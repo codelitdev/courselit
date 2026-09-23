@@ -10,7 +10,7 @@ import {
   generateApiKeySecret,
 } from "./auth/api-keys.js";
 import * as schema from "./db/schema/index.js";
-import { SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
+import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import {
   MEMBER_PERMISSIONS,
   OWNER_PERMISSIONS,
@@ -268,7 +268,7 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
   await runtime.db.insert(schema.schoolAccounts).values([
     {
       id: ownerAccountAId,
-      publicId: createPublicId("lrn", clock),
+      publicId: createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock),
       schoolId: schoolAId,
       userId: owner.id,
       email: "owner@example.com",
@@ -279,7 +279,7 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
     },
     {
       id: memberAccountAId,
-      publicId: createPublicId("lrn", clock),
+      publicId: createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock),
       schoolId: schoolAId,
       userId: member.id,
       email: "member@example.com",
@@ -290,7 +290,7 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
     },
     {
       id: ownerAccountBId,
-      publicId: createPublicId("lrn", clock),
+      publicId: createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock),
       schoolId: schoolBId,
       userId: owner.id,
       email: "owner@example.com",

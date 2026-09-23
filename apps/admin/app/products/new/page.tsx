@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
+import { CourseLitLoadingIcon } from "@/components/loading";
 import { PageHeader } from "@/components/layout/page-header";
 import type { ProductKind, School } from "@/components/products/product-types";
 import { Button } from "@/components/ui/codelit/button";
@@ -125,8 +126,12 @@ export default function NewProductPage() {
           </div>
 
           <div className="flex items-center gap-2 pt-2">
-            <Button type="submit" disabled={!title.trim() || loading}>
-              {loading ? "Creating…" : "Continue"}
+            <Button
+              type="submit"
+              disabled={!title.trim() || loading}
+              aria-label={loading ? "Creating product" : "Continue"}
+            >
+              {loading ? <CourseLitLoadingIcon size={16} /> : "Continue"}
             </Button>
             <Button asChild variant="outline">
               <Link href="/products">Cancel</Link>

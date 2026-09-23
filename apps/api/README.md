@@ -102,23 +102,6 @@ DATABASE_URL=postgres://... bun --cwd apps/api run migrate:notifications \
   --input ./exports/notifications.json --apply
 ```
 
-## Legacy product discussions
-
-`migrate:product-discussions` imports lesson/product discussion comments,
-replies, likes, subscriptions, summaries, and reports. It requires the domain,
-product, lesson, and learner imports to have established their migration
-mappings first. Deleted content remains deleted with empty rendered content;
-the importer never invents an author when a legacy identity cannot be resolved,
-so those rows are reported for reconciliation instead:
-
-```sh
-DATABASE_URL=postgres://... bun --cwd apps/api run migrate:product-discussions \
-  --input ./exports/product-discussions.json
-
-DATABASE_URL=postgres://... bun --cwd apps/api run migrate:product-discussions \
-  --input ./exports/product-discussions.json --apply
-```
-
 ## Custom hosts
 
 Owners manage custom hosts through `/v1/school/hosts`. Creating a host returns

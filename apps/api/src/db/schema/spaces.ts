@@ -12,8 +12,6 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { communities } from "./communities.js";
-import { products } from "./products.js";
 import { schoolAccounts, schools } from "./schools.js";
 import { storefrontPlans } from "./storefront.js";
 
@@ -60,24 +58,24 @@ export const spaceUnlocks = pgTable(
       .notNull()
       .references(() => spaces.id, { onDelete: "cascade" }),
     entityType: text("entity_type").$type<"community" | "product">().notNull(),
-    communityId: uuid("community_id").references(() => communities.id, {
-      onDelete: "cascade",
-    }),
-    productId: uuid("product_id").references(() => products.id, {
-      onDelete: "cascade",
-    }),
+    /** Public ID of the community or product being used as the unlock target. */
+    entityId: text("entity_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    communityOnce: uniqueIndex("space_unlocks_community_uidx")
-      .on(table.spaceId)
-      .where(sql`${table.entityType} = 'community'`),
-    productOnce: uniqueIndex("space_unlocks_product_uidx")
-      .on(table.spaceId, table.productId)
-      .where(sql`${table.entityType} = 'product'`),
+    entityOnce: uniqueIndex("space_unlocks_space_entity_uidx").on(
+      table.spaceId,
+      table.entityType,
+      table.entityId,
+    ),
+    entityLookup: index("space_unlocks_school_entity_idx").on(
+      table.schoolId,
+      table.entityType,
+      table.entityId,
+    ),
     entityCheck: check(
       "space_unlocks_entity_check",
-      sql`(${table.entityType} = 'community' AND ${table.communityId} IS NOT NULL AND ${table.productId} IS NULL) OR (${table.entityType} = 'product' AND ${table.productId} IS NOT NULL AND ${table.communityId} IS NULL)`,
+      sql`${table.entityType} IN ('community', 'product')`,
     ),
   }),
 );

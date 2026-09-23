@@ -15,6 +15,9 @@ import { user } from "./auth.generated.js";
 import { products } from "./products.js";
 import { schoolAccounts, schools } from "./schools.js";
 
+export const MEDIA_CATEGORIES = ["library", "user_uploads"] as const;
+export type MediaCategory = (typeof MEDIA_CATEGORIES)[number];
+
 export const media = pgTable(
   "media",
   {
@@ -34,6 +37,7 @@ export const media = pgTable(
     kind: text("kind")
       .$type<"image" | "video" | "audio" | "document" | "other">()
       .notNull(),
+    category: text("category").$type<MediaCategory>().notNull().default("library"),
     altText: text("alt_text").notNull().default(""),
     caption: text("caption").notNull().default(""),
     accessPolicy: text("access_policy")

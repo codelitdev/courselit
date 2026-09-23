@@ -5,11 +5,11 @@
 # supplied below; secrets can be overridden from the shell or a project .env
 # file without requiring a FrontLit checkout.
 #
-# CourseLit's API, admin app, and learners app continue to run on the host:
+# CourseLit's API, admin app, and storefront app continue to run on the host:
 #
 #   bun run dev:api
 #   bun run dev:admin
-#   bun run dev:learners
+#   bun run dev:storefront
 #   bun run dev:worker
 #
 # Host ports:

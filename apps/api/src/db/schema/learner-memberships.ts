@@ -87,7 +87,11 @@ export const learnerMemberships = pgTable(
     ),
     roleCheck: check(
       "learner_memberships_role_check",
-      sql`${table.role} IS NULL OR ${table.role} IN ('comment', 'post', 'moderate')`,
+      sql`(
+        (${table.entityType} = 'product' AND ${table.role} IS NULL)
+        OR
+        (${table.entityType} = 'community' AND ${table.role} IN ('comment', 'post', 'moderate'))
+      )`,
     ),
     includedParentCheck: check(
       "learner_memberships_included_parent_check",

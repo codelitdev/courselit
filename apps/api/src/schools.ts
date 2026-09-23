@@ -5,9 +5,10 @@ import {
   type PlatformError,
   uuidv7,
 } from "@codelitdev/platform";
+import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { frontLitConfig } from "./frontlit-client.js";
+import { frontLitConfig, getPublicFrontLitSettings } from "./frontlit-client.js";
 import { normalizeEmail } from "./invitations.js";
 import {
   OWNER_PERMISSIONS,
@@ -17,7 +18,7 @@ import {
 } from "./permissions.js";
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
-import { SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
+import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import {
   parseStoredPaymentSettings,
   providerSettingsDto,
@@ -35,12 +36,22 @@ export type SchoolDto = {
   currency: string;
   permissions?: CourseLitPermission[];
   selected?: boolean;
+  website?: {
+    status: "pending" | "provisioning" | "ready" | "action_required";
+    teamId: string | null;
+    lastSuccessfulSyncAt: string | null;
+    lastError: string | null;
+    logo: MediaRef | null;
+  };
 };
+
+type SchoolWebsiteDto = NonNullable<SchoolDto["website"]>;
 
 export function toSchoolDto(
   row: typeof schema.schools.$inferSelect,
   selected?: boolean,
   permissions?: readonly CourseLitPermission[],
+  website?: SchoolWebsiteDto,
 ): SchoolDto {
   return {
     id: row.publicId,
@@ -51,6 +62,7 @@ export function toSchoolDto(
     currency: row.currency,
     ...(permissions === undefined ? {} : { permissions: [...permissions] }),
     ...(selected === undefined ? {} : { selected }),
+    ...(website === undefined ? {} : { website }),
   };
 }
 
@@ -125,7 +137,7 @@ export async function createSchool(
     const ownerEmail = owner?.email ?? "";
     const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
     const schoolAccountId = uuidv7(clock);
-    const ownerAccountPublicId = createPublicId("lrn", clock);
+    const ownerAccountPublicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock);
 
     await tx.insert(schema.schoolAccounts).values({
       id: schoolAccountId,
@@ -134,7 +146,8 @@ export async function createSchool(
       userId: input.principalId,
       email: normalizeEmail(ownerEmail),
       displayName: ownerName,
-      image: owner?.image ?? null,
+      bio: "",
+      avatar: owner?.image ? { url: owner.image } : null,
       status: "active",
       createdAt: now,
       updatedAt: now,
@@ -260,12 +273,23 @@ export async function listSchoolsForUser(
     .limit(1);
   const selectedTenantPublicId = selectedRows[0]?.publicId;
   const rows = await db
-    .select({ school: schema.schools, membership: schema.memberships })
+    .select({
+      school: schema.schools,
+      membership: schema.memberships,
+      integration: schema.schoolIntegrations,
+    })
     .from(schema.memberships)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.memberships.schoolId))
     .innerJoin(
       schema.schoolAccounts,
       eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
+    .leftJoin(
+      schema.schoolIntegrations,
+      and(
+        eq(schema.schoolIntegrations.schoolId, schema.schools.id),
+        eq(schema.schoolIntegrations.provider, "frontlit"),
+      ),
     )
     .where(
       and(
@@ -273,6 +297,37 @@ export async function listSchoolsForUser(
         eq(schema.schoolAccounts.status, "active"),
       ),
     );
+  const config = frontLitConfig();
+  const websiteBySchoolId = new Map<string, SchoolWebsiteDto>();
+  if (config.server) {
+    await Promise.all(
+      rows.map(async (row) => {
+        const integration = row.integration;
+        if (!integration?.remoteTeamId) return;
+        try {
+          const settings = await getPublicFrontLitSettings(integration.remoteTeamId, {
+            config,
+          });
+          websiteBySchoolId.set(row.school.id, {
+            status: integration.status,
+            teamId: integration.remoteTeamId,
+            lastSuccessfulSyncAt: integration.lastSuccessfulSyncAt?.toISOString() ?? null,
+            lastError: integration.lastError,
+            logo: settings.logo,
+          });
+        } catch {
+          websiteBySchoolId.set(row.school.id, {
+            status: integration.status,
+            teamId: integration.remoteTeamId,
+            lastSuccessfulSyncAt: integration.lastSuccessfulSyncAt?.toISOString() ?? null,
+            lastError: integration.lastError,
+            logo: null,
+          });
+        }
+      }),
+    );
+  }
+
   return rows.map((row) =>
     toSchoolDto(
       row.school,
@@ -280,6 +335,7 @@ export async function listSchoolsForUser(
       row.membership.isOwner
         ? OWNER_PERMISSIONS
         : [...parsePermissions(row.membership.permissions)],
+      websiteBySchoolId.get(row.school.id),
     ),
   );
 }
@@ -300,19 +356,23 @@ export async function loadSchoolByPublicId(db: AppDb, publicId: string) {
     )
     .limit(1);
   if (rows[0]) return rows[0];
-  const hosts = await db
-    .select({ school: schema.schools })
-    .from(schema.schoolHosts)
-    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolHosts.schoolId))
-    .where(
-      and(
-        eq(schema.schoolHosts.hostname, identifier.toLowerCase()),
-        eq(schema.schoolHosts.verificationStatus, "verified"),
-        ne(schema.schools.status, "deleted"),
-      ),
-    )
-    .limit(1);
-  return hosts[0]?.school ?? null;
+  try {
+    const hosts = await db
+      .select({ school: schema.schools })
+      .from(schema.schoolHosts)
+      .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolHosts.schoolId))
+      .where(
+        and(
+          eq(schema.schoolHosts.hostname, identifier.toLowerCase()),
+          eq(schema.schoolHosts.verificationStatus, "verified"),
+          ne(schema.schools.status, "deleted"),
+        ),
+      )
+      .limit(1);
+    return hosts[0]?.school ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function updateSchoolCurrency(

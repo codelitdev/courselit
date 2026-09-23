@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ComponentProps, type FormEvent, useEffect, useId, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { Button } from "@/components/ui/codelit/button";
 import {
@@ -572,7 +573,7 @@ export function LessonAuthoring({
           <p className="mt-2 text-muted-foreground">{description}</p>
         </header>
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading lesson…</p>
+          <CourseLitLoading label="Loading lesson…" className="justify-start" />
         ) : null}
         {error ? (
           <p role="alert" className="text-sm text-destructive">

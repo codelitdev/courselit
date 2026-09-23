@@ -1,8 +1,9 @@
 "use client";
 
-import { DollarSign, Info, Loader2, Save } from "lucide-react";
+import { DollarSign, Info, Save } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
+import { CourseLitLoadingIcon } from "@/components/loading";
 import {
   Dialog,
   DialogContent,
@@ -339,6 +340,9 @@ export function PaymentPlanDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="payment-plan-type">Payment type</Label>
+              {paymentSettingsLoading ? (
+                <CourseLitLoadingIcon size={14} />
+              ) : null}
               <Select
                 value={kind}
                 onValueChange={(value) => setKind(value as PlanKind)}
@@ -470,6 +474,7 @@ export function PaymentPlanDialog({
             </Button>
             <Button
               type="submit"
+              aria-label={saving ? "Saving" : "Save"}
               disabled={
                 saving ||
                 !name.trim() ||
@@ -477,12 +482,8 @@ export function PaymentPlanDialog({
                   (paymentSettingsLoading || !paymentProviderConfigured))
               }
             >
-              {saving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {saving ? "Saving…" : "Save"}
+              {saving ? <CourseLitLoadingIcon size={16} /> : <Save className="size-4" />}
+              {saving ? null : "Save"}
             </Button>
           </DialogFooter>
         </form>

@@ -311,16 +311,16 @@ describe("CourseLit SendLit provisioning", () => {
       );
     expect(contactJob).toBeDefined();
     expect(contactJob.payload).toMatchObject({
-      email: "alice.learner@example.com",
-      name: "Alice Learner",
-      tags: ["learner"],
+      schoolAccountId: expect.any(String),
+      ensureSubscribed: true,
+      reason: "learner_signup",
     });
     expect(contactJob.status).toBe("pending");
 
     // 1. Attempt sync when SendLit is down (503 Service Unavailable)
     let syncAttempts = 0;
     const syncedContacts: Array<{ email: string; name?: string }> = [];
-    const taggedContacts: Array<{ contactId: string; tag: string }> = [];
+    const updatedContacts: Array<any> = [];
 
     const sendLitOps: SendLitOperations = {
       provisionTeam: async () => ({
@@ -331,6 +331,7 @@ describe("CourseLit SendLit provisioning", () => {
         apiKey: "sl_live_key",
       }),
       rotateKey: async () => ({ keyId: "kid_1", key: "sl_live_key" }),
+      listContacts: async () => ({ items: [], total: 0 }),
       createContact: async (_key, input) => {
         syncAttempts += 1;
         if (syncAttempts === 1) {
@@ -348,15 +349,15 @@ describe("CourseLit SendLit provisioning", () => {
           updatedAt: clock.now().toISOString(),
         };
       },
-      addContactTag: async (_key, contactId, tag) => {
-        taggedContacts.push({ contactId, tag });
+      updateContact: async (_key, contactId, input) => {
+        updatedContacts.push({ contactId, ...input });
         return {
           contactId,
           email: "alice.learner@example.com",
-          name: "Alice Learner",
-          subscribed: true,
-          tags: [tag],
-          customFields: {},
+          name: input.name ?? null,
+          subscribed: input.subscribed ?? true,
+          tags: input.tags ?? [],
+          customFields: input.customFields ?? {},
           createdAt: clock.now().toISOString(),
           updatedAt: clock.now().toISOString(),
         };
@@ -409,7 +410,15 @@ describe("CourseLit SendLit provisioning", () => {
     expect(syncedContacts).toEqual([
       { email: "alice.learner@example.com", name: "Alice Learner" },
     ]);
-    expect(taggedContacts).toEqual([{ contactId: "cnt_alice_1", tag: "learner" }]);
+    expect(updatedContacts[0]).toMatchObject({
+      contactId: "cnt_alice_1",
+      name: "Alice Learner",
+      subscribed: true,
+      customFields: expect.objectContaining({
+        "courselit.isCommunityMember": "false",
+        "courselit.productIds": [],
+      }),
+    });
 
     await runtime.close();
   }, 20000);

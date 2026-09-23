@@ -70,42 +70,39 @@ describe("admin and learner surfaces", () => {
       "admin/components/communities/community-featured-image.tsx",
     );
     const communityPlansPage = read("admin/app/community/plans/page.tsx");
-    const discussionReports = read(
-      "admin/components/products/product-discussion-reports.tsx",
-    );
-    const learnerSidebar = read("learners/components/layout/learner-sidebar.tsx");
+    const learnerSidebar = read("storefront/components/layout/learner-sidebar.tsx");
     const learnerDashboardLayout = read(
-      "learners/components/dashboard/learner-dashboard-layout.tsx",
+      "storefront/components/dashboard/learner-dashboard-layout.tsx",
     );
-    const learnerFeed = read("learners/components/dashboard/learner-feed.tsx");
-    const learnerProducts = read("learners/components/dashboard/learner-products.tsx");
-    const learnerCommunities = read("learners/app/communities/page.tsx");
+    const learnerFeed = read("storefront/components/dashboard/learner-feed.tsx");
+    const learnerProducts = read("storefront/components/dashboard/learner-products.tsx");
+    const learnerCommunities = read("storefront/app/communities/page.tsx");
     const publicCommunitiesCatalog = read(
-      "learners/components/public-communities-catalog.tsx",
+      "storefront/components/public-communities-catalog.tsx",
     );
     const learnerSpacePost = read(
-      "learners/app/(loggedin)/dashboard/s/[spaceId]/[postId]/page.tsx",
+      "storefront/app/(loggedin)/dashboard/s/[spaceId]/[postId]/page.tsx",
     );
     const learnerCommunityComponent = read(
-      "learners/components/communities/learner-community.tsx",
+      "storefront/components/communities/learner-community.tsx",
     );
     const learnerCommunityEditor = read(
-      "learners/components/communities/learner-rich-text-editor.tsx",
+      "storefront/components/communities/learner-rich-text-editor.tsx",
     );
     const learnerPostComposer = read(
-      "learners/components/communities/learner-post-composer-dialog.tsx",
+      "storefront/components/communities/learner-post-composer-dialog.tsx",
     );
     const learnerNotifications = read(
-      "learners/app/(loggedin)/dashboard/notifications/page.tsx",
+      "storefront/app/(loggedin)/dashboard/notifications/page.tsx",
     );
     const learnerNotificationsComponent = read(
-      "learners/components/notifications/learner-notifications.tsx",
+      "storefront/components/notifications/learner-notifications.tsx",
     );
-    const learnerShell = read("learners/components/layout/learner-shell.tsx");
+    const learnerShell = read("storefront/components/layout/learner-shell.tsx");
     const learnerNotificationsBell = read(
-      "learners/components/notifications/learner-notifications-bell.tsx",
+      "storefront/components/notifications/learner-notifications-bell.tsx",
     );
-    const learnerAccount = read("learners/app/(loggedin)/dashboard/account/page.tsx");
+    const learnerAccount = read("storefront/app/(loggedin)/dashboard/account/page.tsx");
     const productRootPlaceholder = ["$", "{productRoot}"].join("");
     const publicProductPath = [
       "/product/",
@@ -261,7 +258,7 @@ describe("admin and learner surfaces", () => {
       '<Package className="size-4 text-muted-foreground" />',
     );
     expect(productWorkspace).toContain("Invite a customer");
-    expect(productWorkspace).toContain("learnerUrl");
+    expect(productWorkspace).toContain("storefrontUrl");
     expect(productWorkspace).toContain(publicProductPath);
     expect(productWorkspace).toContain("Edit page");
     expect(productWorkspace).toContain(
@@ -269,11 +266,8 @@ describe("admin and learner surfaces", () => {
     );
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain('aria-label="Share product"');
-    expect(productWorkspace).toContain("NEXT_PUBLIC_LEARNER_ORIGIN");
-    expect(productWorkspace).toContain(
-      "Enable lesson-specific discussions for this course",
-    );
-    expect(productWorkspace).toContain("manage/discussions/reports");
+    expect(productWorkspace).toContain("NEXT_PUBLIC_STOREFRONT_ORIGIN");
+    expect(productWorkspace).toContain("Enable a discussion space for this course");
     expect(productWorkspace).toContain("Lead Magnet");
     expect(productWorkspace).toContain("Danger zone");
     expect(productWorkspace).toContain("<Switch");
@@ -358,7 +352,6 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("Analytics time range");
     expect(productWorkspace).toContain("formatUpdatedAt");
     expect(productWorkspace).toContain("<ProductAnalytics");
-    expect(discussionReports).toContain("Reported content");
     expect(products).not.toContain('form.get("body")');
     expect(communities).toContain('redirect("/community")');
     expect(communityPage).toContain("CommunityAdmin");
@@ -369,10 +362,12 @@ describe("admin and learner surfaces", () => {
       '<DialogTitle>{editing ? "Edit space" : "New space"}</DialogTitle>',
     );
     expect(spacesAdmin).toContain('fetch("/api/v1/community"');
-    expect(spacesAdmin).toContain("Only specific members");
-    expect(spacesAdmin).toContain("All members");
+    expect(spacesAdmin).toContain("Selected plans or products");
+    expect(spacesAdmin).toContain("All community members");
     expect(spacesAdmin).toContain("selectedCommunityPlanIds");
-    expect(spacesAdmin).toContain("<DropdownMenuCheckboxItem");
+    expect(spacesAdmin).toContain("selectedProductUnlocks");
+    expect(spacesAdmin).toContain("Selected direct-purchase plans");
+    expect(spacesAdmin).toContain("/api/v1/products/");
     expect(spacesAdmin).toContain("Delete “{deleting?.name}”?");
     expect(spacesAdmin).toContain("Move existing posts to");
     expect(spacesAdmin).toContain("attached media will be preserved");
@@ -393,7 +388,6 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).not.toContain("<ArrowLeft");
     expect(sectionAuthoring).not.toContain("<ArrowLeft");
     expect(lessonAuthoring).not.toContain("<ArrowLeft");
-    expect(discussionReports).not.toContain("Product manage");
     expect(acceptInvitation).toContain("useSetBreadcrumb");
     expect(acceptInvitation).not.toContain("Back to dashboard");
     expect(communityWorkspace).toContain("Payment plans");
@@ -451,10 +445,9 @@ describe("admin and learner surfaces", () => {
     expect(learnerFeed).not.toContain("Pencil");
     expect(learnerProducts).toContain("/api/v1/learner/products");
     expect(learnerSidebar).not.toContain('href: "/communities"');
-    expect(learnerSidebar).toContain('href="/dashboard/notifications"');
-    expect(learnerSidebar).toContain('href="/dashboard/account"');
-    expect(learnerAccount).toContain('useLearnerSession("/dashboard/account")');
-    expect(learnerAccount).toContain("Notification settings");
+    expect(learnerSidebar).toContain('href="/dashboard/account/notifications"');
+    expect(learnerSidebar).toContain('href="/dashboard/account/profile"');
+    expect(learnerAccount).toContain('redirect("/dashboard/account/profile")');
     expect(learnerCommunities).toContain("notFound()");
     expect(publicCommunitiesCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicCommunitiesCatalog).toContain("/api/v1/public/communities");
@@ -566,62 +559,58 @@ describe("admin and learner surfaces", () => {
     expect(navUser).toContain("Account");
   });
 
-  it("keeps the learner app on learner and public API routes", () => {
-    const login = read("learners/app/login/page.tsx");
-    const home = read("learners/app/[[...slug]]/page.tsx");
-    const publicPage = read("learners/components/public-site-page.tsx");
-    const publicProductsPage = read("learners/app/products/page.tsx");
+  it("keeps the storefront app on learner and public API routes", () => {
+    const login = read("storefront/app/login/page.tsx");
+    const home = read("storefront/app/[[...slug]]/page.tsx");
+    const publicPage = read("storefront/components/public-site-page.tsx");
+    const publicProductsPage = read("storefront/app/products/page.tsx");
     const publicProductsCatalog = read(
-      "learners/components/public-products-catalog.tsx",
+      "storefront/components/public-products-catalog.tsx",
     );
-    const publicProductDetailPage = read("learners/app/product/[productId]/page.tsx");
-    const publicProductDetail = read("learners/components/public-product-detail.tsx");
-    const publicCheckout = read("learners/components/public-checkout-session.tsx");
-    const publicProductBlocks = read("learners/components/product-page-blocks.tsx");
-    const publicBlogArticlePage = read("learners/app/blog/[slug]/[id]/page.tsx");
-    const publicBlogPage = read("learners/app/blog/page.tsx");
-    const publicBlogByIdPage = read("learners/app/blog/[slug]/page.tsx");
+    const publicProductDetailPage = read("storefront/app/product/[productId]/page.tsx");
+    const publicProductDetail = read("storefront/components/public-product-detail.tsx");
+    const publicCheckout = read("storefront/components/public-checkout-session.tsx");
+    const publicProductBlocks = read("storefront/components/product-page-blocks.tsx");
+    const publicBlogArticlePage = read("storefront/app/blog/[slug]/[id]/page.tsx");
+    const publicBlogPage = read("storefront/app/blog/page.tsx");
+    const publicBlogByIdPage = read("storefront/app/blog/[slug]/page.tsx");
     const publicCommunityDetailPage = read(
-      "learners/app/communities/[communityId]/page.tsx",
+      "storefront/app/communities/[communityId]/page.tsx",
     );
-    const loggedInLayout = read("learners/app/(loggedin)/layout.tsx");
-    const publicBlogArticle = read("learners/components/public-blog-article.tsx");
-    const publicBlogFeed = read("learners/components/public-blog-feed.tsx");
-    const sitePageRenderer = read("learners/components/site-page-renderer.tsx");
-    const themeProvider = read("learners/app/layout.tsx");
-    const dashboard = read("learners/app/(loggedin)/dashboard/page.tsx");
-    const dashboardLayout = read("learners/app/(loggedin)/dashboard/layout.tsx");
+    const loggedInLayout = read("storefront/app/(loggedin)/layout.tsx");
+    const publicBlogArticle = read("storefront/components/public-blog-article.tsx");
+    const publicBlogFeed = read("storefront/components/public-blog-feed.tsx");
+    const sitePageRenderer = read("storefront/components/site-page-renderer.tsx");
+    const themeProvider = read("storefront/app/layout.tsx");
+    const dashboard = read("storefront/app/(loggedin)/dashboard/page.tsx");
+    const dashboardLayout = read("storefront/app/(loggedin)/dashboard/layout.tsx");
     const dashboardFeed = dashboard;
     const dashboardSpaceFeed = read(
-      "learners/app/(loggedin)/dashboard/s/[spaceId]/page.tsx",
+      "storefront/app/(loggedin)/dashboard/s/[spaceId]/page.tsx",
     );
     const dashboardProducts = read(
-      "learners/app/(loggedin)/dashboard/products/page.tsx",
+      "storefront/app/(loggedin)/dashboard/products/page.tsx",
     );
     const dashboardFeedComponent = read(
-      "learners/components/dashboard/learner-feed.tsx",
+      "storefront/components/dashboard/learner-feed.tsx",
     );
     const dashboardProductsComponent = read(
-      "learners/components/dashboard/learner-products.tsx",
+      "storefront/components/dashboard/learner-products.tsx",
     );
     const dashboardLayoutComponent = read(
-      "learners/components/dashboard/learner-dashboard-layout.tsx",
+      "storefront/components/dashboard/learner-dashboard-layout.tsx",
     );
-    const learnerShell = read("learners/components/layout/learner-shell.tsx");
-    const learnerSidebar = read("learners/components/ui/sidebar.tsx");
-    const learnerMobileHook = read("learners/hooks/use-mobile.ts");
+    const learnerShell = read("storefront/components/layout/learner-shell.tsx");
+    const learnerSidebar = read("storefront/components/ui/sidebar.tsx");
+    const learnerMobileHook = read("storefront/hooks/use-mobile.ts");
     const course = read(
-      "learners/app/(loggedin)/dashboard/courses/[productId]/page.tsx",
+      "storefront/app/(loggedin)/dashboard/courses/[productId]/page.tsx",
     );
-    const embedViewer = read("learners/components/embed-viewer.tsx");
-    const lessonViewer = read("learners/components/lesson-viewer.tsx");
-    const discussions = read("learners/components/course-discussions.tsx");
-    const discussionEditor = read("learners/components/learner-discussion-editor.tsx");
-    const courseIndex = read(
-      "learners/app/(loggedin)/dashboard/courses/[productId]/discussions/page.tsx",
-    );
-    const proxy = read("learners/app/api/[...path]/route.ts");
-    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${discussions}\n${discussionEditor}\n${courseIndex}\n${proxy}`;
+    const embedViewer = read("storefront/components/embed-viewer.tsx");
+    const lessonViewer = read("storefront/components/lesson-viewer.tsx");
+    const courseSpaceDiscussion = read("storefront/components/course-space-discussion.tsx");
+    const proxy = read("storefront/app/api/[...path]/route.ts");
+    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${courseSpaceDiscussion}\n${proxy}`;
     expect(publicPage).toContain("SitePageRenderer");
     expect(publicPage).toContain("SitePageSection");
     expect(publicPage).toContain("loadDataSlots");
@@ -692,21 +681,8 @@ describe("admin and learner surfaces", () => {
     expect(surface).toContain("/api/v1/products/");
     expect(surface).toContain("/api/v1/learner/memberships");
     expect(surface).toContain("/api/v1/learner/lessons/");
-    expect(surface).toContain("/discussions");
-    expect(surface).toContain("Post comment");
-    expect(surface).toContain("Load more comments");
-    expect(surface).toContain("Delete");
-    expect(discussions).toContain("LearnerDiscussionEditor");
-    expect(discussions).toContain("TextRenderer");
-    expect(discussions).toContain("initialContent={commentDraft}");
-    expect(discussions).toContain("initialContent={replyDraft}");
-    expect(discussions).toContain('placeholder="Write a reply…"');
-    expect(discussionEditor).toContain("@frontlit/text-editor");
-    expect(discussionEditor).toContain("showToolbar={false}");
-    expect(courseIndex).toContain("/api/v1/learner/products/");
-    expect(courseIndex).toContain("/api/v1/preview/products/");
-    expect(courseIndex).toContain("x-preview-token");
-    expect(courseIndex).toContain('get("preview")');
+    expect(courseSpaceDiscussion).toContain("<LearnerFeed spaceId={spaceId} />");
+    expect(courseSpaceDiscussion).toContain("canonical space");
     expect(course).toContain("previewToken ?");
     expect(course).toContain("encodeURIComponent(previewToken)");
     expect(embedViewer).toContain("SandboxedEmbed");

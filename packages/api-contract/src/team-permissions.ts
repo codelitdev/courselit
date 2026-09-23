@@ -15,9 +15,6 @@ export const COURSELIT_PERMISSIONS = [
   "products:write",
   "products:publish",
   "products:delete",
-  // Learners
-  "learners:read",
-  "learners:write",
   // Community
   "communities:read",
   "communities:write",
@@ -33,6 +30,7 @@ export const COURSELIT_PERMISSIONS = [
   // Contacts
   "contacts:read",
   "contacts:write",
+  "contacts:delete",
   // Mail
   "mails:read",
   "mails:write",
@@ -66,7 +64,7 @@ export const OWNER_PERMISSIONS: readonly CourseLitPermission[] = [
 export const MEMBER_PERMISSIONS: readonly CourseLitPermission[] = [
   "products:read",
   "products:write",
-  "learners:read",
+  "contacts:read",
   "billing:read",
   "media:read",
   "media:write",
@@ -87,7 +85,6 @@ export const COURSELIT_PERMISSION_IMPLICATIONS: Readonly<
   "products:write": ["products:read"],
   "products:publish": ["products:write", "products:read"],
   "products:delete": ["products:write", "products:read"],
-  "learners:write": ["learners:read"],
   "communities:write": ["communities:read"],
   "communities:moderate": ["communities:write", "communities:read"],
   "storefront:write": ["storefront:read"],
@@ -95,6 +92,7 @@ export const COURSELIT_PERMISSION_IMPLICATIONS: Readonly<
   "commerce:manage": ["commerce:read"],
   "commerce:refund": ["commerce:manage", "commerce:read"],
   "contacts:write": ["contacts:read"],
+  "contacts:delete": ["contacts:write", "contacts:read"],
   "mails:write": ["mails:read"],
   "mails:send": ["mails:write", "mails:read"],
   "media:write": ["media:read"],
@@ -145,19 +143,18 @@ export const COURSELIT_PERMISSION_PRESETS: Record<
     "communities:read",
     "communities:write",
     "communities:moderate",
-    "learners:read",
+    "contacts:read",
     "media:read",
     "media:write",
     "analytics:read",
   ],
   support: [
     "products:read",
-    "learners:read",
-    "learners:write",
+    "contacts:read",
+    "contacts:write",
     "communities:read",
     "communities:moderate",
     "commerce:read",
-    "contacts:read",
   ],
   marketing: [
     "storefront:read",
@@ -178,6 +175,7 @@ export const COURSELIT_PERMISSION_PRESETS: Record<
 export const COURSELIT_HIGH_IMPACT_PERMISSIONS = [
   "members:manage",
   "products:delete",
+  "contacts:delete",
   "media:delete",
   "communities:moderate",
   "commerce:refund",
@@ -251,11 +249,6 @@ export const COURSELIT_PERMISSION_GROUPS: ReadonlyArray<{
     ],
   },
   {
-    id: "learners",
-    label: "Learners",
-    permissions: ["learners:read", "learners:write"],
-  },
-  {
     id: "communities",
     label: "Community",
     permissions: [
@@ -281,7 +274,7 @@ export const COURSELIT_PERMISSION_GROUPS: ReadonlyArray<{
   {
     id: "contacts",
     label: "Contacts",
-    permissions: ["contacts:read", "contacts:write"],
+    permissions: ["contacts:read", "contacts:write", "contacts:delete"],
   },
   {
     id: "mails",

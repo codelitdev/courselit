@@ -30,6 +30,31 @@ describe.serial("school spaces and included products", () => {
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
     expect(communities).toHaveLength(1);
+    await runtime.db.insert(schema.storefrontPlans).values({
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      publicId: "pln_test_community",
+      schoolId: world.schoolA.id,
+      entityType: "community",
+      entityId: communities[0]!.publicId,
+      name: "Community access",
+      description: "",
+      includedProducts: [],
+      providerProductId: null,
+      kind: "free",
+      oneTimeAmount: null,
+      emiAmount: null,
+      emiTotalInstallments: null,
+      subscriptionMonthlyAmount: null,
+      subscriptionYearlyAmount: null,
+      amountMinor: 0,
+      billingInterval: null,
+      installmentCount: null,
+      status: "active",
+      isDefault: true,
+      createdBy: world.owner.id,
+      createdAt: clock.now(),
+      updatedAt: clock.now(),
+    });
 
     const listed = await dispatch(runtime, {
       method: "GET",
@@ -87,7 +112,11 @@ describe.serial("school spaces and included products", () => {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
-      body: { includedWithCommunity: true, status: "published" },
+      body: {
+        includedWithCommunity: true,
+        discussions: true,
+        status: "published",
+      },
     });
     expect(published.status).toBe(200);
     expect(published.body).toMatchObject({
@@ -146,26 +175,36 @@ describe.serial("school spaces and included products", () => {
       "x-school-id": world.schoolA.publicId,
     };
 
+    const directJoin = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/communities/${communities[0]!.publicId}/join`,
+      headers: learnerHeaders,
+      body: { joiningReason: "" },
+    });
+    expect(directJoin.status).toBe(404);
+
     const account = await runtime.db
       .select()
       .from(schema.schoolAccounts)
       .where(eq(schema.schoolAccounts.email, "space-learner@example.com"));
     const community = communities[0]!;
-    await runtime.db.insert(schema.learnerMemberships).values({
-      id: "33333333-3333-4333-8333-333333333333",
-      publicId: "lrm_test_community",
-      schoolId: world.schoolA.id,
-      schoolAccountId: account[0]!.id,
+    const joined = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/communities/${community.publicId}/checkout`,
+      headers: { ...learnerHeaders, "idempotency-key": "space-community-join" },
+      body: { planId: "pln_test_community", joiningReason: "" },
+    });
+    expect(joined.status).toBe(201);
+    const [joinedMembership] = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.schoolAccountId, account[0]!.id));
+    expect(joinedMembership).toMatchObject({
       entityType: "community",
       entityId: community.publicId,
-      paymentPlanId: "complan_fake",
+      paymentPlanId: "pln_test_community",
       status: "active",
       role: "post",
-      isIncludedInPlan: false,
-      parentMembershipId: null,
-      joiningReason: "",
-      createdAt: clock.now(),
-      updatedAt: clock.now(),
     });
     await runtime.db.insert(schema.learnerMemberships).values({
       id: "44444444-4444-4444-8444-444444444444",
@@ -178,10 +217,21 @@ describe.serial("school spaces and included products", () => {
       status: "active",
       role: null,
       isIncludedInPlan: true,
-      parentMembershipId: "33333333-3333-4333-8333-333333333333",
+      parentMembershipId: joinedMembership!.id,
       joiningReason: "",
       createdAt: clock.now(),
       updatedAt: clock.now(),
+    });
+
+    const learnerProduct = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${productId}`,
+      headers: learnerHeaders,
+    });
+    expect(learnerProduct.status).toBe(200);
+    expect(learnerProduct.body).toMatchObject({
+      discussions: true,
+      discussionSpaceId: expect.stringMatching(/^spc_/),
     });
 
     const learnerSpaces = await dispatch(runtime, {

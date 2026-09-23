@@ -83,13 +83,33 @@ export type SendLitContact = {
   updatedAt: string | null;
 };
 
+export type SendLitFilterCondition =
+  | { name: "email"; condition: "is" | "contains" | "not_contains"; value: string; valueLabel?: string }
+  | { name: "tag"; condition: "is" | "is_not"; value: string; valueLabel?: string }
+  | { name: "subscription"; condition: "is"; value: "subscribed" | "unsubscribed"; valueLabel?: string }
+  | { name: "signedUp"; condition: "before" | "after" | "on"; value: string; valueLabel?: string }
+  | {
+      name: "customField";
+      key: string;
+      condition:
+        | "is"
+        | "is_not"
+        | "contains"
+        | "not_contains"
+        | "has"
+        | "not_has"
+        | "before"
+        | "after"
+        | "on"
+        | "exists"
+        | "not_exists";
+      value?: string;
+      valueLabel?: string;
+    };
+
 export type SendLitSegmentFilter = {
   aggregator: "and" | "or";
-  filters: Array<{
-    field: string;
-    operator: string;
-    value: unknown;
-  }>;
+  filters: SendLitFilterCondition[];
 };
 
 export type SendLitSegment = {

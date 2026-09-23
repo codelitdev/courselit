@@ -6,6 +6,7 @@ import { AdminBreadcrumb } from "@/components/layout/admin-breadcrumb";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { BreadcrumbProvider } from "@/components/layout/breadcrumb-context";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { PermissionDeniedFeedback } from "@/components/permission-denied-feedback";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
@@ -137,6 +138,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return (
       <BreadcrumbProvider>
         <Toaster />
+        <PermissionDeniedFeedback />
         <div
           data-full-screen-editor={isFullScreenTeamInvitation ? undefined : true}
           data-full-screen-invitation={isFullScreenTeamInvitation ? true : undefined}
@@ -151,6 +153,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <BreadcrumbProvider>
       <Toaster />
+      <PermissionDeniedFeedback />
       <SidebarProvider defaultOpen={true}>
         <AppSidebar />
         <SidebarInset>

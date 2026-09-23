@@ -832,6 +832,15 @@ export async function deleteProduct(
         }),
       };
     }
+    await tx
+      .delete(schema.spaceUnlocks)
+      .where(
+        and(
+          eq(schema.spaceUnlocks.schoolId, ctx.tenantId!),
+          eq(schema.spaceUnlocks.entityType, "product"),
+          eq(schema.spaceUnlocks.entityId, row.publicId),
+        ),
+      );
     const productLessons = await tx
       .select({ id: schema.lessons.id })
       .from(schema.lessons)

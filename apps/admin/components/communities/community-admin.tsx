@@ -36,6 +36,7 @@ import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { PermissionMessage } from "@/components/permission-message";
 import { PaymentPlanList } from "@/components/products/payment-plan-list";
 import type { SalesPage, StorefrontPlan } from "@/components/products/product-types";
@@ -61,7 +62,7 @@ import {
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
-import { learnerUrl } from "@/lib/learner-url";
+import { storefrontUrl } from "@/lib/storefront-url";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { CommunityFeaturedImage } from "./community-featured-image";
 
@@ -412,7 +413,7 @@ export function CommunityAdmin({
 
   async function shareCommunity() {
     if (!community || !school) return;
-    const url = learnerUrl(
+    const url = storefrontUrl(
       `/p/${encodeURIComponent(community.slug)}`,
       school.subdomain,
     );
@@ -740,7 +741,7 @@ export function CommunityAdmin({
         ) : null}
         {loading ? (
           <div className="rounded-xl border bg-card p-12 text-center text-sm text-muted-foreground">
-            Loading…
+            <CourseLitLoading />
           </div>
         ) : view === "list" ? (
           <CommunityList
@@ -1000,8 +1001,13 @@ function CommunityOverview({
               variant="outline"
               onClick={onLoadMore}
               disabled={loadingMore}
+              aria-label={loadingMore ? "Loading posts" : "Load more posts"}
             >
-              {loadingMore ? "Loading posts…" : "Load more posts"}
+              {loadingMore ? (
+                <CourseLitLoadingIcon size={14} />
+              ) : (
+                "Load more posts"
+              )}
             </Button>
           </div>
         ) : null}
@@ -1066,8 +1072,13 @@ function CommunityList({
             variant="outline"
             onClick={onLoadMore}
             disabled={loadingMore}
+            aria-label={loadingMore ? "Loading communities" : "Load more communities"}
           >
-            {loadingMore ? "Loading communities…" : "Load more communities"}
+              {loadingMore ? (
+                <CourseLitLoadingIcon size={14} />
+              ) : (
+                "Load more communities"
+              )}
           </Button>
         </div>
       ) : null}
@@ -1689,9 +1700,14 @@ function CommunityManage({
                 type="button"
                 variant="outline"
                 disabled={loadingMoreMembers}
+                aria-label={loadingMoreMembers ? "Loading memberships" : "Load more memberships"}
                 onClick={onLoadMoreMembers}
               >
-                {loadingMoreMembers ? "Loading memberships…" : "Load more memberships"}
+                {loadingMoreMembers ? (
+                  <CourseLitLoadingIcon size={14} />
+                ) : (
+                  "Load more memberships"
+                )}
               </Button>
             </div>
           ) : null}
@@ -1924,9 +1940,14 @@ function CommunityManage({
                 type="button"
                 variant="outline"
                 disabled={loadingMoreReports}
+                aria-label={loadingMoreReports ? "Loading reports" : "Load more reports"}
                 onClick={onLoadMoreReports}
               >
-                {loadingMoreReports ? "Loading reports…" : "Load more reports"}
+                {loadingMoreReports ? (
+                  <CourseLitLoadingIcon size={14} />
+                ) : (
+                  "Load more reports"
+                )}
               </Button>
             </div>
           ) : null}

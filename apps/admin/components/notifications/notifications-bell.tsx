@@ -3,6 +3,7 @@
 import { Bell, Check, Inbox } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { CourseLitLoading } from "@/components/loading";
 
 type Notification = {
   id: string;
@@ -187,9 +188,7 @@ export function NotificationsBell() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Loading notifications…
-              </p>
+              <CourseLitLoading label="Loading notifications…" className="px-4 py-8" />
             ) : null}
             {error ? (
               <p className="px-4 py-8 text-center text-sm text-destructive">{error}</p>

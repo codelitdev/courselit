@@ -8,7 +8,7 @@ import {
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import { OWNER_PERMISSIONS, serializePermissions } from "../permissions.js";
-import { SCHOOL_PUBLIC_ID_PREFIX } from "../public-id-prefixes.js";
+import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "../public-id-prefixes.js";
 import { normalizeCustomHostname } from "../school-host.js";
 import type { AppDb } from "../types.js";
 
@@ -449,12 +449,12 @@ export async function importLegacyDomains(
         const schoolAccountId = uuidv7(input.clock);
         await tx.insert(schema.schoolAccounts).values({
           id: schoolAccountId,
-          publicId: createPublicId("lrn", input.clock),
+          publicId: createPublicId(CONTACT_PUBLIC_ID_PREFIX, input.clock),
           schoolId,
           userId: ownerId,
           email: ownerEmail,
           displayName: ownerName,
-          image: ownerUser?.image ?? null,
+          avatar: ownerUser?.image ? { url: ownerUser.image } : null,
           status: "active",
           createdAt: domain.createdAt,
           updatedAt: domain.updatedAt,

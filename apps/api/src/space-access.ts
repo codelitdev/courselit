@@ -56,28 +56,12 @@ export async function accessibleSpaceIds(
     plansByUnlock.set(row.unlockId, list);
   }
 
-  const communities = await db
-    .select({ id: schema.communities.id, publicId: schema.communities.publicId })
-    .from(schema.communities)
-    .where(eq(schema.communities.schoolId, schoolId));
-  const products = await db
-    .select({ id: schema.products.id, publicId: schema.products.publicId })
-    .from(schema.products)
-    .where(eq(schema.products.schoolId, schoolId));
-  const communityPublic = new Map(communities.map((row) => [row.id, row.publicId]));
-  const productPublic = new Map(products.map((row) => [row.id, row.publicId]));
-
   for (const unlock of unlocks) {
     const planIds = plansByUnlock.get(unlock.id) ?? [];
-    const entityId =
-      unlock.entityType === "community"
-        ? communityPublic.get(unlock.communityId!)
-        : productPublic.get(unlock.productId!);
-    if (!entityId) continue;
 
     const match = memberships.some((membership) => {
       if (membership.entityType !== unlock.entityType) return false;
-      if (membership.entityId !== entityId) return false;
+      if (membership.entityId !== unlock.entityId) return false;
       if (planIds.length === 0) return true;
       if (unlock.entityType === "product" && membership.isIncludedInPlan) {
         return false;

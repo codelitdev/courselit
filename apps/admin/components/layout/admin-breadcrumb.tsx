@@ -32,8 +32,6 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   // /products/:productId/content/section/:sectionId
   // /products/:productId/content/section/:sectionId/lesson
   // /products/:productId/manage
-  // /products/:productId/manage/discussions
-  // /products/:productId/manage/discussions/reports
   if (clean === "/products") {
     return [{ label: "Products" }];
   }
@@ -83,6 +81,9 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
           return crumbs;
         }
       }
+    } else if (parts[2] === "customers") {
+      crumbs.push({ label: "Customers" });
+      return crumbs;
     } else if (parts[2] === "manage") {
       const manageRoot = `${productRoot}/manage`;
       if (parts.length === 3) {
@@ -91,17 +92,6 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       }
       crumbs.push({ label: "Settings", href: manageRoot });
 
-      if (parts[3] === "discussions") {
-        if (parts.length === 4) {
-          crumbs.push({ label: "Discussions" });
-          return crumbs;
-        }
-        if (parts[4] === "reports") {
-          crumbs.push({ label: "Discussions", href: `${manageRoot}/discussions` });
-          crumbs.push({ label: "Reports" });
-          return crumbs;
-        }
-      }
     }
     return crumbs;
   }
@@ -138,15 +128,11 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     ];
   }
 
-  // Contacts / Learners
-  if (clean === "/contacts" || clean === "/users" || clean === "/learners") {
+  // Contacts
+  if (clean === "/contacts") {
     return [{ label: "Contacts" }];
   }
-  if (
-    clean.startsWith("/contacts/") ||
-    clean.startsWith("/users/") ||
-    clean.startsWith("/learners/")
-  ) {
+  if (clean.startsWith("/contacts/")) {
     return [
       { label: "Contacts", href: "/contacts" },
       { label: "Contact Details" },

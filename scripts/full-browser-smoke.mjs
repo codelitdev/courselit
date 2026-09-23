@@ -120,7 +120,7 @@ async function runBrowserSmoke() {
     await page.screenshot({ path: path.join(ARTIFACT_DIR, "05_admin_media.png") });
 
     // -------------------------------------------------------------
-    // PHASE 3: LEARNER PORTAL LOGIN & DASHBOARD
+    // PHASE 3: STOREFRONT LOGIN & DASHBOARD
     // -------------------------------------------------------------
     console.log("\n--- [Phase 3: Learner Login Journey] ---");
     const learnerPage = await browser.newPage();

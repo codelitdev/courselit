@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { schools } from "./schools.js";
 
-export const integrationProviders = ["frontlit", "sendlit"] as const;
+export const integrationProviders = ["frontlit", "sendlit", "medialit"] as const;
 export type IntegrationProvider = (typeof integrationProviders)[number];
 
 export const integrationStatuses = [
@@ -35,8 +35,20 @@ export const integrationJobTypes = [
   "provision_sales_page",
   "provision_sendlit",
   "sync_sendlit_contact",
+  "erase_sendlit_contact",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
+
+export type SyncSendLitContactPayload = {
+  schoolAccountId: string;
+  ensureSubscribed?: boolean;
+  reason?: string;
+};
+
+export type EraseSendLitContactPayload = {
+  schoolAccountId: string;
+  sendlitContactId?: string;
+};
 
 /** One mapping per CourseLit school and sister-product provider. Secrets are
  * encrypted before they reach this table; plaintext team keys are never
@@ -89,6 +101,7 @@ export const integrationOutboxJobs = pgTable(
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
     status: text("status").$type<IntegrationJobStatus>().notNull().default("pending"),
     attempts: integer("attempts").notNull().default(0),
+    revision: integer("revision").notNull().default(1),
     nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
     lastError: text("last_error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -105,11 +118,14 @@ export const integrationOutboxJobs = pgTable(
         sql`(${table.payload}->>'resourceId')`,
       )
       .where(sql`type = 'provision_sales_page'`),
-    contactSyncIdentity: index("integration_outbox_jobs_contact_sync_idx").on(
-      table.schoolId,
-      table.provider,
-      table.type,
-    ),
+    contactSyncCoalesce: uniqueIndex("integration_outbox_jobs_contact_sync_uidx")
+      .on(
+        table.schoolId,
+        table.provider,
+        table.type,
+        sql`(${table.payload}->>'schoolAccountId')`,
+      )
+      .where(sql`status = 'pending' AND type = 'sync_sendlit_contact'`),
     pending: index("integration_outbox_jobs_pending_idx").on(
       table.status,
       table.nextAttemptAt,

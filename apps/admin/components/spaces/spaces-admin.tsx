@@ -1,10 +1,11 @@
 "use client";
 
-import { Hash, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { Hash, Package, Plus, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { EmptyState } from "@/components/empty-state";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import type { School } from "@/components/layout/team-switcher";
@@ -49,7 +50,7 @@ type Space = {
   unlocks: SpaceUnlock[];
 };
 
-type CommunityPlan = {
+type AccessPlan = {
   id: string;
   name: string;
   status: "active" | "archived";
@@ -66,7 +67,19 @@ type CommunityPlan = {
   installmentCount?: number | null;
 };
 
-function planSubtitle(plan: CommunityPlan): string {
+type Product = {
+  id: string;
+  title: string;
+  kind: "course" | "download";
+  status: "draft" | "published";
+};
+
+type ProductUnlockDraft = {
+  mode: "all" | "specific";
+  planIds: string[];
+};
+
+function planSubtitle(plan: AccessPlan): string {
   const currency = plan.currency || "USD";
   if (plan.type === "free" || plan.kind === "free") return "Free";
   const oneTimeAmount =
@@ -90,8 +103,7 @@ function planSubtitle(plan: CommunityPlan): string {
     return formatAmount(oneTimeAmount);
   }
   if (plan.type === "emi" || plan.kind === "installment") {
-    const installments =
-      plan.emiTotalInstallments ?? plan.installmentCount ?? 0;
+    const installments = plan.emiTotalInstallments ?? plan.installmentCount ?? 0;
     return `${formatAmount(emiAmount)} × ${installments}`;
   }
   if (plan.type === "subscription" || plan.kind === "subscription") {
@@ -107,13 +119,59 @@ function planSubtitle(plan: CommunityPlan): string {
   return "";
 }
 
+function PlanOption({
+  plan,
+  checked,
+  onCheckedChange,
+}: {
+  plan: AccessPlan;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  const checkboxId = useId();
+  const subtitle = planSubtitle(plan);
+  return (
+    <div
+      className={cn(
+        "flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+        checked
+          ? "bg-primary/10 font-medium text-foreground"
+          : "text-foreground hover:bg-muted/50",
+      )}
+    >
+      <Checkbox
+        id={checkboxId}
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(value === true)}
+      />
+      <label
+        htmlFor={checkboxId}
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2"
+      >
+        <span className="truncate">{plan.name}</span>
+        <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          {subtitle ? <span>{subtitle}</span> : null}
+          {plan.status === "archived" ? (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Archived
+            </span>
+          ) : null}
+        </div>
+      </label>
+    </div>
+  );
+}
+
 type AccessMode = "all_members" | "specific_members";
 
 export function SpacesAdmin() {
   useSetBreadcrumb([{ label: "Spaces" }]);
   const [school, setSchool] = useState<School | null>(null);
   const [spaces, setSpaces] = useState<Space[]>([]);
-  const [communityPlans, setCommunityPlans] = useState<CommunityPlan[]>([]);
+  const [communityPlans, setCommunityPlans] = useState<AccessPlan[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productPlans, setProductPlans] = useState<Record<string, AccessPlan[]>>({});
+  const [loadingProductPlanIds, setLoadingProductPlanIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,8 +188,13 @@ export function SpacesAdmin() {
   const [selectedCommunityPlanIds, setSelectedCommunityPlanIds] = useState<string[]>(
     [],
   );
+  const [selectedProductUnlocks, setSelectedProductUnlocks] = useState<
+    Record<string, ProductUnlockDraft>
+  >({});
 
   const canWrite = hasSchoolPermission(school, "communities:write");
+  const canReadProducts = hasSchoolPermission(school, "products:read");
+  const canReadProductPlans = hasSchoolPermission(school, "storefront:read");
   const selectableCommunityPlans = communityPlans.filter(
     (plan) => plan.status === "active" || selectedCommunityPlanIds.includes(plan.id),
   );
@@ -193,13 +256,44 @@ export function SpacesAdmin() {
       },
     );
     const plansBody = (await plansResponse.json().catch(() => null)) as {
-      items?: CommunityPlan[];
+      items?: AccessPlan[];
       message?: string;
     } | null;
     if (!plansResponse.ok) {
       throw new Error(plansBody?.message ?? "Unable to load community plans.");
     }
     setCommunityPlans(plansBody?.items ?? []);
+  }, []);
+
+  const reloadProducts = useCallback(async (selected: School) => {
+    if (!hasSchoolPermission(selected, "products:read")) {
+      setProducts([]);
+      return;
+    }
+
+    const items: Product[] = [];
+    let cursor: string | null = null;
+    do {
+      const query = new URLSearchParams({ limit: "50" });
+      if (cursor) query.set("cursor", cursor);
+      const response = await fetch(`/api/v1/products?${query.toString()}`, {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "x-school-id": selected.id },
+      });
+      const body = (await response.json().catch(() => null)) as {
+        items?: Product[];
+        nextCursor?: string | null;
+        message?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(body?.message ?? "Unable to load products.");
+      }
+      items.push(...(body?.items ?? []));
+      cursor = body?.nextCursor ?? null;
+    } while (cursor);
+
+    setProducts(items);
   }, []);
 
   useEffect(() => {
@@ -211,7 +305,11 @@ export function SpacesAdmin() {
         const selected = body.items?.find((item) => item.selected) ?? body.items?.[0];
         if (!selected) throw new Error("Create a school before managing spaces.");
         if (active) setSchool(selected);
-        await Promise.all([reload(selected), reloadCommunityPlans(selected)]);
+        await Promise.all([
+          reload(selected),
+          reloadCommunityPlans(selected),
+          reloadProducts(selected),
+        ]);
       })
       .catch((caught: unknown) => {
         if (active) {
@@ -224,7 +322,36 @@ export function SpacesAdmin() {
     return () => {
       active = false;
     };
-  }, [reload, reloadCommunityPlans]);
+  }, [reload, reloadCommunityPlans, reloadProducts]);
+
+  async function ensureProductPlans(productId: string) {
+    if (
+      !canReadProducts ||
+      !canReadProductPlans ||
+      productPlans[productId] ||
+      loadingProductPlanIds.includes(productId)
+    ) {
+      return;
+    }
+    setLoadingProductPlanIds((current) => [...current, productId]);
+    try {
+      const body = await request<{ items?: AccessPlan[] }>(
+        `/api/v1/products/${encodeURIComponent(productId)}/plans`,
+      );
+      setProductPlans((current) => ({
+        ...current,
+        [productId]: body.items ?? [],
+      }));
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to load product payment plans.",
+      );
+    } finally {
+      setLoadingProductPlanIds((current) => current.filter((id) => id !== productId));
+    }
+  }
 
   function startCreate() {
     setError(null);
@@ -237,6 +364,7 @@ export function SpacesAdmin() {
     setWhoCanPost("members");
     setAccessMode("all_members");
     setSelectedCommunityPlanIds([]);
+    setSelectedProductUnlocks({});
   }
 
   function startEdit(space: Space) {
@@ -251,12 +379,31 @@ export function SpacesAdmin() {
     const communityUnlock = space.unlocks.find(
       (unlock) => unlock.entityType === "community",
     );
+    const productUnlocks = space.unlocks.filter(
+      (unlock) => unlock.entityType === "product" && unlock.entityId,
+    );
     setAccessMode(
-      communityUnlock && communityUnlock.planIds.length === 0
+      communityUnlock &&
+        communityUnlock.planIds.length === 0 &&
+        productUnlocks.length === 0
         ? "all_members"
         : "specific_members",
     );
     setSelectedCommunityPlanIds(communityUnlock?.planIds ?? []);
+    setSelectedProductUnlocks(
+      Object.fromEntries(
+        productUnlocks.map((unlock) => [
+          unlock.entityId!,
+          {
+            mode: unlock.planIds.length === 0 ? "all" : "specific",
+            planIds: unlock.planIds,
+          } satisfies ProductUnlockDraft,
+        ]),
+      ),
+    );
+    for (const unlock of productUnlocks) {
+      if (unlock.planIds.length > 0) void ensureProductPlans(unlock.entityId!);
+    }
   }
 
   function closeEditor() {
@@ -279,14 +426,24 @@ export function SpacesAdmin() {
   }
 
   function unlocks(): SpaceUnlock[] {
-    const existingOtherUnlocks =
-      editing?.unlocks.filter((u) => u.entityType !== "community") ?? [];
+    if (accessMode === "all_members") {
+      return [{ entityType: "community", planIds: [] }];
+    }
+
     return [
-      ...existingOtherUnlocks,
-      {
-        entityType: "community",
-        planIds: accessMode === "all_members" ? [] : selectedCommunityPlanIds,
-      },
+      ...(selectedCommunityPlanIds.length > 0
+        ? [
+            {
+              entityType: "community" as const,
+              planIds: selectedCommunityPlanIds,
+            },
+          ]
+        : []),
+      ...Object.entries(selectedProductUnlocks).map(([productId, selection]) => ({
+        entityType: "product" as const,
+        entityId: productId,
+        planIds: selection.mode === "all" ? [] : selection.planIds,
+      })),
     ];
   }
 
@@ -300,11 +457,63 @@ export function SpacesAdmin() {
     );
   }
 
+  function toggleProduct(productId: string, checked: boolean) {
+    setSelectedProductUnlocks((current) => {
+      const next = { ...current };
+      if (checked) {
+        next[productId] ??= { mode: "all", planIds: [] };
+      } else {
+        delete next[productId];
+      }
+      return next;
+    });
+  }
+
+  function setProductUnlockMode(productId: string, mode: "all" | "specific") {
+    setSelectedProductUnlocks((current) => ({
+      ...current,
+      [productId]: {
+        mode,
+        planIds: mode === "all" ? [] : (current[productId]?.planIds ?? []),
+      },
+    }));
+    if (mode === "specific") void ensureProductPlans(productId);
+  }
+
+  function toggleProductPlan(productId: string, planId: string, checked: boolean) {
+    setSelectedProductUnlocks((current) => {
+      const selection = current[productId] ?? { mode: "specific", planIds: [] };
+      const planIds = checked
+        ? selection.planIds.includes(planId)
+          ? selection.planIds
+          : [...selection.planIds, planId]
+        : selection.planIds.filter((id) => id !== planId);
+      return {
+        ...current,
+        [productId]: { mode: "specific", planIds },
+      };
+    });
+  }
+
   async function save() {
     if (!school) return;
-    if (accessMode === "specific_members" && selectedCommunityPlanIds.length === 0) {
-      setError("Select at least one payment plan for specific-member access.");
-      return;
+    if (accessMode === "specific_members") {
+      const productEntries = Object.entries(selectedProductUnlocks);
+      if (selectedCommunityPlanIds.length === 0 && productEntries.length === 0) {
+        setError("Select at least one community plan or product.");
+        return;
+      }
+      const incompleteProduct = productEntries.find(
+        ([, selection]) =>
+          selection.mode === "specific" && selection.planIds.length === 0,
+      );
+      if (incompleteProduct) {
+        const product = products.find((item) => item.id === incompleteProduct[0]);
+        setError(
+          `Select at least one payment plan for ${product?.title ?? "the selected product"}.`,
+        );
+        return;
+      }
     }
     setSaving(true);
     setError(null);
@@ -359,6 +568,22 @@ export function SpacesAdmin() {
     }
   }
 
+  function accessSummary(space: Space): string {
+    const labels = space.unlocks.map((unlock) => {
+      if (unlock.entityType === "community") {
+        return unlock.planIds.length === 0
+          ? "All community members"
+          : `${unlock.planIds.length} community plan${unlock.planIds.length === 1 ? "" : "s"}`;
+      }
+      const product = products.find((item) => item.id === unlock.entityId);
+      const productName = product?.title ?? "Product";
+      return unlock.planIds.length === 0
+        ? `${productName} members`
+        : `${productName}: ${unlock.planIds.length} plan${unlock.planIds.length === 1 ? "" : "s"}`;
+    });
+    return labels.length > 0 ? ` · ${labels.join(" or ")}` : " · Staff only";
+  }
+
   return (
     <AuthGate>
       <main className="page-shell space-y-6">
@@ -380,9 +605,7 @@ export function SpacesAdmin() {
           </p>
         ) : null}
         {loading ? (
-          <div className="rounded-xl border bg-card p-12 text-center text-sm text-muted-foreground">
-            Loading…
-          </div>
+          <CourseLitLoading className="rounded-xl border bg-card p-12" />
         ) : spaces.length === 0 && !creating ? (
           <EmptyState
             icon={Hash}
@@ -401,18 +624,7 @@ export function SpacesAdmin() {
                   <p className="text-sm text-muted-foreground">
                     {space.whoCanPost === "admin" ? "Admins post" : "Members post"}
                     {space.follow ? " · Auto-follow" : ""}
-                    {(() => {
-                      const communityUnlock = space.unlocks.find(
-                        (unlock) => unlock.entityType === "community",
-                      );
-                      if (!communityUnlock) {
-                        return " · Staff-only unless products are attached";
-                      }
-                      if (communityUnlock.planIds.length === 0) {
-                        return " · Community";
-                      }
-                      return ` · ${communityUnlock.planIds.length} community plan${communityUnlock.planIds.length === 1 ? "" : "s"}`;
-                    })()}
+                    {accessSummary(space)}
                   </p>
                 </div>
                 {canWrite ? (
@@ -444,7 +656,7 @@ export function SpacesAdmin() {
             if (!open) closeEditor();
           }}
         >
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit space" : "New space"}</DialogTitle>
               <DialogDescription>
@@ -524,95 +736,246 @@ export function SpacesAdmin() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all_members">All members</SelectItem>
+                        <SelectItem value="all_members">
+                          All community members
+                        </SelectItem>
                         <SelectItem value="specific_members">
-                          Only specific members
+                          Selected plans or products
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {accessMode === "specific_members" ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Payment plans</Label>
-                        {selectableCommunityPlans.length > 1 ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const allIds = selectableCommunityPlans.map((p) => p.id);
-                              const areAllSelected = allIds.every((id) =>
-                                selectedCommunityPlanIds.includes(id),
-                              );
-                              setSelectedCommunityPlanIds(areAllSelected ? [] : allIds);
-                            }}
-                            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-                          >
-                            {selectableCommunityPlans.every((p) =>
-                              selectedCommunityPlanIds.includes(p.id),
-                            )
-                              ? "Deselect all"
-                              : "Select all"}
-                          </button>
-                        ) : null}
-                      </div>
-
-                      {selectableCommunityPlans.length > 0 ? (
-                        <div className="max-h-52 overflow-y-auto rounded-lg border bg-muted/20 p-2 space-y-1">
-                          {selectableCommunityPlans.map((plan) => {
-                            const isChecked = selectedCommunityPlanIds.includes(plan.id);
-                            const subtitle = planSubtitle(plan);
-                            return (
-                              <label
-                                key={plan.id}
-                                className={cn(
-                                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm cursor-pointer transition-colors select-none",
-                                  isChecked
-                                    ? "bg-primary/10 text-foreground font-medium"
-                                    : "hover:bg-muted/50 text-foreground",
-                                )}
-                              >
-                                <Checkbox
-                                  checked={isChecked}
-                                  onCheckedChange={(checked) =>
-                                    toggleCommunityPlan(plan.id, checked === true)
-                                  }
-                                />
-                                <div className="flex flex-1 items-center justify-between min-w-0 gap-2">
-                                  <span className="truncate">{plan.name}</span>
-                                  <div className="flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground">
-                                    {subtitle ? <span>{subtitle}</span> : null}
-                                    {plan.status === "archived" ? (
-                                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                                        Archived
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </label>
-                            );
-                          })}
+                    <div className="space-y-5 rounded-xl border p-4">
+                      <section className="space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <Label>Community payment plans</Label>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Members of any selected community plan get access.
+                            </p>
+                          </div>
+                          {selectableCommunityPlans.length > 1 ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const allIds = selectableCommunityPlans.map(
+                                  (plan) => plan.id,
+                                );
+                                const areAllSelected = allIds.every((id) =>
+                                  selectedCommunityPlanIds.includes(id),
+                                );
+                                setSelectedCommunityPlanIds(
+                                  areAllSelected ? [] : allIds,
+                                );
+                              }}
+                            >
+                              {selectableCommunityPlans.every((plan) =>
+                                selectedCommunityPlanIds.includes(plan.id),
+                              )
+                                ? "Deselect all"
+                                : "Select all"}
+                            </Button>
+                          ) : null}
                         </div>
-                      ) : (
-                        <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                          No active payment plans are available. Create one under{" "}
-                          <Link
-                            href="/community/plans"
-                            className="font-medium text-foreground underline underline-offset-4"
-                          >
-                            Community payment plans
-                          </Link>
-                          .
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Members with any selected payment plan can access this space.</span>
-                        {selectedCommunityPlanIds.length > 0 ? (
-                          <span className="font-medium text-foreground">
-                            {selectedCommunityPlanIds.length} selected
-                          </span>
-                        ) : null}
-                      </div>
+
+                        {selectableCommunityPlans.length > 0 ? (
+                          <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border bg-muted/20 p-2">
+                            {selectableCommunityPlans.map((plan) => (
+                              <PlanOption
+                                key={plan.id}
+                                plan={plan}
+                                checked={selectedCommunityPlanIds.includes(plan.id)}
+                                onCheckedChange={(checked) =>
+                                  toggleCommunityPlan(plan.id, checked)
+                                }
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                            No active community plans are available. Create one under{" "}
+                            <Link
+                              href="/community/plans"
+                              className="font-medium text-foreground underline underline-offset-4"
+                            >
+                              Community payment plans
+                            </Link>
+                            .
+                          </p>
+                        )}
+                      </section>
+
+                      <section className="space-y-3 border-t pt-5">
+                        <div className="flex items-start gap-2">
+                          <Package className="mt-0.5 size-4 text-muted-foreground" />
+                          <div>
+                            <Label>Product access</Label>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Product rules are alternatives to the community plans
+                              selected above.
+                            </p>
+                          </div>
+                        </div>
+
+                        {!canReadProducts ? (
+                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                            Product read permission is required to configure product
+                            access. Existing product rules will be preserved.
+                          </p>
+                        ) : products.length === 0 ? (
+                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                            No products are available. Create one under{" "}
+                            <Link
+                              href="/products/new"
+                              className="font-medium text-foreground underline underline-offset-4"
+                            >
+                              Products
+                            </Link>
+                            .
+                          </p>
+                        ) : (
+                          <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                            {products.map((product) => {
+                              const selection = selectedProductUnlocks[product.id];
+                              const selectedPlanIds = selection?.planIds ?? [];
+                              const plans = (productPlans[product.id] ?? []).filter(
+                                (plan) =>
+                                  plan.status === "active" ||
+                                  selectedPlanIds.includes(plan.id),
+                              );
+                              const plansLoading = loadingProductPlanIds.includes(
+                                product.id,
+                              );
+                              return (
+                                <div
+                                  key={product.id}
+                                  className={cn(
+                                    "rounded-lg border p-3 transition-colors",
+                                    selection ? "bg-muted/20" : "bg-card",
+                                  )}
+                                >
+                                  <div className="flex items-start gap-2.5">
+                                    <Checkbox
+                                      id={`product-toggle-${product.id}`}
+                                      className="mt-0.5"
+                                      checked={Boolean(selection)}
+                                      onCheckedChange={(checked) =>
+                                        toggleProduct(product.id, checked === true)
+                                      }
+                                    />
+                                    <label
+                                      htmlFor={`product-toggle-${product.id}`}
+                                      className="min-w-0 flex-1 cursor-pointer"
+                                    >
+                                      <span className="flex items-center justify-between gap-2">
+                                        <span className="truncate text-sm font-medium">
+                                          {product.title}
+                                        </span>
+                                        <span className="shrink-0 text-xs capitalize text-muted-foreground">
+                                          {product.kind}
+                                          {product.status === "draft" ? " · Draft" : ""}
+                                        </span>
+                                      </span>
+                                    </label>
+                                  </div>
+
+                                  {selection ? (
+                                    <div className="mt-3 space-y-2 pl-7">
+                                      <Select
+                                        value={selection.mode}
+                                        onValueChange={(value) =>
+                                          setProductUnlockMode(
+                                            product.id,
+                                            value as "all" | "specific",
+                                          )
+                                        }
+                                      >
+                                        <SelectTrigger
+                                          id={`product-access-${product.id}`}
+                                        >
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="all">
+                                            Any product membership
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="specific"
+                                            disabled={!canReadProductPlans}
+                                          >
+                                            Selected direct-purchase plans
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+
+                                      {selection.mode === "all" ? (
+                                        <p className="text-xs text-muted-foreground">
+                                          Includes direct purchases and access bundled
+                                          with another plan.
+                                        </p>
+                                      ) : !canReadProductPlans ? (
+                                        <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                                          Storefront read permission is required to
+                                          change this product's selected plans. Existing
+                                          plan selections will be preserved.
+                                        </p>
+                                      ) : plansLoading ? (
+                                        <p
+                                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                                          role="status"
+                                          aria-label="Loading payment plans"
+                                        >
+                                          <CourseLitLoadingIcon size={12} />
+                                        </p>
+                                      ) : plans.length > 0 ? (
+                                        <div className="space-y-1 rounded-lg border bg-card p-2">
+                                          {plans.map((plan) => (
+                                            <PlanOption
+                                              key={plan.id}
+                                              plan={plan}
+                                              checked={selectedPlanIds.includes(
+                                                plan.id,
+                                              )}
+                                              onCheckedChange={(checked) =>
+                                                toggleProductPlan(
+                                                  product.id,
+                                                  plan.id,
+                                                  checked,
+                                                )
+                                              }
+                                            />
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                                          This product has no active payment plans. Add
+                                          one under{" "}
+                                          <Link
+                                            href={`/products/${encodeURIComponent(product.id)}/manage`}
+                                            className="font-medium text-foreground underline underline-offset-4"
+                                          >
+                                            product settings
+                                          </Link>
+                                          .
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+
+                      <p className="border-t pt-3 text-xs text-muted-foreground">
+                        A learner gets access when any selected community plan or
+                        product rule matches an active membership.
+                      </p>
                     </div>
                   ) : null}
                 </div>
@@ -628,13 +991,13 @@ export function SpacesAdmin() {
                 <Button type="button" variant="outline" onClick={closeEditor}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={saving || !name.trim()}>
-                  {saving ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Save className="size-4" />
-                  )}
-                  {saving ? "Saving…" : "Save"}
+                <Button
+                  type="submit"
+                  disabled={saving || !name.trim()}
+                  aria-label={saving ? "Saving" : "Save"}
+                >
+                  {saving ? <CourseLitLoadingIcon size={16} /> : <Save className="size-4" />}
+                  {saving ? null : "Save"}
                 </Button>
               </DialogFooter>
             </form>
@@ -704,13 +1067,10 @@ export function SpacesAdmin() {
                 variant="destructive"
                 onClick={() => void remove()}
                 disabled={saving || !deleteDestinationId}
+                aria-label={saving ? "Deleting space" : "Delete space"}
               >
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Trash2 className="size-4" />
-                )}
-                {saving ? "Deleting…" : "Delete space"}
+                {saving ? <CourseLitLoadingIcon size={16} /> : <Trash2 className="size-4" />}
+                {saving ? null : "Delete space"}
               </Button>
             </DialogFooter>
           </DialogContent>

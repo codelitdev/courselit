@@ -24,6 +24,7 @@ export type MediaUploadPurpose =
   | "certificate_template";
 
 export type MediaAccessPolicy = "public" | "private";
+export type MediaCategory = "library" | "user_uploads";
 
 export type CourseLitMediaRecord = {
   id: string;
@@ -36,6 +37,7 @@ export type CourseLitMediaRecord = {
   width: number | null;
   height: number | null;
   kind: "image" | "video" | "audio" | "document" | "other";
+  category: MediaCategory;
   altText: string;
   caption: string;
   accessPolicy: MediaAccessPolicy;
@@ -161,9 +163,11 @@ export async function uploadCourseLitMedia(
 export async function listCourseLitMedia(
   schoolId: string,
   query = "",
+  category: MediaCategory = "library",
 ): Promise<CourseLitMedia[]> {
   const params = new URLSearchParams({ limit: "50" });
   if (query.trim()) params.set("search", query.trim());
+  params.set("category", category);
   const response = await fetch(`/api/v1/media?${params.toString()}`, {
     credentials: "include",
     cache: "no-store",

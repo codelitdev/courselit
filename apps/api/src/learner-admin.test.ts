@@ -93,7 +93,7 @@ describe.serial("admin learner management", () => {
 
     const roster = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/learners?limit=10",
+      path: "/v1/contacts?rowsPerPage=10",
       headers: adminHeaders,
     });
     expect(roster.status).toBe(200);
@@ -108,20 +108,19 @@ describe.serial("admin learner management", () => {
     });
     const learnerId = item!.id;
 
-    const invalidCursor = await dispatch(runtime, {
+    const invalidPage = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/learners?cursor=not-a-cursor",
+      path: "/v1/contacts?page=0",
       headers: adminHeaders,
     });
-    expect(invalidCursor.status).toBe(400);
-    expect(invalidCursor.body).toMatchObject({
+    expect(invalidPage.status).toBe(400);
+    expect(invalidPage.body).toMatchObject({
       code: "validation_failed",
-      details: { reason: "invalid_cursor" },
     });
 
     const suspended = await dispatch(runtime, {
       method: "PATCH",
-      path: `/v1/learners/${learnerId}`,
+      path: `/v1/contacts/${learnerId}`,
       headers: { ...adminHeaders, "x-request-id": "req_learner_suspend" },
       body: { status: "deactivated" },
     });
@@ -140,7 +139,7 @@ describe.serial("admin learner management", () => {
 
     const restored = await dispatch(runtime, {
       method: "PATCH",
-      path: `/v1/learners/${learnerId}`,
+      path: `/v1/contacts/${learnerId}`,
       headers: adminHeaders,
       body: { status: "active" },
     });
@@ -209,7 +208,7 @@ describe.serial("admin learner management", () => {
 
     const roster = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/learners?limit=50",
+      path: "/v1/contacts?rowsPerPage=50",
       headers: adminHeaders,
     });
     const learnerId = (
@@ -220,7 +219,7 @@ describe.serial("admin learner management", () => {
     const learnerCookies = `${learnerCookie}; ${betterAuthCookie}`;
     const deactivated = await dispatch(runtime, {
       method: "PATCH",
-      path: `/v1/learners/${learnerId}`,
+      path: `/v1/contacts/${learnerId}`,
       headers: adminHeaders,
       body: { status: "deactivated" },
     });
@@ -238,7 +237,7 @@ describe.serial("admin learner management", () => {
 
     const reactivated = await dispatch(runtime, {
       method: "PATCH",
-      path: `/v1/learners/${learnerId}`,
+      path: `/v1/contacts/${learnerId}`,
       headers: adminHeaders,
       body: { status: "active" },
     });
@@ -277,17 +276,18 @@ describe.serial("admin learner management", () => {
       .select()
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
-    const communityId = communityRow!.id;
-    const communityPublicId = communityRow!.publicId;
-    await runtime.db.insert(schema.communityMemberships).values({
+    await runtime.db.insert(schema.learnerMemberships).values({
       id: uuidv7(clock),
-      publicId: createPublicId("cmm", clock),
+      publicId: createPublicId("lrm", clock),
       schoolId: world.schoolA.id,
-      communityId,
       paymentPlanId: null,
       schoolAccountId: ownerAccountId,
+      entityType: "community",
+      entityId: communityRow!.publicId,
+      isIncludedInPlan: false,
+      parentMembershipId: null,
       status: "active",
-      role: "owner",
+      role: "moderate",
       joiningReason: "",
       rejectionReason: null,
       createdAt: now,
@@ -303,19 +303,6 @@ describe.serial("admin learner management", () => {
       );
     expect(accounts).toHaveLength(1);
     expect(accounts[0]!.email).toBe(world.owner.email);
-
-    // Calling identity-link returns a valid token for backward-compatibility
-    const adminHeaders = {
-      cookie: world.owner.sessionCookie,
-      "x-school-id": world.schoolA.publicId,
-    };
-    const link = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learners/identity-link",
-      headers: adminHeaders,
-      body: {},
-    });
-    expect(link.status).toBe(201);
 
     await runtime.close();
   });

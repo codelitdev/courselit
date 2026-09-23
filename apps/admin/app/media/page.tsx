@@ -16,6 +16,7 @@ import {
   type CourseLitMedia,
   listCourseLitMedia,
   type MediaAccessPolicy,
+  type MediaCategory,
   type MediaUploadPurpose,
   useCourseLitMediaUploader,
 } from "@/lib/course-media-uploader";
@@ -28,6 +29,7 @@ export default function MediaPage() {
   const [items, setItems] = useState<CourseLitMedia[]>([]);
   const [search, setSearch] = useState("");
   const [purpose, setPurpose] = useState<MediaUploadPurpose>("product_artwork");
+  const [category, setCategory] = useState<MediaCategory>("library");
   const [accessPolicy, setAccessPolicy] = useState<MediaAccessPolicy>("private");
   const [error, setError] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -37,9 +39,9 @@ export default function MediaPage() {
     accessPolicy,
   });
 
-  async function load(selected: School, nextSearch = search) {
+  async function load(selected: School, nextSearch = search, nextCategory = category) {
     try {
-      setItems(await listCourseLitMedia(selected.id, nextSearch));
+      setItems(await listCourseLitMedia(selected.id, nextSearch, nextCategory));
       setError(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to load media.");
@@ -55,7 +57,7 @@ export default function MediaPage() {
         setSchool(selected);
         if (selected) {
           try {
-            setItems(await listCourseLitMedia(selected.id));
+            setItems(await listCourseLitMedia(selected.id, "", "library"));
           } catch (caught) {
             setError(
               caught instanceof Error ? caught.message : "Unable to load media.",
@@ -74,6 +76,10 @@ export default function MediaPage() {
       return;
     }
     const media = selected.media;
+    if (category !== "library") {
+      if (school) void load(school, search, category);
+      return;
+    }
     setItems((current) => [media, ...current.filter((item) => item.id !== media.id)]);
     setError(null);
   }
@@ -129,6 +135,25 @@ export default function MediaPage() {
 
         <section className="rounded-xl border bg-card p-5 space-y-4">
           <div className="flex flex-wrap items-end gap-3">
+            <div className="grid gap-1 text-sm">
+              <span className="font-medium">Category</span>
+              <Select
+                value={category}
+                onValueChange={(value) => {
+                  const nextCategory = value as MediaCategory;
+                  setCategory(nextCategory);
+                  if (school) void load(school, search, nextCategory);
+                }}
+              >
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="library">Media library</SelectItem>
+                  <SelectItem value="user_uploads">User uploads</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid gap-1 text-sm">
               <span className="font-medium">Purpose</span>
               <Select

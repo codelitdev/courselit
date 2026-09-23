@@ -653,7 +653,7 @@ export async function getFrontLitBlog(
 }
 
 /** Public site reads are intentionally made by the CourseLit API adapter, not
- * by the learners app. The remote public team id is kept server-side. */
+ * by the storefront app. The remote public team id is kept server-side. */
 export async function getPublicFrontLitSettings(
   remoteTeamId: string,
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},

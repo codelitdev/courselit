@@ -19,8 +19,6 @@ export const LEARNER_NOTIFICATION_TYPES = [
   "community_reply",
   "community_reply_liked",
   "community_membership_granted",
-  "course_discussion_comment_created",
-  "course_discussion_reacted",
 ] as const;
 export type LearnerNotificationType = (typeof LEARNER_NOTIFICATION_TYPES)[number];
 

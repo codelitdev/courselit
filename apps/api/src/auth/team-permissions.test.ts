@@ -13,8 +13,8 @@ import {
 } from "@courselit/api-contract";
 
 describe("team permissions catalog and algebra", () => {
-  it("contains exactly 36 stable permissions and no school:admin", () => {
-    expect(COURSELIT_PERMISSIONS).toHaveLength(36);
+  it("contains exactly 35 stable permissions and no school:admin", () => {
+    expect(COURSELIT_PERMISSIONS).toHaveLength(35);
     expect((COURSELIT_PERMISSIONS as readonly string[]).includes("school:admin")).toBe(false);
     expect(OWNER_PERMISSIONS).toEqual([...COURSELIT_PERMISSIONS]);
   });
@@ -68,12 +68,12 @@ describe("team permissions catalog and algebra", () => {
 
     const communityManager = expandCourseLitPermissionPreset("community_manager");
     expect(communityManager).toContain("communities:moderate");
-    expect(communityManager).toContain("learners:read");
+    expect(communityManager).toContain("contacts:read");
     expect(communityManager).not.toContain("products:write");
 
     const support = expandCourseLitPermissionPreset("support");
     expect(support).toContain("products:read");
-    expect(support).toContain("learners:write");
+    expect(support).toContain("contacts:write");
     expect(support).toContain("communities:moderate");
     expect(support).toContain("commerce:read");
     expect(support).not.toContain("products:write");

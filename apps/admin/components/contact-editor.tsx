@@ -6,8 +6,9 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { PageHeader } from "@/components/layout/page-header";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -16,35 +17,48 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/codelit/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Switch } from "@/components/ui/codelit/switch";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 
-type School = { id: string };
-
-type Contact = {
-  contactId: string;
-  email: string;
-  name?: string | null;
-  subscribed: boolean;
-  customFields?: Record<string, unknown>;
-  tags: string[];
-  createdAt?: string | null;
-  updatedAt?: string | null;
+type School = {
+  id: string;
+  permissions?: readonly string[];
 };
 
-type Learner = {
+type Contact = {
   id: string;
+  schoolId: string;
   email: string;
   name: string;
-  status: "active" | "deactivated";
+  bio: string;
+  avatar: { url: string; thumbnailUrl?: string | null } | null;
+  status: "active" | "deactivated" | "deletion_pending";
+  registrationStatus: "registered" | "newsletter_only";
+  createdAt: string;
+  updatedAt: string;
+  lastActiveAt: string | null;
+  marketing: {
+    subscribed: boolean;
+    tags: string[];
+  };
 };
 
 type ContactForm = {
   name: string;
+  bio: string;
+  status: "active" | "deactivated";
   subscribed: boolean;
   tags: string[];
-  learnerStatus: Learner["status"] | null;
 };
 
 function sameTags(left: string[], right: string[]) {
@@ -55,26 +69,25 @@ function sameTags(left: string[], right: string[]) {
 
 export function ContactEditor({
   contactId,
-  learnerId,
 }: {
   contactId: string;
-  learnerId?: string;
 }) {
   const router = useRouter();
   const [school, setSchool] = useState<School | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
-  const [learner, setLearner] = useState<Learner | null>(null);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
   const [form, setForm] = useState<ContactForm>({
     name: "",
+    bio: "",
+    status: "active",
     subscribed: false,
     tags: [],
-    learnerStatus: null,
   });
   const initialForm = useRef<ContactForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -98,54 +111,43 @@ export function ContactEditor({
         if (!selected) throw new Error("No school is selected.");
 
         const headers = { "x-school-id": selected.id };
-        const [contactResponse, subscribersResponse, learnersResponse] =
-          await Promise.all([
-            fetch(`/api/v1/school/mails/subscribers/${encodeURIComponent(contactId)}`, {
-              cache: "no-store",
-              credentials: "include",
-              headers,
-            }),
-            fetch("/api/v1/school/mails/subscribers?limit=50", {
-              cache: "no-store",
-              credentials: "include",
-              headers,
-            }),
-            learnerId
-              ? fetch("/api/v1/learners?limit=50", {
-                  cache: "no-store",
-                  credentials: "include",
-                  headers,
-                })
-              : Promise.resolve(null),
-          ]);
+        const [contactResponse, contactsListResponse] = await Promise.all([
+          fetch(`/api/v1/contacts/${encodeURIComponent(contactId)}`, {
+            cache: "no-store",
+            credentials: "include",
+            headers,
+          }),
+          fetch("/api/v1/contacts?rowsPerPage=100", {
+            cache: "no-store",
+            credentials: "include",
+            headers,
+          }),
+        ]);
+
         if (!contactResponse.ok) {
           throw new Error("Unable to load contact.");
         }
 
         const loadedContact = (await contactResponse.json()) as Contact;
-        const subscribersBody = subscribersResponse.ok
-          ? ((await subscribersResponse.json()) as { items?: Contact[] })
+        const contactsListBody = contactsListResponse.ok
+          ? ((await contactsListResponse.json()) as { items?: Contact[] })
           : { items: [] };
-        const learnersBody = learnersResponse?.ok
-          ? ((await learnersResponse.json()) as { items?: Learner[] })
-          : { items: [] };
-        const loadedLearner =
-          learnersBody.items?.find((item) => item.id === learnerId) ?? null;
-        const options = new Set<string>(loadedContact.tags ?? []);
-        for (const subscriber of subscribersBody.items ?? []) {
-          for (const tag of subscriber.tags ?? []) options.add(tag);
+
+        const options = new Set<string>(loadedContact.marketing?.tags ?? []);
+        for (const c of contactsListBody.items ?? []) {
+          for (const tag of c.marketing?.tags ?? []) options.add(tag);
         }
 
         if (!active) return;
-        const loadedForm = {
+        const loadedForm: ContactForm = {
           name: loadedContact.name ?? "",
-          subscribed: loadedContact.subscribed,
-          tags: [...(loadedContact.tags ?? [])],
-          learnerStatus: loadedLearner?.status ?? null,
+          bio: loadedContact.bio ?? "",
+          status: loadedContact.status === "deactivated" ? "deactivated" : "active",
+          subscribed: loadedContact.marketing?.subscribed ?? false,
+          tags: [...(loadedContact.marketing?.tags ?? [])],
         };
         setSchool(selected);
         setContact(loadedContact);
-        setLearner(loadedLearner);
         setForm(loadedForm);
         initialForm.current = loadedForm;
         setTagOptions(Array.from(options).sort());
@@ -164,14 +166,15 @@ export function ContactEditor({
     return () => {
       active = false;
     };
-  }, [contactId, learnerId]);
+  }, [contactId]);
 
   const hasChanges = Boolean(
     initialForm.current &&
       (form.name.trim() !== initialForm.current.name.trim() ||
+        form.bio.trim() !== initialForm.current.bio.trim() ||
+        form.status !== initialForm.current.status ||
         form.subscribed !== initialForm.current.subscribed ||
-        !sameTags(form.tags, initialForm.current.tags) ||
-        form.learnerStatus !== initialForm.current.learnerStatus),
+        !sameTags(form.tags, initialForm.current.tags)),
   );
 
   async function saveContact(event: FormEvent<HTMLFormElement>) {
@@ -182,22 +185,23 @@ export function ContactEditor({
     setSaved(false);
     setError(null);
     try {
-      const contactChanged = Boolean(
+      const profileChanged = Boolean(
         initialForm.current &&
           (form.name.trim() !== initialForm.current.name.trim() ||
-            form.subscribed !== initialForm.current.subscribed ||
-            !sameTags(form.tags, initialForm.current.tags)),
+            form.bio.trim() !== initialForm.current.bio.trim() ||
+            form.status !== initialForm.current.status),
       );
-      const learnerChanged = Boolean(
-        learner &&
-          initialForm.current &&
-          form.learnerStatus !== initialForm.current.learnerStatus,
+      const marketingChanged = Boolean(
+        initialForm.current &&
+          (form.subscribed !== initialForm.current.subscribed ||
+            !sameTags(form.tags, initialForm.current.tags)),
       );
 
       let updatedContact = contact;
-      if (contactChanged) {
+
+      if (profileChanged) {
         const response = await fetch(
-          `/api/v1/school/mails/subscribers/${encodeURIComponent(contact.contactId)}`,
+          `/api/v1/contacts/${encodeURIComponent(contact.id)}`,
           {
             method: "PATCH",
             credentials: "include",
@@ -207,6 +211,31 @@ export function ContactEditor({
             },
             body: JSON.stringify({
               name: form.name.trim(),
+              bio: form.bio.trim(),
+              status: form.status,
+            }),
+          },
+        );
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as {
+            message?: string;
+          } | null;
+          throw new Error(body?.message ?? "Unable to save contact profile.");
+        }
+        updatedContact = (await response.json()) as Contact;
+      }
+
+      if (marketingChanged) {
+        const response = await fetch(
+          `/api/v1/contacts/${encodeURIComponent(contact.id)}/marketing`,
+          {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+              "content-type": "application/json",
+              "x-school-id": school.id,
+            },
+            body: JSON.stringify({
               subscribed: form.subscribed,
               tags: form.tags,
             }),
@@ -216,37 +245,26 @@ export function ContactEditor({
           const body = (await response.json().catch(() => null)) as {
             message?: string;
           } | null;
-          throw new Error(body?.message ?? "Unable to save contact.");
+          throw new Error(body?.message ?? "Unable to save contact marketing.");
         }
-        updatedContact = (await response.json()) as Contact;
+        const marketingData = (await response.json()) as {
+          subscribed: boolean;
+          tags: string[];
+        };
+        updatedContact = {
+          ...updatedContact,
+          marketing: marketingData,
+        };
       }
 
-      let updatedLearner = learner;
-      if (learnerChanged && learner) {
-        const response = await fetch(
-          `/api/v1/learners/${encodeURIComponent(learner.id)}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-              "content-type": "application/json",
-              "x-school-id": school.id,
-            },
-            body: JSON.stringify({ status: form.learnerStatus }),
-          },
-        );
-        if (!response.ok) throw new Error("Unable to update account status.");
-        updatedLearner = (await response.json()) as Learner;
-      }
-
-      const updatedForm = {
+      const updatedForm: ContactForm = {
         name: updatedContact.name ?? "",
-        subscribed: updatedContact.subscribed,
-        tags: [...(updatedContact.tags ?? [])],
-        learnerStatus: updatedLearner?.status ?? null,
+        bio: updatedContact.bio ?? "",
+        status: updatedContact.status === "deactivated" ? "deactivated" : "active",
+        subscribed: updatedContact.marketing?.subscribed ?? false,
+        tags: [...(updatedContact.marketing?.tags ?? [])],
       };
       setContact(updatedContact);
-      setLearner(updatedLearner);
       setForm(updatedForm);
       initialForm.current = updatedForm;
       setTagOptions((current) =>
@@ -262,13 +280,12 @@ export function ContactEditor({
 
   async function deleteContact() {
     if (!school || !contact || deleting) return;
-    if (!window.confirm("Remove this contact from the audience?")) return;
 
     setDeleting(true);
     setError(null);
     try {
       const response = await fetch(
-        `/api/v1/school/mails/subscribers/${encodeURIComponent(contact.contactId)}`,
+        `/api/v1/contacts/${encodeURIComponent(contact.id)}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -283,6 +300,7 @@ export function ContactEditor({
     }
   }
 
+  const canDeleteContacts = hasSchoolPermission(school, "contacts:delete");
   const displayName = contact?.name?.trim() || contact?.email || "Contact";
   const initials = displayName.slice(0, 1).toUpperCase();
 
@@ -294,9 +312,22 @@ export function ContactEditor({
           description={contact?.email ?? "Edit contact details and audience settings."}
           action={
             contact ? (
-              <Badge variant={form.subscribed ? "success" : "outline"}>
-                {form.subscribed ? "Subscribed" : "Unsubscribed"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    contact.registrationStatus === "registered"
+                      ? "default"
+                      : "neutral"
+                  }
+                >
+                  {contact.registrationStatus === "registered"
+                    ? "Learner"
+                    : "Newsletter only"}
+                </Badge>
+                <Badge variant={form.subscribed ? "success" : "outline"}>
+                  {form.subscribed ? "Subscribed" : "Unsubscribed"}
+                </Badge>
+              </div>
             ) : null
           }
         />
@@ -313,9 +344,7 @@ export function ContactEditor({
         ) : null}
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-muted-foreground">
-            Loading contact…
-          </div>
+          <CourseLitLoading label="Loading contact…" className="p-12" />
         ) : contact ? (
           <>
             <form onSubmit={saveContact} className="space-y-6">
@@ -330,6 +359,12 @@ export function ContactEditor({
                   <CardContent className="space-y-5">
                     <div className="flex items-center gap-3 rounded-[var(--radius)] border bg-muted/20 p-3">
                       <Avatar>
+                        {contact.avatar ? (
+                          <AvatarImage
+                            src={contact.avatar.thumbnailUrl ?? contact.avatar.url}
+                            alt={displayName}
+                          />
+                        ) : null}
                         <AvatarFallback>{initials}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
@@ -366,6 +401,21 @@ export function ContactEditor({
                         }}
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="contact-bio">Bio</Label>
+                      <Input
+                        id="contact-bio"
+                        value={form.bio}
+                        placeholder="Learner bio or notes"
+                        onChange={(event) => {
+                          setSaved(false);
+                          setForm((current) => ({
+                            ...current,
+                            bio: event.target.value,
+                          }));
+                        }}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -373,7 +423,7 @@ export function ContactEditor({
                   <CardHeader>
                     <CardTitle>Account status</CardTitle>
                     <CardDescription>
-                      Manage access to marketing mail and the learner account.
+                      Manage access to marketing mail and portal sign-in.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -395,29 +445,28 @@ export function ContactEditor({
                         }}
                       />
                     </div>
-                    {learner ? (
-                      <div className="flex items-start justify-between gap-4 rounded-[var(--radius)] border p-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="learner-status">Learner account</Label>
-                          <p className="text-xs text-muted-foreground">
-                            {form.learnerStatus === "active"
-                              ? "This learner can sign in to the portal."
-                              : "This learner cannot sign in to the portal."}
-                          </p>
-                        </div>
-                        <Switch
-                          id="learner-status"
-                          checked={form.learnerStatus === "active"}
-                          onCheckedChange={(checked) => {
-                            setSaved(false);
-                            setForm((current) => ({
-                              ...current,
-                              learnerStatus: checked ? "active" : "deactivated",
-                            }));
-                          }}
-                        />
+
+                    <div className="flex items-start justify-between gap-4 rounded-[var(--radius)] border p-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="contact-status">Portal access</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {form.status === "active"
+                            ? "This contact is active and can sign in."
+                            : "This contact is deactivated."}
+                        </p>
                       </div>
-                    ) : null}
+                      <Switch
+                        id="contact-status"
+                        checked={form.status === "active"}
+                        onCheckedChange={(checked) => {
+                          setSaved(false);
+                          setForm((current) => ({
+                            ...current,
+                            status: checked ? "active" : "deactivated",
+                          }));
+                        }}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -459,26 +508,60 @@ export function ContactEditor({
               </div>
             </form>
 
-            <Card className="border-destructive/40">
-              <CardHeader>
-                <CardTitle className="text-destructive">Danger zone</CardTitle>
-                <CardDescription>
-                  Removing a contact takes them out of this school&apos;s mailing
-                  audience.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={deleting}
-                  onClick={() => void deleteContact()}
-                >
-                  <Trash2 className="size-4" />
-                  {deleting ? "Removing…" : "Remove contact"}
-                </Button>
-              </CardContent>
-            </Card>
+            {canDeleteContacts ? (
+              <Card className="border-destructive/40">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Danger zone</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={deleting}
+                    onClick={() => setRemoveDialogOpen(true)}
+                  >
+                    <Trash2 className="size-4" />
+                    {deleting ? "Removing…" : "Remove contact"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            <Dialog
+              open={removeDialogOpen}
+              onOpenChange={(open) => {
+                if (!deleting) setRemoveDialogOpen(open);
+              }}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Remove this contact?</DialogTitle>
+                  <DialogDescription>
+                    This initiates coordinated removal of the contact from the school,
+                    including their profile, learning records, tags, and subscription settings.
+                    This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setRemoveDialogOpen(false)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => void deleteContact()}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Removing…" : "Remove contact"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         ) : null}
       </main>

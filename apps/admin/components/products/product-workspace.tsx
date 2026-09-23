@@ -42,6 +42,7 @@ import {
   useState,
 } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { PermissionMessage } from "@/components/permission-message";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
@@ -71,7 +72,7 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
-import { learnerUrl } from "@/lib/learner-url";
+import { storefrontUrl } from "@/lib/storefront-url";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { cn } from "@/lib/utils";
 import { PaymentPlanList } from "./payment-plan-list";
@@ -793,14 +794,14 @@ export function ProductWorkspace({
         `/api/v1/products/${encodeURIComponent(productId)}/preview`,
         { method: "POST", body: JSON.stringify({ ttlSeconds: 900 }) },
       );
-      const learnerOrigin = process.env.NEXT_PUBLIC_LEARNER_ORIGIN;
-      if (!learnerOrigin) {
+      const storefrontOrigin = process.env.NEXT_PUBLIC_STOREFRONT_ORIGIN;
+      if (!storefrontOrigin) {
         setNotice(
-          "Preview token created. Set NEXT_PUBLIC_LEARNER_ORIGIN to open it automatically.",
+          "Preview token created. Set NEXT_PUBLIC_STOREFRONT_ORIGIN to open it automatically.",
         );
       } else {
         window.open(
-          `${learnerOrigin.replace(/\/$/, "")}/courses/${encodeURIComponent(productId)}#preview=${encodeURIComponent(grant.token)}`,
+          `${storefrontOrigin.replace(/\/$/, "")}/courses/${encodeURIComponent(productId)}#preview=${encodeURIComponent(grant.token)}`,
           "_blank",
           "noopener,noreferrer",
         );
@@ -846,7 +847,7 @@ export function ProductWorkspace({
   async function shareProduct() {
     if (!product) return;
     const publicProductPath = product.slug ? `/p/${encodeURIComponent(product.slug)}` : `/product/${encodeURIComponent(product.id)}`;
-    const url = learnerUrl(publicProductPath, school?.subdomain);
+    const url = storefrontUrl(publicProductPath, school?.subdomain);
     if (!url) {
       setError("Unable to build the public product URL.");
       return;
@@ -925,9 +926,7 @@ export function ProductWorkspace({
     return (
       <AuthGate>
         <main className="page-shell">
-          <div className="rounded-xl border bg-card p-12 text-center text-sm text-muted-foreground">
-            Loading product…
-          </div>
+          <CourseLitLoading label="Loading product…" className="rounded-xl border bg-card p-12" />
         </main>
       </AuthGate>
     );
@@ -947,7 +946,7 @@ export function ProductWorkspace({
 
   const TypeIcon = product.kind === "course" ? BookOpen : Download;
   const canWriteProducts = hasSchoolPermission(school, "products:write");
-  const canInviteCustomers = hasSchoolPermission(school, "learners:write");
+  const canInviteCustomers = hasSchoolPermission(school, "contacts:write");
   const canEditWebsite = hasSchoolPermission(school, "storefront:write");
   const hasActivePaymentPlan = plans.some((plan) => plan.status === "active");
   const canEditSalesPage = Boolean(product.salesPage?.pageId && canEditWebsite);
@@ -1750,7 +1749,7 @@ export function ProductWorkspace({
                   <div>
                     <h2 className="font-semibold">Discussions</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Enable lesson-specific discussions for this course
+                      Enable a discussion space for this course
                     </p>
                   </div>
                   <Switch
@@ -1761,15 +1760,6 @@ export function ProductWorkspace({
                     disabled={saving}
                   />
                 </div>
-                {discussionsDraft ? (
-                  <div>
-                    <Button asChild variant="outline">
-                      <Link href={`${productRoot}/manage/discussions/reports`}>
-                        Manage reported content
-                      </Link>
-                    </Button>
-                  </div>
-                ) : null}
               </section>
             ) : null}
 

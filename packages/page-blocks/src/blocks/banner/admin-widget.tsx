@@ -6,12 +6,13 @@ import { BannerEditor, FieldGroup, SelectField } from "../_shared/fields";
 import { salesData } from "../shared/utils";
 import type { BannerSettings } from "./settings";
 
-export default function BannerAdminWidget({
-  settings,
-  onChange,
-  pageData,
-}: WidgetEditorProps<BannerSettings>) {
-  const assumedProduct = salesData(pageData)?.resourceType === "product";
+export default function BannerAdminWidget(
+  props: WidgetEditorProps<BannerSettings> & {
+    pageData?: Parameters<typeof salesData>[0];
+  },
+) {
+  const { settings, onChange, pageData } = props;
+  const assumedProduct = pageData ? salesData(pageData)?.resourceType === "product" : false;
   const [products, setProducts] = useState<Array<{ id: string; title: string }>>([]);
   useEffect(() => {
     if (assumedProduct) return;

@@ -53,28 +53,10 @@ const communityParityExemptions = [
   ["setDefaultCommunityPlan", "communities.plans.default"],
   ["archiveCommunityPlan", "communities.plans.archive"],
   ["listLearnerProducts", "learner.products.list"],
-  ["joinLearnerCommunity", "learner.communities.join"],
   ["leaveLearnerCommunity", "learner.communities.leave"],
   ["listLearnerCommunityPlans", "learner.communities.plans.list"],
   ["startLearnerCommunityCheckout", "learner.communities.checkout.start"],
   ["getLearnerCommunityCheckout", "learner.communities.checkout.get"],
-  ["listDiscussionReports", "products.discussions.reports.list"],
-  ["updateDiscussionReport", "products.discussions.reports.update"],
-  ["listLearnerDiscussionComments", "learner.discussions.comments.list"],
-  ["createLearnerDiscussionComment", "learner.discussions.comments.create"],
-  ["updateLearnerDiscussionComment", "learner.discussions.comments.update"],
-  ["deleteLearnerDiscussionComment", "learner.discussions.comments.delete"],
-  ["listLearnerDiscussionReplies", "learner.discussions.replies.list"],
-  ["createLearnerDiscussionReply", "learner.discussions.replies.create"],
-  ["updateLearnerDiscussionReply", "learner.discussions.replies.update"],
-  ["deleteLearnerDiscussionReply", "learner.discussions.replies.delete"],
-  ["toggleLearnerDiscussionLike", "learner.discussions.likes.toggle"],
-  ["toggleLearnerDiscussionSubscription", "learner.discussions.subscriptions.toggle"],
-  ["createLearnerDiscussionReport", "learner.discussions.reports.create"],
-  ["listLearnerDiscussionSummaries", "learner.discussions.summaries.list"],
-  ["listPreviewDiscussionComments", "preview.discussions.comments.list"],
-  ["listPreviewDiscussionSummaries", "preview.discussions.summaries.list"],
-  ["listPreviewDiscussionReplies", "preview.discussions.replies.list"],
   ["getPublicSiteSettings", "public.site.settings.get"],
   ["getPublicSitePage", "public.site.pages.get"],
   ["listPublicSiteBlogs", "public.site.blogs.list"],
@@ -206,6 +188,17 @@ export const mcpParityManifest = [
     },
   },
   {
+    capability: "public.newsletter.subscribe",
+    rest: { operationId: "subscribeNewsletter" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Public newsletter signup is a storefront visitor form and is not exposed as an administrative MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "learner.download.createLink",
     rest: { operationId: "learnerCreateDownloadLink" },
     parity: "exempt",
@@ -292,6 +285,28 @@ export const mcpParityManifest = [
     exemption: {
       reason:
         "Product analytics is an admin dashboard read model and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "products.customers.list",
+    rest: { operationId: "listProductCustomers" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Product customer progress is an admin dashboard read model and is not exposed as a CourseLit MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "products.customers.progress",
+    rest: { operationId: "getProductCustomerProgress" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Product customer lesson progress is an admin dashboard read model and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -646,34 +661,109 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "learners.list",
-    rest: { operationId: "listLearners" },
+    capability: "contacts.list",
+    risk: "read",
+    rest: { operationId: "listContacts" },
+    mcp: { tool: "contacts.list" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.get",
+    risk: "read",
+    rest: { operationId: "getContact" },
+    mcp: { tool: "contacts.get" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.update",
+    risk: "write",
+    rest: { operationId: "updateContact" },
+    mcp: { tool: "contacts.update" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.marketing.update",
+    risk: "write",
+    rest: { operationId: "updateContactMarketing" },
+    mcp: { tool: "contacts.marketing.update" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.delete",
+    risk: "destructive",
+    rest: { operationId: "deleteContact" },
+    mcp: { tool: "contacts.delete" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.segments.list",
+    risk: "read",
+    rest: { operationId: "listContactSegments" },
+    mcp: { tool: "contacts.segments.list" },
+    parity: "required",
+  },
+  {
+    capability: "contacts.filterPreview",
+    rest: { operationId: "filterPreviewContacts" },
     parity: "exempt",
     exemption: {
       reason:
-        "Learner roster administration is a browser/admin workflow and is not an MCP tool.",
+        "Filter preview is a browser UI building interaction and is not exposed as an MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "learners.update",
-    rest: { operationId: "updateLearner" },
+    capability: "contacts.segments.create",
+    rest: { operationId: "createContactSegment" },
     parity: "exempt",
     exemption: {
       reason:
-        "Learner lifecycle administration is a browser/admin workflow and is not an MCP tool.",
+        "Segment creation is an admin browser workflow and is not exposed as an MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "learners.identityLink.create",
-    rest: { operationId: "createLearnerIdentityLink" },
+    capability: "contacts.segments.get",
+    rest: { operationId: "getContactSegment" },
     parity: "exempt",
     exemption: {
       reason:
-        "Admin-to-learner identity handoff is a browser workflow and is not an MCP tool.",
+        "Segment retrieval is an admin browser workflow and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "contacts.segments.update",
+    rest: { operationId: "updateContactSegment" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Segment editing is an admin browser workflow and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "contacts.segments.delete",
+    rest: { operationId: "deleteContactSegment" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Segment deletion is an admin browser workflow and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "contacts.segments.members",
+    rest: { operationId: "getContactSegmentMembers" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Segment member browsing is an admin browser workflow and is not exposed as an MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },

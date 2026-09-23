@@ -27,7 +27,29 @@ export type School = {
   status?: string;
   permissions?: readonly CourseLitPermission[];
   selected?: boolean;
+  website?: {
+    logo: { url: string; thumbnailUrl?: string | null } | null;
+  };
 };
+
+function SchoolMark({ school, className }: { school?: School; className?: string }) {
+  const logo = school?.website?.logo;
+  return (
+    <div
+      className={`flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--primary-soft)] ${className ?? ""}`}
+    >
+      {logo ? (
+        <img
+          src={logo.url}
+          alt=""
+          className="size-full object-cover"
+        />
+      ) : (
+        <CourseLitLogo className="size-full" />
+      )}
+    </div>
+  );
+}
 
 export function TeamSwitcher({
   schools,
@@ -78,9 +100,7 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-[var(--primary-soft)]">
-                <CourseLitLogo className="size-8" />
-              </div>
+              <SchoolMark school={currentSchool} className="size-8" />
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{title}</span>
                 <span className="truncate text-xs text-muted-foreground">
@@ -113,9 +133,7 @@ export function TeamSwitcher({
                     className="gap-2 p-2 cursor-pointer flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-md border text-xs font-medium">
-                        {(school.name || "S").slice(0, 1).toUpperCase()}
-                      </span>
+                      <SchoolMark school={school} className="size-6 border text-xs font-medium" />
                       <div className="flex flex-col min-w-0 flex-1">
                         <span className="min-w-0 truncate text-sm font-medium">
                           {school.name}

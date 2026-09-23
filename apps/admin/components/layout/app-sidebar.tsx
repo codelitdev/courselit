@@ -77,7 +77,7 @@ const CREATE_NAV: PermissionedNavItem[] = [
     href: "/contacts",
     label: "Contacts",
     icon: Contact,
-    requiredPermission: "learners:read",
+    requiredPermission: "contacts:read",
   },
   {
     href: "#",
@@ -87,22 +87,22 @@ const CREATE_NAV: PermissionedNavItem[] = [
       {
         href: "/mails?tab=broadcasts",
         label: "Broadcasts",
-        requiredPermission: "learners:read",
+        requiredPermission: "contacts:read",
       },
       {
         href: "/mails?tab=sequences",
         label: "Sequences",
-        requiredPermission: "learners:read",
+        requiredPermission: "contacts:read",
       },
       {
         href: "/mails?tab=templates",
         label: "Templates",
-        requiredPermission: "learners:read",
+        requiredPermission: "contacts:read",
       },
       {
         href: "/mails/settings",
         label: "Settings",
-        requiredPermission: "learners:read",
+        requiredPermission: "contacts:read",
       },
     ],
   },

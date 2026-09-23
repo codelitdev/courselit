@@ -3,6 +3,7 @@
 import { Building2, Check, ExternalLink, Globe, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { CreateSchoolDialog } from "@/components/layout/create-school-dialog";
 import { Button } from "@/components/ui/codelit/button";
 
@@ -84,9 +85,7 @@ export default function SchoolsPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-muted-foreground">
-            Loading schools…
-          </div>
+          <CourseLitLoading label="Loading schools…" className="p-12" />
         ) : schools.length === 0 ? (
           <div className="rounded-xl border border-dashed p-12 text-center space-y-3">
             <div className="mx-auto flex aspect-square size-12 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-primary">

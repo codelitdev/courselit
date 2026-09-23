@@ -26,6 +26,11 @@ import { revokeCommunityMembershipAccess } from "./community-commerce.js";
 import * as schema from "./db/schema/index.js";
 import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
 import {
+  findLearnerMembership,
+  type LearnerMembershipStatus,
+  upsertLearnerMembership,
+} from "./learner-memberships.js";
+import {
   type MediaKind,
   mediaIdsForRichTextContent,
   mediaRefFromCatalog,
@@ -57,6 +62,16 @@ export type CommunityLearnerViewer = {
 export type CommunityViewer =
   | { kind: "admin"; context: AdminContext }
   | CommunityLearnerViewer;
+
+function learnerMembershipRole(
+  status: LearnerMembershipStatus,
+  communityRole: "member" | "moderator" | "owner",
+): "comment" | "post" | "moderate" {
+  if (status !== "active") return "comment";
+  return communityRole === "moderator" || communityRole === "owner"
+    ? "moderate"
+    : "post";
+}
 
 export type CommunityDto = {
   id: string;
@@ -452,19 +467,20 @@ function normalizeCurrency(value: string | null | undefined): string {
 }
 
 function membershipToDto(
-  row: typeof schema.communityMemberships.$inferSelect,
+  row: typeof schema.learnerMemberships.$inferSelect,
   learnerPublicId?: string | null,
   communityPublicId?: string,
   member: CommunityActorDto | null = null,
+  isOwner = false,
 ): CommunityMembershipDto {
   return {
     id: row.publicId,
-    communityId: communityPublicId ?? row.communityId,
+    communityId: communityPublicId ?? row.entityId,
     learnerId: learnerPublicId ?? member?.id ?? row.schoolAccountId,
     adminUserId: member?.kind === "admin" ? member.id : null,
     member,
     status: row.status,
-    role: row.role,
+    role: isOwner ? "owner" : row.role === "moderate" ? "moderator" : "member",
     joiningReason: row.joiningReason,
     rejectionReason: row.rejectionReason,
     createdAt: serializeDate(row.createdAt),
@@ -839,13 +855,22 @@ async function activeCommunityMemberCount(
   communityId: string,
 ): Promise<number> {
   const rows = await db
-    .select({ count: count(schema.communityMemberships.id) })
-    .from(schema.communityMemberships)
+    .select({ count: count(schema.learnerMemberships.id) })
+    .from(schema.learnerMemberships)
+    .innerJoin(
+      schema.communities,
+      and(
+        eq(schema.communities.publicId, schema.learnerMemberships.entityId),
+        eq(schema.communities.id, communityId),
+      ),
+    )
     .where(
       and(
-        eq(schema.communityMemberships.schoolId, schoolId),
-        eq(schema.communityMemberships.communityId, communityId),
-        eq(schema.communityMemberships.status, "active"),
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.entityId, communityId),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     );
   return Number(rows[0]?.count ?? 0);
@@ -859,18 +884,27 @@ async function activeCommunityMemberCountMap(
   if (communityIds.length === 0) return new Map();
   const rows = await db
     .select({
-      communityId: schema.communityMemberships.communityId,
-      count: count(schema.communityMemberships.id),
+      communityId: schema.communities.id,
+      count: count(schema.learnerMemberships.id),
     })
-    .from(schema.communityMemberships)
-    .where(
+    .from(schema.learnerMemberships)
+    .innerJoin(
+      schema.communities,
       and(
-        eq(schema.communityMemberships.schoolId, schoolId),
-        inArray(schema.communityMemberships.communityId, communityIds),
-        eq(schema.communityMemberships.status, "active"),
+        eq(schema.communities.publicId, schema.learnerMemberships.entityId),
+        eq(schema.communities.schoolId, schema.learnerMemberships.schoolId),
       ),
     )
-    .groupBy(schema.communityMemberships.communityId);
+    .where(
+      and(
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        inArray(schema.communities.id, communityIds),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
+      ),
+    )
+    .groupBy(schema.communities.id);
   return new Map(rows.map((row) => [row.communityId, Number(row.count)]));
 }
 
@@ -918,26 +952,28 @@ async function communityPostCountMap(
 async function isLastActiveModerator(
   db: AppDb,
   schoolId: string,
-  communityId: string,
-  membership: typeof schema.communityMemberships.$inferSelect,
+  communityPublicId: string,
+  membership: typeof schema.learnerMemberships.$inferSelect,
   next: { status: string; role: string },
 ) {
   if (
     membership.status !== "active" ||
-    membership.role !== "moderator" ||
-    (next.status === "active" && next.role === "moderator")
+    membership.role !== "moderate" ||
+    (next.status === "active" && (next.role === "moderator" || next.role === "owner"))
   ) {
     return false;
   }
   const moderators = await db
-    .select({ count: count(schema.communityMemberships.id) })
-    .from(schema.communityMemberships)
+    .select({ count: count(schema.learnerMemberships.id) })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.communityMemberships.schoolId, schoolId),
-        eq(schema.communityMemberships.communityId, communityId),
-        eq(schema.communityMemberships.status, "active"),
-        eq(schema.communityMemberships.role, "moderator"),
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.entityId, communityPublicId),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.learnerMemberships.role, "moderate"),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     );
   return Number(moderators[0]?.count ?? 0) <= 1;
@@ -1000,22 +1036,20 @@ async function loadMembership(
       .limit(1);
     targetSchoolAccountId = mem[0]?.schoolAccountId ?? identity.id;
   }
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    targetSchoolAccountId,
-  );
-  if (!isUuid) return null;
-  const rows = await db
-    .select()
-    .from(schema.communityMemberships)
+  const community = await db
+    .select({ publicId: schema.communities.publicId })
+    .from(schema.communities)
     .where(
-      and(
-        eq(schema.communityMemberships.schoolId, schoolId),
-        eq(schema.communityMemberships.communityId, communityId),
-        eq(schema.communityMemberships.schoolAccountId, targetSchoolAccountId),
-      ),
+      and(eq(schema.communities.schoolId, schoolId), eq(schema.communities.id, communityId)),
     )
     .limit(1);
-  return rows[0] ?? null;
+  if (!community[0]) return null;
+  return findLearnerMembership(db, {
+    schoolId,
+    schoolAccountId: targetSchoolAccountId,
+    entityType: "community",
+    entityId: community[0].publicId,
+  });
 }
 
 async function canReadCommunity(
@@ -1098,7 +1132,7 @@ async function canModerateCommunity(
   });
   return (
     membership?.status === "active" &&
-    (membership.role === "moderator" || membership.role === "owner")
+    membership.role === "moderate"
   );
 }
 
@@ -1127,7 +1161,7 @@ async function communityActorMap(
       schoolId: schema.schoolAccounts.schoolId,
       name: schema.schoolAccounts.displayName,
       email: schema.schoolAccounts.email,
-      image: schema.schoolAccounts.image,
+      avatar: schema.schoolAccounts.avatar,
     })
     .from(schema.schoolAccounts)
     .where(inArray(schema.schoolAccounts.id, internalIds));
@@ -1155,7 +1189,7 @@ async function communityActorMap(
       kind: isAdmin ? "admin" : "learner",
       name: row.name,
       email: row.email,
-      imageUrl: row.image,
+      imageUrl: row.avatar?.url ?? null,
     };
     actors.set(row.id, actor);
     actors.set(row.publicId, actor);
@@ -1339,8 +1373,10 @@ export async function listLearnerCommunities(
     return { ok: false, error: createPlatformError("validation_failed") };
   }
   const conditions = [
-    eq(schema.communityMemberships.schoolId, viewer.schoolId),
-    eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
+    eq(schema.learnerMemberships.schoolId, viewer.schoolId),
+    eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
+    eq(schema.learnerMemberships.entityType, "community"),
+    eq(schema.learnerMemberships.isIncludedInPlan, false),
     isNull(schema.communities.deletedAt),
   ];
   if (cursor) {
@@ -1355,11 +1391,14 @@ export async function listLearnerCommunities(
     );
   }
   const rows = await db
-    .select({ community: schema.communities, membership: schema.communityMemberships })
-    .from(schema.communityMemberships)
+    .select({ community: schema.communities, membership: schema.learnerMemberships })
+    .from(schema.learnerMemberships)
     .innerJoin(
       schema.communities,
-      eq(schema.communities.id, schema.communityMemberships.communityId),
+      and(
+        eq(schema.communities.publicId, schema.learnerMemberships.entityId),
+        eq(schema.communities.schoolId, schema.learnerMemberships.schoolId),
+      ),
     )
     .where(and(...conditions))
     .orderBy(asc(schema.communities.name), asc(schema.communities.id))
@@ -1422,9 +1461,11 @@ export async function listLearnerFeed(
     isNull(schema.communityPosts.deletedAt),
     eq(schema.communities.schoolId, viewer.schoolId),
     isNull(schema.communities.deletedAt),
-    eq(schema.communityMemberships.schoolId, viewer.schoolId),
-    eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
-    eq(schema.communityMemberships.status, "active"),
+    eq(schema.learnerMemberships.schoolId, viewer.schoolId),
+    eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
+    eq(schema.learnerMemberships.entityType, "community"),
+    eq(schema.learnerMemberships.isIncludedInPlan, false),
+    eq(schema.learnerMemberships.status, "active"),
   ];
   if (cursor) {
     conditions.push(
@@ -1459,10 +1500,13 @@ export async function listLearnerFeed(
       eq(schema.communities.id, schema.communityPosts.communityId),
     )
     .innerJoin(
-      schema.communityMemberships,
+      schema.learnerMemberships,
       and(
-        eq(schema.communityMemberships.communityId, schema.communities.id),
-        eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.entityId, schema.communities.publicId),
+        eq(schema.learnerMemberships.schoolId, schema.communities.schoolId),
+        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     )
     .where(and(...conditions))
@@ -1705,13 +1749,16 @@ export async function listAvailableLearnerCommunities(
     );
   }
   const rows = await db
-    .select({ community: schema.communities, membership: schema.communityMemberships })
+    .select({ community: schema.communities, membership: schema.learnerMemberships })
     .from(schema.communities)
     .leftJoin(
-      schema.communityMemberships,
+      schema.learnerMemberships,
       and(
-        eq(schema.communityMemberships.communityId, schema.communities.id),
-        eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.entityId, schema.communities.publicId),
+        eq(schema.learnerMemberships.schoolId, schema.communities.schoolId),
+        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     )
     .where(and(...conditions))
@@ -1866,21 +1913,22 @@ export async function createCommunity(
           ),
         )
         .limit(1);
-      const membership = {
-        id: uuidv7(clock),
-        publicId: createPublicId("cmm", clock),
-        schoolId: school.schoolId,
-        communityId: row.id,
-        schoolAccountId: staff?.schoolAccountId ?? row.id,
-        paymentPlanId: null,
-        status: "active" as const,
-        role: "owner" as const,
-        joiningReason: "",
-        rejectionReason: null,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await tx.insert(schema.communityMemberships).values(membership);
+      const ownerSchoolAccountId = staff?.schoolAccountId;
+      if (!ownerSchoolAccountId) {
+        return { ok: false as const, error: createPlatformError("forbidden") };
+      }
+      const membership = await upsertLearnerMembership(
+        tx as AppDb,
+        {
+          schoolId: school.schoolId,
+          schoolAccountId: ownerSchoolAccountId,
+          entityType: "community",
+          entityId: row.publicId,
+          status: "active",
+          role: "moderate",
+        },
+        clock,
+      );
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),
         schoolId: school.schoolId,
@@ -1896,7 +1944,7 @@ export async function createCommunity(
         value: communityToDto(
           row,
           publicSchoolId,
-          membershipToDto(membership, null, publicId),
+          membershipToDto(membership, null, publicId, null, true),
           null,
           1,
         ),
@@ -2377,136 +2425,6 @@ export async function deleteCommunity(
   return { ok: true, value: { id: publicId } };
 }
 
-export async function joinCommunity(
-  db: AppDb,
-  viewer: CommunityLearnerViewer,
-  communityPublicId: string,
-  joiningReason: string,
-  clock: Clock,
-): Promise<Result<CommunityMembershipDto>> {
-  const community = await loadCommunity(db, viewer.schoolId, communityPublicId);
-  if (!community) return notFound();
-  const activePlans = await db
-    .select({
-      id: schema.storefrontPlans.id,
-      kind: schema.storefrontPlans.kind,
-      isDefault: schema.storefrontPlans.isDefault,
-    })
-    .from(schema.storefrontPlans)
-    .where(
-      and(
-        eq(schema.storefrontPlans.schoolId, viewer.schoolId),
-        eq(schema.storefrontPlans.entityType, "community"),
-        eq(schema.storefrontPlans.entityId, community.publicId),
-        eq(schema.storefrontPlans.status, "active"),
-      ),
-    );
-  if (activePlans.length === 0) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "community_has_no_payment_plans" },
-      }),
-    };
-  }
-  const freePlan =
-    activePlans.find((plan) => plan.kind === "free" && plan.isDefault) ??
-    activePlans.find((plan) => plan.kind === "free");
-  if (!freePlan) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "community_requires_payment" },
-      }),
-    };
-  }
-  const normalizedJoiningReason = joiningReason.trim();
-  if (!community.autoAcceptMembers && !normalizedJoiningReason) {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "joining_reason_required" },
-      }),
-    };
-  }
-  const identity: Identity = {
-    kind: "learner",
-    id: viewer.learnerId,
-    publicId: viewer.learnerPublicId,
-  };
-  const existing = await loadMembership(db, viewer.schoolId, community.id, identity);
-  if (existing) {
-    return {
-      ok: true,
-      value: membershipToDto(existing, viewer.learnerPublicId, communityPublicId),
-    };
-  }
-  const now = clock.now();
-  const row = {
-    id: uuidv7(clock),
-    publicId: createPublicId("cmm", clock),
-    schoolId: viewer.schoolId,
-    communityId: community.id,
-    paymentPlanId: freePlan.id,
-    schoolAccountId: viewer.learnerId,
-    status: community.autoAcceptMembers ? ("active" as const) : ("pending" as const),
-    role: "member" as const,
-    joiningReason: normalizedJoiningReason,
-    rejectionReason: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.insert(schema.communityMemberships).values(row);
-  await recordActivity(
-    db,
-    {
-      schoolId: viewer.schoolId,
-      actorId: viewer.learnerId,
-      type: ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
-      entityId: community.publicId,
-      metadata: { membershipId: row.publicId },
-    },
-    clock,
-  );
-  if (row.status === "active") {
-    await recordActivity(
-      db,
-      {
-        schoolId: viewer.schoolId,
-        actorId: viewer.learnerId,
-        type: ActivityType.COMMUNITY_JOINED,
-        entityId: community.publicId,
-        metadata: { membershipId: row.publicId },
-      },
-      clock,
-    );
-  }
-  await createSchoolAdminNotifications(
-    db,
-    viewer.schoolId,
-    {
-      type:
-        row.status === "pending"
-          ? "community_membership_requested"
-          : "community_joined",
-      title:
-        row.status === "pending"
-          ? "New community membership request"
-          : "New community member",
-      body:
-        row.status === "pending"
-          ? "A learner requested to join a community."
-          : "A learner joined a community.",
-      href: `/community/memberships`,
-    },
-    clock,
-  );
-  return {
-    ok: true,
-    value: membershipToDto(row, viewer.learnerPublicId, communityPublicId),
-  };
-}
-
 export async function leaveCommunity(
   db: AppDb,
   viewer: CommunityLearnerViewer,
@@ -2545,16 +2463,18 @@ export async function leaveCommunity(
     };
   }
 
-  if (membership.role === "moderator") {
+  if (membership.role === "moderate") {
     const moderators = await db
-      .select({ id: schema.communityMemberships.id })
-      .from(schema.communityMemberships)
+      .select({ id: schema.learnerMemberships.id })
+      .from(schema.learnerMemberships)
       .where(
         and(
-          eq(schema.communityMemberships.schoolId, viewer.schoolId),
-          eq(schema.communityMemberships.communityId, community.id),
-          eq(schema.communityMemberships.status, "active"),
-          eq(schema.communityMemberships.role, "moderator"),
+          eq(schema.learnerMemberships.schoolId, viewer.schoolId),
+          eq(schema.learnerMemberships.entityType, "community"),
+          eq(schema.learnerMemberships.entityId, community.publicId),
+          eq(schema.learnerMemberships.status, "active"),
+          eq(schema.learnerMemberships.role, "moderate"),
+          eq(schema.learnerMemberships.isIncludedInPlan, false),
         ),
       );
     if (moderators.length === 1) {
@@ -2619,20 +2539,11 @@ export async function leaveCommunity(
       {
         schoolId: viewer.schoolId,
         learnerId: viewer.learnerId,
-        paymentPlanId: membership.paymentPlanId,
+        membershipId: membership.id,
       },
       clock,
       { cancelSubscription: false },
     );
-    await tx
-      .delete(schema.communityMemberships)
-      .where(
-        and(
-          eq(schema.communityMemberships.id, membership.id),
-          eq(schema.communityMemberships.schoolId, viewer.schoolId),
-          eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
-        ),
-      );
     if (subscriptions.length > 0) {
       await tx
         .update(schema.communitySubscriptions)
@@ -2694,35 +2605,40 @@ export async function listMemberships(
   if (options.cursor && !cursor) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
-  const conditions = [eq(schema.communityMemberships.communityId, community.id)];
+  const conditions = [
+    eq(schema.learnerMemberships.schoolId, school.schoolId),
+    eq(schema.learnerMemberships.entityType, "community"),
+    eq(schema.learnerMemberships.entityId, community.publicId),
+    eq(schema.learnerMemberships.isIncludedInPlan, false),
+  ];
   if (options.status) {
-    conditions.push(eq(schema.communityMemberships.status, options.status));
+    conditions.push(eq(schema.learnerMemberships.status, options.status));
   }
   if (cursor) {
     conditions.push(
       or(
-        gt(schema.communityMemberships.createdAt, cursor.date),
+        gt(schema.learnerMemberships.createdAt, cursor.date),
         and(
-          eq(schema.communityMemberships.createdAt, cursor.date),
-          gt(schema.communityMemberships.id, cursor.id),
+          eq(schema.learnerMemberships.createdAt, cursor.date),
+          gt(schema.learnerMemberships.id, cursor.id),
         ),
       )!,
     );
   }
   const rows = await db
     .select({
-      membership: schema.communityMemberships,
+      membership: schema.learnerMemberships,
       learnerPublicId: schema.schoolAccounts.publicId,
     })
-    .from(schema.communityMemberships)
+    .from(schema.learnerMemberships)
     .leftJoin(
       schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.communityMemberships.schoolAccountId),
+      eq(schema.schoolAccounts.id, schema.learnerMemberships.schoolAccountId),
     )
     .where(and(...conditions))
     .orderBy(
-      asc(schema.communityMemberships.createdAt),
-      asc(schema.communityMemberships.id),
+      asc(schema.learnerMemberships.createdAt),
+      asc(schema.learnerMemberships.id),
     )
     .limit(options.limit + 1);
   const page = rows.slice(0, options.limit);
@@ -2730,6 +2646,20 @@ export async function listMemberships(
     db,
     page.map((row) => row.membership.schoolAccountId),
   );
+  const ownerRows = await db
+    .select({ schoolAccountId: schema.memberships.schoolAccountId })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, school.schoolId),
+        eq(schema.memberships.isOwner, true),
+        inArray(
+          schema.memberships.schoolAccountId,
+          page.map((row) => row.membership.schoolAccountId),
+        ),
+      ),
+    );
+  const ownerIds = new Set(ownerRows.map((row) => row.schoolAccountId));
   return {
     ok: true,
     value: {
@@ -2741,6 +2671,7 @@ export async function listMemberships(
           row.membership.schoolAccountId
             ? (actors.get(row.membership.schoolAccountId) ?? null)
             : null,
+          ownerIds.has(row.membership.schoolAccountId),
         ),
       ),
       nextCursor:
@@ -2766,30 +2697,35 @@ export async function updateMembership(
   if (!school || !adminCan(context, "communities:moderate")) return forbidden();
   const rows = await db
     .select({
-      membership: schema.communityMemberships,
+      membership: schema.learnerMemberships,
       communityPublicId: schema.communities.publicId,
       learnerPublicId: schema.schoolAccounts.publicId,
     })
-    .from(schema.communityMemberships)
+    .from(schema.learnerMemberships)
     .innerJoin(
       schema.communities,
-      eq(schema.communities.id, schema.communityMemberships.communityId),
+      and(
+        eq(schema.communities.publicId, schema.learnerMemberships.entityId),
+        eq(schema.communities.schoolId, schema.learnerMemberships.schoolId),
+      ),
     )
     .leftJoin(
       schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.communityMemberships.schoolAccountId),
+      eq(schema.schoolAccounts.id, schema.learnerMemberships.schoolAccountId),
     )
     .where(
       and(
-        eq(schema.communityMemberships.schoolId, school.schoolId),
-        eq(schema.communityMemberships.publicId, membershipPublicId),
+        eq(schema.learnerMemberships.schoolId, school.schoolId),
+        eq(schema.learnerMemberships.publicId, membershipPublicId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     )
     .limit(1);
   const existing = rows[0]?.membership;
   if (!existing) return notFound();
   const [staffMembership] = await db
-    .select({ userId: schema.schoolAccounts.userId })
+    .select({ userId: schema.schoolAccounts.userId, isOwner: schema.memberships.isOwner })
     .from(schema.memberships)
     .innerJoin(
       schema.schoolAccounts,
@@ -2811,9 +2747,15 @@ export async function updateMembership(
     };
   }
   const now = clock.now();
+  const existingPublicRole =
+    staffMembership?.isOwner === true
+      ? "owner"
+      : existing.role === "moderate"
+        ? "moderator"
+        : "member";
   if (
     input.role !== undefined &&
-    input.role !== existing.role &&
+    input.role !== existingPublicRole &&
     (input.status ?? existing.status) !== "active"
   ) {
     return {
@@ -2824,6 +2766,7 @@ export async function updateMembership(
     };
   }
   const nextStatus = input.status ?? existing.status;
+  const nextPublicRole = input.role ?? existingPublicRole;
   const requestedRejectionReason =
     input.rejectionReason === undefined
       ? existing.rejectionReason
@@ -2838,7 +2781,7 @@ export async function updateMembership(
   }
   const next = {
     status: nextStatus,
-    role: input.role ?? existing.role,
+    role: learnerMembershipRole(nextStatus, nextPublicRole),
     rejectionReason: nextStatus === "rejected" ? requestedRejectionReason : null,
     updatedAt: now,
   };
@@ -2846,9 +2789,9 @@ export async function updateMembership(
     await isLastActiveModerator(
       db,
       school.schoolId,
-      existing.communityId,
+      rows[0]!.communityPublicId,
       existing,
-      next,
+      { ...next, role: nextPublicRole },
     )
   ) {
     return {
@@ -2860,9 +2803,9 @@ export async function updateMembership(
   }
   const actors = await communityActorMap(db, [existing.schoolAccountId]);
   await db
-    .update(schema.communityMemberships)
+    .update(schema.learnerMemberships)
     .set(next)
-    .where(eq(schema.communityMemberships.id, existing.id));
+    .where(eq(schema.learnerMemberships.id, existing.id));
   if (
     next.status === "active" &&
     existing.status !== "active" &&
@@ -2874,7 +2817,7 @@ export async function updateMembership(
         schoolId: school.schoolId,
         actorId: existing.schoolAccountId,
         type: ActivityType.COMMUNITY_MEMBERSHIP_GRANTED,
-        entityId: rows[0]?.communityPublicId ?? existing.communityId,
+        entityId: rows[0]?.communityPublicId ?? existing.entityId,
         metadata: { membershipId: existing.publicId, grantedBy: context.principalId },
       },
       clock,
@@ -2885,7 +2828,7 @@ export async function updateMembership(
         schoolId: school.schoolId,
         actorId: existing.schoolAccountId,
         type: ActivityType.COMMUNITY_JOINED,
-        entityId: rows[0]?.communityPublicId ?? existing.communityId,
+        entityId: rows[0]?.communityPublicId ?? existing.entityId,
         metadata: { membershipId: existing.publicId },
       },
       clock,
@@ -2926,6 +2869,7 @@ export async function updateMembership(
       rows[0]?.learnerPublicId,
       rows[0]?.communityPublicId,
       existing.schoolAccountId ? (actors.get(existing.schoolAccountId) ?? null) : null,
+      staffMembership?.isOwner === true,
     ),
   };
 }
@@ -3362,13 +3306,15 @@ export async function createPost(
     clock,
   );
   const activeMembers = await db
-    .select({ schoolAccountId: schema.communityMemberships.schoolAccountId })
-    .from(schema.communityMemberships)
+    .select({ schoolAccountId: schema.learnerMemberships.schoolAccountId })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.communityMemberships.schoolId, school.schoolId),
-        eq(schema.communityMemberships.communityId, community.id),
-        eq(schema.communityMemberships.status, "active"),
+        eq(schema.learnerMemberships.schoolId, school.schoolId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.entityId, community.publicId),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.learnerMemberships.isIncludedInPlan, false),
       ),
     );
   const learnerPostUrl = await learnerPostHref(db, school.schoolId, row.publicId);

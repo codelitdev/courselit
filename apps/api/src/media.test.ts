@@ -53,6 +53,7 @@ describe.serial("media library", () => {
     const canonicalUrl = media.canonicalUrl;
     expect(media).toMatchObject({
       schoolId: world.schoolA.publicId,
+      category: "library",
       usageCount: 0,
       canonicalUrl: expect.any(String),
     });
@@ -408,6 +409,70 @@ describe.serial("media library", () => {
       url: expect.stringContaining("media.test/assets/"),
     });
     expect(delivered.body).not.toHaveProperty("mediaLitId");
+    await runtime.close();
+  });
+
+  it("keeps learner-uploaded profile media out of the default admin library", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const signedUp = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-up",
+      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      body: {
+        email: "profile-media-learner@example.com",
+        password: "learner-password-1",
+        name: "Profile Media Learner",
+      },
+    });
+    const learnerCookie = cookieFrom(signedUp.headers);
+    const authorization = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/profile-media/upload-authorizations",
+      headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+      body: {
+        fileName: "profile.png",
+        mimeType: "image/png",
+        byteSize: 1024,
+      },
+    });
+    expect(authorization.status).toBe(201);
+    const finalized = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/profile-media",
+      headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+      body: {
+        uploadId: (authorization.body as { uploadId: string }).uploadId,
+        altText: "Profile photo",
+      },
+    });
+    expect(finalized.status).toBe(201);
+    const mediaId = (finalized.body as { id: string }).id;
+
+    const defaultLibrary = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/media",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(defaultLibrary.status).toBe(200);
+    expect(defaultLibrary.body).toMatchObject({ items: [] });
+
+    const userUploads = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/media?category=user_uploads",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(userUploads.status).toBe(200);
+    expect(userUploads.body).toMatchObject({
+      items: [{ id: mediaId, category: "user_uploads" }],
+    });
     await runtime.close();
   });
 

@@ -1,7 +1,13 @@
 import type { Clock } from "@codelitdev/platform";
-import { and, asc, eq, inArray, lt, lte } from "drizzle-orm";
+import { and, asc, eq, inArray, lt, lte, sql } from "drizzle-orm";
 import type { Logger } from "pino";
 import * as schema from "./db/schema/index.js";
+import {
+  COURSELIT_IS_COMMUNITY_MEMBER_FIELD,
+  COURSELIT_LAST_ACTIVE_FIELD,
+  COURSELIT_PRODUCT_IDS_FIELD,
+  COURSELIT_SIGNED_UP_FIELD,
+} from "./contact-filters.js";
 import {
   COURSELIT_FRONTLIT_PROVISION_PAGES,
   FrontLitApiError,
@@ -16,11 +22,16 @@ import { ensureSalesPageJobs, provisionSalesPageJob } from "./frontlit-sales-pag
 import {
   addSendLitContactTag,
   createSendLitContact,
+  deleteSendLitContact,
+  getSendLitContact,
+  listSendLitContacts,
   provisionSendLitTeam,
   rotateSendLitTeamKey,
   SendLitApiError,
   type SendLitConfig,
+  type SendLitContact,
   sendLitConfig,
+  updateSendLitContact,
 } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import {
@@ -30,7 +41,7 @@ import {
 
 // These are the only system pages CourseLit requires for a school. FrontLit
 // owns the page content and blog posts. CourseLit builds its dynamic index
-// routes from the homepage chrome in the learner app, so only these three
+// routes from the homepage chrome in the storefront app, so only these three
 // pages are persisted in FrontLit.
 const REQUIRED_FRONTLIT_SLUGS = ["", "terms", "privacy"] as const;
 const MAX_ERROR_LENGTH = 2000;
@@ -51,6 +62,10 @@ export type SendLitOperations = {
   provisionTeam: typeof provisionSendLitTeam;
   rotateKey: typeof rotateSendLitTeamKey;
   createContact?: typeof createSendLitContact;
+  getContact?: typeof getSendLitContact;
+  updateContact?: typeof updateSendLitContact;
+  deleteContact?: typeof deleteSendLitContact;
+  listContacts?: typeof listSendLitContacts;
   addContactTag?: typeof addSendLitContactTag;
 };
 
@@ -58,6 +73,10 @@ const defaultSendLitOperations: SendLitOperations = {
   provisionTeam: provisionSendLitTeam,
   rotateKey: rotateSendLitTeamKey,
   createContact: createSendLitContact,
+  getContact: getSendLitContact,
+  updateContact: updateSendLitContact,
+  deleteContact: deleteSendLitContact,
+  listContacts: listSendLitContacts,
   addContactTag: addSendLitContactTag,
 };
 
@@ -324,44 +343,267 @@ async function syncSendLitContactJob(
   config: SendLitConfig,
 ): Promise<void> {
   const payload = job.payload as {
+    schoolAccountId?: string;
     email?: string;
-    name?: string;
-    tags?: string[];
+    ensureSubscribed?: boolean;
+    reason?: string;
   };
-  if (!payload.email || typeof payload.email !== "string") {
+
+  let schoolAccountId = payload.schoolAccountId;
+  if (!schoolAccountId && payload.email) {
+    const [acc] = await db
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, job.schoolId),
+          eq(schema.schoolAccounts.email, payload.email),
+        ),
+      )
+      .limit(1);
+    schoolAccountId = acc?.id;
+  }
+
+  if (!schoolAccountId) {
     throw new IntegrationActionRequiredError(
-      "Invalid contact sync payload: missing email",
+      "Invalid contact sync payload: missing schoolAccountId",
     );
   }
 
-  const integration = await getIntegration(db, job.schoolId, "sendlit");
-  if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
+  const lockKey = "contact_sync:" + schoolAccountId;
+  const lockRes = await db.execute(
+    sql`SELECT pg_try_advisory_lock(hashtext(${lockKey})) as locked`,
+  );
+  const locked = (lockRes as any)[0]?.locked ?? (lockRes as any).rows?.[0]?.locked;
+  if (locked === false) {
     throw new SendLitApiError(
-      "SendLit is not provisioned or ready yet",
+      "Contact sync currently locked by another worker",
       undefined,
       true,
     );
   }
 
-  const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-  const doCreateContact = operations.createContact ?? createSendLitContact;
-  const doAddContactTag = operations.addContactTag ?? addSendLitContactTag;
+  try {
+    const [schoolAccount] = await db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.id, schoolAccountId),
+          eq(schema.schoolAccounts.schoolId, job.schoolId),
+        ),
+      )
+      .limit(1);
 
-  const contact = await doCreateContact(
-    teamApiKey,
-    {
-      email: payload.email,
-      name: payload.name || undefined,
-    },
-    { config },
-  );
-
-  const tags =
-    Array.isArray(payload.tags) && payload.tags.length > 0 ? payload.tags : ["learner"];
-  for (const tag of tags) {
-    if (typeof tag === "string" && tag.trim()) {
-      await doAddContactTag(teamApiKey, contact.contactId, tag.trim(), { config });
+    if (!schoolAccount || schoolAccount.status === "deletion_pending") {
+      return;
     }
+
+    const integration = await getIntegration(db, job.schoolId, "sendlit");
+    if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
+      throw new SendLitApiError(
+        "SendLit is not provisioned or ready yet",
+        undefined,
+        true,
+      );
+    }
+
+    const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
+    const doCreateContact = operations.createContact ?? createSendLitContact;
+    const doGetContact = operations.getContact ?? getSendLitContact;
+    const doUpdateContact = operations.updateContact ?? updateSendLitContact;
+    const doListContacts = operations.listContacts ?? listSendLitContacts;
+
+    let sendlitContactId = schoolAccount.sendlitContactId;
+    let currentContact: SendLitContact | null = null;
+
+    if (sendlitContactId) {
+      try {
+        currentContact = await doGetContact(teamApiKey, sendlitContactId, { config });
+      } catch (err) {
+        if (err instanceof SendLitApiError && err.status === 404) {
+          sendlitContactId = null;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (!sendlitContactId) {
+      const searchRes = await doListContacts(
+        teamApiKey,
+        { q: schoolAccount.email, rowsPerPage: 50 },
+        { config },
+      );
+      const existing = searchRes.items.find(
+        (c) => c.email.toLowerCase() === schoolAccount.email.toLowerCase(),
+      );
+      if (existing) {
+        sendlitContactId = existing.contactId;
+        currentContact = existing;
+      } else {
+        const created = await doCreateContact(
+          teamApiKey,
+          {
+            email: schoolAccount.email,
+            name: schoolAccount.displayName || undefined,
+          },
+          { config },
+        );
+        sendlitContactId = created.contactId;
+        currentContact = created;
+      }
+
+      await db
+        .update(schema.schoolAccounts)
+        .set({
+          sendlitContactId,
+          contactActivatedAt: schoolAccount.contactActivatedAt ?? clock.now(),
+          updatedAt: clock.now(),
+        })
+        .where(eq(schema.schoolAccounts.id, schoolAccount.id));
+    }
+
+    // Compute CourseLit custom fields
+    const activeMemberships = await db
+      .select({
+        productId: schema.learnerMemberships.entityId,
+      })
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, job.schoolId),
+          eq(schema.learnerMemberships.schoolAccountId, schoolAccount.id),
+          eq(schema.learnerMemberships.entityType, "product"),
+          eq(schema.learnerMemberships.status, "active"),
+        ),
+      );
+    const productIds = activeMemberships.map((m) => m.productId);
+
+    const activeCommunity = await db
+      .select({ id: schema.learnerMemberships.id })
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, job.schoolId),
+          eq(schema.learnerMemberships.schoolAccountId, schoolAccount.id),
+          eq(schema.learnerMemberships.entityType, "community"),
+          eq(schema.learnerMemberships.isIncludedInPlan, false),
+          eq(schema.learnerMemberships.status, "active"),
+        ),
+      )
+      .limit(1);
+    const isCommunityMember = activeCommunity.length > 0;
+
+    const lastActive = schoolAccount.lastActiveAt
+      ? schoolAccount.lastActiveAt.toISOString()
+      : undefined;
+    const signedUp = (
+      schoolAccount.learnerRegisteredAt ?? schoolAccount.createdAt
+    ).toISOString();
+
+    const mergedCustomFields: Record<string, unknown> = {
+      ...(currentContact?.customFields ?? {}),
+      [COURSELIT_PRODUCT_IDS_FIELD]: productIds,
+      [COURSELIT_IS_COMMUNITY_MEMBER_FIELD]: isCommunityMember ? "true" : "false",
+      ...(lastActive ? { [COURSELIT_LAST_ACTIVE_FIELD]: lastActive } : {}),
+      [COURSELIT_SIGNED_UP_FIELD]: signedUp,
+    };
+
+    const updateBody: {
+      name: string;
+      customFields: Record<string, unknown>;
+      subscribed?: boolean;
+    } = {
+      name: schoolAccount.displayName,
+      customFields: mergedCustomFields,
+    };
+
+    if (payload.ensureSubscribed === true) {
+      updateBody.subscribed = true;
+    }
+
+    await doUpdateContact(teamApiKey, sendlitContactId, updateBody, { config });
+
+    if (!schoolAccount.contactActivatedAt) {
+      await db
+        .update(schema.schoolAccounts)
+        .set({
+          contactActivatedAt: clock.now(),
+          updatedAt: clock.now(),
+        })
+        .where(eq(schema.schoolAccounts.id, schoolAccount.id));
+    }
+  } finally {
+    await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${lockKey}))`);
+  }
+}
+
+async function eraseSendLitContactJob(
+  db: AppDb,
+  job: IntegrationJob,
+  clock: Clock,
+  operations: SendLitOperations,
+  config: SendLitConfig,
+): Promise<void> {
+  const payload = job.payload as {
+    schoolAccountId?: string;
+    sendlitContactId?: string;
+  };
+
+  if (!payload.schoolAccountId) {
+    throw new IntegrationActionRequiredError(
+      "Invalid contact erase payload: missing schoolAccountId",
+    );
+  }
+
+  const lockKey = "contact_sync:" + payload.schoolAccountId;
+  const lockRes = await db.execute(
+    sql`SELECT pg_try_advisory_lock(hashtext(${lockKey})) as locked`,
+  );
+  const locked = (lockRes as any)[0]?.locked ?? (lockRes as any).rows?.[0]?.locked;
+  if (locked === false) {
+    throw new SendLitApiError(
+      "Contact erase currently locked by another worker",
+      undefined,
+      true,
+    );
+  }
+
+  try {
+    const integration = await getIntegration(db, job.schoolId, "sendlit");
+    let contactId = payload.sendlitContactId;
+    if (!contactId) {
+      const [acc] = await db
+        .select({ sendlitContactId: schema.schoolAccounts.sendlitContactId })
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.id, payload.schoolAccountId))
+        .limit(1);
+      contactId = acc?.sendlitContactId ?? undefined;
+    }
+
+    if (integration?.encryptedTeamKey && integration.status === "ready" && contactId) {
+      const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
+      const doDeleteContact = operations.deleteContact ?? deleteSendLitContact;
+      try {
+        await doDeleteContact(teamApiKey, contactId, { config });
+      } catch (err) {
+        if (!(err instanceof SendLitApiError && err.status === 404)) {
+          throw err;
+        }
+      }
+    }
+
+    await db
+      .delete(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.id, payload.schoolAccountId),
+          eq(schema.schoolAccounts.schoolId, job.schoolId),
+        ),
+      );
+  } finally {
+    await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${lockKey}))`);
   }
 }
 
@@ -425,7 +667,12 @@ async function finishJob(db: AppDb, job: IntegrationJob, clock: Clock): Promise<
   await db
     .update(schema.integrationOutboxJobs)
     .set({ status: "done", updatedAt: clock.now(), lastError: null })
-    .where(eq(schema.integrationOutboxJobs.id, job.id));
+    .where(
+      and(
+        eq(schema.integrationOutboxJobs.id, job.id),
+        eq(schema.integrationOutboxJobs.revision, job.revision),
+      ),
+    );
 }
 
 async function failJob(
@@ -436,7 +683,14 @@ async function failJob(
   actionRequired: boolean,
 ): Promise<void> {
   const now = clock.now();
-  const message = safeError(error);
+  let message = safeError(error);
+  if (
+    error instanceof SendLitApiError &&
+    (error.status === 402 || error.status === 403 || error.message.includes("plan_limit_exceeded"))
+  ) {
+    message = "sendlit_quota_exceeded";
+    actionRequired = true;
+  }
   if (job.type === "provision_frontlit" || job.type === "provision_sendlit") {
     await updateIntegration(db, job.schoolId, job.provider, {
       status: actionRequired ? "action_required" : "pending",
@@ -514,6 +768,8 @@ export async function processNextIntegrationJob(
         await provisionOneSendLitSchool(db, job, clock, sendLitOperations, sendLitCfg);
       } else if (job.type === "sync_sendlit_contact") {
         await syncSendLitContactJob(db, job, clock, sendLitOperations, sendLitCfg);
+      } else if (job.type === "erase_sendlit_contact") {
+        await eraseSendLitContactJob(db, job, clock, sendLitOperations, sendLitCfg);
       } else {
         throw new IntegrationActionRequiredError(
           `Unknown SendLit job type: ${job.type}`,

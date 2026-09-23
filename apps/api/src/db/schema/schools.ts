@@ -1,6 +1,8 @@
+import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -62,7 +64,7 @@ export const schoolAccounts = pgTable(
   "school_accounts",
   {
     id: uuid("id").primaryKey(),
-    publicId: text("public_id").notNull().unique(),
+    publicId: text("public_id").notNull().unique(), // Prefix: 'cnt' to match unified contacts aggregate
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
@@ -71,11 +73,16 @@ export const schoolAccounts = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     email: text("email").notNull(),
     displayName: text("display_name").notNull(),
-    image: text("image"),
+    bio: text("bio").notNull().default(""),
+    avatar: jsonb("avatar").$type<MediaRef | null>(),
     status: text("status")
-      .$type<"active" | "deactivated">()
+      .$type<"active" | "deactivated" | "deletion_pending">()
       .notNull()
       .default("active"),
+    learnerRegisteredAt: timestamp("learner_registered_at", { withTimezone: true }),
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
+    contactActivatedAt: timestamp("contact_activated_at", { withTimezone: true }),
+    sendlitContactId: text("sendlit_contact_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -87,6 +94,17 @@ export const schoolAccounts = pgTable(
     schoolEmail: uniqueIndex("school_accounts_school_email_uidx").on(
       table.schoolId,
       table.email,
+    ),
+    schoolSendLitContact: uniqueIndex("school_accounts_school_sendlit_contact_uidx")
+      .on(table.schoolId, table.sendlitContactId)
+      .where(sql`${table.sendlitContactId} IS NOT NULL`),
+    contactActivatedCheck: check(
+      "school_accounts_contact_activated_check",
+      sql`${table.sendlitContactId} IS NULL OR ${table.contactActivatedAt} IS NOT NULL`,
+    ),
+    statusCheck: check(
+      "school_accounts_status_check",
+      sql`${table.status} IN ('active', 'deactivated', 'deletion_pending')`,
     ),
   }),
 );

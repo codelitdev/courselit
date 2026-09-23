@@ -3,6 +3,7 @@
 import { ChevronDown, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
+import { CourseLitLoading } from "@/components/loading";
 import {
   Dialog,
   DialogContent,
@@ -266,7 +267,7 @@ export function ProductCertificates({
           <CollapsibleContent className="stack pt-5">
             <form onSubmit={(event) => void saveTemplate(event)} className="stack">
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading template…</p>
+                <CourseLitLoading label="Loading template…" className="justify-start" />
               ) : null}
               <div className="space-y-4">
                 <div className="space-y-1.5">

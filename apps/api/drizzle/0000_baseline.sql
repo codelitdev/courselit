@@ -291,6 +291,7 @@ CREATE TABLE "media" (
 	"width" integer,
 	"height" integer,
 	"kind" text NOT NULL,
+	"category" text DEFAULT 'library' NOT NULL,
 	"alt_text" text DEFAULT '' NOT NULL,
 	"caption" text DEFAULT '' NOT NULL,
 	"access_policy" text DEFAULT 'private' NOT NULL,
@@ -387,22 +388,6 @@ CREATE TABLE "community_comments" (
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "community_comments_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "community_memberships" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"community_id" uuid NOT NULL,
-	"payment_plan_id" uuid,
-	"school_account_id" uuid NOT NULL,
-	"status" text DEFAULT 'pending' NOT NULL,
-	"role" text DEFAULT 'member' NOT NULL,
-	"joining_reason" text DEFAULT '' NOT NULL,
-	"rejection_reason" text,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "community_memberships_public_id_unique" UNIQUE("public_id")
 );
 --> statement-breakpoint
 CREATE TABLE "community_post_subscribers" (
@@ -534,6 +519,7 @@ CREATE TABLE "integration_outbox_jobs" (
 	"payload" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"status" text DEFAULT 'pending' NOT NULL,
 	"attempts" integer DEFAULT 0 NOT NULL,
+	"revision" integer DEFAULT 1 NOT NULL,
 	"next_attempt_at" timestamp with time zone NOT NULL,
 	"last_error" text,
 	"created_at" timestamp with time zone NOT NULL,
@@ -578,7 +564,11 @@ CREATE TABLE "learner_memberships" (
 	CONSTRAINT "learner_memberships_public_id_unique" UNIQUE("public_id"),
 	CONSTRAINT "learner_memberships_entity_type_check" CHECK ("learner_memberships"."entity_type" IN ('product', 'community')),
 	CONSTRAINT "learner_memberships_status_check" CHECK ("learner_memberships"."status" IN ('active', 'payment_failed', 'expired', 'pending', 'rejected', 'paused')),
-	CONSTRAINT "learner_memberships_role_check" CHECK ("learner_memberships"."role" IS NULL OR "learner_memberships"."role" IN ('comment', 'post', 'moderate')),
+	CONSTRAINT "learner_memberships_role_check" CHECK ((
+        ("learner_memberships"."entity_type" = 'product' AND "learner_memberships"."role" IS NULL)
+        OR
+        ("learner_memberships"."entity_type" = 'community' AND "learner_memberships"."role" IN ('comment', 'post', 'moderate'))
+      )),
 	CONSTRAINT "learner_memberships_included_parent_check" CHECK ("learner_memberships"."is_included_in_plan" = false OR ("learner_memberships"."entity_type" = 'product' AND "learner_memberships"."parent_membership_id" IS NOT NULL AND "learner_memberships"."payment_plan_id" IS NOT NULL))
 );
 --> statement-breakpoint
@@ -642,113 +632,13 @@ CREATE TABLE "notifications" (
 	CONSTRAINT "notifications_public_id_unique" UNIQUE("public_id")
 );
 --> statement-breakpoint
-CREATE TABLE "product_discussion_comments" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"school_account_id" uuid,
-	"content" text NOT NULL,
-	"likes_count" integer DEFAULT 0 NOT NULL,
-	"deleted_at" timestamp with time zone,
-	"deleted_by" text,
-	"deleted_by_role" text,
-	"delete_reason" text,
-	"restored_at" timestamp with time zone,
-	"restored_by" text,
-	"is_edited" boolean DEFAULT false NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "product_discussion_comments_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "product_discussion_likes" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"content_type" text NOT NULL,
-	"content_id" uuid NOT NULL,
-	"comment_id" uuid,
-	"school_account_id" uuid NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "product_discussion_likes_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "product_discussion_replies" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"comment_id" uuid NOT NULL,
-	"parent_reply_id" uuid,
-	"school_account_id" uuid,
-	"content" text NOT NULL,
-	"likes_count" integer DEFAULT 0 NOT NULL,
-	"deleted_at" timestamp with time zone,
-	"deleted_by" text,
-	"deleted_by_role" text,
-	"delete_reason" text,
-	"restored_at" timestamp with time zone,
-	"restored_by" text,
-	"is_edited" boolean DEFAULT false NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "product_discussion_replies_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "product_discussion_reports" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"content_type" text NOT NULL,
-	"content_id" uuid NOT NULL,
-	"comment_id" uuid,
-	"school_account_id" uuid NOT NULL,
-	"reason" text NOT NULL,
-	"status" text DEFAULT 'pending' NOT NULL,
-	"rejection_reason" text,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "product_discussion_reports_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "product_discussion_subscribers" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"school_account_id" uuid NOT NULL,
-	"subscription" boolean DEFAULT true NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "product_discussion_subscribers_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "product_discussion_summaries" (
+CREATE TABLE "staff_notification_preferences" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"school_id" uuid NOT NULL,
-	"product_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" uuid NOT NULL,
-	"comments_count" integer DEFAULT 0 NOT NULL,
-	"replies_count" integer DEFAULT 0 NOT NULL,
-	"total_count" integer DEFAULT 0 NOT NULL,
-	"activity_count_including_deleted" integer DEFAULT 0 NOT NULL,
-	"last_activity_at" timestamp with time zone NOT NULL,
-	"last_comment_id" text,
-	"last_reply_id" text,
+	"membership_id" uuid NOT NULL,
+	"type" text NOT NULL,
+	"app_enabled" boolean DEFAULT true NOT NULL,
+	"email_enabled" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL
 );
@@ -808,7 +698,7 @@ CREATE TABLE "api_keys" (
 	"user_id" text,
 	"name" text DEFAULT 'Default' NOT NULL,
 	"digest" text NOT NULL,
-	"permissions" text[] DEFAULT '{}'::text[] NOT NULL,
+	"permissions" text[] DEFAULT '{}' NOT NULL,
 	"expires_at" timestamp with time zone,
 	"revoked_at" timestamp with time zone,
 	"last_used_at" timestamp with time zone,
@@ -823,7 +713,7 @@ CREATE TABLE "invitations" (
 	"school_id" uuid NOT NULL,
 	"email" text NOT NULL,
 	"normalized_email" text NOT NULL,
-	"permissions" text[] DEFAULT '{}'::text[] NOT NULL,
+	"permissions" text[] DEFAULT '{}' NOT NULL,
 	"preset_id" text,
 	"token_digest" text NOT NULL,
 	"invited_by_school_account_id" uuid,
@@ -845,23 +735,12 @@ CREATE TABLE "memberships" (
 	"school_id" uuid NOT NULL,
 	"school_account_id" uuid NOT NULL,
 	"is_owner" boolean DEFAULT false NOT NULL,
-	"permissions" text[] DEFAULT '{}'::text[] NOT NULL,
+	"permissions" text[] DEFAULT '{}' NOT NULL,
 	"preset_id" text,
 	"version" integer DEFAULT 1 NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "memberships_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "staff_notification_preferences" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"membership_id" uuid NOT NULL,
-	"type" text NOT NULL,
-	"app_enabled" boolean DEFAULT true NOT NULL,
-	"email_enabled" boolean DEFAULT true NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "school_accounts" (
@@ -871,11 +750,18 @@ CREATE TABLE "school_accounts" (
 	"user_id" text NOT NULL,
 	"email" text NOT NULL,
 	"display_name" text NOT NULL,
-	"image" text,
+	"bio" text DEFAULT '' NOT NULL,
+	"avatar" jsonb,
 	"status" text DEFAULT 'active' NOT NULL,
+	"learner_registered_at" timestamp with time zone,
+	"last_active_at" timestamp with time zone,
+	"contact_activated_at" timestamp with time zone,
+	"sendlit_contact_id" text,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "school_accounts_public_id_unique" UNIQUE("public_id")
+	CONSTRAINT "school_accounts_public_id_unique" UNIQUE("public_id"),
+	CONSTRAINT "school_accounts_contact_activated_check" CHECK ("school_accounts"."sendlit_contact_id" IS NULL OR "school_accounts"."contact_activated_at" IS NOT NULL),
+	CONSTRAINT "school_accounts_status_check" CHECK ("school_accounts"."status" IN ('active', 'deactivated', 'deletion_pending'))
 );
 --> statement-breakpoint
 CREATE TABLE "school_auth_tickets" (
@@ -938,6 +824,48 @@ CREATE TABLE "schools" (
 CREATE TABLE "selected_schools" (
 	"user_id" text PRIMARY KEY NOT NULL,
 	"school_id" uuid NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "space_followers" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"space_id" uuid NOT NULL,
+	"school_account_id" uuid NOT NULL,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "space_unlock_plans" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"unlock_id" uuid NOT NULL,
+	"payment_plan_id" uuid NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "space_unlocks" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"space_id" uuid NOT NULL,
+	"entity_type" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "space_unlocks_entity_check" CHECK ("space_unlocks"."entity_type" IN ('community', 'product'))
+);
+--> statement-breakpoint
+CREATE TABLE "spaces" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"public_id" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"name" text NOT NULL,
+	"slug" text NOT NULL,
+	"description" text DEFAULT '' NOT NULL,
+	"logo" text DEFAULT 'MessagesSquare' NOT NULL,
+	"featured_image" jsonb,
+	"follow" boolean DEFAULT false NOT NULL,
+	"who_can_post" text DEFAULT 'members' NOT NULL,
+	"position" integer NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "spaces_public_id_unique" UNIQUE("public_id")
 );
 --> statement-breakpoint
 CREATE TABLE "storefront_checkout_attempts" (
@@ -1342,9 +1270,6 @@ ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_school_id_sc
 ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_post_id_community_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."community_posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "community_memberships" ADD CONSTRAINT "community_memberships_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "community_memberships" ADD CONSTRAINT "community_memberships_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "community_memberships" ADD CONSTRAINT "community_memberships_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_post_subscribers" ADD CONSTRAINT "community_post_subscribers_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_post_subscribers" ADD CONSTRAINT "community_post_subscribers_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_post_subscribers" ADD CONSTRAINT "community_post_subscribers_post_id_community_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."community_posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1377,26 +1302,8 @@ ALTER TABLE "learner_notification_preferences" ADD CONSTRAINT "learner_notificat
 ALTER TABLE "learner_notification_preferences" ADD CONSTRAINT "learner_notification_preferences_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_comments" ADD CONSTRAINT "product_discussion_comments_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_comments" ADD CONSTRAINT "product_discussion_comments_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_comments" ADD CONSTRAINT "product_discussion_comments_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_likes" ADD CONSTRAINT "product_discussion_likes_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_likes" ADD CONSTRAINT "product_discussion_likes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_likes" ADD CONSTRAINT "product_discussion_likes_comment_id_product_discussion_comments_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."product_discussion_comments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_likes" ADD CONSTRAINT "product_discussion_likes_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_replies" ADD CONSTRAINT "product_discussion_replies_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_replies" ADD CONSTRAINT "product_discussion_replies_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_replies" ADD CONSTRAINT "product_discussion_replies_comment_id_product_discussion_comments_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."product_discussion_comments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_replies" ADD CONSTRAINT "product_discussion_replies_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_reports" ADD CONSTRAINT "product_discussion_reports_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_reports" ADD CONSTRAINT "product_discussion_reports_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_reports" ADD CONSTRAINT "product_discussion_reports_comment_id_product_discussion_comments_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."product_discussion_comments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_reports" ADD CONSTRAINT "product_discussion_reports_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_subscribers" ADD CONSTRAINT "product_discussion_subscribers_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_subscribers" ADD CONSTRAINT "product_discussion_subscribers_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_subscribers" ADD CONSTRAINT "product_discussion_subscribers_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_summaries" ADD CONSTRAINT "product_discussion_summaries_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_discussion_summaries" ADD CONSTRAINT "product_discussion_summaries_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "staff_notification_preferences" ADD CONSTRAINT "staff_notification_preferences_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "staff_notification_preferences" ADD CONSTRAINT "staff_notification_preferences_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_events" ADD CONSTRAINT "audit_events_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -1411,8 +1318,6 @@ ALTER TABLE "invitations" ADD CONSTRAINT "invitations_inviter_id_user_id_fk" FOR
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_accepted_by_school_account_id_school_accounts_id_fk" FOREIGN KEY ("accepted_by_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "staff_notification_preferences" ADD CONSTRAINT "staff_notification_preferences_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "staff_notification_preferences" ADD CONSTRAINT "staff_notification_preferences_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_accounts" ADD CONSTRAINT "school_accounts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_accounts" ADD CONSTRAINT "school_accounts_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1424,6 +1329,15 @@ ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_school_account_id_
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "selected_schools" ADD CONSTRAINT "selected_schools_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "selected_schools" ADD CONSTRAINT "selected_schools_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_space_id_spaces_id_fk" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_unlock_id_space_unlocks_id_fk" FOREIGN KEY ("unlock_id") REFERENCES "public"."space_unlocks"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_payment_plan_id_storefront_plans_id_fk" FOREIGN KEY ("payment_plan_id") REFERENCES "public"."storefront_plans"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_space_id_spaces_id_fk" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "spaces" ADD CONSTRAINT "spaces_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1479,8 +1393,8 @@ CREATE UNIQUE INDEX "media_references_resource_media_uidx" ON "media_references"
 CREATE UNIQUE INDEX "product_sections_product_position_uidx" ON "product_sections" USING btree ("product_id","position");--> statement-breakpoint
 CREATE UNIQUE INDEX "scorm_runtime_states_membership_lesson_uidx" ON "scorm_runtime_states" USING btree ("membership_id","lesson_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "communities_school_slug_uidx" ON "communities" USING btree ("school_id","slug");--> statement-breakpoint
+CREATE UNIQUE INDEX "communities_school_uidx" ON "communities" USING btree ("school_id") WHERE "communities"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "community_comments_post_idx" ON "community_comments" USING btree ("post_id","created_at","id");--> statement-breakpoint
-CREATE UNIQUE INDEX "community_memberships_community_account_uidx" ON "community_memberships" USING btree ("community_id","school_account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "community_subscribers_account_uidx" ON "community_post_subscribers" USING btree ("post_id","school_account_id");--> statement-breakpoint
 CREATE INDEX "community_posts_feed_idx" ON "community_posts" USING btree ("community_id","created_at","id");--> statement-breakpoint
 CREATE INDEX "community_posts_listing_idx" ON "community_posts" USING btree ("community_id","pinned","created_at","id");--> statement-breakpoint
@@ -1494,7 +1408,7 @@ CREATE UNIQUE INDEX "community_invoices_payment_uidx" ON "community_invoices" US
 CREATE UNIQUE INDEX "community_subscriptions_provider_subscription_uidx" ON "community_subscriptions" USING btree ("provider_subscription_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "integration_outbox_jobs_provision_uidx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type") WHERE type IN ('provision_frontlit', 'provision_sendlit');--> statement-breakpoint
 CREATE UNIQUE INDEX "integration_outbox_jobs_sales_page_uidx" ON "integration_outbox_jobs" USING btree ("school_id",("payload"->>'resourceType'),("payload"->>'resourceId')) WHERE type = 'provision_sales_page';--> statement-breakpoint
-CREATE INDEX "integration_outbox_jobs_contact_sync_idx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type");--> statement-breakpoint
+CREATE UNIQUE INDEX "integration_outbox_jobs_contact_sync_uidx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type",("payload"->>'schoolAccountId')) WHERE status = 'pending' AND type = 'sync_sendlit_contact';--> statement-breakpoint
 CREATE INDEX "integration_outbox_jobs_pending_idx" ON "integration_outbox_jobs" USING btree ("status","next_attempt_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_integrations_school_provider_uidx" ON "school_integrations" USING btree ("school_id","provider");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_integrations_provider_external_uidx" ON "school_integrations" USING btree ("provider","external_id");--> statement-breakpoint
@@ -1505,29 +1419,27 @@ CREATE INDEX "learner_memberships_parent_lookup_idx" ON "learner_memberships" US
 CREATE UNIQUE INDEX "migration_mappings_source_target_uidx" ON "migration_mappings" USING btree ("source_system","source_collection","source_id","target_table");--> statement-breakpoint
 CREATE UNIQUE INDEX "learner_notification_preferences_type_uidx" ON "learner_notification_preferences" USING btree ("school_id","school_account_id","type");--> statement-breakpoint
 CREATE INDEX "notifications_feed_idx" ON "notifications" USING btree ("school_id","school_account_id","created_at","id");--> statement-breakpoint
-CREATE INDEX "product_discussion_comments_target_idx" ON "product_discussion_comments" USING btree ("school_id","product_id","entity_type","entity_id","created_at","id");--> statement-breakpoint
-CREATE UNIQUE INDEX "product_discussion_likes_account_uidx" ON "product_discussion_likes" USING btree ("content_type","content_id","school_account_id");--> statement-breakpoint
-CREATE INDEX "product_discussion_likes_target_idx" ON "product_discussion_likes" USING btree ("product_id","entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "product_discussion_replies_comment_idx" ON "product_discussion_replies" USING btree ("comment_id","created_at","id");--> statement-breakpoint
-CREATE INDEX "product_discussion_replies_parent_idx" ON "product_discussion_replies" USING btree ("parent_reply_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "product_discussion_reports_account_uidx" ON "product_discussion_reports" USING btree ("content_type","content_id","school_account_id");--> statement-breakpoint
-CREATE INDEX "product_discussion_reports_target_idx" ON "product_discussion_reports" USING btree ("school_id","product_id","entity_type","entity_id","status");--> statement-breakpoint
-CREATE UNIQUE INDEX "product_discussion_subscribers_account_uidx" ON "product_discussion_subscribers" USING btree ("product_id","entity_type","entity_id","school_account_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "product_discussion_summaries_target_uidx" ON "product_discussion_summaries" USING btree ("school_id","product_id","entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "product_discussion_summaries_activity_idx" ON "product_discussion_summaries" USING btree ("school_id","product_id","entity_type","last_activity_at","entity_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "staff_notification_preferences_type_uidx" ON "staff_notification_preferences" USING btree ("school_id","membership_id","type");--> statement-breakpoint
 CREATE UNIQUE INDEX "products_school_slug_uidx" ON "products" USING btree ("school_id","slug");--> statement-breakpoint
 CREATE INDEX "rate_limit_events_lookup_idx" ON "rate_limit_events" USING btree ("school_id","user_id","scope","action","subject_id","created_at");--> statement-breakpoint
 CREATE INDEX "rate_limit_events_fingerprint_idx" ON "rate_limit_events" USING btree ("school_id","user_id","scope","subject_id","fingerprint","created_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "memberships_school_single_owner_uidx" ON "memberships" USING btree ("school_id") WHERE "memberships"."is_owner" = true;--> statement-breakpoint
-CREATE UNIQUE INDEX "memberships_school_account_uidx" ON "memberships" USING btree ("school_id","school_account_id");--> statement-breakpoint
-CREATE INDEX "memberships_school_account_idx" ON "memberships" USING btree ("school_account_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "invitations_school_pending_email_uidx" ON "invitations" USING btree ("school_id","normalized_email") WHERE "invitations"."status" = 'pending';--> statement-breakpoint
 CREATE INDEX "invitations_school_email_idx" ON "invitations" USING btree ("school_id","email");--> statement-breakpoint
-CREATE UNIQUE INDEX "staff_notification_preferences_type_uidx" ON "staff_notification_preferences" USING btree ("school_id","membership_id","type");--> statement-breakpoint
+CREATE UNIQUE INDEX "invitations_school_pending_email_uidx" ON "invitations" USING btree ("school_id","normalized_email") WHERE "invitations"."status" = 'pending';--> statement-breakpoint
+CREATE UNIQUE INDEX "memberships_school_account_uidx" ON "memberships" USING btree ("school_id","school_account_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "memberships_school_single_owner_uidx" ON "memberships" USING btree ("school_id") WHERE "memberships"."is_owner" = true;--> statement-breakpoint
+CREATE INDEX "memberships_school_account_idx" ON "memberships" USING btree ("school_account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_accounts_school_user_uidx" ON "school_accounts" USING btree ("school_id","user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_accounts_school_email_uidx" ON "school_accounts" USING btree ("school_id","email");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_accounts_school_sendlit_contact_uidx" ON "school_accounts" USING btree ("school_id","sendlit_contact_id") WHERE "school_accounts"."sendlit_contact_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "school_hosts_school_hostname_uidx" ON "school_hosts" USING btree ("school_id","hostname");--> statement-breakpoint
 CREATE INDEX "school_sessions_school_account_idx" ON "school_sessions" USING btree ("school_id","school_account_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "space_followers_space_account_uidx" ON "space_followers" USING btree ("space_id","school_account_id");--> statement-breakpoint
+CREATE INDEX "space_followers_account_idx" ON "space_followers" USING btree ("school_id","school_account_id","space_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "space_unlock_plans_unlock_plan_uidx" ON "space_unlock_plans" USING btree ("unlock_id","payment_plan_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "space_unlocks_space_entity_uidx" ON "space_unlocks" USING btree ("space_id","entity_type","entity_id");--> statement-breakpoint
+CREATE INDEX "space_unlocks_school_entity_idx" ON "space_unlocks" USING btree ("school_id","entity_type","entity_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "spaces_school_slug_uidx" ON "spaces" USING btree ("school_id","slug");--> statement-breakpoint
+CREATE INDEX "spaces_school_position_idx" ON "spaces" USING btree ("school_id","position","id");--> statement-breakpoint
 CREATE UNIQUE INDEX "storefront_checkout_school_idempotency_uidx" ON "storefront_checkout_attempts" USING btree ("school_id","idempotency_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "storefront_checkout_provider_checkout_uidx" ON "storefront_checkout_attempts" USING btree ("provider_checkout_id") WHERE "storefront_checkout_attempts"."provider_checkout_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "storefront_checkout_sessions_school_id_uidx" ON "storefront_checkout_sessions" USING btree ("school_id","id");--> statement-breakpoint
@@ -1561,66 +1473,3 @@ CREATE UNIQUE INDEX "billing_subscriptions_provider_subscription_uidx" ON "billi
 CREATE UNIQUE INDEX "billing_subscriptions_entity_source_uidx" ON "billing_subscriptions" USING btree ("billable_entity_id") WHERE "billing_subscriptions"."is_entitlement_source" = true;--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_webhook_events_provider_event_uidx" ON "billing_webhook_events" USING btree ("provider","provider_event_id");--> statement-breakpoint
 CREATE INDEX "billing_webhook_events_queue_idx" ON "billing_webhook_events" USING btree ("status","available_at");
---> statement-breakpoint
-CREATE UNIQUE INDEX "communities_school_uidx" ON "communities" USING btree ("school_id") WHERE "communities"."deleted_at" is null;--> statement-breakpoint
-CREATE TABLE "spaces" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"name" text NOT NULL,
-	"slug" text NOT NULL,
-	"description" text DEFAULT '' NOT NULL,
-	"logo" text DEFAULT 'MessagesSquare' NOT NULL,
-	"featured_image" jsonb,
-	"follow" boolean DEFAULT false NOT NULL,
-	"who_can_post" text DEFAULT 'members' NOT NULL,
-	"position" integer NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "spaces_public_id_unique" UNIQUE("public_id")
-);
---> statement-breakpoint
-CREATE TABLE "space_unlocks" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"space_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"community_id" uuid,
-	"product_id" uuid,
-	"created_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "space_unlocks_entity_check" CHECK (("space_unlocks"."entity_type" = 'community' AND "space_unlocks"."community_id" IS NOT NULL AND "space_unlocks"."product_id" IS NULL) OR ("space_unlocks"."entity_type" = 'product' AND "space_unlocks"."product_id" IS NOT NULL AND "space_unlocks"."community_id" IS NULL))
-);
---> statement-breakpoint
-CREATE TABLE "space_unlock_plans" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"unlock_id" uuid NOT NULL,
-	"payment_plan_id" uuid NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "space_followers" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"space_id" uuid NOT NULL,
-	"school_account_id" uuid NOT NULL,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-ALTER TABLE "spaces" ADD CONSTRAINT "spaces_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_space_id_spaces_id_fk" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_unlock_id_space_unlocks_id_fk" FOREIGN KEY ("unlock_id") REFERENCES "public"."space_unlocks"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_payment_plan_id_storefront_plans_id_fk" FOREIGN KEY ("payment_plan_id") REFERENCES "public"."storefront_plans"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_space_id_spaces_id_fk" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "spaces_school_slug_uidx" ON "spaces" USING btree ("school_id","slug");--> statement-breakpoint
-CREATE INDEX "spaces_school_position_idx" ON "spaces" USING btree ("school_id","position","id");--> statement-breakpoint
-CREATE UNIQUE INDEX "space_unlocks_community_uidx" ON "space_unlocks" USING btree ("space_id") WHERE "space_unlocks"."entity_type" = 'community';--> statement-breakpoint
-CREATE UNIQUE INDEX "space_unlocks_product_uidx" ON "space_unlocks" USING btree ("space_id","product_id") WHERE "space_unlocks"."entity_type" = 'product';--> statement-breakpoint
-CREATE UNIQUE INDEX "space_unlock_plans_unlock_plan_uidx" ON "space_unlock_plans" USING btree ("unlock_id","payment_plan_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "space_followers_space_account_uidx" ON "space_followers" USING btree ("space_id","school_account_id");--> statement-breakpoint
-CREATE INDEX "space_followers_account_idx" ON "space_followers" USING btree ("school_id","school_account_id","space_id");

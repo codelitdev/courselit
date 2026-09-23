@@ -229,8 +229,13 @@ describe.serial("legacy community migration", () => {
     expect(
       await runtime.db
         .select()
-        .from(schema.communityMemberships)
-        .where(eq(schema.communityMemberships.schoolAccountId, learnerId)),
+        .from(schema.learnerMemberships)
+        .where(
+          and(
+            eq(schema.learnerMemberships.schoolAccountId, learnerId),
+            eq(schema.learnerMemberships.entityType, "community"),
+          ),
+        ),
     ).toHaveLength(1);
     expect(
       await runtime.db

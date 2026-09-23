@@ -24,7 +24,6 @@
     "migrate:products": "bun scripts/import-products.mjs",
     "migrate:payment-plans": "bun scripts/import-payment-plans.mjs",
     "migrate:communities": "bun scripts/import-communities.mjs",
-    "migrate:product-discussions": "bun scripts/import-product-discussions.mjs",
     "migrate:learners": "bun scripts/import-learners.mjs",
     "migrate:notifications": "bun scripts/import-notifications.mjs",
     "pretest": "bun run check:auth-schema"

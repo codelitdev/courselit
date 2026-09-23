@@ -2,7 +2,7 @@
 
 **Status:** Proposed for implementation
 
-**Scope:** CourseLit API, admin application, learner application, school team
+**Scope:** CourseLit API, admin application, storefront application, school team
 membership lifecycle, permission enforcement, invitations, ownership, API keys,
 OAuth, notifications, and authorization auditing
 
@@ -47,7 +47,7 @@ presets, an `isOwner` flag, invitations, member permission editing and removal,
 and a Team settings UI. This PRD turns those pieces into one coherent V1. It
 adds an enforced ownership invariant, a complete school-specific permission
 catalog, centralized fail-closed authorization, hardened invitation and member
-lifecycle operations, scoped credential behavior, and an explicit learner-app
+lifecycle operations, scoped credential behavior, and an explicit storefront-app
 contract.
 
 The design is informed by FrontLit's team-membership implementation, but the
@@ -77,7 +77,7 @@ The current team implementation is useful but incomplete:
   rate-limited lifecycle operation;
 - staff profile rendering reads global user fields instead of the school-local
   profile;
-- the learner app has no canonical server-derived representation of the
+- the storefront app has no canonical server-derived representation of the
   viewer's staff capabilities; and
 - there is no documented rule for when staff permissions may affect learner
   pages, feeds, notifications, previews, or moderation controls.
@@ -138,7 +138,7 @@ inconsistent permission checks.
 
 ## Related documents
 
-- [`teachable-style-identity-management.md`](./teachable-style-identity-management.md)
+- [`accounts-management.md`](./accounts-management.md)
   defines the global account, school account, staff membership, and learner
   membership relationship.
 - [`one-community-per-school.md`](./one-community-per-school.md) defines spaces,
@@ -264,7 +264,7 @@ for school administration. Except for account-scoped administrative onboarding
 such as school creation and invitation acceptance, both require an active
 staff membership and authorize through staff permissions.
 
-The learner portal, public storefront, checkout, media delivery, and provider
+The storefront portal, public storefront, checkout, media delivery, and provider
 webhooks use separate application or system endpoint surfaces. They may be
 hosted by the same backend and may use HTTP, but they are not part of the
 admin REST API and are not candidates for MCP parity.
@@ -275,7 +275,7 @@ This boundary is based on actor intent, not merely a URL prefix:
 Admin REST API / MCP
     -> staff membership + administrative operation policy
 
-Learner application API
+Storefront application API
     -> school account + learner membership/public learner rule
 
 Public site API
@@ -571,7 +571,7 @@ The operation policy is the source of truth. Domain services may add
 resource-level checks, such as author ownership or learner access, but they
 must not weaken the operation policy.
 
-Anonymous public reads and learner application operations are explicitly
+Anonymous public reads and storefront application operations are explicitly
 classified in their own policy registries rather than silently omitted from
 coverage. Worker and webhook policies do not carry human staff authority; they
 use their own authenticated system boundary and must call domain services that
@@ -961,7 +961,7 @@ ownerless or dual-owner state.
 Existing credentials are re-evaluated immediately. Owner-only authority is
 not embedded in tokens or key permission snapshots.
 
-## Learner application behavior
+## Storefront application behavior
 
 ### Staff capability resolution
 
@@ -989,17 +989,17 @@ type LearnerSchoolActor = {
 };
 ```
 
-This projection is server-derived. The learner app must never infer staff
+This projection is server-derived. The storefront app must never infer staff
 status from the email, a global account property, an old `role`, or the
 presence of learner access. The API remains authoritative even when the UI
 hides or shows a control based on this projection.
 
-### Learner-side effects by permission
+### Storefront-side effects by permission
 
 Most permissions have **no learner-side entitlement effect**. Their only
-learner-app effects are:
+storefront-app effects are:
 
-| Permission or relationship | Learner-app effect |
+| Permission or relationship | Storefront-app effect |
 | --- | --- |
 | Owner / Full access | May show an "Open admin" affordance and all authorized staff notification groups. Does not unlock learner content. |
 | `communities:moderate` | Shows moderation actions and permits staff moderation across spaces through explicit moderation endpoints. |
@@ -1056,7 +1056,7 @@ V1 does not support impersonating a specific learner.
 
 ### Learner navigation
 
-The learner portal remains learner-focused. Staff status does not reproduce
+The storefront portal remains learner-focused. Staff status does not reproduce
 the admin sidebar. A staff actor may receive a single "Open admin" link and
 capability-specific controls within relevant learner pages.
 
@@ -1142,7 +1142,7 @@ is never included in a query parameter.
 - The admin app may call the same preference service; it must not maintain a
   second preference model.
 
-These are learner-application endpoints, not part of the externally documented
+These are storefront-application endpoints, not part of the externally documented
 admin REST API or MCP parity surface. Shared domain services do not imply a
 shared authorization audience.
 
@@ -1307,7 +1307,7 @@ names, raw IDs, or token material as metric labels.
 5. Make all navigation and direct routes capability-aware.
 6. Add conflict, expired-invite, revoked-invite, and recent-auth states.
 
-### Phase 5: Learner application integration
+### Phase 5: Storefront application integration
 
 1. Add the optional staff capability projection to the learner actor response.
 2. Keep ordinary learner authorization exclusively on learner memberships.
@@ -1396,7 +1396,7 @@ names, raw IDs, or token material as metric labels.
 - Every MCP tool and its admin REST equivalent resolve to the same operation
   policy.
 
-### Learner application tests
+### Storefront application tests
 
 - A learner-only account receives `staff: null`.
 - A staff-only account receives staff capabilities but no learner entitlements.

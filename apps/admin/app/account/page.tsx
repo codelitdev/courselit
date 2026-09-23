@@ -4,6 +4,7 @@ import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader"
 import { Camera, Check, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -175,9 +176,7 @@ export default function AccountPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-muted-foreground">
-            Loading profile…
-          </div>
+          <CourseLitLoading label="Loading profile…" className="p-12" />
         ) : (
           <div className="space-y-6">
             <div className="flex flex-col lg:flex-row gap-6">

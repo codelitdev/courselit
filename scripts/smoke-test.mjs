@@ -203,7 +203,7 @@ async function runSmokeTest() {
 
       // 3. Learner Login Page with School context
       console.log("\n=======================================================");
-      console.log(`3. TESTING LEARNER APP (http://localhost:3001/login?school=${schoolPublicId})`);
+      console.log(`3. TESTING STOREFRONT APP (http://localhost:3001/login?school=${schoolPublicId})`);
       console.log("=======================================================");
       await session.navigate(`http://localhost:3001/login?school=${schoolPublicId}`, 4000);
       const learnerTitle = await session.eval("document.title");

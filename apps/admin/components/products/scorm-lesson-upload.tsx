@@ -1,6 +1,7 @@
 "use client";
 
 import { MediaUploadDialog, type SelectedMedia } from "@frontlit/media-uploader";
+import { CourseLitLoadingIcon } from "@/components/loading";
 import { CheckCircle, FileWarning, Package, Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
@@ -209,13 +210,14 @@ export function ScormLessonUpload({
             type="button"
             variant={packageTitle ? "outline" : "primary"}
             disabled={uploading}
+            aria-label={uploading ? "Processing" : packageTitle ? "Replace package" : "Upload SCORM package"}
           >
             <Upload className="size-4" />
-            {uploading
-              ? "Processing…"
-              : packageTitle
-                ? "Replace package"
-                : "Upload SCORM package"}
+            {uploading ? <CourseLitLoadingIcon size={16} /> : packageTitle ? (
+              "Replace package"
+            ) : (
+              "Upload SCORM package"
+            )}
           </Button>
         </MediaUploadDialog>
         <p className="mt-2 text-xs text-muted-foreground">

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import { Button } from "@/components/ui/codelit/button";
+import { CourseLitLoading } from "@/components/loading";
 import { summarizeCourseLitPermissions } from "@/components/settings/permission-picker";
 import {
   clearInvitationHash,
@@ -174,7 +175,7 @@ export default function TeamInvitationPage() {
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading invitation…</p>
+          <CourseLitLoading label="Loading invitation…" />
         ) : null}
         {error ? (
           <p

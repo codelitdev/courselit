@@ -45,6 +45,20 @@ describe.serial("learner authentication", () => {
       hasGoogle: false,
     });
 
+    const hostRes = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/school/login-methods",
+      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+    });
+    expect(hostRes.status).toBe(200);
+
+    const unknownHostRes = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/school/login-methods",
+      headers: { "x-forwarded-host": "unknown.localhost:3001" },
+    });
+    expect(unknownHostRes.status).toBe(404);
+
     // Admin login-methods endpoint no longer exists
     const adminRes = await dispatch(runtime, {
       method: "GET",
@@ -184,4 +198,71 @@ describe.serial("learner authentication", () => {
 
     await runtime.close();
   });
+
+  it("authenticates a learner via host header resolution for /v1/learner/me", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+
+    const email = "host-learner@example.com";
+    const otp = await runtime.auth.auth.api.createVerificationOTP({
+      body: {
+        email,
+        type: "sign-in",
+      },
+    });
+    const signedIn = await runtime.auth.auth.api.signInEmailOTP({
+      body: {
+        email,
+        otp,
+        name: "Host Learner",
+      },
+      asResponse: true,
+    });
+    expect(signedIn.status).toBe(200);
+    const sessionCookie = signedIn.headers.get("set-cookie")?.split(";", 1)[0];
+    expect(sessionCookie).toBeTruthy();
+
+    // 1. Initial request via host header with Better Auth cookie (bridges session)
+    const whoami = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        host: "school-a.localhost:3001",
+        cookie: sessionCookie!,
+      },
+    });
+    expect(whoami.status).toBe(200);
+    expect(whoami.body).toMatchObject({
+      email,
+      name: "Host Learner",
+    });
+
+    // Verify Set-Cookie header contains courselit.learner.session
+    const courselitCookie = whoami.headers?.["Set-Cookie"];
+    expect(courselitCookie).toContain("courselit.learner.session=");
+
+    // Extract the courselit.learner.session cookie value
+    const match = /courselit\.learner\.session=([^;]+)/.exec(courselitCookie as string);
+    expect(match).toBeTruthy();
+    const learnerCookieValue = match![1];
+
+    // 2. Subsequent request with courselit.learner.session cookie
+    const whoamiWithSession = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        host: "school-a.localhost:3001",
+        cookie: `courselit.learner.session=${learnerCookieValue}`,
+      },
+    });
+    expect(whoamiWithSession.status).toBe(200);
+    expect(whoamiWithSession.body).toMatchObject({
+      email,
+      name: "Host Learner",
+    });
+
+    await runtime.close();
+  });
 });
+

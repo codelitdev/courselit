@@ -4,6 +4,7 @@ import { DollarSign, Download, GraduationCap, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Resources } from "@/components/resources";
+import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import type { Product, School } from "./product-types";
 
@@ -49,24 +50,23 @@ function MetricCard({
   value,
   growth,
   loading,
+  href,
 }: {
   title: string;
   icon: typeof DollarSign;
   value: string;
   growth: number;
   loading: boolean;
+  href?: string;
 }) {
-  return (
+  const card = (
     <div className="rounded-xl border bg-card p-5">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-sm font-medium">{title}</h2>
         <Icon className="size-4 text-muted-foreground" />
       </div>
       {loading ? (
-        <div className="mt-4 space-y-2" role="status" aria-label={`Loading ${title}`}>
-          <div className="h-7 w-24 animate-pulse rounded bg-muted" />
-          <div className="h-4 w-36 animate-pulse rounded bg-muted" />
-        </div>
+        <CourseLitLoading label={`Loading ${title}…`} className="mt-4 justify-start" />
       ) : (
         <>
           <p className="mt-3 text-2xl font-semibold">{value}</p>
@@ -74,6 +74,13 @@ function MetricCard({
         </>
       )}
     </div>
+  );
+  return href ? (
+    <Link href={href} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      {card}
+    </Link>
+  ) : (
+    card
   );
 }
 
@@ -109,11 +116,7 @@ function SalesChart({
     <section className="rounded-xl border bg-card p-5">
       <h2 className="text-xl font-semibold">Sales</h2>
       {loading ? (
-        <div
-          className="mt-5 h-60 animate-pulse rounded bg-muted"
-          role="status"
-          aria-label="Loading sales"
-        />
+        <CourseLitLoading label="Loading sales…" className="mt-5 h-60" />
       ) : (
         <div className="mt-5" role="img" aria-label={`Sales trend in ${currency}`}>
           <div className="grid grid-cols-[max-content_minmax(0,1fr)] gap-2">
@@ -271,6 +274,7 @@ export function ProductAnalytics({
           value={data?.customers.count.toLocaleString() ?? "—"}
           growth={data?.customers.growth ?? 0}
           loading={loading}
+          href={`/products/${encodeURIComponent(productId)}/customers`}
         />
         <MetricCard
           title={completionTitle}

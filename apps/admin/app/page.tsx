@@ -5,6 +5,7 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthGate } from "../components/auth-gate";
+import { CourseLitLoading } from "../components/loading";
 import { type CurrentAccount } from "../components/layout/nav-user";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/codelit/button";
@@ -21,7 +22,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "../components/ui/chart";
-import { learnerUrl } from "../lib/learner-url";
+import { storefrontUrl } from "../lib/storefront-url";
 
 type OverviewRange = "7d" | "30d" | "90d" | "1y";
 
@@ -68,7 +69,7 @@ export default function HomePage() {
 
   const selected = schools.find((school) => school.selected) ?? schools[0] ?? null;
   const selectedSchoolId = selected?.id;
-  const visitSiteUrl = selected ? learnerUrl("/", selected.subdomain) : null;
+  const visitSiteUrl = selected ? storefrontUrl("/", selected.subdomain) : null;
 
   useEffect(() => {
     void fetch("/api/auth/get-session", {
@@ -114,7 +115,7 @@ export default function HomePage() {
     <AuthGate>
       <div className="page-shell">
         {loading || !selected ? (
-          <div className="p-12 text-center text-sm text-muted-foreground">Loading…</div>
+          <CourseLitLoading className="p-12" />
         ) : (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -185,9 +186,7 @@ export default function HomePage() {
                 />
               </>
             ) : (
-              <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
-                Loading activity…
-              </div>
+              <CourseLitLoading label="Loading activity…" className="rounded-xl border bg-card p-8" />
             )}
           </div>
         )}

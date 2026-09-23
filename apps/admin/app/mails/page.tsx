@@ -30,6 +30,7 @@ import type { Email } from "@sendlit/email-editor";
 import { BUILTIN_SYSTEM_TEMPLATES } from "@/lib/system-email-templates";
 import { AuthGate } from "@/components/auth-gate";
 import { PageHeader } from "@/components/layout/page-header";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import {
   Card,
   CardContent,
@@ -187,7 +188,7 @@ export default function MailsPage() {
   const [selectedNewTemplateTitle, setSelectedNewTemplateTitle] = useState("Blank");
   const [savingTemplate, setSavingTemplate] = useState(false);
 
-  const canWriteMails = hasSchoolPermission(school, "learners:write");
+  const canWriteMails = hasSchoolPermission(school, "contacts:write");
 
   function selectTab(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -876,7 +877,7 @@ export default function MailsPage() {
                 if (school) void loadTabData(school, selectedTab);
               }}
             >
-              <RefreshCw className={`size-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              {loading ? <CourseLitLoadingIcon size={16} /> : <RefreshCw className="mr-2 size-4" />}
               Refresh
             </Button>
           }
@@ -929,9 +930,7 @@ export default function MailsPage() {
               </CardHeader>
               <CardContent>
                 {loading && broadcasts.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    Loading broadcasts...
-                  </p>
+                  <CourseLitLoading label="Loading broadcasts…" className="py-8" />
                 ) : broadcasts.length === 0 ? (
                   <div className="py-12 text-center">
                     <Radio className="mx-auto size-6 text-muted-foreground mb-2" />
@@ -1090,9 +1089,7 @@ export default function MailsPage() {
               </CardHeader>
               <CardContent>
                 {loading && sequences.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    Loading sequences...
-                  </p>
+                  <CourseLitLoading label="Loading sequences…" className="py-8" />
                 ) : sequences.length === 0 ? (
                   <div className="py-12 text-center">
                     <Layers className="mx-auto size-6 text-muted-foreground mb-2" />
@@ -1182,9 +1179,7 @@ export default function MailsPage() {
               </CardHeader>
               <CardContent>
                 {loading && templates.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    Loading templates...
-                  </p>
+                  <CourseLitLoading label="Loading templates…" className="py-8" />
                 ) : templates.length === 0 ? (
                   <div className="py-12 text-center">
                     <FileText className="mx-auto size-6 text-muted-foreground mb-2" />

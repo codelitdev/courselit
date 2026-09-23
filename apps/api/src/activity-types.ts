@@ -32,8 +32,6 @@ export const ActivityType = {
   COMMUNITY_REPLY_LIKED: "community_reply_liked",
   COMMUNITY_MEMBERSHIP_REQUESTED: "community_membership_requested",
   COMMUNITY_MEMBERSHIP_GRANTED: "community_membership_granted",
-  COURSE_DISCUSSION_COMMENT_CREATED: "course_discussion_comment_created",
-  COURSE_DISCUSSION_REACTED: "course_discussion_reacted",
 } as const;
 
 export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType];

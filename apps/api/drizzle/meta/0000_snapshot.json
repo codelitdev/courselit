@@ -1,5 +1,5 @@
 {
-  "id": "9b8580a2-8383-47df-a4fc-ee1b18c9f6d0",
+  "id": "c6b0a5d5-25c8-4a87-bdd8-822d96577227",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2395,6 +2395,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'library'"
+        },
         "alt_text": {
           "name": "alt_text",
           "type": "text",
@@ -3165,6 +3172,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "communities_school_uidx": {
+          "name": "communities_school_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"communities\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -3377,164 +3400,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.community_memberships": {
-      "name": "community_memberships",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "community_id": {
-          "name": "community_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "payment_plan_id": {
-          "name": "payment_plan_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'member'"
-        },
-        "joining_reason": {
-          "name": "joining_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "rejection_reason": {
-          "name": "rejection_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "community_memberships_community_account_uidx": {
-          "name": "community_memberships_community_account_uidx",
-          "columns": [
-            {
-              "expression": "community_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "school_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "community_memberships_school_id_schools_id_fk": {
-          "name": "community_memberships_school_id_schools_id_fk",
-          "tableFrom": "community_memberships",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "community_memberships_community_id_communities_id_fk": {
-          "name": "community_memberships_community_id_communities_id_fk",
-          "tableFrom": "community_memberships",
-          "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "community_memberships_school_account_id_school_accounts_id_fk": {
-          "name": "community_memberships_school_account_id_school_accounts_id_fk",
-          "tableFrom": "community_memberships",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "community_memberships_public_id_unique": {
-          "name": "community_memberships_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.community_post_subscribers": {
       "name": "community_post_subscribers",
       "schema": "",
@@ -3706,6 +3571,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'General'"
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "pinned": {
           "name": "pinned",
@@ -4841,6 +4712,13 @@
           "notNull": true,
           "default": 0
         },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
         "next_attempt_at": {
           "name": "next_attempt_at",
           "type": "timestamp with time zone",
@@ -4923,8 +4801,8 @@
           "method": "btree",
           "with": {}
         },
-        "integration_outbox_jobs_contact_sync_idx": {
-          "name": "integration_outbox_jobs_contact_sync_idx",
+        "integration_outbox_jobs_contact_sync_uidx": {
+          "name": "integration_outbox_jobs_contact_sync_uidx",
           "columns": [
             {
               "expression": "school_id",
@@ -4943,9 +4821,16 @@
               "isExpression": false,
               "asc": true,
               "nulls": "last"
+            },
+            {
+              "expression": "(\"payload\"->>'schoolAccountId')",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
+          "where": "status = 'pending' AND type = 'sync_sendlit_contact'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -5432,7 +5317,7 @@
         },
         "learner_memberships_role_check": {
           "name": "learner_memberships_role_check",
-          "value": "\"learner_memberships\".\"role\" IS NULL OR \"learner_memberships\".\"role\" IN ('comment', 'post', 'moderate')"
+          "value": "(\n        (\"learner_memberships\".\"entity_type\" = 'product' AND \"learner_memberships\".\"role\" IS NULL)\n        OR\n        (\"learner_memberships\".\"entity_type\" = 'community' AND \"learner_memberships\".\"role\" IN ('comment', 'post', 'moderate'))\n      )"
         },
         "learner_memberships_included_parent_check": {
           "name": "learner_memberships_included_parent_check",
@@ -5972,8 +5857,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.product_discussion_comments": {
-      "name": "product_discussion_comments",
+    "public.staff_notification_preferences": {
+      "name": "staff_notification_preferences",
       "schema": "",
       "columns": {
         "id": {
@@ -5982,927 +5867,33 @@
           "primaryKey": true,
           "notNull": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "school_id": {
           "name": "school_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "product_id": {
-          "name": "product_id",
+        "membership_id": {
+          "name": "membership_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "entity_type": {
-          "name": "entity_type",
+        "type": {
+          "name": "type",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "likes_count": {
-          "name": "likes_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_by": {
-          "name": "deleted_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_by_role": {
-          "name": "deleted_by_role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "delete_reason": {
-          "name": "delete_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "restored_at": {
-          "name": "restored_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "restored_by": {
-          "name": "restored_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_edited": {
-          "name": "is_edited",
+        "app_enabled": {
+          "name": "app_enabled",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "product_discussion_comments_target_idx": {
-          "name": "product_discussion_comments_target_idx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_discussion_comments_school_id_schools_id_fk": {
-          "name": "product_discussion_comments_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_comments",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_comments_product_id_products_id_fk": {
-          "name": "product_discussion_comments_product_id_products_id_fk",
-          "tableFrom": "product_discussion_comments",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_comments_school_account_id_school_accounts_id_fk": {
-          "name": "product_discussion_comments_school_account_id_school_accounts_id_fk",
-          "tableFrom": "product_discussion_comments",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_discussion_comments_public_id_unique": {
-          "name": "product_discussion_comments_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.product_discussion_likes": {
-      "name": "product_discussion_likes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_type": {
-          "name": "content_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_id": {
-          "name": "content_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comment_id": {
-          "name": "comment_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "product_discussion_likes_account_uidx": {
-          "name": "product_discussion_likes_account_uidx",
-          "columns": [
-            {
-              "expression": "content_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "content_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "school_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "product_discussion_likes_target_idx": {
-          "name": "product_discussion_likes_target_idx",
-          "columns": [
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_discussion_likes_school_id_schools_id_fk": {
-          "name": "product_discussion_likes_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_likes",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_likes_product_id_products_id_fk": {
-          "name": "product_discussion_likes_product_id_products_id_fk",
-          "tableFrom": "product_discussion_likes",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_likes_comment_id_product_discussion_comments_id_fk": {
-          "name": "product_discussion_likes_comment_id_product_discussion_comments_id_fk",
-          "tableFrom": "product_discussion_likes",
-          "tableTo": "product_discussion_comments",
-          "columnsFrom": [
-            "comment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_likes_school_account_id_school_accounts_id_fk": {
-          "name": "product_discussion_likes_school_account_id_school_accounts_id_fk",
-          "tableFrom": "product_discussion_likes",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_discussion_likes_public_id_unique": {
-          "name": "product_discussion_likes_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.product_discussion_replies": {
-      "name": "product_discussion_replies",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comment_id": {
-          "name": "comment_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_reply_id": {
-          "name": "parent_reply_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "likes_count": {
-          "name": "likes_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_by": {
-          "name": "deleted_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_by_role": {
-          "name": "deleted_by_role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "delete_reason": {
-          "name": "delete_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "restored_at": {
-          "name": "restored_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "restored_by": {
-          "name": "restored_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_edited": {
-          "name": "is_edited",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "product_discussion_replies_comment_idx": {
-          "name": "product_discussion_replies_comment_idx",
-          "columns": [
-            {
-              "expression": "comment_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "product_discussion_replies_parent_idx": {
-          "name": "product_discussion_replies_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_reply_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_discussion_replies_school_id_schools_id_fk": {
-          "name": "product_discussion_replies_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_replies",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_replies_product_id_products_id_fk": {
-          "name": "product_discussion_replies_product_id_products_id_fk",
-          "tableFrom": "product_discussion_replies",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_replies_comment_id_product_discussion_comments_id_fk": {
-          "name": "product_discussion_replies_comment_id_product_discussion_comments_id_fk",
-          "tableFrom": "product_discussion_replies",
-          "tableTo": "product_discussion_comments",
-          "columnsFrom": [
-            "comment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_replies_school_account_id_school_accounts_id_fk": {
-          "name": "product_discussion_replies_school_account_id_school_accounts_id_fk",
-          "tableFrom": "product_discussion_replies",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_discussion_replies_public_id_unique": {
-          "name": "product_discussion_replies_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.product_discussion_reports": {
-      "name": "product_discussion_reports",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_type": {
-          "name": "content_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_id": {
-          "name": "content_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comment_id": {
-          "name": "comment_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "rejection_reason": {
-          "name": "rejection_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "product_discussion_reports_account_uidx": {
-          "name": "product_discussion_reports_account_uidx",
-          "columns": [
-            {
-              "expression": "content_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "content_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "school_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "product_discussion_reports_target_idx": {
-          "name": "product_discussion_reports_target_idx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_discussion_reports_school_id_schools_id_fk": {
-          "name": "product_discussion_reports_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_reports",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_reports_product_id_products_id_fk": {
-          "name": "product_discussion_reports_product_id_products_id_fk",
-          "tableFrom": "product_discussion_reports",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_reports_comment_id_product_discussion_comments_id_fk": {
-          "name": "product_discussion_reports_comment_id_product_discussion_comments_id_fk",
-          "tableFrom": "product_discussion_reports",
-          "tableTo": "product_discussion_comments",
-          "columnsFrom": [
-            "comment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_reports_school_account_id_school_accounts_id_fk": {
-          "name": "product_discussion_reports_school_account_id_school_accounts_id_fk",
-          "tableFrom": "product_discussion_reports",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_discussion_reports_public_id_unique": {
-          "name": "product_discussion_reports_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.product_discussion_subscribers": {
-      "name": "product_discussion_subscribers",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_account_id": {
-          "name": "school_account_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "subscription": {
-          "name": "subscription",
+        "email_enabled": {
+          "name": "email_enabled",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -6922,29 +5913,23 @@
         }
       },
       "indexes": {
-        "product_discussion_subscribers_account_uidx": {
-          "name": "product_discussion_subscribers_account_uidx",
+        "staff_notification_preferences_type_uidx": {
+          "name": "staff_notification_preferences_type_uidx",
           "columns": [
             {
-              "expression": "product_id",
+              "expression": "school_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "entity_type",
+              "expression": "membership_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "school_account_id",
+              "expression": "type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -6957,9 +5942,9 @@
         }
       },
       "foreignKeys": {
-        "product_discussion_subscribers_school_id_schools_id_fk": {
-          "name": "product_discussion_subscribers_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_subscribers",
+        "staff_notification_preferences_school_id_schools_id_fk": {
+          "name": "staff_notification_preferences_school_id_schools_id_fk",
+          "tableFrom": "staff_notification_preferences",
           "tableTo": "schools",
           "columnsFrom": [
             "school_id"
@@ -6970,234 +5955,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "product_discussion_subscribers_product_id_products_id_fk": {
-          "name": "product_discussion_subscribers_product_id_products_id_fk",
-          "tableFrom": "product_discussion_subscribers",
-          "tableTo": "products",
+        "staff_notification_preferences_membership_id_memberships_id_fk": {
+          "name": "staff_notification_preferences_membership_id_memberships_id_fk",
+          "tableFrom": "staff_notification_preferences",
+          "tableTo": "memberships",
           "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_subscribers_school_account_id_school_accounts_id_fk": {
-          "name": "product_discussion_subscribers_school_account_id_school_accounts_id_fk",
-          "tableFrom": "product_discussion_subscribers",
-          "tableTo": "school_accounts",
-          "columnsFrom": [
-            "school_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_discussion_subscribers_public_id_unique": {
-          "name": "product_discussion_subscribers_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.product_discussion_summaries": {
-      "name": "product_discussion_summaries",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comments_count": {
-          "name": "comments_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "replies_count": {
-          "name": "replies_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_count": {
-          "name": "total_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "activity_count_including_deleted": {
-          "name": "activity_count_including_deleted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "last_activity_at": {
-          "name": "last_activity_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_comment_id": {
-          "name": "last_comment_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_reply_id": {
-          "name": "last_reply_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "product_discussion_summaries_target_uidx": {
-          "name": "product_discussion_summaries_target_uidx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "product_discussion_summaries_activity_idx": {
-          "name": "product_discussion_summaries_activity_idx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "last_activity_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_discussion_summaries_school_id_schools_id_fk": {
-          "name": "product_discussion_summaries_school_id_schools_id_fk",
-          "tableFrom": "product_discussion_summaries",
-          "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_discussion_summaries_product_id_products_id_fk": {
-          "name": "product_discussion_summaries_product_id_products_id_fk",
-          "tableFrom": "product_discussion_summaries",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
+            "membership_id"
           ],
           "columnsTo": [
             "id"
@@ -7381,6 +6144,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "included_with_community": {
+          "name": "included_with_community",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "discussion_space_id": {
+          "name": "discussion_space_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_by": {
           "name": "created_by",
@@ -7660,11 +6436,30 @@
           "primaryKey": false,
           "notNull": true
         },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_school_account_id": {
+          "name": "created_by_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "user_id": {
           "name": "user_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Default'"
         },
         "digest": {
           "name": "digest",
@@ -7674,9 +6469,10 @@
         },
         "permissions": {
           "name": "permissions",
-          "type": "text",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'{}'"
         },
         "expires_at": {
           "name": "expires_at",
@@ -7701,6 +6497,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -7716,6 +6519,32 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "api_keys_membership_id_memberships_id_fk": {
+          "name": "api_keys_membership_id_memberships_id_fk",
+          "tableFrom": "api_keys",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membership_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "api_keys_created_by_school_account_id_school_accounts_id_fk": {
+          "name": "api_keys_created_by_school_account_id_school_accounts_id_fk",
+          "tableFrom": "api_keys",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "created_by_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "api_keys_user_id_user_id_fk": {
@@ -7774,17 +6603,24 @@
           "primaryKey": false,
           "notNull": true
         },
-        "role": {
-          "name": "role",
+        "normalized_email": {
+          "name": "normalized_email",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "permissions": {
           "name": "permissions",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "preset_id": {
+          "name": "preset_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "token_digest": {
           "name": "token_digest",
@@ -7792,11 +6628,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "invited_by_school_account_id": {
+          "name": "invited_by_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "inviter_id": {
           "name": "inviter_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
         },
         "expires_at": {
           "name": "expires_at",
@@ -7804,8 +6653,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "accepted_by_school_account_id": {
+          "name": "accepted_by_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "accepted_at": {
           "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejected_at": {
+          "name": "rejected_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -7821,9 +6682,59 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "invitations_school_email_idx": {
+          "name": "invitations_school_email_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "invitations_school_pending_email_uidx": {
+          "name": "invitations_school_pending_email_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "normalized_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"invitations\".\"status\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "invitations_school_id_schools_id_fk": {
           "name": "invitations_school_id_schools_id_fk",
@@ -7838,6 +6749,19 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
+        "invitations_invited_by_school_account_id_school_accounts_id_fk": {
+          "name": "invitations_invited_by_school_account_id_school_accounts_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "invited_by_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "invitations_inviter_id_user_id_fk": {
           "name": "invitations_inviter_id_user_id_fk",
           "tableFrom": "invitations",
@@ -7848,7 +6772,20 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "invitations_accepted_by_school_account_id_school_accounts_id_fk": {
+          "name": "invitations_accepted_by_school_account_id_school_accounts_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "accepted_by_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -7876,6 +6813,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "school_id": {
           "name": "school_id",
           "type": "uuid",
@@ -7888,18 +6831,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "is_owner": {
           "name": "is_owner",
           "type": "boolean",
@@ -7909,39 +6840,38 @@
         },
         "permissions": {
           "name": "permissions",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "preset_id": {
+          "name": "preset_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
         },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {
-        "memberships_school_user_uidx": {
-          "name": "memberships_school_user_uidx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "memberships_school_account_uidx": {
           "name": "memberships_school_account_uidx",
           "columns": [
@@ -7959,6 +6889,37 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_school_single_owner_uidx": {
+          "name": "memberships_school_single_owner_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"memberships\".\"is_owner\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_school_account_idx": {
+          "name": "memberships_school_account_idx",
+          "columns": [
+            {
+              "expression": "school_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -7990,23 +6951,18 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "memberships_user_id_user_id_fk": {
-          "name": "memberships_user_id_user_id_fk",
-          "tableFrom": "memberships",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "memberships_public_id_unique": {
+          "name": "memberships_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -8051,9 +7007,16 @@
           "primaryKey": false,
           "notNull": true
         },
-        "image": {
-          "name": "image",
+        "bio": {
+          "name": "bio",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "avatar": {
+          "name": "avatar",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -8063,6 +7026,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'active'"
+        },
+        "learner_registered_at": {
+          "name": "learner_registered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_active_at": {
+          "name": "last_active_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_activated_at": {
+          "name": "contact_activated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sendlit_contact_id": {
+          "name": "sendlit_contact_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -8119,6 +7106,28 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "school_accounts_school_sendlit_contact_uidx": {
+          "name": "school_accounts_school_sendlit_contact_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sendlit_contact_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"school_accounts\".\"sendlit_contact_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -8160,7 +7169,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "school_accounts_contact_activated_check": {
+          "name": "school_accounts_contact_activated_check",
+          "value": "\"school_accounts\".\"sendlit_contact_id\" IS NULL OR \"school_accounts\".\"contact_activated_at\" IS NOT NULL"
+        },
+        "school_accounts_status_check": {
+          "name": "school_accounts_status_check",
+          "value": "\"school_accounts\".\"status\" IN ('active', 'deactivated', 'deletion_pending')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.school_auth_tickets": {
@@ -8687,6 +7705,539 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.space_followers": {
+      "name": "space_followers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_account_id": {
+          "name": "school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "space_followers_space_account_uidx": {
+          "name": "space_followers_space_account_uidx",
+          "columns": [
+            {
+              "expression": "space_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "school_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "space_followers_account_idx": {
+          "name": "space_followers_account_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "school_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "space_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "space_followers_school_id_schools_id_fk": {
+          "name": "space_followers_school_id_schools_id_fk",
+          "tableFrom": "space_followers",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_followers_space_id_spaces_id_fk": {
+          "name": "space_followers_space_id_spaces_id_fk",
+          "tableFrom": "space_followers",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_followers_school_account_id_school_accounts_id_fk": {
+          "name": "space_followers_school_account_id_school_accounts_id_fk",
+          "tableFrom": "space_followers",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.space_unlock_plans": {
+      "name": "space_unlock_plans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unlock_id": {
+          "name": "unlock_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_plan_id": {
+          "name": "payment_plan_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "space_unlock_plans_unlock_plan_uidx": {
+          "name": "space_unlock_plans_unlock_plan_uidx",
+          "columns": [
+            {
+              "expression": "unlock_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "payment_plan_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "space_unlock_plans_school_id_schools_id_fk": {
+          "name": "space_unlock_plans_school_id_schools_id_fk",
+          "tableFrom": "space_unlock_plans",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_unlock_plans_unlock_id_space_unlocks_id_fk": {
+          "name": "space_unlock_plans_unlock_id_space_unlocks_id_fk",
+          "tableFrom": "space_unlock_plans",
+          "tableTo": "space_unlocks",
+          "columnsFrom": [
+            "unlock_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_unlock_plans_payment_plan_id_storefront_plans_id_fk": {
+          "name": "space_unlock_plans_payment_plan_id_storefront_plans_id_fk",
+          "tableFrom": "space_unlock_plans",
+          "tableTo": "storefront_plans",
+          "columnsFrom": [
+            "payment_plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.space_unlocks": {
+      "name": "space_unlocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "space_unlocks_space_entity_uidx": {
+          "name": "space_unlocks_space_entity_uidx",
+          "columns": [
+            {
+              "expression": "space_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "space_unlocks_school_entity_idx": {
+          "name": "space_unlocks_school_entity_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "space_unlocks_school_id_schools_id_fk": {
+          "name": "space_unlocks_school_id_schools_id_fk",
+          "tableFrom": "space_unlocks",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_unlocks_space_id_spaces_id_fk": {
+          "name": "space_unlocks_space_id_spaces_id_fk",
+          "tableFrom": "space_unlocks",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "space_unlocks_entity_check": {
+          "name": "space_unlocks_entity_check",
+          "value": "\"space_unlocks\".\"entity_type\" IN ('community', 'product')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.spaces": {
+      "name": "spaces",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'MessagesSquare'"
+        },
+        "featured_image": {
+          "name": "featured_image",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follow": {
+          "name": "follow",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "who_can_post": {
+          "name": "who_can_post",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'members'"
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "spaces_school_slug_uidx": {
+          "name": "spaces_school_slug_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "spaces_school_position_idx": {
+          "name": "spaces_school_position_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "spaces_school_id_schools_id_fk": {
+          "name": "spaces_school_id_schools_id_fk",
+          "tableFrom": "spaces",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "spaces_public_id_unique": {
+          "name": "spaces_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

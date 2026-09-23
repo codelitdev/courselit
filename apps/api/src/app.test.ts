@@ -518,17 +518,8 @@ describe.serial("reference API adapters", () => {
     expect(document.paths["/v1/public/site/blogs/{slug}"]).toBeDefined();
     expect(document.paths["/v1/products/{productId}/preview"]).toBeDefined();
     expect(document.paths["/v1/preview/products/{productId}"]).toBeDefined();
-    expect(
-      document.paths["/v1/preview/products/{productId}/discussions"],
-    ).toBeDefined();
-    expect(
-      document.paths["/v1/preview/products/{productId}/lessons/{lessonId}/discussions"],
-    ).toBeDefined();
-    expect(
-      document.paths[
-        "/v1/preview/products/{productId}/lessons/{lessonId}/discussions/comments/{commentId}/replies"
-      ],
-    ).toBeDefined();
+    expect(document.paths["/v1/learner/spaces"]).toBeDefined();
+    expect(document.paths["/v1/learner/feed"]).toBeDefined();
     expect(document.paths["/v1/school/code-injection"]).toBeDefined();
     expect(document.paths["/v1/school/hosts"]).toBeDefined();
     expect(document.paths["/v1/school/hosts/{hostname}"]).toBeDefined();

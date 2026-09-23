@@ -25,9 +25,7 @@ import {
   createCommunityPaymentPlanBodySchema,
   createCommunityPostBodySchema,
   createCommunityReportBodySchema,
-  createDiscussionCommentBodySchema,
-  createDiscussionReplyBodySchema,
-  createDiscussionReportBodySchema,
+  createContactSegmentBodySchema,
   createLearnerCheckoutBodySchema,
   createLearnerCommunityCheckoutBodySchema,
   createLearnerDownloadLinkBodySchema,
@@ -45,19 +43,19 @@ import {
   createStorefrontPlanBodySchema,
   deleteCommunityCategoryBodySchema,
   deleteSpaceBodySchema,
-  discussionLikeBodySchema,
-  discussionListQuerySchema,
-  discussionSubscriptionBodySchema,
   evaluateQuizBodySchema,
+  filterPreviewBodySchema,
   finalizeMediaUploadBodySchema,
-  joinCommunityBodySchema,
   learnerAuthBodySchema,
   learnerAvatarMediaAuthorizationBodySchema,
   learnerAvatarMediaFinalizeBodySchema,
   learnerCommunityMediaAuthorizationBodySchema,
   learnerCommunityMediaListQuerySchema,
   leaveCommunityBodySchema,
+  listContactsQuerySchema,
   listProductsQuerySchema,
+  mediaCategorySchema,
+  newsletterSubscribeBodySchema,
   notificationListQuerySchema,
   notificationPreferenceTypeSchema,
   orderSpacesBodySchema,
@@ -76,7 +74,9 @@ import {
   updateCommunityPaymentPlanBodySchema,
   updateCommunityPostBodySchema,
   updateCommunityReportBodySchema,
-  updateDiscussionReportBodySchema,
+  updateContactBodySchema,
+  updateContactMarketingBodySchema,
+  updateContactSegmentBodySchema,
   updateLearnerProfileBodySchema,
   updateLessonBodySchema,
   updateMediaBodySchema,
@@ -95,7 +95,7 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, ne, or } from "drizzle-orm";
 import { ActivityType, getSchoolOverview, recordActivity } from "./activities.js";
 import {
   createApiKeyRecord,
@@ -146,7 +146,6 @@ import {
   getCommunity,
   getPost,
   getPublicCommunity,
-  joinCommunity,
   leaveCommunity,
   listAvailableLearnerCommunities,
   listComments,
@@ -178,6 +177,21 @@ import {
   setDefaultCommunityPlan,
   updateCommunityPlan,
 } from "./community-plans.js";
+import {
+  createContactSegment,
+  deleteContact,
+  deleteContactSegment,
+  filterPreviewContacts,
+  getContact,
+  getContactSegment,
+  getContactSegmentMembers,
+  listContacts,
+  listContactSegments,
+  subscribeNewsletter,
+  updateContact,
+  updateContactMarketing,
+  updateContactSegment,
+} from "./contacts.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { createLearnerDownloadLink } from "./downloads.js";
@@ -226,7 +240,6 @@ import {
   clearLearnerSessionCookieHeader,
   completeLesson,
   consumeSchoolAuthTicket,
-  createLearnerIdentityLink,
   ensureLearnerProductMembershipForPublicSignup,
   getLearnerLessonMedia,
   grantLearnerMembership,
@@ -234,13 +247,11 @@ import {
   learnerSessionCookieHeader,
   listLearnerProducts,
   listLearnerProgress,
-  listLearners,
   signInLearner,
   signInLearnerWithIdentity,
   signOutLearner,
   signUpLearner,
   updateLearnerProfile,
-  updateLearnerStatus,
 } from "./learners.js";
 import { createCourseLitMcp } from "./mcp.js";
 import {
@@ -273,21 +284,9 @@ import { COURSELIT_PERMISSIONS, type CourseLitPermission } from "./permissions.j
 import { createPreviewGrant, readPreviewProduct } from "./preview.js";
 import { getProductAnalytics } from "./product-analytics.js";
 import {
-  createDiscussionComment,
-  createDiscussionReply,
-  createDiscussionReport,
-  deleteDiscussionComment,
-  deleteDiscussionReply,
-  listDiscussionComments,
-  listDiscussionReplies,
-  listDiscussionReports,
-  listDiscussionSummaries,
-  toggleDiscussionLike,
-  toggleDiscussionSubscription,
-  updateDiscussionComment,
-  updateDiscussionReply,
-  updateDiscussionReport,
-} from "./product-discussions.js";
+  getProductCustomerProgress,
+  listProductCustomers,
+} from "./product-customers.js";
 import {
   createProduct,
   deleteProduct,
@@ -596,149 +595,6 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
-    const previewDiscussionSummariesMatch =
-      /^\/v1\/preview\/products\/([^/]+)\/discussions$/.exec(path);
-    if (request.method === "GET" && previewDiscussionSummariesMatch) {
-      const rawToken =
-        request.headers["x-preview-token"] ?? request.headers["X-Preview-Token"];
-      const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
-      if (!token) return errorResponse(createPlatformError("unauthenticated"));
-      const productPublicId = decodeURIComponent(previewDiscussionSummariesMatch[1]!);
-      const previewProduct = await readPreviewProduct(
-        deps.db,
-        { token, productPublicId },
-        deps.clock,
-      );
-      if (!previewProduct.ok) return errorResponse(previewProduct.error);
-      const school = await loadSchoolByPublicId(deps.db, previewProduct.value.schoolId);
-      if (!school) return errorResponse(createPlatformError("not_found"));
-      const parsed = discussionListQuerySchema.safeParse({
-        cursor: query.get("cursor") ?? undefined,
-        limit: query.get("limit") ?? undefined,
-      });
-      if (!parsed.success)
-        return errorResponse(createPlatformError("validation_failed"));
-      const result = await listDiscussionSummaries(
-        deps.db,
-        {
-          kind: "admin",
-          context: {
-            tenantId: school.id,
-            principalId: `preview:${token.slice(0, 16)}`,
-            credential: {
-              kind: "session",
-              credentialId: `preview:${token.slice(0, 16)}`,
-            },
-            permissions: new Set<CourseLitPermission>(["products:read"]),
-            requestId: requestIdFrom(request, deps),
-          },
-        },
-        productPublicId,
-        parsed.data,
-        deps.clock.now(),
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-
-    const previewDiscussionMatch =
-      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/discussions$/.exec(path);
-    if (request.method === "GET" && previewDiscussionMatch) {
-      const rawToken =
-        request.headers["x-preview-token"] ?? request.headers["X-Preview-Token"];
-      const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
-      if (!token) return errorResponse(createPlatformError("unauthenticated"));
-      const productPublicId = decodeURIComponent(previewDiscussionMatch[1]!);
-      const previewProduct = await readPreviewProduct(
-        deps.db,
-        { token, productPublicId },
-        deps.clock,
-      );
-      if (!previewProduct.ok) return errorResponse(previewProduct.error);
-      const school = await loadSchoolByPublicId(deps.db, previewProduct.value.schoolId);
-      if (!school) return errorResponse(createPlatformError("not_found"));
-      const parsed = discussionListQuerySchema.safeParse({
-        cursor: query.get("cursor") ?? undefined,
-        limit: query.get("limit") ?? undefined,
-      });
-      if (!parsed.success)
-        return errorResponse(createPlatformError("validation_failed"));
-      const result = await listDiscussionComments(
-        deps.db,
-        {
-          kind: "admin",
-          context: {
-            tenantId: school.id,
-            principalId: `preview:${token.slice(0, 16)}`,
-            credential: {
-              kind: "session",
-              credentialId: `preview:${token.slice(0, 16)}`,
-            },
-            permissions: new Set<CourseLitPermission>(["products:read"]),
-            requestId: requestIdFrom(request, deps),
-          },
-        },
-        productPublicId,
-        decodeURIComponent(previewDiscussionMatch[2]!),
-        parsed.data,
-        deps.clock.now(),
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-
-    const previewDiscussionRepliesMatch =
-      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/comments\/([^/]+)\/replies$/.exec(
-        path,
-      );
-    if (request.method === "GET" && previewDiscussionRepliesMatch) {
-      const rawToken =
-        request.headers["x-preview-token"] ?? request.headers["X-Preview-Token"];
-      const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
-      if (!token) return errorResponse(createPlatformError("unauthenticated"));
-      const productPublicId = decodeURIComponent(previewDiscussionRepliesMatch[1]!);
-      const previewProduct = await readPreviewProduct(
-        deps.db,
-        { token, productPublicId },
-        deps.clock,
-      );
-      if (!previewProduct.ok) return errorResponse(previewProduct.error);
-      const school = await loadSchoolByPublicId(deps.db, previewProduct.value.schoolId);
-      if (!school) return errorResponse(createPlatformError("not_found"));
-      const parsed = discussionListQuerySchema.safeParse({
-        cursor: query.get("cursor") ?? undefined,
-        limit: query.get("limit") ?? undefined,
-      });
-      if (!parsed.success)
-        return errorResponse(createPlatformError("validation_failed"));
-      const result = await listDiscussionReplies(
-        deps.db,
-        {
-          kind: "admin",
-          context: {
-            tenantId: school.id,
-            principalId: `preview:${token.slice(0, 16)}`,
-            credential: {
-              kind: "session",
-              credentialId: `preview:${token.slice(0, 16)}`,
-            },
-            permissions: new Set<CourseLitPermission>(["products:read"]),
-            requestId: requestIdFrom(request, deps),
-          },
-        },
-        productPublicId,
-        decodeURIComponent(previewDiscussionRepliesMatch[2]!),
-        decodeURIComponent(previewDiscussionRepliesMatch[3]!),
-        parsed.data,
-        deps.clock.now(),
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-
     const previewReadMatch = /^\/v1\/preview\/products\/([^/]+)$/.exec(path);
     if (request.method === "GET" && previewReadMatch) {
       const rawToken =
@@ -761,7 +617,8 @@ export async function dispatch(
     let learnerAuth = await authenticateLearner(deps.db, request.headers, deps.clock);
     let bridgedLearnerToken: string | null = null;
     if (learnerAuth.kind !== "authenticated" && path.startsWith("/v1/learner/")) {
-      const cookieHeader = request.headers.cookie ?? request.headers.Cookie;
+      const rawCookie = request.headers.cookie ?? request.headers.Cookie;
+      const cookieHeader = Array.isArray(rawCookie) ? rawCookie.join("; ") : rawCookie;
       const hasBetterAuthCookie =
         typeof cookieHeader === "string" &&
         cookieHeader.split(";").some((part) => {
@@ -778,7 +635,56 @@ export async function dispatch(
           deps,
         );
         if (globalIdentity.kind === "authenticated") {
-          const schoolPublicId = resolveLearnerSchoolKey(request);
+          let schoolPublicId = resolveLearnerSchoolKey(request);
+          if (!schoolPublicId) {
+            // 1. Try selectedSchools for this user
+            const [selected] = await deps.db
+              .select({ publicId: schema.schools.publicId })
+              .from(schema.selectedSchools)
+              .innerJoin(
+                schema.schools,
+                eq(schema.schools.id, schema.selectedSchools.schoolId),
+              )
+              .where(
+                and(
+                  eq(schema.selectedSchools.userId, globalIdentity.principalId),
+                  ne(schema.schools.status, "deleted"),
+                ),
+              )
+              .limit(1);
+            if (selected) {
+              schoolPublicId = selected.publicId;
+            } else {
+              // 2. Try any active schoolAccount for this user
+              const [account] = await deps.db
+                .select({ publicId: schema.schools.publicId })
+                .from(schema.schoolAccounts)
+                .innerJoin(
+                  schema.schools,
+                  eq(schema.schools.id, schema.schoolAccounts.schoolId),
+                )
+                .where(
+                  and(
+                    eq(schema.schoolAccounts.userId, globalIdentity.principalId),
+                    ne(schema.schools.status, "deleted"),
+                  ),
+                )
+                .limit(1);
+              if (account) {
+                schoolPublicId = account.publicId;
+              } else {
+                // 3. Fallback to single active school in development / single-tenant setup
+                const allSchools = await deps.db
+                  .select({ publicId: schema.schools.publicId })
+                  .from(schema.schools)
+                  .where(ne(schema.schools.status, "deleted"))
+                  .limit(2);
+                if (allSchools.length === 1 && allSchools[0]) {
+                  schoolPublicId = allSchools[0].publicId;
+                }
+              }
+            }
+          }
           if (schoolPublicId) {
             const users = await deps.db
               .select({
@@ -828,7 +734,7 @@ export async function dispatch(
       // verified host. An authenticated learner session may be stale or
       // belong to another school; it must not override the public host and
       // make an otherwise anonymous sales page unusable.
-      const schoolKey = resolveLearnerSchoolKey(request);
+      let schoolKey = resolveLearnerSchoolKey(request);
       if (!schoolKey) {
         if (learnerAuth.kind === "authenticated") {
           return {
@@ -837,6 +743,17 @@ export async function dispatch(
               schoolId: learnerAuth.value.school.id,
               publicId: learnerAuth.value.school.publicId,
             },
+          };
+        }
+        const allSchools = await deps.db
+          .select({ id: schema.schools.id, publicId: schema.schools.publicId })
+          .from(schema.schools)
+          .where(ne(schema.schools.status, "deleted"))
+          .limit(2);
+        if (allSchools.length === 1 && allSchools[0]) {
+          return {
+            ok: true,
+            value: { schoolId: allSchools[0].id, publicId: allSchools[0].publicId },
           };
         }
         return { ok: false, error: createPlatformError("tenant_required") };
@@ -881,9 +798,18 @@ export async function dispatch(
     };
 
     if (request.method === "GET" && path === "/v1/public/school/login-methods") {
-      const schoolKey = resolveLearnerSchoolKey(request);
-      if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-      const school = await loadSchoolByPublicId(deps.db, schoolKey);
+      let schoolKey = resolveLearnerSchoolKey(request);
+      let school = schoolKey ? await loadSchoolByPublicId(deps.db, schoolKey) : null;
+      if (!school) {
+        const allSchools = await deps.db
+          .select()
+          .from(schema.schools)
+          .where(ne(schema.schools.status, "deleted"))
+          .limit(2);
+        if (allSchools.length === 1 && allSchools[0]) {
+          school = allSchools[0];
+        }
+      }
       if (!school) return errorResponse(createPlatformError("not_found"));
       const hasGoogle = Boolean(
         process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
@@ -1182,6 +1108,25 @@ export async function dispatch(
         ? { status: 200, body: { items: result.value } }
         : errorResponse(result.error);
     }
+
+    if (request.method === "POST" && path === "/v1/newsletter/subscribe") {
+      const parsed = newsletterSubscribeBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      const result = await subscribeNewsletter(deps.db, {
+        schoolId: school.value.schoolId,
+        email: parsed.data.email,
+        name: parsed.data.name,
+        clock: deps.clock,
+      });
+      return result.ok
+        ? { status: 200, body: { status: "subscribed" as const, email: result.value.email } }
+        : errorResponse(result.error);
+    }
+
     if (request.method === "POST" && path === "/v1/storefront/checkout-sessions") {
       const parsed = createCheckoutSessionBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
@@ -1488,10 +1433,15 @@ export async function dispatch(
           : errorResponse(result.error);
       }
       if (request.method === "GET" && path === "/v1/learner/me") {
-        const profile = await readLearnerProfile(deps.db, deps.sendLit, {
-          schoolId: learnerAuth.value.school.id,
-          email: learnerAuth.value.schoolAccount.email,
-        });
+        let profile = undefined;
+        try {
+          profile = await readLearnerProfile(deps.db, deps.sendLit, {
+            schoolId: learnerAuth.value.school.id,
+            email: learnerAuth.value.schoolAccount.email,
+          });
+        } catch (profileErr) {
+          console.error("[readLearnerProfile error]", profileErr);
+        }
         return {
           status: 200,
           body: learnerMe(learnerAuth.value, profile),
@@ -1784,279 +1734,6 @@ export async function dispatch(
             lessonPublicId: decodeURIComponent(learnerQuizEvaluationMatch[2]!),
           },
           parsed.data.answers,
-          deps.clock,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      const learnerDiscussionSummariesMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/discussions$/.exec(path);
-      if (request.method === "GET" && learnerDiscussionSummariesMatch) {
-        const parsed = discussionListQuerySchema.safeParse({
-          cursor: query.get("cursor") ?? undefined,
-          limit: query.get("limit") ?? undefined,
-        });
-        if (!parsed.success)
-          return errorResponse(createPlatformError("validation_failed"));
-        const result = await listDiscussionSummaries(
-          deps.db,
-          learnerCommunityViewer,
-          decodeURIComponent(learnerDiscussionSummariesMatch[1]!),
-          parsed.data,
-          deps.clock.now(),
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      const learnerDiscussionTargetMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions$/.exec(path);
-      if (learnerDiscussionTargetMatch) {
-        const productPublicId = decodeURIComponent(learnerDiscussionTargetMatch[1]!);
-        const lessonPublicId = decodeURIComponent(learnerDiscussionTargetMatch[2]!);
-        if (request.method === "GET") {
-          const parsed = discussionListQuerySchema.safeParse({
-            cursor: query.get("cursor") ?? undefined,
-            limit: query.get("limit") ?? undefined,
-          });
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await listDiscussionComments(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            parsed.data,
-            deps.clock.now(),
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-        if (request.method === "POST") {
-          const parsed = createDiscussionCommentBodySchema.safeParse(
-            request.body ?? {},
-          );
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await createDiscussionComment(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            parsed.data.content,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 201, body: result.value }
-            : errorResponse(result.error);
-        }
-      }
-      const learnerDiscussionRepliesMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/comments\/([^/]+)\/replies$/.exec(
-          path,
-        );
-      if (learnerDiscussionRepliesMatch) {
-        const productPublicId = decodeURIComponent(learnerDiscussionRepliesMatch[1]!);
-        const lessonPublicId = decodeURIComponent(learnerDiscussionRepliesMatch[2]!);
-        const commentPublicId = decodeURIComponent(learnerDiscussionRepliesMatch[3]!);
-        if (request.method === "GET") {
-          const parsed = discussionListQuerySchema.safeParse({
-            cursor: query.get("cursor") ?? undefined,
-            limit: query.get("limit") ?? undefined,
-          });
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await listDiscussionReplies(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            commentPublicId,
-            parsed.data,
-            deps.clock.now(),
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-        if (request.method === "POST") {
-          const parsed = createDiscussionReplyBodySchema.safeParse(request.body ?? {});
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await createDiscussionReply(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            commentPublicId,
-            parsed.data.content,
-            parsed.data.parentReplyId,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 201, body: result.value }
-            : errorResponse(result.error);
-        }
-      }
-      const learnerDiscussionCommentMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/comments\/([^/]+)$/.exec(
-          path,
-        );
-      if (learnerDiscussionCommentMatch) {
-        const productPublicId = decodeURIComponent(learnerDiscussionCommentMatch[1]!);
-        const lessonPublicId = decodeURIComponent(learnerDiscussionCommentMatch[2]!);
-        const commentPublicId = decodeURIComponent(learnerDiscussionCommentMatch[3]!);
-        if (request.method === "PATCH") {
-          const parsed = createDiscussionCommentBodySchema.safeParse(
-            request.body ?? {},
-          );
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await updateDiscussionComment(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            commentPublicId,
-            parsed.data.content,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-        if (request.method === "DELETE") {
-          const result = await deleteDiscussionComment(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            commentPublicId,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-      }
-      const learnerDiscussionReplyMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/replies\/([^/]+)$/.exec(
-          path,
-        );
-      if (learnerDiscussionReplyMatch) {
-        const productPublicId = decodeURIComponent(learnerDiscussionReplyMatch[1]!);
-        const lessonPublicId = decodeURIComponent(learnerDiscussionReplyMatch[2]!);
-        const replyPublicId = decodeURIComponent(learnerDiscussionReplyMatch[3]!);
-        if (request.method === "PATCH") {
-          const parsed = createDiscussionCommentBodySchema.safeParse(
-            request.body ?? {},
-          );
-          if (!parsed.success)
-            return errorResponse(createPlatformError("validation_failed"));
-          const result = await updateDiscussionReply(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            replyPublicId,
-            parsed.data.content,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-        if (request.method === "DELETE") {
-          const result = await deleteDiscussionReply(
-            deps.db,
-            learnerCommunityViewer,
-            productPublicId,
-            lessonPublicId,
-            replyPublicId,
-            deps.clock,
-          );
-          return result.ok
-            ? { status: 200, body: result.value }
-            : errorResponse(result.error);
-        }
-      }
-      const learnerDiscussionLikeMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/likes$/.exec(
-          path,
-        );
-      if (request.method === "POST" && learnerDiscussionLikeMatch) {
-        const parsed = discussionLikeBodySchema.safeParse(request.body ?? {});
-        if (!parsed.success)
-          return errorResponse(createPlatformError("validation_failed"));
-        const result = await toggleDiscussionLike(
-          deps.db,
-          learnerCommunityViewer,
-          decodeURIComponent(learnerDiscussionLikeMatch[1]!),
-          decodeURIComponent(learnerDiscussionLikeMatch[2]!),
-          parsed.data.contentType,
-          parsed.data.contentId,
-          deps.clock,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      const learnerDiscussionSubscriptionMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/subscription$/.exec(
-          path,
-        );
-      if (request.method === "POST" && learnerDiscussionSubscriptionMatch) {
-        const parsed = discussionSubscriptionBodySchema.safeParse(request.body ?? {});
-        if (!parsed.success)
-          return errorResponse(createPlatformError("validation_failed"));
-        const result = await toggleDiscussionSubscription(
-          deps.db,
-          learnerCommunityViewer,
-          decodeURIComponent(learnerDiscussionSubscriptionMatch[1]!),
-          decodeURIComponent(learnerDiscussionSubscriptionMatch[2]!),
-          parsed.data.subscription,
-          deps.clock,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      const learnerDiscussionReportMatch =
-        /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/discussions\/reports$/.exec(
-          path,
-        );
-      if (request.method === "POST" && learnerDiscussionReportMatch) {
-        const parsed = createDiscussionReportBodySchema.safeParse(request.body ?? {});
-        if (!parsed.success)
-          return errorResponse(createPlatformError("validation_failed"));
-        const result = await createDiscussionReport(
-          deps.db,
-          learnerCommunityViewer,
-          decodeURIComponent(learnerDiscussionReportMatch[1]!),
-          decodeURIComponent(learnerDiscussionReportMatch[2]!),
-          parsed.data.contentType,
-          parsed.data.contentId,
-          parsed.data.reason,
-          deps.clock,
-        );
-        return result.ok
-          ? { status: 201, body: result.value }
-          : errorResponse(result.error);
-      }
-      const joinCommunityMatch = /^\/v1\/learner\/communities\/([^/]+)\/join$/.exec(
-        path,
-      );
-      if (request.method === "POST" && joinCommunityMatch) {
-        const parsed = joinCommunityBodySchema.safeParse(request.body ?? {});
-        if (!parsed.success)
-          return errorResponse(createPlatformError("validation_failed"));
-        const result = await joinCommunity(
-          deps.db,
-          learnerCommunityViewer,
-          decodeURIComponent(joinCommunityMatch[1]!),
-          parsed.data.joiningReason,
           deps.clock,
         );
         return result.ok
@@ -2990,26 +2667,6 @@ export async function dispatch(
       return { status: 200, body: result.value };
     }
 
-    if (request.method === "POST" && path === "/v1/learners/identity-link") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
-      const result = await createLearnerIdentityLink(
-        deps.db,
-        {
-          schoolId: context.tenantId,
-          publicSchoolId: school.value.publicId,
-          principalId: context.principalId,
-          requestId: context.requestId,
-          permissions: context.permissions,
-        },
-        deps.clock,
-      );
-      return result.ok
-        ? { status: 201, body: result.value }
-        : errorResponse(result.error);
-    }
-
     const updateSchoolMatch = /^\/v1\/schools\/([^/]+)$/.exec(path);
     // Website / Pages
     if (
@@ -3777,7 +3434,7 @@ export async function dispatch(
     // ---------------------------------------------------------------------------
     if (path === "/v1/school/mails/settings") {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -3802,7 +3459,7 @@ export async function dispatch(
 
     if (request.method === "GET" && path === "/v1/school/mails/overview") {
       if (
-        !context.permissions.has("learners:read")
+        !context.permissions.has("contacts:read")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -3814,7 +3471,7 @@ export async function dispatch(
 
     if (request.method === "GET" && path === "/v1/school/overview") {
       if (
-        !context.permissions.has("learners:read")
+        !context.permissions.has("contacts:read")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -3837,7 +3494,7 @@ export async function dispatch(
       /^\/v1\/school\/(?:contacts|users)\/([^/]+)\/tags\/([^/]+)$/.exec(path);
     if (contactTagMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -3898,7 +3555,7 @@ export async function dispatch(
     if (path === "/v1/school/mails/subscribers" || path === "/v1/school/contacts") {
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -3915,7 +3572,7 @@ export async function dispatch(
       }
       if (request.method === "POST") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -3926,6 +3583,12 @@ export async function dispatch(
           (request.body ?? {}) as any,
         );
         if (result.ok) {
+          await subscribeNewsletter(deps.db, {
+            schoolId: context.tenantId!,
+            email: result.value.email,
+            name: result.value.name ?? undefined,
+            clock: deps.clock,
+          });
           await recordActivity(
             deps.db,
             {
@@ -3963,7 +3626,7 @@ export async function dispatch(
       const contactId = decodeURIComponent(subscriberMatch[1]!);
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -3979,7 +3642,7 @@ export async function dispatch(
       }
       if (request.method === "PATCH" || request.method === "PUT") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4012,7 +3675,7 @@ export async function dispatch(
       }
       if (request.method === "DELETE") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4031,7 +3694,7 @@ export async function dispatch(
     if (path === "/v1/school/segments") {
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4046,7 +3709,7 @@ export async function dispatch(
       }
       if (request.method === "POST") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4067,7 +3730,7 @@ export async function dispatch(
       const segmentId = decodeURIComponent(segmentMatch[1]!);
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4083,7 +3746,7 @@ export async function dispatch(
       }
       if (request.method === "PATCH" || request.method === "PUT") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4100,7 +3763,7 @@ export async function dispatch(
       }
       if (request.method === "DELETE") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4119,7 +3782,7 @@ export async function dispatch(
     if (path === "/v1/school/mails/sequences") {
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4136,7 +3799,7 @@ export async function dispatch(
       }
       if (request.method === "POST") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4157,7 +3820,7 @@ export async function dispatch(
     );
     if (request.method === "GET" && sequenceStatsMatch) {
       if (
-        !context.permissions.has("learners:read")
+        !context.permissions.has("contacts:read")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4178,7 +3841,7 @@ export async function dispatch(
     );
     if (request.method === "POST" && sequenceStartMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4199,7 +3862,7 @@ export async function dispatch(
     );
     if (request.method === "POST" && sequencePauseMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4219,7 +3882,7 @@ export async function dispatch(
       /^\/v1\/school\/mails\/sequences\/([^/]+)\/emails\/([^/]+)$/.exec(path);
     if (sequenceEmailItemMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4256,7 +3919,7 @@ export async function dispatch(
       /^\/v1\/school\/mails\/sequences\/([^/]+)\/emails$/.exec(path);
     if (request.method === "POST" && sequenceEmailsMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4278,7 +3941,7 @@ export async function dispatch(
       const sequenceId = decodeURIComponent(sequenceMatch[1]!);
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4294,7 +3957,7 @@ export async function dispatch(
       }
       if (request.method === "PATCH" || request.method === "PUT") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4311,7 +3974,7 @@ export async function dispatch(
       }
       if (request.method === "DELETE") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4329,7 +3992,7 @@ export async function dispatch(
 
     if (path === "/v1/school/mails/system-templates" && request.method === "GET") {
       if (
-        !context.permissions.has("learners:read")
+        !context.permissions.has("contacts:read")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4342,7 +4005,7 @@ export async function dispatch(
     if (path === "/v1/school/mails/templates") {
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4357,7 +4020,7 @@ export async function dispatch(
       }
       if (request.method === "POST") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4377,7 +4040,7 @@ export async function dispatch(
       /^\/v1\/school\/mails\/templates\/([^/]+)\/duplicate$/.exec(path);
     if (request.method === "POST" && templateDuplicateMatch) {
       if (
-        !context.permissions.has("learners:write")
+        !context.permissions.has("contacts:write")
       ) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -4398,7 +4061,7 @@ export async function dispatch(
       const templateId = decodeURIComponent(templateMatch[1]!);
       if (request.method === "GET") {
         if (
-            !context.permissions.has("learners:read")
+            !context.permissions.has("contacts:read")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4414,7 +4077,7 @@ export async function dispatch(
       }
       if (request.method === "PATCH" || request.method === "PUT") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4431,7 +4094,7 @@ export async function dispatch(
       }
       if (request.method === "DELETE") {
         if (
-            !context.permissions.has("learners:write")
+            !context.permissions.has("contacts:write")
         ) {
           return errorResponse(createPlatformError("forbidden"));
         }
@@ -4452,49 +4115,6 @@ export async function dispatch(
       schoolId: context.tenantId!,
       publicId: school.value.publicId,
     };
-    const discussionReportsMatch =
-      /^\/v1\/products\/([^/]+)\/discussions\/reports$/.exec(path);
-    if (request.method === "GET" && discussionReportsMatch) {
-      const parsed = communityStatusQuerySchema.safeParse({
-        cursor: query.get("cursor") ?? undefined,
-        limit: query.get("limit") ?? undefined,
-        status: query.get("status") ?? undefined,
-      });
-      if (!parsed.success)
-        return errorResponse(createPlatformError("validation_failed"));
-      const result = await listDiscussionReports(
-        deps.db,
-        context,
-        decodeURIComponent(discussionReportsMatch[1]!),
-        {
-          status: parsed.data.status,
-          cursor: parsed.data.cursor,
-          limit: parsed.data.limit,
-        },
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-    const discussionReportMatch = /^\/v1\/product-discussion-reports\/([^/]+)$/.exec(
-      path,
-    );
-    if (request.method === "PATCH" && discussionReportMatch) {
-      const parsed = updateDiscussionReportBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success)
-        return errorResponse(createPlatformError("validation_failed"));
-      const result = await updateDiscussionReport(
-        deps.db,
-        context,
-        decodeURIComponent(discussionReportMatch[1]!),
-        parsed.data.status,
-        parsed.data.rejectionReason,
-        deps.clock,
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
     if (request.method === "GET" && path === "/v1/spaces") {
       const result = await listAdminSpaces(deps.db, context, school.value.schoolId);
       return result.ok
@@ -5031,13 +4651,21 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
-    if (request.method === "GET" && path === "/v1/learners") {
-      const limitValue = query.get("limit");
-      const limit = limitValue === null ? 25 : Number(limitValue);
-      if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    if (request.method === "GET" && path === "/v1/contacts") {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const parsed = listContactsQuerySchema.safeParse({
+        q: query.get("q") ?? undefined,
+        segmentId: query.get("segmentId") ?? undefined,
+        filter: query.get("filter") ?? undefined,
+        page: query.get("page") ?? undefined,
+        rowsPerPage: query.get("rowsPerPage") ?? undefined,
+      });
+      if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const result = await listLearners(
+      const result = await listContacts(
         deps.db,
         {
           schoolId: context.tenantId,
@@ -5046,19 +4674,21 @@ export async function dispatch(
           requestId: context.requestId,
           permissions: context.permissions,
         },
-        { cursor: query.get("cursor") ?? undefined, limit },
+        parsed.data,
+        deps.clock,
       );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
+      return { status: 200, body: result };
     }
-    const learnerMatch = /^\/v1\/learners\/([^/]+)$/.exec(path);
-    if (request.method === "PATCH" && learnerMatch) {
-      const input = request.body as { status?: unknown } | undefined;
-      if (input?.status !== "active" && input?.status !== "deactivated") {
+
+    if (request.method === "POST" && path === "/v1/contacts/filter-preview") {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const parsed = filterPreviewBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const result = await updateLearnerStatus(
+      const result = await filterPreviewContacts(
         deps.db,
         {
           schoolId: context.tenantId,
@@ -5067,13 +4697,245 @@ export async function dispatch(
           requestId: context.requestId,
           permissions: context.permissions,
         },
-        decodeURIComponent(learnerMatch[1]!),
-        input.status,
+        parsed.data.filter,
         deps.clock,
       );
       return result.ok
         ? { status: 200, body: result.value }
         : errorResponse(result.error);
+    }
+
+    const contactMarketingMatch = /^\/v1\/contacts\/([^/]+)\/marketing$/.exec(path);
+    if (request.method === "PATCH" && contactMarketingMatch) {
+      if (!context.permissions.has("contacts:write")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const contactId = decodeURIComponent(contactMarketingMatch[1]!);
+      const parsed = updateContactMarketingBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await updateContactMarketing(
+        deps.db,
+        {
+          schoolId: context.tenantId,
+          publicSchoolId: school.value.publicId,
+          principalId: context.principalId,
+          requestId: context.requestId,
+          permissions: context.permissions,
+        },
+        contactId,
+        parsed.data,
+        deps.clock,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const contactMatch = /^\/v1\/contacts\/([^/]+)$/.exec(path);
+    if (contactMatch) {
+      const contactId = decodeURIComponent(contactMatch[1]!);
+      if (request.method === "GET") {
+        if (!context.permissions.has("contacts:read")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await getContact(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          contactId,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "PATCH") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = updateContactBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        const result = await updateContact(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          contactId,
+          parsed.data,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "DELETE") {
+        if (!context.permissions.has("contacts:delete")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await deleteContact(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          contactId,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+    }
+
+    if (path === "/v1/contact-segments") {
+      if (request.method === "GET") {
+        if (!context.permissions.has("contacts:read")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await listContactSegments(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "POST") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = createContactSegmentBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        const result = await createContactSegment(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          parsed.data,
+        );
+        return result.ok
+          ? { status: 201, body: result.value }
+          : errorResponse(result.error);
+      }
+    }
+
+    const segmentMembersMatch = /^\/v1\/contact-segments\/([^/]+)\/members$/.exec(path);
+    if (request.method === "GET" && segmentMembersMatch) {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const segmentId = decodeURIComponent(segmentMembersMatch[1]!);
+      const page = query.get("page") ? Number(query.get("page")) : 1;
+      const rowsPerPage = query.get("rowsPerPage") ? Number(query.get("rowsPerPage")) : 20;
+      const result = await getContactSegmentMembers(
+        deps.db,
+        {
+          schoolId: context.tenantId,
+          publicSchoolId: school.value.publicId,
+          principalId: context.principalId,
+          requestId: context.requestId,
+          permissions: context.permissions,
+        },
+        segmentId,
+        { page, rowsPerPage },
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const contactSegmentMatch = /^\/v1\/contact-segments\/([^/]+)$/.exec(path);
+    if (contactSegmentMatch) {
+      const segmentId = decodeURIComponent(contactSegmentMatch[1]!);
+      if (request.method === "GET") {
+        if (!context.permissions.has("contacts:read")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await getContactSegment(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          segmentId,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "PATCH") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = updateContactSegmentBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        const result = await updateContactSegment(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          segmentId,
+          parsed.data,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "DELETE") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await deleteContactSegment(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          segmentId,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
     }
 
     const plansMatch = /^\/v1\/products\/([^/]+)\/plans$/.exec(path);
@@ -5392,10 +5254,15 @@ export async function dispatch(
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const category = mediaCategorySchema.safeParse(query.get("category") ?? "library");
+      if (!category.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
       const result = await listMedia(deps.db, context, school.value.publicId, {
         search: query.get("search") ?? undefined,
         cursor: query.get("cursor") ?? undefined,
         limit,
+        category: category.data,
       });
       return result.ok
         ? { status: 200, body: result.value }
@@ -5874,6 +5741,42 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
+    const productCustomersMatch = /^\/v1\/products\/([^/]+)\/customers$/.exec(path);
+    if (request.method === "GET" && productCustomersMatch) {
+      const page = Number(query.get("page") ?? "1");
+      const limit = Number(query.get("limit") ?? "25");
+      if (
+        !Number.isInteger(page) ||
+        page < 1 ||
+        !Number.isInteger(limit) ||
+        limit < 1 ||
+        limit > 100
+      ) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await listProductCustomers(deps.db, context, {
+        productPublicId: decodeURIComponent(productCustomersMatch[1]!),
+        query: query.get("q") ?? undefined,
+        page,
+        limit,
+      });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const productCustomerProgressMatch =
+      /^\/v1\/products\/([^/]+)\/customers\/([^/]+)\/progress$/.exec(path);
+    if (request.method === "GET" && productCustomerProgressMatch) {
+      const result = await getProductCustomerProgress(deps.db, context, {
+        productPublicId: decodeURIComponent(productCustomerProgressMatch[1]!),
+        customerPublicId: decodeURIComponent(productCustomerProgressMatch[2]!),
+      });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
     const noteMatch = /^\/v1\/products\/([^/]+)$/.exec(path);
     if (request.method === "PATCH" && noteMatch) {
       const parsed = updateProductBodySchema.safeParse(request.body ?? {});
@@ -5979,7 +5882,7 @@ export async function dispatch(
       return { status: 200, body: result.value };
     }
     if (request.method === "POST" && path === "/v1/memberships") {
-      if (!context.permissions.has("learners:write")) {
+      if (!context.permissions.has("contacts:write")) {
         return errorResponse(createPlatformError("forbidden"));
       }
       const input = request.body as
@@ -6023,22 +5926,36 @@ export async function dispatch(
 
     return errorResponse(createPlatformError("not_found"));
   } catch (thrown) {
-    return errorResponse(
-      captureAndMapException(thrown, (error) =>
-        deps.observability?.captureException({
-          error,
-          source: "http.dispatch",
-          context: {
-            method: request.method,
-            path: request.path,
-            school_id: headerSchoolId(request.headers) ?? undefined,
-            request_id:
-              typeof request.headers["x-request-id"] === "string"
-                ? request.headers["x-request-id"]
-                : undefined,
-          },
-        }),
-      ),
+    console.error("[dispatch uncaught error]", thrown);
+    const err = captureAndMapException(thrown, (error) =>
+      deps.observability?.captureException({
+        error,
+        source: "http.dispatch",
+        context: {
+          method: request.method,
+          path: request.path,
+          school_id: headerSchoolId(request.headers) ?? undefined,
+          request_id:
+            typeof request.headers["x-request-id"] === "string"
+              ? request.headers["x-request-id"]
+              : undefined,
+        },
+      }),
     );
+    const resp = errorResponse(err);
+    if (process.env.NODE_ENV !== "production") {
+      const baseBody =
+        resp.body && typeof resp.body === "object"
+          ? (resp.body as Record<string, unknown>)
+          : {};
+      return {
+        ...resp,
+        body: {
+          ...baseBody,
+          debug: thrown instanceof Error ? { message: thrown.message, stack: thrown.stack } : String(thrown),
+        },
+      };
+    }
+    return resp;
   }
 }

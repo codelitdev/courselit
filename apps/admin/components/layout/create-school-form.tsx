@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { DialogFooter } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import {
@@ -288,9 +289,10 @@ export function CreateSchoolForm({
               {offer.trialDays ? ` · ${offer.trialDays}-day trial` : ""}
             </p>
           ) : paidCheckoutUnavailable ? null : (
-            <p className="text-sm text-muted-foreground">
-              Loading the current provider-configured price…
-            </p>
+            <CourseLitLoading
+              label="Loading the current provider-configured price…"
+              className="justify-start"
+            />
           )}
         </>
       ) : null}
@@ -304,6 +306,7 @@ export function CreateSchoolForm({
       <DialogFooter>
         <Button
           type="submit"
+          aria-label={submitLabel}
           disabled={
             submitting ||
             catalogLoading ||
@@ -314,7 +317,7 @@ export function CreateSchoolForm({
               (!catalog?.catalogRevision || !offer))
           }
         >
-          {submitLabel}
+          {submitting || catalogLoading ? <CourseLitLoadingIcon size={16} /> : submitLabel}
         </Button>
       </DialogFooter>
     </form>

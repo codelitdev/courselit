@@ -4,6 +4,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import { FileText, Plus } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
 import { PageHeader } from "@/components/layout/page-header";
@@ -167,7 +168,7 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
             </Button>
           }
         />
-        {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+        {loading ? <CourseLitLoading className="justify-start" /> : null}
         {error ? (
           <section className="rounded-xl border border-dashed p-10 text-center">
             <p className="text-sm text-destructive">{error}</p>

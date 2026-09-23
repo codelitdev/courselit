@@ -3,7 +3,7 @@
 **Status:** Ready for implementation  
 **Scope:** Community management, school-level spaces, product discussions,
 pricing, learner access, community commerce, public sales experience, admin
-application, learner application, API, data model, imports, analytics, and
+application, storefront application, API, data model, imports, analytics, and
 documentation  
 **Last updated:** 2026-09-20
 
@@ -42,7 +42,7 @@ If the product has a space the member can access, the course viewer shows
 that space as the discussion panel. Posts written there are ordinary space
 posts and appear in the learner feed.
 
-The public learner portal has no community catalog: `/communities` is
+The public storefront portal has no community catalog: `/communities` is
 removed and `/join` renders the singleton community's saved sales page. That
 page uses the **Community** page block, which presents every active pricing
 plan with the spaces that community plan includes and the community's
@@ -310,7 +310,7 @@ Moderation authority does not create a paid entitlement or financial record.
 | COM-001 | Every school has exactly one community, provisioned with the school. |
 | COM-002 | The community is always enabled by default and cannot be independently created, deleted, or disabled. |
 | COM-003 | Community configuration (name, description, banner, artwork, joining question, auto-approval) remains editable by administrators. |
-| ROUTE-001 | `/communities` does not exist in the learner portal. |
+| ROUTE-001 | `/communities` does not exist in the storefront portal. |
 | ROUTE-002 | `/join` renders the singleton community's saved sales page. |
 | SALES-001 | `/join` uses the **Community** page block and renders every active community plan rather than only the default. |
 | SALES-002 | Each community plan card shows formatted pricing, the spaces that plan includes, all shared included products, and a plan-specific checkout action. |
@@ -521,10 +521,9 @@ including the course-viewer discussion space.
 - Learner notification preferences can mute a type (for example
   `space_post_created`) without unfollowing. Delivery honors both the
   follower row and the preference.
-- Replace `community_post_created` / `community_comment*` /
-  `course_discussion_*` notification types with the space-prefixed types
-  above. Notification `href` values use the canonical post-detail route and
-  retain the post's space context where useful.
+- Use the space-prefixed notification types above. Notification `href` values
+  use the canonical post-detail route and retain the post's space context where
+  useful.
 
 Do not notify the actor who caused the event. Do not notify pending,
 rejected, or expired members.
@@ -725,14 +724,13 @@ One row per `(space, entity)`.
 - `school_id` FK schools cascade;
 - `space_id` FK spaces cascade;
 - `entity_type` `'community' | 'product'`;
-- `community_id` FK communities cascade, nullable;
-- `product_id` FK products cascade, nullable;
+- `entity_id` text containing the public ID of the community or product;
 - `created_at`;
-- check: exactly one of `community_id` / `product_id` matches `entity_type`;
-- at most one community unlock per space;
-- at most one unlock per `(space_id, product_id)`;
-- lookups on `(school_id, entity_type, community_id)` and
-  `(school_id, entity_type, product_id)`.
+- check: `entity_type` is `'community'` or `'product'`;
+- unique `(space_id, entity_type, entity_id)`;
+- lookup index on `(school_id, entity_type, entity_id)`;
+- entity and school ownership are validated by the service because the
+  polymorphic `entity_id` cannot use a conditional foreign key.
 
 ### `space_unlock_plans`
 
@@ -1775,7 +1773,7 @@ admin and learner clients cannot compile against a half-migrated shape.
 - Admin and public clients use singleton community navigation. Learner clients
   use `/join` for community commerce and space-scoped routes for participation;
   they do not require a community ID in the page URL.
-- The public learner portal has no `/communities` catalog; `/join` is the
+- The public storefront portal has no `/communities` catalog; `/join` is the
   canonical community sales page.
 - A product can be marked **Included with community**. That flag lives on
   the product. A published product must have at least one acquisition path:

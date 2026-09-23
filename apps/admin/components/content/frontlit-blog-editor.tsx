@@ -5,6 +5,7 @@ import type { TextEditorContent } from "@frontlit/text-editor";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { BlogFeaturedImage } from "@/components/content/blog-featured-image";
 import { WritingEditorDocumentHeader } from "@/components/content/writing-editor-document-header";
 import { WritingEditorShell } from "@/components/content/writing-editor-shell";
@@ -362,7 +363,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
         >
           <div className="px-6 text-center">
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading blog…</p>
+              <CourseLitLoading label="Loading blog…" />
             ) : null}
             {error ? (
               <p className="text-sm text-destructive" role="alert">

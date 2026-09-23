@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { Resources } from "@/components/resources";
 import { Button } from "@/components/ui/codelit/button";
@@ -215,7 +216,7 @@ export function SectionAuthoring({
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading section…</p>
+          <CourseLitLoading label="Loading section…" className="justify-start" />
         ) : null}
         {error ? (
           <p role="alert" className="text-sm text-destructive">

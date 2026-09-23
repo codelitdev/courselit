@@ -31,6 +31,7 @@ export const MEDIA_RESOURCE_TYPES = [
 export type MediaResourceType = (typeof MEDIA_RESOURCE_TYPES)[number];
 export type MediaKind = "image" | "video" | "audio" | "document" | "other";
 export type MediaAccessPolicy = "public" | "private";
+export type MediaCategory = "library" | "user_uploads";
 
 /** Convert a catalog row into the platform's shared media reference. */
 export function mediaRefFromCatalog(
@@ -227,6 +228,7 @@ export type MediaDto = {
   width: number | null;
   height: number | null;
   kind: MediaKind;
+  category: MediaCategory;
   altText: string;
   caption: string;
   accessPolicy: MediaAccessPolicy;
@@ -289,6 +291,7 @@ function toDto(
     width: row.width,
     height: row.height,
     kind: row.kind,
+    category: row.category,
     altText: row.altText,
     caption: row.caption,
     accessPolicy: row.accessPolicy,
@@ -647,6 +650,7 @@ export async function finalizeMediaUpload(
     width: asset.width,
     height: asset.height,
     kind: kindForMime(asset.mimeType),
+    category: "library" as const,
     altText: input.altText,
     caption: input.caption,
     accessPolicy: input.accessPolicy,
@@ -862,6 +866,7 @@ export async function finalizeLearnerAvatarUpload(
     width: asset.width,
     height: asset.height,
     kind: "image" as const,
+    category: "user_uploads" as const,
     altText: input.altText,
     caption: input.caption,
     accessPolicy: "public" as const,
@@ -976,6 +981,7 @@ export async function finalizeLearnerCommunityMediaUpload(
     width: asset.width,
     height: asset.height,
     kind,
+    category: "user_uploads" as const,
     altText: input.altText,
     caption: input.caption,
     accessPolicy: input.accessPolicy,
@@ -1071,7 +1077,12 @@ export async function listMedia(
   db: AppDb,
   ctx: Ctx,
   publicSchoolId: string,
-  input: { search?: string; cursor?: string; limit: number },
+  input: {
+    search?: string;
+    cursor?: string;
+    limit: number;
+    category?: MediaCategory;
+  },
 ): Promise<
   | { ok: true; value: { items: MediaDto[]; nextCursor: string | null } }
   | { ok: false; error: PlatformError }
@@ -1082,6 +1093,7 @@ export async function listMedia(
   const conditions = [
     eq(schema.media.schoolId, ctx.tenantId!),
     eq(schema.media.status, "active"),
+    eq(schema.media.category, input.category ?? "library"),
   ];
   const search = input.search?.trim();
   if (search) {

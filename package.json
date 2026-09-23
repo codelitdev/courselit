@@ -33,7 +33,7 @@
     "dev:api": "bun --filter @courselit/api dev",
     "dev:worker": "bun --filter @courselit/api worker",
     "dev:admin": "bun --filter @courselit/admin dev",
-    "dev:learners": "bun --filter @courselit/learners dev",
+    "dev:storefront": "bun --filter @courselit/storefront dev",
     "dev:docs": "bun --filter @courselit/docs dev",
     "lint": "bun run --workspaces --if-present lint",
     "format": "biome format --write .",

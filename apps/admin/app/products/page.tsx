@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FeaturedCard } from "@/components/featured-card";
 import { EmptyState } from "@/components/empty-state";
+import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import type { Product, ProductKind, School } from "@/components/products/product-types";
@@ -37,8 +38,6 @@ import { hasSchoolPermission } from "@/lib/school-permissions";
 
 type ProductFilter = "all" | ProductKind;
 const ITEMS_PER_PAGE = 9;
-const PRODUCT_SKELETON_KEYS = ["one", "two", "three", "four", "five", "six"];
-
 function kindLabel(kind: ProductKind) {
   return kind === "course" ? "Course" : "Digital download";
 }
@@ -126,26 +125,6 @@ function buildProductsQuery(filter: ProductFilter, page: number, cursor?: string
   if (cursor) params.set("cursor", cursor);
   const query = params.toString();
   return query ? `?${query}` : "";
-}
-
-function ProductListSkeleton() {
-  return (
-    <section
-      className="grid gap-x-4 gap-y-3 md:grid-cols-2 lg:grid-cols-3"
-      aria-label="Loading products"
-    >
-      {PRODUCT_SKELETON_KEYS.map((key) => (
-        <div key={key} className="overflow-hidden rounded-xl border bg-card">
-          <div className="h-36 animate-pulse bg-muted" />
-          <div className="space-y-3 p-4">
-            <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="h-8 w-full animate-pulse rounded bg-muted" />
-            <div className="h-4 w-full animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      ))}
-    </section>
-  );
 }
 
 function ProductPagination({
@@ -304,7 +283,7 @@ export default function ProductsPage() {
         </div>
 
         {loading ? (
-          <ProductListSkeleton />
+          <CourseLitLoading label="Loading products…" className="min-h-64" />
         ) : products.length === 0 ? (
           <EmptyState
             icon={BookOpen}

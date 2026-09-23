@@ -128,8 +128,6 @@ function targetType(value: unknown): string | null {
     "community_reply",
     "community_reply_liked",
     "community_membership_granted",
-    "course_discussion_comment_created",
-    "course_discussion_reacted",
   ].includes(normalized)
     ? normalized
     : null;
@@ -144,8 +142,6 @@ function titleFor(type: string): string {
     community_reply: "New space reply",
     community_reply_liked: "Your space reply was reacted to",
     community_membership_granted: "Community membership approved",
-    course_discussion_comment_created: "New course discussion comment",
-    course_discussion_reacted: "Your course discussion was reacted to",
   };
   return titles[type] ?? "New activity";
 }

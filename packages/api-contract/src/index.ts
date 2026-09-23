@@ -191,6 +191,57 @@ export const productAnalyticsSchema = z.object({
   completions: productAnalyticsMetricSchema,
   downloads: productAnalyticsMetricSchema,
 });
+
+export const productCustomerSchema = z.object({
+  id: z.string(),
+  membershipId: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  avatar: mediaRefSchema.nullable(),
+  accountStatus: z.enum(["active", "deactivated", "deletion_pending"]),
+  membershipStatus: z.enum([
+    "active",
+    "payment_failed",
+    "expired",
+    "pending",
+    "rejected",
+    "paused",
+  ]),
+  subscriptionMethod: z.string().nullable(),
+  subscriptionId: z.string().nullable(),
+  signedUpAt: z.string(),
+  lastActiveAt: z.string().nullable(),
+  progress: z.object({
+    completedLessons: z.number().int().nonnegative(),
+    totalLessons: z.number().int().nonnegative(),
+    percentage: z.number().int().min(0).max(100),
+  }),
+});
+export type ProductCustomer = z.infer<typeof productCustomerSchema>;
+
+export const productCustomerProgressSchema = z.object({
+  customer: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string().email(),
+    avatar: mediaRefSchema.nullable(),
+  }),
+  lessons: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      completed: z.boolean(),
+      completedAt: z.string().nullable(),
+    }),
+  ),
+});
+export type ProductCustomerProgress = z.infer<typeof productCustomerProgressSchema>;
+
+export const listProductCustomersQuerySchema = z.object({
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+});
 const activityMetricSchema = z.object({
   count: z.number().nonnegative(),
   growth: z.number(),
@@ -398,6 +449,7 @@ export const schoolSchema = z.object({
       teamId: z.string().nullable(),
       lastSuccessfulSyncAt: z.string().datetime().nullable(),
       lastError: z.string().nullable(),
+      logo: mediaRefSchema.nullable(),
     })
     .nullable()
     .optional(),
@@ -657,6 +709,7 @@ const mediaResourceTypes = [
   "certificate_template",
 ] as const;
 export const mediaResourceTypeSchema = z.enum(mediaResourceTypes);
+export const mediaCategorySchema = z.enum(["library", "user_uploads"]);
 export const mediaSchema = z.object({
   id: z.string(),
   schoolId: z.string(),
@@ -668,6 +721,7 @@ export const mediaSchema = z.object({
   width: z.number().int().nonnegative().nullable(),
   height: z.number().int().nonnegative().nullable(),
   kind: z.enum(["image", "video", "audio", "document", "other"]),
+  category: mediaCategorySchema,
   altText: z.string(),
   caption: z.string(),
   accessPolicy: z.enum(["public", "private"]),
@@ -1068,8 +1122,6 @@ export const notificationPreferenceTypeSchema = z.enum([
   "community_reply",
   "community_reply_liked",
   "community_membership_granted",
-  "course_discussion_comment_created",
-  "course_discussion_reacted",
 ]);
 export const notificationPreferenceSchema = z.object({
   type: notificationPreferenceTypeSchema,
@@ -1213,118 +1265,12 @@ export const updateCommunityReportBodySchema = z.object({
   rejectionReason: z.string().max(2_000).nullable().optional(),
 });
 
-export const discussionContentSchema = z
-  .object({ type: z.literal("doc") })
-  .passthrough();
-export const discussionListQuerySchema = z.object({
-  cursor: z.string().max(500).optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
-export const discussionCommentSchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  entityType: z.literal("lesson"),
-  entityId: z.string(),
-  authorId: z.string().nullable(),
-  authorKind: z.enum(["learner", "admin"]).nullable(),
-  content: discussionContentSchema,
-  likesCount: z.number().int().nonnegative(),
-  hasLiked: z.boolean(),
-  replyCount: z.number().int().nonnegative(),
-  replies: z.array(z.lazy(() => discussionReplySchema)),
-  replyNextCursor: z.string().nullable(),
-  hasMoreReplies: z.boolean(),
-  deleted: z.boolean(),
-  deletedAt: z.string().nullable(),
-  isEdited: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export const discussionReplySchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  entityType: z.literal("lesson"),
-  entityId: z.string(),
-  commentId: z.string(),
-  parentReplyId: z.string().nullable(),
-  authorId: z.string().nullable(),
-  authorKind: z.enum(["learner", "admin"]).nullable(),
-  content: discussionContentSchema,
-  likesCount: z.number().int().nonnegative(),
-  hasLiked: z.boolean(),
-  deleted: z.boolean(),
-  deletedAt: z.string().nullable(),
-  isEdited: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export const discussionSummarySchema = z.object({
-  productId: z.string(),
-  entityType: z.literal("lesson"),
-  entityId: z.string(),
-  lessonTitle: z.string(),
-  commentsCount: z.number().int().nonnegative(),
-  repliesCount: z.number().int().nonnegative(),
-  totalCount: z.number().int().nonnegative(),
-  activityCountIncludingDeleted: z.number().int().nonnegative(),
-  lastActivityAt: z.string(),
-  lastCommentId: z.string().nullable(),
-  lastReplyId: z.string().nullable(),
-});
-export const discussionReportSchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  entityType: z.literal("lesson"),
-  entityId: z.string(),
-  contentType: z.enum(["comment", "reply"]),
-  contentId: z.string(),
-  commentId: z.string().nullable(),
-  reporterId: z.string().nullable(),
-  reporterKind: z.enum(["learner", "admin"]).nullable(),
-  authorId: z.string().nullable(),
-  authorKind: z.enum(["learner", "admin"]).nullable(),
-  reason: z.string(),
-  status: z.enum(["pending", "accepted", "rejected"]),
-  rejectionReason: z.string().nullable(),
-  lessonTitle: z.string(),
-  contentPreview: z.string().nullable(),
-  contentDeleted: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export const createDiscussionCommentBodySchema = z.object({
-  content: discussionContentSchema,
-});
-export const createDiscussionReplyBodySchema = z.object({
-  content: discussionContentSchema,
-  parentReplyId: z.string().min(1).optional(),
-});
-export const discussionLikeBodySchema = z.object({
-  contentType: z.enum(["comment", "reply"]),
-  contentId: z.string().min(1),
-});
-export const discussionSubscriptionBodySchema = z.object({
-  subscription: z.boolean(),
-});
-export const createDiscussionReportBodySchema = z.object({
-  contentType: z.enum(["comment", "reply"]),
-  contentId: z.string().min(1),
-  reason: z.string().trim().min(1).max(2_000),
-});
-export const updateDiscussionReportBodySchema = z.object({
-  status: z.enum(["pending", "accepted", "rejected"]),
-  rejectionReason: z.string().max(2_000).nullable().optional(),
-});
-
 export const updateCommunityMembershipBodySchema = z.object({
   status: z.enum(["active", "pending", "rejected"]).optional(),
   role: z.enum(["member", "moderator", "owner"]).optional(),
   rejectionReason: z.string().max(2_000).nullable().optional(),
 });
 
-export const joinCommunityBodySchema = z.object({
-  joiningReason: z.string().max(2_000).default(""),
-});
 export const leaveCommunityBodySchema = z.object({}).default({});
 export const leaveCommunityResponseSchema = z.object({
   left: z.boolean(),
@@ -1425,6 +1371,122 @@ export const listLearnersQuerySchema = z.object({
 export const updateLearnerBodySchema = z.object({
   status: z.enum(["active", "deactivated"]),
 });
+
+export const contactMarketingSchema = z.object({
+  subscribed: z.boolean(),
+  tags: z.array(z.string()),
+});
+export type ContactMarketing = z.infer<typeof contactMarketingSchema>;
+
+export const contactSchema = z.object({
+  id: z.string(),
+  schoolId: z.string(),
+  email: z.string().email(),
+  name: z.string(),
+  bio: z.string(),
+  avatar: mediaRefSchema.nullable(),
+  status: z.enum(["active", "deactivated", "deletion_pending"]),
+  registrationStatus: z.enum(["newsletter_only", "registered"]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastActiveAt: z.string().nullable(),
+  marketing: contactMarketingSchema,
+});
+export type Contact = z.infer<typeof contactSchema>;
+
+export const contactFilterItemSchema = z.union([
+  z.object({
+    name: z.literal("email"),
+    condition: z.enum(["Is exactly", "Contains", "Does not contain"]),
+    value: z.string(),
+  }),
+  z.object({
+    name: z.literal("product"),
+    condition: z.enum(["Has", "Does not have"]),
+    value: z.string(),
+    valueLabel: z.string().optional(),
+  }),
+  z.object({
+    name: z.literal("community"),
+    condition: z.enum(["Is a member", "Is not a member"]),
+  }),
+  z.object({
+    name: z.enum(["lastActive", "signedUp"]),
+    condition: z.enum(["Before", "After", "On"]),
+    value: z.string(),
+  }),
+  z.object({
+    name: z.literal("subscription"),
+    condition: z.enum(["Subscribed", "Not subscribed"]),
+  }),
+  z.object({
+    name: z.literal("tag"),
+    condition: z.enum(["Has", "Does not have"]),
+    value: z.string(),
+  }),
+]);
+export type ContactFilter = z.infer<typeof contactFilterItemSchema>;
+
+export const contactFilterSetSchema = z.object({
+  version: z.literal(1).default(1),
+  aggregator: z.enum(["and", "or"]),
+  filters: z.array(contactFilterItemSchema),
+});
+export type ContactFilterSet = z.infer<typeof contactFilterSetSchema>;
+
+export const contactSegmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  filter: contactFilterSetSchema,
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
+});
+export type ContactSegment = z.infer<typeof contactSegmentSchema>;
+
+export const listContactsQuerySchema = z.object({
+  q: z.string().optional(),
+  segmentId: z.string().optional(),
+  filter: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  rowsPerPage: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const updateContactBodySchema = z.object({
+  name: z.string().trim().min(1).max(200).optional(),
+  bio: z.string().max(2000).optional(),
+  avatar: mediaRefSchema.nullable().optional(),
+  status: z.enum(["active", "deactivated"]).optional(),
+});
+export type UpdateContactBody = z.infer<typeof updateContactBodySchema>;
+
+export const updateContactMarketingBodySchema = z.object({
+  subscribed: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+});
+export type UpdateContactMarketingBody = z.infer<typeof updateContactMarketingBodySchema>;
+
+export const filterPreviewBodySchema = z.object({
+  filter: contactFilterSetSchema,
+  page: z.coerce.number().int().min(1).default(1),
+  rowsPerPage: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const createContactSegmentBodySchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  filter: contactFilterSetSchema,
+});
+
+export const updateContactSegmentBodySchema = z.object({
+  name: z.string().trim().min(1).max(200).optional(),
+  filter: contactFilterSetSchema.optional(),
+});
+
+export const newsletterSubscribeBodySchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(1).max(200).optional(),
+  tags: z.array(z.string()).optional(),
+});
+export type NewsletterSubscribeBody = z.infer<typeof newsletterSubscribeBodySchema>;
 export const updateLearnerProfileBodySchema = z.object({
   name: z.string().trim().min(1).max(200),
   avatarMediaId: z.string().nullable().optional(),
@@ -2344,303 +2406,6 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
-  listDiscussionReports: {
-    method: "GET",
-    path: "/v1/products/:productId/discussions/reports",
-    pathParams: z.object({ productId: z.string() }),
-    query: communityStatusQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionReportSchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  updateDiscussionReport: {
-    method: "PATCH",
-    path: "/v1/product-discussion-reports/:reportId",
-    pathParams: z.object({ reportId: z.string() }),
-    body: updateDiscussionReportBodySchema,
-    responses: {
-      200: discussionReportSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listLearnerDiscussionComments: {
-    method: "GET",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionCommentSchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-        summary: discussionSummarySchema,
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listPreviewDiscussionComments: {
-    method: "GET",
-    path: "/v1/preview/products/:productId/lessons/:lessonId/discussions",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    headers: z.object({ "x-preview-token": z.string().min(1) }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionCommentSchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-        summary: discussionSummarySchema,
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listPreviewDiscussionSummaries: {
-    method: "GET",
-    path: "/v1/preview/products/:productId/discussions",
-    pathParams: z.object({ productId: z.string() }),
-    headers: z.object({ "x-preview-token": z.string().min(1) }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionSummarySchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listPreviewDiscussionReplies: {
-    method: "GET",
-    path: "/v1/preview/products/:productId/lessons/:lessonId/discussions/comments/:commentId/replies",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      commentId: z.string(),
-    }),
-    headers: z.object({ "x-preview-token": z.string().min(1) }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionReplySchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listLearnerDiscussionSummaries: {
-    method: "GET",
-    path: "/v1/learner/products/:productId/discussions",
-    pathParams: z.object({ productId: z.string() }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionSummarySchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  createLearnerDiscussionComment: {
-    method: "POST",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    body: createDiscussionCommentBodySchema,
-    responses: {
-      201: discussionCommentSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  updateLearnerDiscussionComment: {
-    method: "PATCH",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/comments/:commentId",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      commentId: z.string(),
-    }),
-    body: createDiscussionCommentBodySchema,
-    responses: {
-      200: discussionCommentSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  deleteLearnerDiscussionComment: {
-    method: "DELETE",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/comments/:commentId",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      commentId: z.string(),
-    }),
-    responses: {
-      200: z.object({ id: z.string() }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  listLearnerDiscussionReplies: {
-    method: "GET",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/comments/:commentId/replies",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      commentId: z.string(),
-    }),
-    query: discussionListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(discussionReplySchema),
-        nextCursor: z.string().nullable(),
-        hasMore: z.boolean(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  createLearnerDiscussionReply: {
-    method: "POST",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/comments/:commentId/replies",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      commentId: z.string(),
-    }),
-    body: createDiscussionReplyBodySchema,
-    responses: {
-      201: discussionReplySchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  updateLearnerDiscussionReply: {
-    method: "PATCH",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/replies/:replyId",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      replyId: z.string(),
-    }),
-    body: createDiscussionCommentBodySchema,
-    responses: {
-      200: discussionReplySchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  deleteLearnerDiscussionReply: {
-    method: "DELETE",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/replies/:replyId",
-    pathParams: z.object({
-      productId: z.string(),
-      lessonId: z.string(),
-      replyId: z.string(),
-    }),
-    responses: {
-      200: z.object({ id: z.string() }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  toggleLearnerDiscussionLike: {
-    method: "POST",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/likes",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    body: discussionLikeBodySchema,
-    responses: {
-      200: z.object({
-        contentType: z.enum(["comment", "reply"]),
-        contentId: z.string(),
-        active: z.boolean(),
-        likesCount: z.number().int().nonnegative(),
-      }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  toggleLearnerDiscussionSubscription: {
-    method: "POST",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/subscription",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    body: discussionSubscriptionBodySchema,
-    responses: {
-      200: z.object({ active: z.boolean() }),
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  createLearnerDiscussionReport: {
-    method: "POST",
-    path: "/v1/learner/products/:productId/lessons/:lessonId/discussions/reports",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
-    body: createDiscussionReportBodySchema,
-    responses: {
-      201: discussionReportSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-      409: platformErrorSchema,
-    },
-  },
-  joinLearnerCommunity: {
-    method: "POST",
-    path: "/v1/learner/communities/:communityId/join",
-    pathParams: z.object({ communityId: z.string() }),
-    body: joinCommunityBodySchema,
-    responses: {
-      200: communityMembershipSchema,
-      201: communityMembershipSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
   leaveLearnerCommunity: {
     method: "POST",
     path: "/v1/learner/communities/:communityId/leave",
@@ -2810,41 +2575,189 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  listLearners: {
+  listContacts: {
     method: "GET",
-    path: "/v1/learners",
-    query: listLearnersQuerySchema,
+    path: "/v1/contacts",
+    query: listContactsQuerySchema,
     responses: {
       200: z.object({
-        items: z.array(adminLearnerSchema),
-        nextCursor: z.string().nullable(),
+        items: z.array(contactSchema),
+        total: z.number().int().nonnegative(),
       }),
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+      500: platformErrorSchema,
     },
   },
-  createLearnerIdentityLink: {
-    method: "POST",
-    path: "/v1/learners/identity-link",
-    body: z.object({}).default({}),
+  getContact: {
+    method: "GET",
+    path: "/v1/contacts/:contactId",
+    pathParams: z.object({ contactId: z.string() }),
     responses: {
-      201: learnerIdentityLinkSchema,
+      200: contactSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
     },
   },
-  updateLearner: {
+  updateContact: {
     method: "PATCH",
-    path: "/v1/learners/:learnerId",
-    pathParams: z.object({ learnerId: z.string() }),
-    body: updateLearnerBodySchema,
+    path: "/v1/contacts/:contactId",
+    pathParams: z.object({ contactId: z.string() }),
+    body: updateContactBodySchema,
     responses: {
-      200: adminLearnerSchema,
+      200: contactSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  updateContactMarketing: {
+    method: "PATCH",
+    path: "/v1/contacts/:contactId/marketing",
+    pathParams: z.object({ contactId: z.string() }),
+    body: updateContactMarketingBodySchema,
+    responses: {
+      200: contactMarketingSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  deleteContact: {
+    method: "DELETE",
+    path: "/v1/contacts/:contactId",
+    pathParams: z.object({ contactId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  filterPreviewContacts: {
+    method: "POST",
+    path: "/v1/contacts/filter-preview",
+    body: filterPreviewBodySchema,
+    responses: {
+      200: z.object({
+        filter: contactFilterSetSchema,
+        totalCount: z.number().int().nonnegative(),
+        contacts: z.array(contactSchema),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  listContactSegments: {
+    method: "GET",
+    path: "/v1/contact-segments",
+    responses: {
+      200: z.object({
+        items: z.array(contactSegmentSchema),
+        unsupportedCount: z.number().int().nonnegative(),
+      }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  createContactSegment: {
+    method: "POST",
+    path: "/v1/contact-segments",
+    body: createContactSegmentBodySchema,
+    responses: {
+      201: contactSegmentSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  getContactSegment: {
+    method: "GET",
+    path: "/v1/contact-segments/:segmentId",
+    pathParams: z.object({ segmentId: z.string() }),
+    responses: {
+      200: contactSegmentSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      422: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  updateContactSegment: {
+    method: "PATCH",
+    path: "/v1/contact-segments/:segmentId",
+    pathParams: z.object({ segmentId: z.string() }),
+    body: updateContactSegmentBodySchema,
+    responses: {
+      200: contactSegmentSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      422: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  deleteContactSegment: {
+    method: "DELETE",
+    path: "/v1/contact-segments/:segmentId",
+    pathParams: z.object({ segmentId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  getContactSegmentMembers: {
+    method: "GET",
+    path: "/v1/contact-segments/:segmentId/members",
+    pathParams: z.object({ segmentId: z.string() }),
+    query: z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      rowsPerPage: z.coerce.number().int().min(1).max(100).default(20),
+    }),
+    responses: {
+      200: z.object({
+        segment: contactSegmentSchema,
+        totalCount: z.number().int().nonnegative(),
+        contacts: z.array(contactSchema),
+      }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      422: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  subscribeNewsletter: {
+    method: "POST",
+    path: "/v1/newsletter/subscribe",
+    body: newsletterSubscribeBodySchema,
+    responses: {
+      200: z.object({
+        status: z.literal("subscribed"),
+        email: z.string(),
+      }),
+      400: platformErrorSchema,
+      500: platformErrorSchema,
     },
   },
   createProduct: {
@@ -3065,6 +2978,36 @@ export const contract = c.router({
     query: z.object({ range: productAnalyticsRangeSchema.default("7d") }),
     responses: {
       200: productAnalyticsSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listProductCustomers: {
+    method: "GET",
+    path: "/v1/products/:productId/customers",
+    pathParams: z.object({ productId: z.string() }),
+    query: listProductCustomersQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(productCustomerSchema),
+        total: z.number().int().nonnegative(),
+        page: z.number().int().positive(),
+        limit: z.number().int().positive(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getProductCustomerProgress: {
+    method: "GET",
+    path: "/v1/products/:productId/customers/:customerId/progress",
+    pathParams: z.object({ productId: z.string(), customerId: z.string() }),
+    responses: {
+      200: productCustomerProgressSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3327,6 +3270,7 @@ export const contract = c.router({
       search: z.string().max(200).optional(),
       cursor: z.string().max(500).optional(),
       limit: z.coerce.number().int().min(1).max(50).default(25),
+      category: mediaCategorySchema.default("library"),
     }),
     responses: {
       200: z.object({ items: z.array(mediaSchema), nextCursor: z.string().nullable() }),

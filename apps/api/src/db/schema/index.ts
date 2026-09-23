@@ -8,7 +8,6 @@ export * from "./integrations.js";
 export * from "./learner-memberships.js";
 export * from "./migration.js";
 export * from "./notifications.js";
-export * from "./product-discussions.js";
 export * from "./products.js";
 export * from "./rate-limit.js";
 export * from "./schools.js";

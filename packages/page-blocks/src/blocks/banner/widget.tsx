@@ -126,8 +126,8 @@ export default function BannerWidget({
         headers: learnerHeaders({ "content-type": "application/json" }),
         body: JSON.stringify(
           kind === "product"
-            ? { productId: resource.id, planId }
-            : { communityId: resource.community!.id, planId },
+            ? { productId: resource?.id, planId }
+            : { communityId: resource?.community?.id, planId },
         ),
       });
       if (!response.ok) throw new Error("Unable to start checkout.");

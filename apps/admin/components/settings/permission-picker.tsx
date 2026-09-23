@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  computeEffectiveCourseLitPermissions,
   COURSELIT_HIGH_IMPACT_PERMISSIONS,
   COURSELIT_PERMISSION_GROUPS,
-  expandCourseLitPermissionPreset,
   type CourseLitPermission,
   type CourseLitPermissionPresetId,
+  computeEffectiveCourseLitPermissions,
+  expandCourseLitPermissionPreset,
 } from "@courselit/api-contract/team-permissions";
 import { Checkbox } from "@/components/ui/codelit/checkbox";
 import { Label } from "@/components/ui/codelit/label";
@@ -31,23 +31,34 @@ export const COURSE_PERMISSION_PRESET_LABELS: Record<
   custom: "Custom",
 };
 
+export function courseLitPermissionPresetFor(
+  permissions: readonly CourseLitPermission[],
+): CourseLitPermissionPresetId {
+  const effectivePermissions = computeEffectiveCourseLitPermissions(permissions);
+  const presetIds = Object.keys(COURSE_PERMISSION_PRESET_LABELS).filter(
+    (preset): preset is Exclude<CourseLitPermissionPresetId, "custom"> =>
+      preset !== "custom",
+  );
+  for (const preset of presetIds) {
+    const expanded = computeEffectiveCourseLitPermissions(
+      expandCourseLitPermissionPreset(preset),
+    );
+    if (
+      expanded.length === effectivePermissions.length &&
+      expanded.every((permission, index) => permission === effectivePermissions[index])
+    ) {
+      return preset;
+    }
+  }
+  return "custom";
+}
+
 export function summarizeCourseLitPermissions(
   permissions: readonly CourseLitPermission[],
 ): string {
   if (permissions.length === 0) return "No product access";
-  const labels = Object.entries(COURSE_PERMISSION_PRESET_LABELS) as Array<
-    [CourseLitPermissionPresetId, string]
-  >;
-  for (const [preset, label] of labels) {
-    if (preset === "custom") continue;
-    const expanded = expandCourseLitPermissionPreset(preset);
-    if (
-      expanded.length === permissions.length &&
-      expanded.every((permission, index) => permission === permissions[index])
-    ) {
-      return label;
-    }
-  }
+  const preset = courseLitPermissionPresetFor(permissions);
+  if (preset !== "custom") return COURSE_PERMISSION_PRESET_LABELS[preset];
   return `${permissions.length} custom permissions`;
 }
 

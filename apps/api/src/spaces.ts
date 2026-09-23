@@ -179,8 +179,7 @@ export async function provisionSchoolCommunity(
     schoolId: input.schoolId,
     spaceId,
     entityType: "community",
-    communityId,
-    productId: null,
+    entityId: communityPublicId,
     createdAt: now,
   });
   await upsertLearnerMembership(
@@ -228,44 +227,12 @@ async function loadUnlocks(db: AppDb, spaceIds: string[]) {
     list.push(row.publicId);
     plansByUnlock.set(row.unlockId, list);
   }
-  const communities = unlocks.some((row) => row.communityId)
-    ? await db
-        .select({ id: schema.communities.id, publicId: schema.communities.publicId })
-        .from(schema.communities)
-        .where(
-          inArray(
-            schema.communities.id,
-            unlocks
-              .map((row) => row.communityId)
-              .filter((id): id is string => Boolean(id)),
-          ),
-        )
-    : [];
-  const products = unlocks.some((row) => row.productId)
-    ? await db
-        .select({ id: schema.products.id, publicId: schema.products.publicId })
-        .from(schema.products)
-        .where(
-          inArray(
-            schema.products.id,
-            unlocks
-              .map((row) => row.productId)
-              .filter((id): id is string => Boolean(id)),
-          ),
-        )
-    : [];
-  const communityPublic = new Map(communities.map((row) => [row.id, row.publicId]));
-  const productPublic = new Map(products.map((row) => [row.id, row.publicId]));
   const bySpace = new Map<string, SpaceDto["unlocks"]>();
   for (const unlock of unlocks) {
-    const entityId =
-      unlock.entityType === "community"
-        ? (communityPublic.get(unlock.communityId!) ?? "")
-        : (productPublic.get(unlock.productId!) ?? "");
     const list = bySpace.get(unlock.spaceId) ?? [];
     list.push({
       entityType: unlock.entityType,
-      entityId,
+      entityId: unlock.entityId,
       planIds: plansByUnlock.get(unlock.id) ?? [],
     });
     bySpace.set(unlock.spaceId, list);
@@ -323,8 +290,7 @@ async function replaceUnlocks(
         schoolId,
         spaceId,
         entityType: "community",
-        communityId: community.id,
-        productId: null,
+        entityId: community.publicId,
         createdAt: clock.now(),
       });
       const planIds = unlock.planIds ?? [];
@@ -372,8 +338,7 @@ async function replaceUnlocks(
       schoolId,
       spaceId,
       entityType: "product",
-      communityId: null,
-      productId: product.id,
+      entityId: product.publicId,
       createdAt: clock.now(),
     });
     const planIds = unlock.planIds ?? [];
@@ -1065,8 +1030,7 @@ export async function enableProductDiscussionSpace(
     schoolId,
     spaceId,
     entityType: "product",
-    communityId: null,
-    productId: product.id,
+    entityId: product.publicId,
     createdAt: now,
   });
   return spaceId;

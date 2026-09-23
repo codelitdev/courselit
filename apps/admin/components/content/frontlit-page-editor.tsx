@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { Button } from "@/components/ui/codelit/button";
 import { Input } from "@/components/ui/codelit/input";
@@ -454,7 +455,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         {loading || error ? (
           <div className="shrink-0 px-4 py-3">
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading page…</p>
+              <CourseLitLoading label="Loading page…" className="justify-start" />
             ) : null}
             {error ? (
               <p className="text-sm text-destructive" role="alert">

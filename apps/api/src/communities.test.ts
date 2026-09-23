@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { communityCommentSchema } from "@courselit/api-contract";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
@@ -483,20 +483,6 @@ describe.serial("communities", () => {
     });
     expect(paidCommunityCheckout.body).toMatchObject({ status: "paid" });
 
-    const joined = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${community.id}/join`,
-      headers: learnerHeaders,
-      body: { joiningReason: "I want to learn with other creators." },
-    });
-    expect(joined.status).toBe(200);
-    const membership = joined.body as {
-      id: string;
-      communityId: string;
-      status: string;
-    };
-    expect(membership).toMatchObject({ communityId: community.id, status: "active" });
-
     const learnerMediaAuthorization = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/community-media/upload-authorizations",
@@ -534,6 +520,24 @@ describe.serial("communities", () => {
     expect(learnerMediaLibrary.status).toBe(200);
     expect(learnerMediaLibrary.body).toMatchObject({
       items: [{ id: learnerMediaId, kind: "image" }],
+    });
+
+    const adminMediaLibrary = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/media",
+      headers: { cookie: world.owner.sessionCookie, "x-school-id": world.schoolA.publicId },
+    });
+    expect(adminMediaLibrary.status).toBe(200);
+    expect(adminMediaLibrary.body).toMatchObject({ items: [] });
+
+    const adminUserUploads = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/media?category=user_uploads",
+      headers: { cookie: world.owner.sessionCookie, "x-school-id": world.schoolA.publicId },
+    });
+    expect(adminUserUploads.status).toBe(200);
+    expect(adminUserUploads.body).toMatchObject({
+      items: [{ id: learnerMediaId, category: "user_uploads" }],
     });
 
     const listed = await dispatch(runtime, {
@@ -795,13 +799,6 @@ describe.serial("communities", () => {
       body: { content: "An admin joined the conversation." },
     });
     expect(adminComment.status).toBe(403);
-    const secondLearnerJoined = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${community.id}/join`,
-      headers: secondLearnerHeaders,
-      body: { joiningReason: "I want to learn with other creators." },
-    });
-    expect(secondLearnerJoined.status).toBe(200);
     const listedMembers = await dispatch(runtime, {
       method: "GET",
       path: `/v1/communities/${community.id}/members`,
@@ -1388,16 +1385,6 @@ describe.serial("communities", () => {
     expect(
       (secondCommunityPage.body as { items: Array<{ id: string }> }).items[0]?.id,
     ).not.toBe(firstCommunityPageBody.items[0]?.id);
-    const missingJoiningReason = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${moderatedCommunity.id}/join`,
-      headers: learnerHeaders,
-      body: { joiningReason: "   " },
-    });
-    expect(missingJoiningReason.status).toBe(400);
-    expect(missingJoiningReason.body).toMatchObject({
-      details: { reason: "joining_reason_required" },
-    });
     const missingCheckoutReason = await dispatch(runtime, {
       method: "POST",
       path: `/v1/learner/communities/${moderatedCommunity.id}/checkout`,
@@ -1411,14 +1398,20 @@ describe.serial("communities", () => {
     expect(missingCheckoutReason.body).toMatchObject({
       details: { reason: "joining_reason_required" },
     });
-    const pendingJoin = await dispatch(runtime, {
+    const pendingCheckout = await dispatch(runtime, {
       method: "POST",
-      path: `/v1/learner/communities/${moderatedCommunity.id}/join`,
-      headers: learnerHeaders,
-      body: { joiningReason: "Please let me in." },
+      path: `/v1/learner/communities/${moderatedCommunity.id}/checkout`,
+      headers: {
+        ...learnerHeaders,
+        "idempotency-key": "moderated-pending-checkout",
+      },
+      body: {
+        planId: (moderatedPlan.body as { id: string }).id,
+        joiningReason: "Please let me in.",
+      },
     });
-    expect(pendingJoin.status).toBe(200);
-    expect(pendingJoin.body).toMatchObject({ status: "pending" });
+    expect(pendingCheckout.status).toBe(201);
+    expect(pendingCheckout.body).toMatchObject({ status: "paid" });
     const firstLearnerCommunityPage = await dispatch(runtime, {
       method: "GET",
       path: "/v1/learner/communities?limit=1",
@@ -1559,15 +1552,27 @@ describe.serial("communities", () => {
     });
     expect(allowedPost.status).toBe(201);
 
-    const secondModeratedJoin = await dispatch(runtime, {
+    const secondModeratedCheckout = await dispatch(runtime, {
       method: "POST",
-      path: `/v1/learner/communities/${moderatedCommunity.id}/join`,
-      headers: secondLearnerHeaders,
-      body: { joiningReason: "I would like to join this community too." },
+      path: `/v1/learner/communities/${moderatedCommunity.id}/checkout`,
+      headers: {
+        ...secondLearnerHeaders,
+        "idempotency-key": "moderated-second-checkout",
+      },
+      body: {
+        planId: (moderatedPlan.body as { id: string }).id,
+        joiningReason: "I would like to join this community too.",
+      },
     });
-    expect(secondModeratedJoin.status).toBe(200);
-    expect(secondModeratedJoin.body).toMatchObject({ status: "pending" });
-    const secondModeratedMembershipId = (secondModeratedJoin.body as { id: string }).id;
+    expect(secondModeratedCheckout.status).toBe(201);
+    const secondModeratedMembers = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/communities/${moderatedCommunity.id}/members?status=pending`,
+      headers: adminHeaders,
+    });
+    const secondModeratedMembershipId = (
+      secondModeratedMembers.body as { items: Array<{ id: string }> }
+    ).items[0]!.id;
     const secondApprovedModerator = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/community-memberships/${secondModeratedMembershipId}`,
@@ -2001,8 +2006,20 @@ describe.serial("communities", () => {
     expect(left.body).toEqual({ left: true });
     expect(provider.cancelledSubscriptions).toEqual(["community-leave-subscription-1"]);
 
-    const memberships = await runtime.db.select().from(schema.communityMemberships);
-    expect(memberships.filter((item) => item.role === "member")).toHaveLength(0);
+    const [learnerAccount] = await runtime.db
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "community-leave-learner@example.com"));
+    const memberships = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.entityType, "community"),
+          eq(schema.learnerMemberships.schoolAccountId, learnerAccount!.id),
+        ),
+      );
+    expect(memberships.filter((item) => item.status === "active")).toHaveLength(0);
     const subscriptions = await runtime.db.select().from(schema.communitySubscriptions);
     expect(subscriptions).toMatchObject([{ status: "cancelled" }]);
 

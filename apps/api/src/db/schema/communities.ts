@@ -49,46 +49,6 @@ export const communities = pgTable(
   }),
 );
 
-export const communityMemberships = pgTable(
-  "community_memberships",
-  {
-    id: uuid("id").primaryKey(),
-    publicId: text("public_id").notNull().unique(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    communityId: uuid("community_id")
-      .notNull()
-      .references(() => communities.id, { onDelete: "cascade" }),
-    // Kept nullable for legacy/free memberships and populated when a learner
-    // joins through a selected community payment plan.
-    paymentPlanId: uuid("payment_plan_id"),
-    schoolAccountId: uuid("school_account_id")
-      .notNull()
-      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
-    status: text("status")
-      .$type<
-        "active" | "payment_failed" | "expired" | "pending" | "rejected" | "paused"
-      >()
-      .notNull()
-      .default("pending"),
-    role: text("role")
-      .$type<"member" | "moderator" | "owner">()
-      .notNull()
-      .default("member"),
-    joiningReason: text("joining_reason").notNull().default(""),
-    rejectionReason: text("rejection_reason"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    communitySchoolAccount: uniqueIndex("community_memberships_community_account_uidx").on(
-      table.communityId,
-      table.schoolAccountId,
-    ),
-  }),
-);
-
 export const communityPosts = pgTable(
   "community_posts",
   {

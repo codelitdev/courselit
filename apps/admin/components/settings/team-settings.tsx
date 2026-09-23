@@ -1,27 +1,23 @@
 "use client";
 
-import { toast } from "sonner";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
-import { Copy, Mail, Pencil, Shield, Trash2, UserPlus, Users } from "lucide-react";
 import {
   COURSELIT_PERMISSIONS,
+  type CourseLitPermission,
+  type CourseLitPermissionPresetId,
   computeEffectiveCourseLitPermissions,
   expandCourseLitPermissionPreset,
   filterDelegableCourseLitPermissions,
-  type CourseLitPermission,
-  type CourseLitPermissionPresetId,
 } from "@courselit/api-contract/team-permissions";
-import { Button } from "@/components/ui/codelit/button";
+import { Copy, Mail, Pencil, Shield, Trash2, UserPlus, Users } from "lucide-react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { showPermissionDeniedToast } from "@/components/permission-denied-feedback";
+import { CourseLitLoading } from "@/components/loading";
 import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogContent,
-} from "@/components/ui/codelit/dialog";
-import { Input } from "@/components/ui/codelit/input";
-import { Label } from "@/components/ui/codelit/label";
+  courseLitPermissionPresetFor,
+  PermissionPicker,
+  summarizeCourseLitPermissions,
+} from "@/components/settings/permission-picker";
 import {
   Card,
   CardContent,
@@ -29,10 +25,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/codelit/button";
 import {
-  PermissionPicker,
-  summarizeCourseLitPermissions,
-} from "@/components/settings/permission-picker";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/codelit/dialog";
+import { Input } from "@/components/ui/codelit/input";
+import { Label } from "@/components/ui/codelit/label";
 
 type TeamMember = {
   id: string;
@@ -106,6 +109,11 @@ export function TeamSettings() {
         | (TeamResponse & { message?: string })
         | null;
       if (!response.ok) {
+        if (response.status === 403) {
+          setError(null);
+          showPermissionDeniedToast();
+          return;
+        }
         throw new Error(
           body && "message" in body && body.message
             ? body.message
@@ -133,9 +141,7 @@ export function TeamSettings() {
         viewer.permissions.includes("members:manage")),
   );
   const canManage = Boolean(
-    viewer &&
-      (viewer.isOwner ||
-        viewer.permissions.includes("members:manage")),
+    viewer && (viewer.isOwner || viewer.permissions.includes("members:manage")),
   );
   const selectablePermissions = viewer
     ? viewer.isOwner
@@ -235,15 +241,18 @@ export function TeamSettings() {
 
   function resendInvitation(invitation: TeamInvitation) {
     setInviteEmail(invitation.email);
-    setInvitePreset("custom");
+    setInvitePreset(courseLitPermissionPresetFor(invitation.permissions));
     setInvitePermissions(invitation.permissions);
     setInviteOpen(true);
   }
 
   function openEditMember(member: TeamMember) {
-    if (!canEditMember(member)) return;
+    if (!canEditMember(member)) {
+      showPermissionDeniedToast();
+      return;
+    }
     setMemberToEdit(member);
-    setEditPreset("custom");
+    setEditPreset(courseLitPermissionPresetFor(member.permissions));
     setEditPermissions(member.permissions);
   }
 
@@ -265,6 +274,10 @@ export function TeamSettings() {
         | { message?: string }
         | null;
       if (!response.ok) {
+        if (response.status === 403) {
+          showPermissionDeniedToast();
+          return;
+        }
         throw new Error(
           body && "message" in body
             ? body.message
@@ -300,6 +313,10 @@ export function TeamSettings() {
         { method: "DELETE", credentials: "include" },
       );
       if (!response.ok) {
+        if (response.status === 403) {
+          showPermissionDeniedToast();
+          return;
+        }
         const body = (await response.json().catch(() => null)) as {
           message?: string;
         } | null;
@@ -389,7 +406,7 @@ export function TeamSettings() {
         ) : null}
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading team…</p>
+            <CourseLitLoading label="Loading team…" className="justify-start" />
           ) : null}
           {!loading && members.length === 0 && invitations.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">

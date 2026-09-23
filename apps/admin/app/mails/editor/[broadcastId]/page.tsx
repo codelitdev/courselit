@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Copy, RefreshCw, Send } from "lucide-react";
 import { defaultEmail, EmailEditor, type Email } from "@sendlit/email-editor";
 import { defaultTemplateEmail } from "@sendlit/email-blocks";
 import { Button } from "@/components/ui/codelit/button";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import {
@@ -309,10 +310,7 @@ export default function EmailBroadcastEditorPage({
   if (loading) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background p-6">
-        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
-          <RefreshCw className="size-6 animate-spin text-primary" />
-          <span>Loading broadcast editor…</span>
-        </div>
+        <CourseLitLoading label="Loading broadcast editor…" />
       </div>
     );
   }
@@ -366,11 +364,14 @@ export default function EmailBroadcastEditorPage({
 
         <div className="flex items-center gap-3">
           {/* Status Indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            role="status"
+            aria-label={saving ? "Saving" : saved ? "Saved" : undefined}
+          >
             {saving ? (
               <>
-                <RefreshCw className="size-3.5 animate-spin text-primary" />
-                <span>Saving…</span>
+                <CourseLitLoadingIcon size={14} />
               </>
             ) : saved ? (
               <>

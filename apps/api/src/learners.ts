@@ -14,20 +14,17 @@ import { issueCertificateIfComplete } from "./certificates.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import { upsertLearnerMembership } from "./learner-memberships.js";
-import {
-  type LearnerProfileFields,
-  readLearnerProfile,
-  updateLearnerProfileContact,
-} from "./learner-profile.js";
+import { type LearnerProfileFields } from "./learner-profile.js";
 import type { MediaLitClient } from "./media.js";
-import type { CourseLitPermission } from "./permissions.js";
 import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { loadSchoolByPublicId } from "./schools.js";
+import { type MediaRef } from "@courselit/api-contract";
+import { queueSendLitContactSync } from "./contacts.js";
+import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import type { AppDb } from "./types.js";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-export const LEARNER_IDENTITY_LINK_TTL_MS = 10 * 60 * 1000;
 
 export type LearnerDto = {
   id: string;
@@ -38,15 +35,6 @@ export type LearnerDto = {
   image: string | null;
   bio: string;
   emailUpdatesEnabled: boolean;
-};
-
-export type AdminLearnerDto = {
-  id: string;
-  schoolId: string;
-  email: string;
-  name: string;
-  status: "active" | "deactivated";
-  createdAt: string;
 };
 
 export type LearnerMembershipDto = {
@@ -100,11 +88,6 @@ export type LearnerProductDto = ProductDto & {
   completedLessonsCount: number;
   certificateId: string | null;
   downloaded: boolean;
-};
-
-export type LearnerIdentityLinkDto = {
-  token: string;
-  expiresAt: string;
 };
 
 export type LearnerSession = {
@@ -402,6 +385,13 @@ export async function listLearnerProducts(
             )
             .limit(1),
         ]);
+      const discussionSpaceRows = product.discussionSpaceId
+        ? await db
+            .select({ publicId: schema.spaces.publicId })
+            .from(schema.spaces)
+            .where(eq(schema.spaces.id, product.discussionSpaceId))
+            .limit(1)
+        : [];
       return {
         id: product.publicId,
         schoolId: input.publicSchoolId,
@@ -416,7 +406,7 @@ export async function listLearnerProducts(
         certificate: product.certificate,
         discussions: product.discussions,
         includedWithCommunity: product.includedWithCommunity,
-        discussionSpaceId: product.discussionSpaceId,
+        discussionSpaceId: discussionSpaceRows[0]?.publicId ?? null,
         publishedAt: product.publishedAt ? serializeDate(product.publishedAt) : null,
         createdAt: serializeDate(product.createdAt),
         updatedAt: serializeDate(product.updatedAt),
@@ -427,42 +417,6 @@ export async function listLearnerProducts(
       };
     }),
   );
-}
-
-function adminLearnerToDto(
-  account: typeof schema.schoolAccounts.$inferSelect,
-  publicSchoolId: string,
-): AdminLearnerDto {
-  return {
-    id: account.publicId,
-    schoolId: publicSchoolId,
-    email: account.email,
-    name: account.displayName,
-    status: account.status,
-    createdAt: serializeDate(account.createdAt),
-  };
-}
-
-function encodeLearnerCursor(account: typeof schema.schoolAccounts.$inferSelect): string {
-  return Buffer.from(
-    JSON.stringify({ createdAt: account.createdAt.toISOString(), id: account.id }),
-  ).toString("base64url");
-}
-
-function decodeLearnerCursor(value: string): { createdAt: Date; id: string } | null {
-  try {
-    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as {
-      createdAt?: unknown;
-      id?: unknown;
-    };
-    if (typeof parsed.createdAt !== "string" || typeof parsed.id !== "string") {
-      return null;
-    }
-    const createdAt = new Date(parsed.createdAt);
-    return Number.isNaN(createdAt.getTime()) ? null : { createdAt, id: parsed.id };
-  } catch {
-    return null;
-  }
 }
 
 export function readLearnerSessionCookie(
@@ -494,22 +448,22 @@ export function clearLearnerSessionCookieHeader(): string {
 export function toLearnerDto(
   account: typeof schema.schoolAccounts.$inferSelect,
   publicSchoolId: string,
-  profile: LearnerProfileFields = {
-    avatarMediaId: null,
-    image: null,
-    bio: "",
-    emailUpdatesEnabled: true,
-  },
+  profile?: LearnerProfileFields,
 ): LearnerDto {
+  const rawAvatar = account.avatar as unknown;
+  const avatarObj =
+    rawAvatar && typeof rawAvatar === "object" ? (rawAvatar as MediaRef) : null;
+  const avatarString =
+    typeof rawAvatar === "string" && rawAvatar.trim() ? rawAvatar.trim() : null;
   return {
     id: account.publicId,
     schoolId: publicSchoolId,
     email: account.email,
     name: account.displayName,
-    avatarMediaId: profile.avatarMediaId,
-    image: profile.image,
-    bio: profile.bio,
-    emailUpdatesEnabled: profile.emailUpdatesEnabled,
+    avatarMediaId: profile?.avatarMediaId ?? avatarObj?.mediaId ?? null,
+    image: profile?.image ?? avatarObj?.url ?? avatarString ?? null,
+    bio: account.bio || profile?.bio || "",
+    emailUpdatesEnabled: profile?.emailUpdatesEnabled ?? true,
   };
 }
 
@@ -526,45 +480,49 @@ export async function authenticateLearner(
   if (!token) return { kind: "absent" };
   const digest = digestToken(token);
   const now = clock.now();
-  const rows = await db
-    .select({
-      session: schema.schoolSessions,
-      account: schema.schoolAccounts,
-      school: schema.schools,
-    })
-    .from(schema.schoolSessions)
-    .innerJoin(
-      schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.schoolSessions.schoolAccountId),
-    )
-    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolSessions.schoolId))
-    .where(eq(schema.schoolSessions.tokenDigest, digest))
-    .limit(1);
-  const row = rows[0];
-  if (!row || row.session.expiresAt.getTime() <= now.getTime()) {
-    return { kind: "rejected", error: createPlatformError("unauthenticated") };
+  try {
+    const rows = await db
+      .select({
+        session: schema.schoolSessions,
+        account: schema.schoolAccounts,
+        school: schema.schools,
+      })
+      .from(schema.schoolSessions)
+      .innerJoin(
+        schema.schoolAccounts,
+        eq(schema.schoolAccounts.id, schema.schoolSessions.schoolAccountId),
+      )
+      .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolSessions.schoolId))
+      .where(eq(schema.schoolSessions.tokenDigest, digest))
+      .limit(1);
+    const row = rows[0];
+    if (!row || row.session.expiresAt.getTime() <= now.getTime()) {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
+    }
+    if (row.account.status !== "active") {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
+    }
+    const hasGoogle = Boolean(
+      process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+    );
+    const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
+    if (!allowedMethods.includes(row.session.authenticationMethod)) {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
+    }
+    return {
+      kind: "authenticated",
+      value: {
+        schoolAccount: row.account,
+        learner: Object.assign({}, row.account, { name: row.account.displayName }),
+        school: row.school,
+        sessionId: row.session.id,
+        userId: row.session.userId,
+        authenticationMethod: row.session.authenticationMethod,
+      },
+    };
+  } catch {
+    return { kind: "absent" };
   }
-  if (row.account.status !== "active") {
-    return { kind: "rejected", error: createPlatformError("unauthenticated") };
-  }
-  const hasGoogle = Boolean(
-    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-  );
-  const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
-  if (!allowedMethods.includes(row.session.authenticationMethod)) {
-    return { kind: "rejected", error: createPlatformError("unauthenticated") };
-  }
-  return {
-    kind: "authenticated",
-    value: {
-      schoolAccount: row.account,
-      learner: Object.assign({}, row.account, { name: row.account.displayName }),
-      school: row.school,
-      sessionId: row.session.id,
-      userId: row.session.userId,
-      authenticationMethod: row.session.authenticationMethod,
-    },
-  };
 }
 
 export function assertLearnerSchool(
@@ -588,6 +546,7 @@ export async function ensureSchoolAccount(
     userId: string;
     email: string;
     displayName?: string | null;
+    avatar?: MediaRef | null;
     image?: string | null;
     clock: Clock;
   },
@@ -618,20 +577,32 @@ export async function ensureSchoolAccount(
     .limit(1);
   const now = input.clock.now();
   if (byEmail[0]) {
+    const avatar =
+      input.avatar !== undefined
+        ? input.avatar
+        : input.image
+          ? { url: input.image }
+          : byEmail[0].avatar;
     const updated = await db
       .update(schema.schoolAccounts)
       .set({
         userId: input.userId,
         displayName: input.displayName?.trim() || byEmail[0].displayName,
-        image: input.image ?? byEmail[0].image,
+        avatar,
         updatedAt: now,
       })
       .where(eq(schema.schoolAccounts.id, byEmail[0].id))
       .returning();
     return updated[0];
   }
-  const publicId = createPublicId("lrn", input.clock);
+  const publicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, input.clock);
   const name = input.displayName?.trim() || learnerNameFromEmail(email);
+  const avatar =
+    input.avatar !== undefined
+      ? input.avatar
+      : input.image
+        ? { url: input.image }
+        : null;
   const inserted = await db
     .insert(schema.schoolAccounts)
     .values({
@@ -641,7 +612,7 @@ export async function ensureSchoolAccount(
       userId: input.userId,
       email,
       displayName: name,
-      image: input.image ?? null,
+      avatar,
       status: "active",
       createdAt: now,
       updatedAt: now,
@@ -781,26 +752,37 @@ function learnerNameFromEmail(email: string): string {
 export async function enqueueLearnerContactSync(
   db: AppDb,
   schoolId: string,
-  learner: { email: string; name?: string | null },
+  learner: { email: string; name?: string | null; id?: string },
   clock: Clock,
+  options: { ensureSubscribed?: boolean; reason?: string } = {},
 ): Promise<void> {
-  const now = clock.now();
-  await db.insert(schema.integrationOutboxJobs).values({
-    id: uuidv7(clock),
-    schoolId,
-    provider: "sendlit",
-    type: "sync_sendlit_contact",
-    payload: {
-      email: learner.email,
-      name: learner.name?.trim() || "",
-      tags: ["learner"],
-    },
-    status: "pending",
-    attempts: 0,
-    nextAttemptAt: now,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    let schoolAccountId = learner.id;
+    if (!schoolAccountId) {
+      const [acc] = await db
+        .select({ id: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .where(
+          and(
+            eq(schema.schoolAccounts.schoolId, schoolId),
+            eq(schema.schoolAccounts.email, learner.email),
+          ),
+        )
+        .limit(1);
+      schoolAccountId = acc?.id;
+    }
+    if (!schoolAccountId) return;
+
+    await queueSendLitContactSync(db, {
+      schoolId,
+      schoolAccountId,
+      ensureSubscribed: options.ensureSubscribed,
+      reason: options.reason,
+      clock,
+    });
+  } catch (err) {
+    console.error("[enqueueLearnerContactSync failed]", err);
+  }
 }
 
 /**
@@ -861,22 +843,41 @@ export async function signInLearnerWithIdentity(
     clock,
   });
 
-  await recordActivity(
-    db,
-    {
-      schoolId: school.id,
-      actorId: schoolAccount.publicId,
-      type: ActivityType.USER_CREATED,
-      entityId: schoolAccount.publicId,
-      metadata: { email: schoolAccount.email },
-    },
-    clock,
-  );
+  try {
+    await recordActivity(
+      db,
+      {
+        schoolId: school.id,
+        actorId: schoolAccount.publicId,
+        type: ActivityType.USER_CREATED,
+        entityId: schoolAccount.publicId,
+        metadata: { email: schoolAccount.email },
+      },
+      clock,
+    );
+  } catch (err) {
+    console.error("[recordActivity failed on login]", err);
+  }
+
+  const now = clock.now();
+  const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
+    lastActiveAt: now,
+    updatedAt: now,
+  };
+  if (!schoolAccount.learnerRegisteredAt) {
+    updates.learnerRegisteredAt = now;
+  }
+  await db
+    .update(schema.schoolAccounts)
+    .set(updates)
+    .where(eq(schema.schoolAccounts.id, schoolAccount.id));
+
   await enqueueLearnerContactSync(
     db,
     school.id,
-    { email: schoolAccount.email, name: schoolAccount.displayName },
+    { email: schoolAccount.email, name: schoolAccount.displayName, id: schoolAccount.id },
     clock,
+    { reason: "learner_login" },
   );
 
   return {
@@ -964,11 +965,21 @@ export async function signUpLearner(
     },
     clock,
   );
+  await db
+    .update(schema.schoolAccounts)
+    .set({
+      learnerRegisteredAt: now,
+      lastActiveAt: now,
+      updatedAt: now,
+    })
+    .where(eq(schema.schoolAccounts.id, schoolAccount.id));
+
   await enqueueLearnerContactSync(
     db,
     school.id,
-    { email: schoolAccount.email, name: schoolAccount.displayName },
+    { email: schoolAccount.email, name: schoolAccount.displayName, id: schoolAccount.id },
     clock,
+    { ensureSubscribed: true, reason: "learner_signup" },
   );
 
   return { ok: true, value: issued.dto, token: issued.token };
@@ -1031,6 +1042,26 @@ export async function signInLearner(
     authenticationMethod: "email",
     clock,
   });
+
+  const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
+    lastActiveAt: now,
+    updatedAt: now,
+  };
+  if (!schoolAccount.learnerRegisteredAt) {
+    updates.learnerRegisteredAt = now;
+  }
+  await db
+    .update(schema.schoolAccounts)
+    .set(updates)
+    .where(eq(schema.schoolAccounts.id, schoolAccount.id));
+
+  await enqueueLearnerContactSync(
+    db,
+    school.id,
+    { email: schoolAccount.email, name: schoolAccount.displayName, id: schoolAccount.id },
+    clock,
+    { reason: "learner_login" },
+  );
 
   return { ok: true, value: issued.dto, token: issued.token };
 }
@@ -1569,149 +1600,6 @@ export async function listLearnerProgress(
   };
 }
 
-type AdminLearnerContext = {
-  schoolId: string | null;
-  publicSchoolId: string;
-  principalId: string;
-  requestId: string;
-  permissions: ReadonlySet<CourseLitPermission>;
-};
-
-function canReadLearners(ctx: AdminLearnerContext): boolean {
-  return Boolean(ctx.schoolId && ctx.permissions.has("learners:read"));
-}
-
-function canWriteLearners(ctx: AdminLearnerContext): boolean {
-  return Boolean(ctx.schoolId && ctx.permissions.has("learners:write"));
-}
-
-export async function createLearnerIdentityLink(
-  _db: AppDb,
-  ctx: AdminLearnerContext,
-  clock: Clock,
-): Promise<
-  { ok: true; value: LearnerIdentityLinkDto } | { ok: false; error: PlatformError }
-> {
-  if (!canWriteLearners(ctx)) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  const expiresAt = new Date(clock.now().getTime() + 3600000);
-  return {
-    ok: true,
-    value: {
-      token: randomBytes(32).toString("base64url"),
-      expiresAt: serializeDate(expiresAt),
-    },
-  };
-}
-
-export async function listLearners(
-  db: AppDb,
-  ctx: AdminLearnerContext,
-  input: { cursor?: string; limit: number },
-): Promise<
-  | { ok: true; value: { items: AdminLearnerDto[]; nextCursor: string | null } }
-  | { ok: false; error: PlatformError }
-> {
-  if (!canReadLearners(ctx)) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  const cursor = input.cursor ? decodeLearnerCursor(input.cursor) : null;
-  if (input.cursor && !cursor) {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "invalid_cursor" },
-      }),
-    };
-  }
-  const rows = await db
-    .select()
-    .from(schema.schoolAccounts)
-    .where(
-      and(
-        eq(schema.schoolAccounts.schoolId, ctx.schoolId!),
-        cursor
-          ? or(
-              gt(schema.schoolAccounts.createdAt, cursor.createdAt),
-              and(
-                eq(schema.schoolAccounts.createdAt, cursor.createdAt),
-                gt(schema.schoolAccounts.id, cursor.id),
-              ),
-            )
-          : undefined,
-      ),
-    )
-    .orderBy(asc(schema.schoolAccounts.createdAt), asc(schema.schoolAccounts.id))
-    .limit(input.limit + 1);
-  const hasMore = rows.length > input.limit;
-  const page = hasMore ? rows.slice(0, input.limit) : rows;
-  return {
-    ok: true,
-    value: {
-      items: page.map((account) => adminLearnerToDto(account, ctx.publicSchoolId)),
-      nextCursor: hasMore ? encodeLearnerCursor(page[page.length - 1]!) : null,
-    },
-  };
-}
-
-export async function updateLearnerStatus(
-  db: AppDb,
-  ctx: AdminLearnerContext,
-  learnerPublicId: string,
-  status: "active" | "deactivated",
-  clock: Clock,
-): Promise<{ ok: true; value: AdminLearnerDto } | { ok: false; error: PlatformError }> {
-  if (!canWriteLearners(ctx)) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  const now = clock.now();
-  return db.transaction(async (tx) => {
-    const rows = await tx
-      .select()
-      .from(schema.schoolAccounts)
-      .where(
-        and(
-          eq(schema.schoolAccounts.publicId, learnerPublicId),
-          eq(schema.schoolAccounts.schoolId, ctx.schoolId!),
-        ),
-      )
-      .limit(1);
-    const account = rows[0];
-    if (!account) {
-      return { ok: false as const, error: createPlatformError("not_found") };
-    }
-    if (account.status !== status) {
-      await tx
-        .update(schema.schoolAccounts)
-        .set({ status, updatedAt: now })
-        .where(eq(schema.schoolAccounts.id, account.id));
-      if (status === "deactivated") {
-        await tx
-          .delete(schema.schoolSessions)
-          .where(eq(schema.schoolSessions.schoolAccountId, account.id));
-      }
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: ctx.schoolId!,
-        actorId: ctx.principalId,
-        action: status === "active" ? "learner.restored" : "learner.deactivated",
-        resourceType: "learner",
-        resourceId: account.publicId,
-        requestId: ctx.requestId,
-        createdAt: now,
-      });
-    }
-    return {
-      ok: true as const,
-      value: adminLearnerToDto(
-        { ...account, status, updatedAt: now },
-        ctx.publicSchoolId,
-      ),
-    };
-  });
-}
-
 export function learnerMe(
   session: LearnerSession,
   profile?: LearnerProfileFields,
@@ -1731,7 +1619,7 @@ export async function updateLearnerProfile(
   },
   clock: Clock,
   requestId: string,
-  sendLit: import("./sendlit-client.js").SendLitConfig,
+  _sendLit?: import("./sendlit-client.js").SendLitConfig,
 ): Promise<{ ok: true; value: LearnerDto } | { ok: false; error: PlatformError }> {
   const name = input.name.trim();
   if (!name || name.length > 200) {
@@ -1741,46 +1629,24 @@ export async function updateLearnerProfile(
     return { ok: false, error: createPlatformError("validation_failed") };
   }
 
-  const profileRequested =
-    input.image !== undefined ||
-    input.avatarMediaId !== undefined ||
-    input.bio !== undefined ||
-    input.emailUpdatesEnabled !== undefined;
-  let profile: LearnerProfileFields | undefined;
-  if (profileRequested) {
-    try {
-      const existingProfile = await readLearnerProfile(db, sendLit, {
-        schoolId: session.school.id,
-        email: session.schoolAccount.email,
-      });
-      const updatedProfile = await updateLearnerProfileContact(db, sendLit, {
-        schoolId: session.school.id,
-        email: session.schoolAccount.email,
-        name,
-        bio: input.bio ?? existingProfile.bio,
-        emailUpdatesEnabled:
-          input.emailUpdatesEnabled ?? existingProfile.emailUpdatesEnabled,
-        avatarMediaId:
-          input.avatarMediaId !== undefined
-            ? input.avatarMediaId
-            : existingProfile.avatarMediaId,
-        avatarUrl: input.image !== undefined ? input.image : existingProfile.image,
-      });
-      if (!updatedProfile) {
-        return { ok: false, error: createPlatformError("internal_error") };
-      }
-      profile = updatedProfile;
-    } catch {
-      return { ok: false, error: createPlatformError("internal_error") };
-    }
-  }
-
   const now = clock.now();
   return db.transaction(async (tx) => {
     const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
       updatedAt: now,
     };
     if (name !== session.schoolAccount.displayName) updates.displayName = name;
+    if (input.bio !== undefined) updates.bio = input.bio.trim();
+    if (input.image !== undefined || input.avatarMediaId !== undefined) {
+      const existingAvatar = session.schoolAccount.avatar;
+      const mediaId =
+        input.avatarMediaId !== undefined
+          ? input.avatarMediaId
+          : existingAvatar?.mediaId;
+      const url =
+        input.image !== undefined ? input.image : (existingAvatar?.url ?? null);
+      updates.avatar = url ? { url, ...(mediaId ? { mediaId } : {}) } : null;
+    }
+
     const updated = await tx
       .update(schema.schoolAccounts)
       .set(updates)
@@ -1796,12 +1662,14 @@ export async function updateLearnerProfile(
       return { ok: false as const, error: createPlatformError("unauthenticated") };
     }
 
-    await enqueueLearnerContactSync(
-      tx as unknown as AppDb,
-      session.school.id,
-      { email: account.email, name: account.displayName },
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: session.school.id,
+      schoolAccountId: account.id,
+      ensureSubscribed: input.emailUpdatesEnabled,
+      reason: "learner.profile_updated",
       clock,
-    );
+    });
+
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: session.school.id,
@@ -1815,7 +1683,12 @@ export async function updateLearnerProfile(
 
     return {
       ok: true as const,
-      value: toLearnerDto(account, session.school.publicId, profile),
+      value: toLearnerDto(account, session.school.publicId, {
+        bio: account.bio,
+        avatarMediaId: account.avatar?.mediaId ?? null,
+        image: account.avatar?.url ?? null,
+        emailUpdatesEnabled: input.emailUpdatesEnabled ?? true,
+      }),
     };
   });
 }

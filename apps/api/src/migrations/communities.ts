@@ -225,7 +225,7 @@ async function schoolFor(
 
 async function targetExists(
   db: AppDb,
-  table: "media" | "communities" | "storefrontPlans" | "communityMemberships" | "communityPosts" | "communityComments" | "communityReactions" | "communityPostSubscribers" | "communityReports",
+  table: "media" | "communities" | "storefrontPlans" | "learnerMemberships" | "communityPosts" | "communityComments" | "communityReactions" | "communityPostSubscribers" | "communityReports",
   id: string,
 ): Promise<boolean> {
   const tableRef = schema[table];
@@ -849,10 +849,14 @@ export async function importLegacyCommunities(
         continue;
       }
       seen.add(`${COLLECTIONS.memberships}:${sourceId}`);
-      if (await mappingStatus(COLLECTIONS.memberships, sourceId, "communityMemberships")) continue;
+      if (await mappingStatus(COLLECTIONS.memberships, sourceId, "learnerMemberships")) continue;
       const communityId = await communityTarget(record, COLLECTIONS.memberships, sourceId);
       if (!communityId) continue;
-      const community = await db.select({ schoolId: schema.communities.schoolId }).from(schema.communities).where(eq(schema.communities.id, communityId)).limit(1);
+      const community = await db
+        .select({ schoolId: schema.communities.schoolId, publicId: schema.communities.publicId })
+        .from(schema.communities)
+        .where(eq(schema.communities.id, communityId))
+        .limit(1);
       const communityRow = community[0];
       const status = normalizeStatus(record.status);
       const role = normalizeRole(record.role);
@@ -867,28 +871,45 @@ export async function importLegacyCommunities(
         continue;
       }
       const planSourceId = sourceIdFor(record, "paymentPlanId", "planId");
-      const paymentPlanId = planSourceId ? await mappedTarget(db, sourceSystem, COLLECTIONS.plans, planSourceId, "storefrontPlans") : null;
-      if (planSourceId && !paymentPlanId) {
+      const paymentPlanInternalId = planSourceId
+        ? await mappedTarget(db, sourceSystem, COLLECTIONS.plans, planSourceId, "storefrontPlans")
+        : null;
+      if (planSourceId && !paymentPlanInternalId) {
         addRejection(rejection(COLLECTIONS.memberships, sourceId, "plan_mapping_missing", { planId: planSourceId }));
         continue;
       }
+      const paymentPlan = paymentPlanInternalId
+        ? await db
+            .select({ publicId: schema.storefrontPlans.publicId })
+            .from(schema.storefrontPlans)
+            .where(eq(schema.storefrontPlans.id, paymentPlanInternalId))
+            .limit(1)
+        : [];
       if (!addReady()) continue;
       const targetId = uuidv7(input.clock);
-      await db.insert(schema.communityMemberships).values({
+      await db.insert(schema.learnerMemberships).values({
         id: targetId,
         publicId: sourceId,
         schoolId: communityRow.schoolId,
-        communityId,
-        paymentPlanId,
         schoolAccountId: identity.schoolAccountId!,
+        entityType: "community",
+        entityId: communityRow.publicId,
+        paymentPlanId: paymentPlan[0]?.publicId ?? null,
+        isIncludedInPlan: false,
+        parentMembershipId: null,
         status,
-        role,
+        role:
+          status === "active" && (role === "moderator" || role === "owner")
+            ? "moderate"
+            : status === "active"
+              ? "post"
+              : "comment",
         joiningReason: stringValue(record.joiningReason) ?? "",
         rejectionReason: stringValue(record.rejectionReason),
         createdAt: timestamps.createdAt,
         updatedAt: timestamps.updatedAt,
       });
-      await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.memberships, sourceId, targetTable: "communityMemberships", targetId, schoolId: communityRow.schoolId });
+      await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.memberships, sourceId, targetTable: "learnerMemberships", targetId, schoolId: communityRow.schoolId });
       counts.imported += 1;
       counts.membershipsImported += 1;
     }

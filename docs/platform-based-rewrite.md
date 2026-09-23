@@ -14,7 +14,7 @@
 
 ## 1. Executive summary
 
-CourseLit will be rebuilt on the CodeLit Platform foundation and migrated from its current MongoDB-backed, unified admin-and-learner application to a PostgreSQL-backed, API-first product with separate administration and learner experiences.
+CourseLit will be rebuilt on the CodeLit Platform foundation and migrated from its current MongoDB-backed, unified admin-and-storefront application to a PostgreSQL-backed, API-first product with separate administration and learner experiences.
 
 This is a replacement program, not an in-place refactor. The new system will be deployed on fresh infrastructure with an initially blank PostgreSQL database and will run alongside the current CourseLit production system.
 
@@ -26,7 +26,7 @@ The target product has three primary runtime applications. The API workspace has
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CourseLit API (`http` and `worker`) | HTTP serves schools, products, lessons, learners, communities, commerce, REST, OpenAPI, MCP, and webhooks. Worker processes drip, outbox, notifications, imports, reconciliation, and maintenance. |
 | Admin app                           | Authenticated workspace for school owners and invited team members                                                                                                                                 |
-| Learner app                         | Public school site, learner authentication, course consumption, communities, checkout, and certificates                                                                                            |
+| Storefront app                      | Public school site, learner authentication, course consumption, communities, checkout, and certificates                                                                                            |
 
 The rewrite will use the Platform for common SaaS behavior and retain CourseLit ownership of its product behavior:
 
@@ -78,7 +78,7 @@ This makes the system hard to evolve safely and prevents CourseLit from consumin
 - Rebuilding page or blog authoring inside CourseLit.
 - Using SendLit contacts as CourseLit authentication or authorization records.
 - Using Platform SaaS billing records for learner purchases or storefront entitlements.
-- Sharing browser sessions between the admin and learner applications.
+- Sharing browser sessions between the admin and storefront applications.
 - A single big-bang data migration without school-scoped rehearsals and reconciliation.
 - Dual-writing new schools to MongoDB merely to create a legacy rollback path.
 - Reproducing every current internal admin route before the first vertical slice.
@@ -161,13 +161,13 @@ FrontLit owns pages, blog entries, page-builder content, and site theme data. Co
 ```mermaid
 flowchart LR
     Admin[School owner or teammate] --> AdminApp[Admin app]
-    Learner[Guest or learner] --> LearnerApp[Learner app]
+    Learner[Guest or learner] --> StorefrontApp[Storefront app]
     ApiClient[REST or MCP client] --> API[CourseLit API]
     Caddy[Caddy legacy or rewritten router] --> AdminApp
-    Caddy --> LearnerApp
+    Caddy --> StorefrontApp
     Caddy --> Legacy[Legacy CourseLit for unmigrated schools]
     AdminApp --> API
-    LearnerApp --> API
+    StorefrontApp --> API
     API --> PG[(PostgreSQL)]
     API --> Worker[API worker process]
     Worker --> PG
@@ -208,7 +208,7 @@ flowchart LR
 - Supports school selection, invitations, roles, products, learners, community management, community payment plans, membership moderation, integrations, storefront settings, and Platform billing. Community admin screens are management-only: they must not contain the learner post composer, comment composer, reactions, subscriptions, or learner notifications.
 - Embeds FrontLit and SendLit components only through published, versioned package contracts, including `@frontlit/page-builder`, `@sendlit/email-editor`, and `@sendlit/email-blocks` where appropriate. Until a required contract is supported for external consumption, link to the sister product rather than copy its application code.
 
-#### `apps/learners`
+#### `apps/storefront`
 
 - Next.js and React public application.
 - Resolves a school from the normalized host, including `<school>.courselit.app` and verified custom domains.
@@ -216,11 +216,11 @@ flowchart LR
 - The authenticated `/dashboard` is a learner workspace and may use an application shell rather than a FrontLit page layout, but it must consume the active school theme so learner workspaces remain visually consistent with the public site.
 - Every protected learner route must live under the Next.js `(loggedin)` route group and under `/dashboard`. `/dashboard` is the aggregate feed, `/dashboard/s/[spaceId]` is a filtered space feed, and `/dashboard/s/[spaceId]/[postId]` is a space-scoped post detail. The other primary learner surfaces are `/dashboard/products`, `/dashboard/account`, and `/dashboard/notifications`. Course viewing and lesson discussions use `/dashboard/courses/...`; explicit preview tokens may allow preview rendering without a learner session.
 - Feed and Products are top-level learner navigation items, not a nested group or tab strip. Account and Notifications belong in the learner sidebar footer menu.
-- Public learner-app routes remain outside the logged-in group: `/products`, `/product/[productId]` (where the stable public product ID uses the `prd_` prefix), `/join`, `/blog`, `/blog/[blogId]`, the production-compatible `/blog/[slug]/[id]` article URL, `/checkout?session=...`, and `/certificates/[verificationId]`. `/join` is the singleton community sales page; authenticated community participation is space-based under `/dashboard` and `/dashboard/s/[spaceId]`, with post details at `/dashboard/s/[spaceId]/[postId]`.
+- Public storefront routes remain outside the logged-in group: `/products`, `/product/[productId]` (where the stable public product ID uses the `prd_` prefix), `/join`, `/blog`, `/blog/[blogId]`, the production-compatible `/blog/[slug]/[id]` article URL, `/checkout?session=...`, and `/certificates/[verificationId]`. `/join` is the singleton community sales page; authenticated community participation is space-based under `/dashboard` and `/dashboard/s/[spaceId]`, with post details at `/dashboard/s/[spaceId]/[postId]`.
 - Public site routes and system-owned public content are composed like `frontlit/apps/sites`: resolve the school FrontLit page and team theme, render the published layout through `@frontlit/page-builder`, and provide CourseLit-owned dynamic content through named page-builder data slots.
-- Public-site-owned UI must use the published `@frontlit/page-builder` blocks, primitives, and components. Do not create a second public-site block or theme system in the learner app.
-- Treat the learner app as two explicit surface classes: public-site routes (guest storefront, public product/catalog pages, public pages, and blog) and learner workspace routes (authenticated dashboard, memberships, progress, lesson viewing, checkout, downloads, communities, community posting/commenting/reactions/subscriptions, learner notifications, and certificates). The second class may use an application shell, but it still consumes the active school theme.
-- Community functionality is intentionally split across applications. `apps/admin` owns the singleton community's settings, spaces, learner membership approval and roles, payment plans, reports, moderation, and other administrative controls. `apps/learners` owns the member experience: community acquisition through `/join`, space discovery, space feeds, reading and creating posts, comments/replies, reactions, post subscriptions, reporting, and learner-facing notifications. Reuse the production `main` discussion components, hooks, validators, and tests where compatible, adapting only their transport, identity, and application-boundary seams.
+- Public-site-owned UI must use the published `@frontlit/page-builder` blocks, primitives, and components. Do not create a second public-site block or theme system in the storefront app.
+- Treat the storefront app as two explicit surface classes: public-site routes (guest storefront, public product/catalog pages, public pages, and blog) and learner workspace routes (authenticated dashboard, memberships, progress, lesson viewing, checkout, downloads, communities, community posting/commenting/reactions/subscriptions, learner notifications, and certificates). The second class may use an application shell, but it still consumes the active school theme.
+- Community functionality is intentionally split across applications. `apps/admin` owns the singleton community's settings, spaces, learner membership approval and roles, payment plans, reports, moderation, and other administrative controls. `apps/storefront` owns the member experience: community acquisition through `/join`, space discovery, space feeds, reading and creating posts, comments/replies, reactions, post subscriptions, reporting, and learner-facing notifications. Reuse the production `main` discussion components, hooks, validators, and tests where compatible, adapting only their transport, identity, and application-boundary seams.
 - The public `/products` route is a CourseLit system-owned catalog surface. It must be rendered inside the school’s active FrontLit theme using the homepage’s shared `header` and `footer` blocks plus an empty themed `Section` containing the CourseLit catalog. It must not require a persisted FrontLit `/products` page or become an isolated custom page with its own header, footer, theme tokens, or card system.
 - Public product detail/sales surfaces follow the same composition rule. If a system-owned route has no dedicated FrontLit page, it may fall back to the school homepage layout for shared chrome and inject its content through a named data slot. This does not make the CourseLit product model a FrontLit model: FrontLit owns presentation/layout, while CourseLit owns product visibility, pricing, enrollment, and access decisions.
 - The public checkout flow preserves the production sequence: `/products` links to `/product/:productId`; the product page renders CourseLit-owned, FrontLit-primitive blocks for the curriculum and purchase plans; selecting Buy now or Get access creates a short-lived server-side checkout intent; the browser continues at `/checkout?session=<opaque-session-id>`. The query value must not contain payment credentials, learner identity assertions, or trusted price data. If the learner is not authenticated, the checkout route returns through the configured learner login methods and then resumes the same intent. Free plans activate a learner membership through the API; paid plans are created through the school's selected Stripe, Lemon Squeezy, or Razorpay adapter and return to the checkout route for status display. The API webhook, not the browser return, confirms payment and grants entitlement.
@@ -242,7 +242,7 @@ The target workspace is:
 apps/
   api/
   admin/
-  learners/
+  storefront/
   docs/
 packages/
   api-contract/
@@ -276,7 +276,7 @@ Copied code must become part of the target repository and must not retain runtim
 Before implementing a capability that already exists in CourseLit, engineers must inspect its implementation and tests on `main`, then record the target disposition in the parity ledger. The implementation should reuse the smallest suitable production-tested units and port or adapt them to the target architecture; only the legacy application as a whole must not be copied wholesale. In particular:
 
 1. Preserve the externally observable behavior unless this PRD explicitly changes it.
-2. Adapt the behavior to the target ownership boundaries, PostgreSQL schema, API contracts, separate admin/learner applications, and Platform conventions.
+2. Adapt the behavior to the target ownership boundaries, PostgreSQL schema, API contracts, separate admin/storefront applications, and Platform conventions.
 3. Carry over relevant validation, permission checks, idempotency, deletion rules, integration behavior, and regression tests.
 4. Add target-side parity tests and link their evidence from the parity ledger.
 5. If the PRD intentionally changes a behavior, document the difference and test the new behavior instead of silently inheriting `main`.
@@ -308,7 +308,7 @@ Use that worktree for source and test comparison while making changes only in `p
 
 When porting a rich-text workflow from `main`, retain the production editor and renderer behavior through `@frontlit/text-editor`; adapt only the API, MediaLit picker, permissions, and persistence seams required by the target architecture. Future agents must check this rule before adding any editor, lesson content form, product description field, page content field, email content field, or learner content renderer.
 
-The legacy application historically rendered some learner navigation in the same dashboard shell. In the split target, learner-only navigation stays in `apps/learners`: Feed and Products are top-level learner navigation items, with Account and Notifications in the learner account menu. None of these learner items belong in the `apps/admin` sidebar. Existing admin navigation should retain the production information architecture—Create (Overview, Products, Communities, Blogs, Pages, Users, Mails, and Settings), nested Mails/Settings sub-navigation (Users links directly to `/learners` as standalone `/learners/tags` is retired in favor of direct SendLit contact tagging), Support, and the account menu—subject to the target features that have been migrated.
+The legacy application historically rendered some learner navigation in the same dashboard shell. In the split target, learner-only navigation stays in `apps/storefront`: Feed and Products are top-level learner navigation items, with Account and Notifications in the learner account menu. None of these learner items belong in the `apps/admin` sidebar. Existing admin navigation should retain the production information architecture—Create (Overview, Products, Communities, Blogs, Pages, Users, Mails, and Settings), nested Mails/Settings sub-navigation (Users links directly to `/learners` as standalone `/learners/tags` is retired in favor of direct SendLit contact tagging), Support, and the account menu—subject to the target features that have been migrated.
 
 ## 9. Functional requirements
 
@@ -345,7 +345,7 @@ The legacy application historically rendered some learner navigation in the same
 - The learner Better Auth realm is served at `/api/learner-auth`, uses its own
   auth tables and `LEARNER_AUTH_SECRET`, and uses the
   `courselit-learner.*` cookie namespace. Admin cookies and learner cookies use
-  distinct names and session validation; the learner app proxy never forwards
+  distinct names and session validation; the storefront app proxy never forwards
   admin cookies to learner-auth or learner API routes.
 - School host resolution occurs before learner authentication and is server-verified.
 - An identity from one school cannot be replayed against another school's host.
@@ -402,7 +402,7 @@ the requested published FrontLit page (or the homepage fallback for a system
 route), its team settings/theme, and its published widget layout. CourseLit then
 loads its route-specific data through a named `data-slot` and passes the complete
 layout, theme, page data, and slot values to the published `@frontlit/page-builder`
-`PageRenderer`. The learner app must not duplicate FrontLit’s header/footer,
+`PageRenderer`. The storefront app must not duplicate FrontLit’s header/footer,
 theme-resolution, block registry, or public card primitives. Authenticated
 `/dashboard` and course-learning workflows are allowed to remain application-shell
 routes, but they must use the school-resolved theme and must not be mistaken for
@@ -427,7 +427,7 @@ the public-site rendering path.
 ### 9.6 Preview mode
 
 - An authorized product manager requests a short-lived, single-purpose preview grant from the admin API.
-- The learner app consumes the grant for one school and product.
+- The storefront app consumes the grant for one school and product.
 - Preview can expose unpublished and dripped content only within the manager's authorization.
 - Preview never creates or mutates learner, membership, progress, certificate, checkout, or notification records.
 - A manager with a normal learner membership receives the ordinary learner experience unless a preview grant is active.
@@ -435,7 +435,7 @@ the public-site rendering path.
 ### 9.7 Communities and discussions
 
 - Preserve communities, categories, pages, membership requests, auto-accept policy, roles, posts, comments, flat replies with reply context, reactions, subscriptions, reports, moderation, and notifications.
-- Split the user experience between applications: community authoring and administration (including payment plans, membership management, settings, reports, and moderation) belongs in `apps/admin`; community participation (feed, posts, comments/replies, reactions, subscriptions, reports, and notifications) belongs in `apps/learners`. Do not duplicate learner posting or notification controls in the admin app merely because the legacy `main` portal combined both surfaces.
+- Split the user experience between applications: community authoring and administration (including payment plans, membership management, settings, reports, and moderation) belongs in `apps/admin`; community participation (feed, posts, comments/replies, reactions, subscriptions, reports, and notifications) belongs in `apps/storefront`. Do not duplicate learner posting or notification controls in the admin app merely because the legacy `main` portal combined both surfaces.
 - Reuse/adapt the smallest production-tested community components and logic from `main` instead of replacing them with newly invented flows. The split is an application boundary change, not permission to change observable community behavior.
 - Preserve product/lesson discussions and their separate moderation workflow.
 - All listing APIs use cursor pagination with stable tie-breakers.
@@ -477,7 +477,7 @@ the public-site rendering path.
 
 Learner checkout configuration is managed by school administrators through the
 CourseLit API. The selected provider's secret credentials are encrypted at rest
-and never returned to the learner app. Checkout attempts are bound to the school,
+and never returned to the storefront app. Checkout attempts are bound to the school,
 learner, product, plan, currency, and expected amount before a hosted checkout
 URL or provider checkout data is returned. Access is granted only from a verified
 Stripe, Lemon Squeezy, or Razorpay webhook; the browser return URL is not an
@@ -515,14 +515,14 @@ entitlement signal.
 - The deployment-level `FRONTLIT_APIKEY` and the returned school-level team API key have different purposes and must not be substituted for one another.
 - Pages, navigation, blog posts, page-builder content, and public theme data are authored and stored in FrontLit.
 - The CourseLit admin app launches or embeds `@frontlit/page-builder` only through its published package contract.
-- The learner app renders a published FrontLit snapshot and CourseLit product blocks through stable public IDs.
+- The storefront app renders a published FrontLit snapshot and CourseLit product blocks through stable public IDs.
 - Learner route organization is part of the public contract: authenticated screens are grouped under `(loggedin)/dashboard`, while public catalogs, `/join`, blog, and certificate verification remain outside that group. A route-group move must preserve the URL semantics listed in Section 8.1 and update API-generated notification links along with browser links.
 - An unsupported migrated FrontLit block is preserved without transformation and displayed as `Unsupported` in both the admin page builder and learner-site renderer. It must not crash or disappear silently. The placeholder may identify the block type but must not expose raw configuration or secrets.
 - Server integration uses a stable, externally supported FrontLit API. CourseLit must not import FrontLit's private workspace contract or server modules.
 - CourseLit stores only mappings, synchronization state, and any bounded cache needed for resilient public rendering.
 - FrontLit failure must not affect course viewing, learner progress, or checkout. Public content degradation behavior and cache TTL are documented.
 - School creation commits locally and enqueues FrontLit provisioning through the CourseLit outbox; a temporary FrontLit outage leaves the integration in a visible `pending` state rather than rolling back the school.
-- FrontLit provisioning is an asynchronous, idempotent CourseLit worker flow: it persists the returned one-time team key before follow-up calls, requests exactly the three non-deletable CourseLit pages (`/`, `/terms`, and `/privacy`) in the FrontLit provisioning payload, and claims the CourseLit school subdomain in FrontLit. The learner app does not require persisted FrontLit pages for `/blog`, `/products`, or `/communities`: these CourseLit system routes reuse the homepage’s published `header` and `footer` blocks and place their route-specific content inside an empty themed `Section` from `@frontlit/page-builder`. Blog content comes from published school blog posts; products and communities remain CourseLit-owned surfaces. CourseLit must not create or require FrontLit-specific Docs, Help, or Changelog pages during school creation; those remain owned by FrontLit. CourseLit must not copy FrontLit's private page seed/layout implementation or maintain a second page model. Existing teams provisioned before this scoped page list was supported are not destructively cleaned up by CourseLit; any cleanup must be an explicit, separately reviewed migration.
+- FrontLit provisioning is an asynchronous, idempotent CourseLit worker flow: it persists the returned one-time team key before follow-up calls, requests exactly the three non-deletable CourseLit pages (`/`, `/terms`, and `/privacy`) in the FrontLit provisioning payload, and claims the CourseLit school subdomain in FrontLit. The storefront app does not require persisted FrontLit pages for `/blog`, `/products`, or `/communities`: these CourseLit system routes reuse the homepage’s published `header` and `footer` blocks and place their route-specific content inside an empty themed `Section` from `@frontlit/page-builder`. Blog content comes from published school blog posts; products and communities remain CourseLit-owned surfaces. CourseLit must not create or require FrontLit-specific Docs, Help, or Changelog pages during school creation; those remain owned by FrontLit. CourseLit must not copy FrontLit's private page seed/layout implementation or maintain a second page model. Existing teams provisioned before this scoped page list was supported are not destructively cleaned up by CourseLit; any cleanup must be an explicit, separately reviewed migration.
 - Every CourseLit product and community owns the ID of its saved FrontLit sales page directly on the resource row. Creating a product/community commits the resource and a `provision_sales_page` outbox job in the same local transaction; reconciliation provisions or updates the page asynchronously after the school's FrontLit team becomes available, so a FrontLit outage must not block authoring or checkout. Sales pages use the resource's unique school-wide slug and are omitted from the ordinary admin `/pages` list by their owned page IDs, while product/community settings expose an `Edit page` link to the page builder once the remote page is ready. Product pages are seeded with the CourseLit banner block and course pages also receive the CourseLit curriculum block; community pages retain their CourseLit content slot. The learner route renders the published FrontLit sales-page layout and resolves CourseLit-owned content inside FrontLit's themed `Section`.
 - The public blog index is `/blog`; each published post is rendered at `/blog/:slug/:id`, where `slug` resolves the published article through the supported FrontLit public API and `id` must match the returned stable document ID. The detail view uses the same homepage `header`/`footer` chrome and themed `Section`, and renders article TipTap/ProseMirror content with `@frontlit/text-editor`.
 - CourseLit will provision and own each school's SendLit team independently in the SendLit integration milestone. FrontLit's optional SendLit connection is an internal FrontLit concern and must not be used as a prerequisite, fallback, or dependency for CourseLit school provisioning or learner-site operation.
@@ -823,7 +823,7 @@ Deliverables:
 - free membership activation and admin membership grants;
 - course viewer, downloads, progress writes, drip computation, and preview isolation;
 - migration and reconciliation for mixed admin/learner users and `User.purchases`.
-- port learner-facing behavior from `main` into `apps/learners`, including the aggregated Feed and enrolled Products surfaces; do not place learner navigation in `apps/admin`.
+- port learner-facing behavior from `main` into `apps/storefront`, including the aggregated Feed and enrolled Products surfaces; do not place learner navigation in `apps/admin`.
 
 Exit gate: a migrated and a newly created learner can authenticate, obtain a membership, consume a course, resume progress, and earn a certificate with parity evidence.
 

@@ -58,11 +58,21 @@ export type ProductViewer =
   | { kind: "learner"; schoolAccountId?: string; learnerId?: string }
   | { kind: "public" };
 
-function productToDto(
+async function productToDto(
+  db: AppDb,
   row: typeof schema.products.$inferSelect,
   publicSchoolId: string,
   featuredImage: ProductDto["featuredImage"],
-): ProductDto {
+): Promise<ProductDto> {
+  const discussionSpace = row.discussionSpaceId
+    ? (
+        await db
+          .select({ publicId: schema.spaces.publicId })
+          .from(schema.spaces)
+          .where(eq(schema.spaces.id, row.discussionSpaceId))
+          .limit(1)
+      )[0]
+    : null;
   return {
     id: row.publicId,
     schoolId: publicSchoolId,
@@ -77,7 +87,7 @@ function productToDto(
     certificate: row.certificate,
     discussions: row.discussions,
     includedWithCommunity: row.includedWithCommunity,
-    discussionSpaceId: row.discussionSpaceId,
+    discussionSpaceId: discussionSpace?.publicId ?? null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
@@ -513,10 +523,11 @@ export async function getProduct(
     : sectionRows.filter((section) => visibleSectionIds.has(section.id));
   const featuredImage = await productFeaturedImageFor(db, product);
   const sectionUnlocks = sectionUnlockTimes(sectionRows, membershipStartedAt);
+  const productDto = await productToDto(db, product, school.publicId, featuredImage);
   return {
     ok: true,
     value: {
-      ...productToDto(product, school.publicId, featuredImage),
+      ...productDto,
       enrolled,
       sections: visibleSections.map(sectionToDto),
       lessons: visible.map((row) => {
@@ -955,60 +966,6 @@ export async function deleteLesson(
       return { ok: false as const, error: createPlatformError("not_found") };
     }
 
-    // Discussion entity IDs are intentionally not foreign keys because they
-    // support both product and lesson targets. Remove those orphaned rows
-    // before deleting the lesson itself.
-    const lessonTarget = and(
-      eq(schema.productDiscussionComments.schoolId, ctx.tenantId!),
-      eq(schema.productDiscussionComments.entityType, "lesson"),
-      eq(schema.productDiscussionComments.entityId, row.id),
-    );
-    await tx
-      .delete(schema.productDiscussionReports)
-      .where(
-        and(
-          eq(schema.productDiscussionReports.schoolId, ctx.tenantId!),
-          eq(schema.productDiscussionReports.entityType, "lesson"),
-          eq(schema.productDiscussionReports.entityId, row.id),
-        ),
-      );
-    await tx
-      .delete(schema.productDiscussionLikes)
-      .where(
-        and(
-          eq(schema.productDiscussionLikes.schoolId, ctx.tenantId!),
-          eq(schema.productDiscussionLikes.entityType, "lesson"),
-          eq(schema.productDiscussionLikes.entityId, row.id),
-        ),
-      );
-    await tx
-      .delete(schema.productDiscussionSubscribers)
-      .where(
-        and(
-          eq(schema.productDiscussionSubscribers.schoolId, ctx.tenantId!),
-          eq(schema.productDiscussionSubscribers.entityType, "lesson"),
-          eq(schema.productDiscussionSubscribers.entityId, row.id),
-        ),
-      );
-    await tx
-      .delete(schema.productDiscussionSummaries)
-      .where(
-        and(
-          eq(schema.productDiscussionSummaries.schoolId, ctx.tenantId!),
-          eq(schema.productDiscussionSummaries.entityType, "lesson"),
-          eq(schema.productDiscussionSummaries.entityId, row.id),
-        ),
-      );
-    await tx
-      .delete(schema.productDiscussionReplies)
-      .where(
-        and(
-          eq(schema.productDiscussionReplies.schoolId, ctx.tenantId!),
-          eq(schema.productDiscussionReplies.entityType, "lesson"),
-          eq(schema.productDiscussionReplies.entityId, row.id),
-        ),
-      );
-    await tx.delete(schema.productDiscussionComments).where(lessonTarget);
     await tx
       .delete(schema.mediaReferences)
       .where(
