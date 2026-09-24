@@ -1179,7 +1179,7 @@ plan ID selected on that card; the community ID remains server-resolved.
 
 Rename `courselit-banner` to **Product** (internal widget name
 `courselit-product`). Drop all community resource-type support from this
-block. Register it with `registerCourseSalesBlocks()`.
+block. Register it with `registerCourseLitBlocks()`.
 
 Keep the saved product sales page and its non-deletable Product block.
 CourseLit page data for a product includes its active product plans and,
@@ -1236,7 +1236,7 @@ It never requires a client-selected community ID.
 
 Add a **Community** block in `packages/page-blocks` (internal widget name
 `courselit-community`, display name **Community**). Register it with
-`registerCourseSalesBlocks()` so it is selectable in the page builder.
+`registerCourseLitBlocks()` so it is selectable in the page builder.
 
 - **Allowed on:** site pages (homepage and other school website pages) **and**
   the owned community sales page. `/join` uses this block, not Product /

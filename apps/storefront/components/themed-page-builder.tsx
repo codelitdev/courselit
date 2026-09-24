@@ -326,6 +326,30 @@ export function LearnerSection(props: WithoutTheme<ComponentProps<typeof Section
   return <Section {...props} theme={useSchoolThemeStyle()} />;
 }
 
+export function LearnerInset({
+  className,
+  ...props
+}: WithoutTheme<ComponentProps<typeof PageCard>>) {
+  const theme = useSchoolThemeStyle();
+
+  // This is a static inset rather than an interactive card, so retain the
+  // theme's surface treatment while omitting the card's hover animation.
+  const staticSurfaceTheme: ThemeStyle = {
+    ...theme,
+    interactives: {
+      ...theme.interactives,
+      card: {
+        ...theme.interactives.card,
+        custom: "",
+      },
+    },
+  };
+
+  return (
+    <PageCard {...props} theme={staticSurfaceTheme} className={cn("p-4", className)} />
+  );
+}
+
 export function LearnerDrawer(props: WithoutTheme<ComponentProps<typeof Drawer>>) {
   return <Drawer {...props} theme={useSchoolThemeStyle()} />;
 }
@@ -403,8 +427,27 @@ export function LearnerPopoverContent(
   return <PopoverContent {...props} theme={useSchoolThemeStyle()} />;
 }
 
-export function LearnerAvatar(props: WithoutTheme<ComponentProps<typeof Avatar>>) {
-  return <Avatar {...props} theme={useSchoolThemeStyle()} />;
+export function LearnerAvatar({
+  className,
+  ...props
+}: WithoutTheme<ComponentProps<typeof Avatar>>) {
+  const theme = useSchoolThemeStyle();
+  const avatarSurface = theme.interactives.card;
+
+  return (
+    <Avatar
+      {...props}
+      theme={theme}
+      className={cn(
+        "border border-border",
+        avatarSurface.border?.width,
+        avatarSurface.border?.style,
+        avatarSurface.border?.radius,
+        avatarSurface.shadow,
+        className,
+      )}
+    />
+  );
 }
 
 export const LearnerAvatarImage = AvatarImage;

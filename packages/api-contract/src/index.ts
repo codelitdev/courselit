@@ -661,7 +661,7 @@ export const updateSchoolWebsiteBlogBodySchema = z
     slug: z.string().trim().min(1).max(200).optional(),
     title: z.string().optional(),
     content: z.record(z.string(), z.unknown()).optional(),
-    excerpt: z.string().optional(),
+    excerpt: z.string().max(200).optional(),
     featuredImage: mediaRefSchema.nullable().optional(),
     meta: z.record(z.string(), z.unknown()).optional(),
   })

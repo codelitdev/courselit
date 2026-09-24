@@ -242,6 +242,25 @@ describe.serial("reference API adapters", () => {
     await runtime.close();
   });
 
+  it("rejects website blog excerpts longer than 200 characters", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const response = await dispatch(runtime, {
+      method: "PATCH",
+      path: "/v1/school/website/blogs/blog_1",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { excerpt: "x".repeat(201) },
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({ code: "validation_failed" });
+    await runtime.close();
+  });
+
   it("returns a billing entitlement from the public billing composition", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });

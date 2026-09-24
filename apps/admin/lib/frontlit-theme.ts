@@ -1,5 +1,5 @@
+import { COURSELIT_SYSTEM_THEMES } from "@courselit/page-blocks/theme";
 import type { Theme } from "@frontlit/page-builder/models";
-import { themes as systemThemes } from "@frontlit/page-builder/primitives";
 import type { FrontLitTheme } from "./frontlit-content";
 
 export function themeSnapshot(theme: Theme): string {
@@ -19,7 +19,7 @@ export function resolveEditorTheme(
   savedThemes: FrontLitTheme[],
 ): Theme | undefined {
   if (!themeId) return undefined;
-  const systemTheme = systemThemes.find((theme) => theme.id === themeId);
+  const systemTheme = COURSELIT_SYSTEM_THEMES.find((theme) => theme.id === themeId);
   if (systemTheme) return systemTheme;
   const savedTheme = savedThemes.find((theme) => theme.themeId === themeId);
   return savedTheme ? toBuilderTheme(savedTheme) : undefined;

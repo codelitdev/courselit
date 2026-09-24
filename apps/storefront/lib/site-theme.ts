@@ -1,8 +1,8 @@
 "use client";
 
+import { COURSELIT_SYSTEM_THEMES } from "@courselit/page-blocks/theme";
 import { getDefaultTheme } from "@frontlit/page-builder";
 import type { Theme, ThemeStyle } from "@frontlit/page-builder/models";
-import { themes } from "@frontlit/page-builder/primitives";
 import { generateThemeStyles } from "@frontlit/page-builder/renderer";
 
 /**
@@ -13,7 +13,11 @@ export function resolveSchoolTheme(
   themeId: string | null,
   themeStyle: Record<string, unknown> | null,
 ): Theme {
-  const baseTheme = themes.find((theme) => theme.id === themeId) ?? getDefaultTheme();
+  const defaultTheme =
+    COURSELIT_SYSTEM_THEMES.find((theme) => theme.id === "classic") ??
+    getDefaultTheme();
+  const baseTheme =
+    COURSELIT_SYSTEM_THEMES.find((theme) => theme.id === themeId) ?? defaultTheme;
   if (themeStyle) {
     return {
       id: baseTheme.id,

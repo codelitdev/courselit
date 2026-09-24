@@ -35,8 +35,144 @@ export type FrontLitProvisionPage =
       layout?: readonly FrontLitProvisionWidget[];
     };
 
+function richTextDocument(
+  text: string,
+  marks?: Array<{ type: string }>,
+): Record<string, unknown> {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text, ...(marks ? { marks } : {}) }],
+      },
+    ],
+  };
+}
+
+const provisionWidget = (
+  widgetId: string,
+  name: string,
+  settings: Record<string, unknown> = {},
+): FrontLitProvisionWidget => ({
+  widgetId,
+  name,
+  deletable: true,
+  moveable: true,
+  shared: false,
+  settings,
+});
+
+export const COURSELIT_HOME_PAGE_TEMPLATE: readonly FrontLitProvisionWidget[] = [
+  provisionWidget("courselit-home-intro", "rich-text", {
+    text: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "This is the default page created for you by CourseLit. Customize this further from the ",
+            },
+            {
+              type: "text",
+              marks: [{ type: "bold" }],
+              text: "Website → Pages → Homepage → Edit",
+            },
+            { type: "text", text: "." },
+          ],
+        },
+      ],
+    },
+    alignment: "left",
+    verticalPadding: "py-1",
+  }),
+  provisionWidget("courselit-home-hero", "hero", {
+    title: "Your Eye Catching Hero Statement Goes Here",
+    description: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "You can write " },
+            {
+              type: "text",
+              marks: [{ type: "bold" }, { type: "underline" }],
+              text: "rich text",
+            },
+            {
+              type: "text",
+              text: " here and also show images/videos/youtube videos alongside text, as shown here.",
+            },
+          ],
+        },
+      ],
+    },
+    buttonAction: "/products",
+    buttonCaption: "Ask user to take action",
+    secondaryButtonCaption: "",
+    secondaryButtonAction: "",
+    youtubeLink: "https://www.youtube.com/watch?v=7OP2bU9RWVE",
+    alignment: "right",
+    contentAlignment: "left",
+    mediaRadius: 2,
+    layout: "normal",
+  }),
+  provisionWidget("courselit-home-features", "grid", {
+    title: "Showcase your features",
+    description: richTextDocument(
+      "Use this optional text to tell visitors what makes your school special.",
+    ),
+    headerAlignment: "center",
+    items: [1, 2, 3].map((number) => ({
+      title: `Feature ${number}`,
+      description:
+        "Describe a benefit of your courses, community, or learning experience.",
+      buttonCaption: `Explore feature ${number}`,
+      buttonAction: "/products",
+    })),
+    columns: 3,
+  }),
+  provisionWidget("courselit-home-faq", "faq", {
+    title: "Frequently Asked Questions",
+    headerAlignment: "center",
+    verticalPadding: "py-8",
+    layout: "list",
+    items: [1, 2, 3].map((number) => ({
+      id: `courselit-home-faq-${number}`,
+      question: `Question ${number}`,
+      answer: "Add a clear answer to a common question your visitors may have.",
+    })),
+  }),
+  provisionWidget("courselit-home-newsletter", "newsletter-signup", {
+    title: "Sign up for my newsletter",
+    subtitle: "Get the latest articles, news, and updates.",
+    btnText: "Subscribe",
+    alignment: "left",
+  }),
+  provisionWidget("courselit-home-more-title", "rich-text", {
+    text: richTextDocument("There's more!", [{ type: "bold" }]),
+    alignment: "center",
+    verticalPadding: "py-0",
+  }),
+  provisionWidget("courselit-home-more-copy", "rich-text", {
+    text: richTextDocument(
+      "There are many more blocks for you to use in the page builder. Start building!",
+    ),
+    alignment: "center",
+    verticalPadding: "py-1",
+  }),
+];
+
 export const COURSELIT_FRONTLIT_PROVISION_PAGES: readonly FrontLitProvisionPage[] = [
-  { slug: "", name: "Homepage", deletable: false },
+  {
+    slug: "",
+    name: "Homepage",
+    deletable: false,
+    layout: COURSELIT_HOME_PAGE_TEMPLATE,
+  },
   { slug: "terms", name: "Terms of Service", deletable: false },
   { slug: "privacy", name: "Privacy policy", deletable: false },
 ];
@@ -181,7 +317,9 @@ export type FrontLitPublicBlog = {
   content: Record<string, unknown> | null;
   excerpt: string | null;
   featuredImage: MediaRef | null;
+  author?: { name: string; imageUrl: string | null } | null;
   meta: Record<string, unknown>;
+  createdAt: string | null;
   publishedAt: string | null;
   updatedAt: string | null;
 };

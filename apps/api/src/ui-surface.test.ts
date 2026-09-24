@@ -631,9 +631,13 @@ describe("admin and learner surfaces", () => {
     expect(publicProductBlocks).toContain("ProductCurriculumBlock");
     expect(publicProductBlocks).toContain("Continue learning");
     expect(publicBlogArticlePage).toContain("getPublicArticleBySlug");
-    expect(publicBlogArticlePage).toContain('systemRoute="blog"');
+    expect(publicBlogArticlePage).toContain("encodeURIComponent(article.slug)");
+    expect(publicBlogArticlePage).toContain("redirect(");
     expect(publicBlogPage).toContain('systemRoute="blog"');
     expect(publicBlogByIdPage).toContain("documentId === slug");
+    expect(publicBlogByIdPage).toContain('systemRoute="blog"');
+    expect(publicBlogByIdPage).toContain("encodeURIComponent(article.slug)");
+    expect(publicBlogByIdPage).toContain("redirect(");
     expect(publicCommunityDetailPage).toContain('systemRoute="community"');
     expect(loggedInLayout).toContain("LoggedInRoute");
     expect(publicBlogArticle).toContain("@frontlit/text-editor");
@@ -644,6 +648,8 @@ describe("admin and learner surfaces", () => {
     expect(home).toContain("page.robotsAllowed === null");
     expect(publicBlogFeed).toContain("PageCardImage");
     expect(publicBlogFeed).toContain("featuredImage");
+    expect(publicBlogFeed).toContain("href={`/blog/");
+    expect(publicBlogFeed).toContain("post.slug");
     expect(themeProvider).toContain("getSettings(await requestHost())");
     expect(themeProvider).toContain("CodeInjector");
     expect(themeProvider).toContain("codeInjectionBody");

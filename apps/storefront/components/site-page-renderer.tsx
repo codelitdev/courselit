@@ -1,6 +1,9 @@
 "use client";
 
-import { registerCourseSalesBlocks } from "@courselit/page-blocks";
+import {
+  normalizeCourseLitSiteLayout,
+  registerCourseLitBlocks,
+} from "@courselit/page-blocks";
 import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
 import { Section } from "@frontlit/page-builder/primitives";
 import type { PageBuilderLinkProps } from "@frontlit/page-builder/renderer";
@@ -13,7 +16,7 @@ import {
 } from "@/lib/school-theme-context";
 import { resolveSchoolTheme } from "@/lib/site-theme";
 
-registerCourseSalesBlocks();
+registerCourseLitBlocks();
 
 export const LEARNER_THEME_MODE_KEY = "courselit-learner-theme-mode";
 
@@ -55,7 +58,7 @@ export function SitePageRenderer({
   return (
     <SchoolThemeContextProvider theme={theme}>
       <PageRenderer
-        layout={layout}
+        layout={normalizeCourseLitSiteLayout(layout)}
         theme={theme}
         pageData={{
           ...pageData,

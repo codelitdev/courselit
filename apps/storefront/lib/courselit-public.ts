@@ -34,6 +34,9 @@ export interface PublicArticle {
   content: TextEditorContent | null;
   excerpt: string | null;
   featuredImage: MediaRef | null;
+  meta: Record<string, unknown>;
+  author?: { name: string; imageUrl: string | null } | null;
+  createdAt: string | null;
   publishedAt: string | null;
   updatedAt: string | null;
 }

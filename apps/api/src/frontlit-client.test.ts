@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   COURSELIT_FRONTLIT_PROVISION_PAGES,
+  COURSELIT_HOME_PAGE_TEMPLATE,
   createFrontLitBlog,
   createFrontLitPage,
   createFrontLitTheme,
@@ -34,6 +35,39 @@ describe("FrontLit client", () => {
 
     expect(pages.map((page) => page.slug)).toEqual(["", "terms", "privacy"]);
     expect(pages.every((page) => page.deletable === false)).toBe(true);
+  });
+
+  it("seeds the homepage with the CourseLit starter layout", () => {
+    expect(COURSELIT_HOME_PAGE_TEMPLATE.map((widget) => widget.name)).toEqual([
+      "rich-text",
+      "hero",
+      "grid",
+      "faq",
+      "newsletter-signup",
+      "rich-text",
+      "rich-text",
+    ]);
+    expect(COURSELIT_FRONTLIT_PROVISION_PAGES[0]).toMatchObject({
+      slug: "",
+      name: "Homepage",
+      deletable: false,
+      layout: COURSELIT_HOME_PAGE_TEMPLATE,
+    });
+    expect(COURSELIT_HOME_PAGE_TEMPLATE[0]?.settings?.verticalPadding).toBe("py-0");
+    expect(COURSELIT_HOME_PAGE_TEMPLATE[1]?.settings).toMatchObject({
+      secondaryButtonCaption: "",
+      secondaryButtonAction: "",
+    });
+    expect(COURSELIT_HOME_PAGE_TEMPLATE[3]?.settings).toMatchObject({
+      title: "Frequently Asked Questions",
+      verticalPadding: "py-8",
+    });
+    expect(COURSELIT_HOME_PAGE_TEMPLATE[3]?.settings).not.toHaveProperty("subtitle");
+    expect(
+      COURSELIT_HOME_PAGE_TEMPLATE.slice(-2).every(
+        (widget) => widget.settings?.verticalPadding === "py-0",
+      ),
+    ).toBe(true);
   });
 
   it("uses the provisioning secret only on the provisioning endpoint", async () => {

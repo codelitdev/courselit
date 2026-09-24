@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings2, X } from "lucide-react";
+import { Eye, Settings2, X } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
@@ -19,6 +19,7 @@ type WritingEditorShellProps = {
   onSettingsOpenChange: (open: boolean) => void;
   onPublish: () => void;
   onDiscardDraft: () => void;
+  previewHref?: string | null;
   settings: ReactNode;
   children: ReactNode;
 };
@@ -50,6 +51,7 @@ export function WritingEditorShell({
   onSettingsOpenChange,
   onPublish,
   onDiscardDraft,
+  previewHref,
   settings,
   children,
 }: WritingEditorShellProps) {
@@ -83,6 +85,36 @@ export function WritingEditorShell({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {previewHref ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="px-2"
+            >
+              <a
+                href={previewHref}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="View live blog post"
+                title="View live blog post"
+              >
+                <Eye className="size-4" />
+              </a>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="px-2"
+              aria-label="Publish this blog before viewing it"
+              title="Publish this blog before viewing it"
+              disabled
+            >
+              <Eye className="size-4" />
+            </Button>
+          )}
           <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
             {contentStatusLabel(status)}
           </span>

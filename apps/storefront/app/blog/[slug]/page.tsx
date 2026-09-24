@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PublicBlogArticle } from "@/components/public-blog-article";
 import { loadPublicPage, PublicSitePage } from "@/components/public-site-page";
 import { getPublicArticleBySlug, listPublicArticles } from "@/lib/courselit-public";
@@ -23,13 +23,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : { title: "Post not found" };
 }
 
-export default async function PublicBlogArticleByIdPage({ params }: Props) {
+export default async function PublicBlogArticlePage({ params }: Props) {
   const { slug } = await params;
   const article = await loadBlogArticle(slug);
   if (!article) notFound();
+  if (article.documentId === slug) {
+    redirect(`/blog/${encodeURIComponent(article.slug)}`);
+  }
+
   return (
     <PublicSitePage
-      pageSlug={`blog/${slug}`}
+      pageSlug={`blog/${article.slug}`}
       systemRoute="blog"
       systemContent={<PublicBlogArticle article={article} />}
     />

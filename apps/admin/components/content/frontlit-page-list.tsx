@@ -2,12 +2,13 @@
 
 import type { MediaRef } from "@courselit/api-contract";
 import { FileText, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
-import { CourseLitLoading } from "@/components/loading";
 import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
 import { PageHeader } from "@/components/layout/page-header";
+import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -48,6 +49,7 @@ function contentStatusLabel(status: FrontLitContent["status"]): string {
 }
 
 export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) {
+  const router = useRouter();
   const [pages, setPages] = useState<FrontLitContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,10 +138,16 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
         );
       }
       const page = (await response.json()) as FrontLitContent;
-      setPages((current) => [page, ...current]);
       setCreateOpen(false);
       setCreateName("");
       createFormRef.current.name = "";
+      if (onlyBlogs) {
+        router.push(
+          `/website/blogs/${encodeURIComponent(page.id)}/edit?redirectTo=${encodeURIComponent(editorReturnPath)}`,
+        );
+      } else {
+        setPages((current) => [page, ...current]);
+      }
     } catch (caught: unknown) {
       setCreateError(
         caught instanceof Error
@@ -211,20 +219,24 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
                 imageUrl={imageUrl(page.featuredImage)}
                 imageAlt={page.name}
               >
-                {page.excerpt ? (
-                  <p className="mt-2 line-clamp-2 min-h-10 text-sm text-muted-foreground">
-                    {page.excerpt}
-                  </p>
-                ) : (
-                  <p className="mt-2 min-h-10 text-sm text-muted-foreground">
-                    No description
-                  </p>
-                )}
+                {!onlyBlogs ? (
+                  page.excerpt ? (
+                    <p className="mt-2 line-clamp-2 min-h-10 text-sm text-muted-foreground">
+                      {page.excerpt}
+                    </p>
+                  ) : (
+                    <p className="mt-2 min-h-10 text-sm text-muted-foreground">
+                      No description
+                    </p>
+                  )
+                ) : null}
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
-                    <FileText className="size-3.5" />
-                    {page.kind === "blog" ? "Blog" : "Page"}
-                  </span>
+                  {!onlyBlogs ? (
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
+                      <FileText className="size-3.5" />
+                      Page
+                    </span>
+                  ) : null}
                   <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
                     {contentStatusLabel(page.status)}
                   </span>

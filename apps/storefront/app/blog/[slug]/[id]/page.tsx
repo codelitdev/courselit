@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { PublicBlogArticle } from "@/components/public-blog-article";
-import { loadPublicPage, PublicSitePage } from "@/components/public-site-page";
+import { notFound, redirect } from "next/navigation";
+import { loadPublicPage } from "@/components/public-site-page";
 import { getPublicArticleBySlug } from "@/lib/courselit-public";
 
 interface Props {
@@ -30,12 +29,6 @@ export default async function PublicBlogArticlePage({ params }: Props) {
   const route = await params;
   const article = await loadBlogArticle(route);
   if (!article) notFound();
-
-  return (
-    <PublicSitePage
-      pageSlug={`blog/${route.slug}/${route.id}`}
-      systemRoute="blog"
-      systemContent={<PublicBlogArticle article={article} />}
-    />
-  );
+  if (article.documentId !== route.id) notFound();
+  redirect(`/blog/${encodeURIComponent(article.slug)}`);
 }

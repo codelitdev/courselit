@@ -5,11 +5,11 @@ import type { TextEditorContent } from "@frontlit/text-editor";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
-import { CourseLitLoading } from "@/components/loading";
 import { BlogFeaturedImage } from "@/components/content/blog-featured-image";
 import { WritingEditorDocumentHeader } from "@/components/content/writing-editor-document-header";
 import { WritingEditorShell } from "@/components/content/writing-editor-shell";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
+import { CourseLitLoading } from "@/components/loading";
 import { RichTextEditor } from "@/components/products/rich-text-editor";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
@@ -19,6 +19,7 @@ import {
   frontLitRequest,
   resolveEditorRedirect,
 } from "@/lib/frontlit-content";
+import { storefrontUrl } from "@/lib/storefront-url";
 
 type BlogDraft = {
   title: string;
@@ -29,8 +30,11 @@ type BlogDraft = {
 
 type School = {
   id: string;
+  subdomain?: string;
   selected?: boolean;
 };
+
+const EXCERPT_MAX_LENGTH = 200;
 
 function tagsFromMeta(meta: Record<string, unknown>): string {
   return Array.isArray(meta.tags)
@@ -63,6 +67,15 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [excerptSaveError, setExcerptSaveError] = useState<string | null>(null);
+  const excerptTooLong = draft.excerpt.length > EXCERPT_MAX_LENGTH;
+  const excerptError = excerptTooLong
+    ? `Excerpt must be ${EXCERPT_MAX_LENGTH} characters or fewer.`
+    : excerptSaveError;
+  const liveBlogUrl =
+    blog && blog.status !== "draft" && school
+      ? storefrontUrl(`/blog/${encodeURIComponent(blog.slug)}`, school.subdomain)
+      : null;
 
   useSetBreadcrumb([
     { label: "Blogs", href: "/blogs" },
@@ -104,6 +117,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
         setBlog(loaded);
         setSchool(selectedSchool);
         setError(null);
+        setExcerptSaveError(null);
       })
       .catch((caught: unknown) => {
         if (active) {
@@ -125,11 +139,16 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     const nextDraft = { ...draftRef.current, [field]: value };
     draftRef.current = nextDraft;
     setDraft(nextDraft);
+    if (field === "excerpt") {
+      setError(null);
+      setExcerptSaveError(null);
+    }
   }
 
   async function savePatch(patch: Record<string, unknown>) {
     setSaving(true);
     setError(null);
+    if ("excerpt" in patch) setExcerptSaveError(null);
     try {
       const updated = await frontLitRequest<FrontLitBlog>(
         `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}`,
@@ -138,7 +157,9 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
       setBlog(updated);
       metaRef.current = updated.draftMeta;
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Unable to save blog.");
+      const message = caught instanceof Error ? caught.message : "Unable to save blog.";
+      if ("excerpt" in patch) setExcerptSaveError(message);
+      else setError(message);
     } finally {
       setSaving(false);
     }
@@ -151,6 +172,9 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
   function scheduleSave(field: keyof BlogDraft) {
     const existing = timersRef.current[field];
     if (existing) clearTimeout(existing);
+    if (field === "excerpt" && draftRef.current.excerpt.length > EXCERPT_MAX_LENGTH) {
+      return;
+    }
     timersRef.current[field] = setTimeout(() => {
       const current = draftRef.current;
       if (field === "title") void savePatch({ title: current.title });
@@ -182,6 +206,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
   }
 
   async function handlePublish() {
+    if (draftRef.current.excerpt.length > EXCERPT_MAX_LENGTH) return;
     setPublishing(true);
     setError(null);
     try {
@@ -218,6 +243,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
       draftRef.current = nextDraft;
       setDraft(nextDraft);
       setBlog(reverted);
+      setExcerptSaveError(null);
       setResetKey((key) => key + 1);
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Unable to discard changes.");
@@ -242,6 +268,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
           onSettingsOpenChange={setSettingsOpen}
           onPublish={() => void handlePublish()}
           onDiscardDraft={() => void handleDiscard()}
+          previewHref={liveBlogUrl}
           settings={
             <div className="space-y-7">
               <div>
@@ -264,13 +291,23 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
               <div>
                 <div className="flex items-center justify-between gap-3">
                   <Label htmlFor="frontlit-blog-excerpt">Excerpt</Label>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {draft.excerpt.length} characters
+                  <span
+                    className={
+                      excerptTooLong
+                        ? "text-xs tabular-nums text-destructive"
+                        : "text-xs tabular-nums text-muted-foreground"
+                    }
+                  >
+                    {draft.excerpt.length}/{EXCERPT_MAX_LENGTH} characters
                   </span>
                 </div>
                 <Textarea
                   id="frontlit-blog-excerpt"
                   value={draft.excerpt}
+                  aria-invalid={Boolean(excerptError)}
+                  aria-describedby={
+                    excerptError ? "frontlit-blog-excerpt-error" : undefined
+                  }
                   onChange={(event) => {
                     setDraftValue("excerpt", event.target.value);
                     scheduleSave("excerpt");
@@ -279,6 +316,15 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
                   className="mt-1 min-h-28"
                   disabled={saving || publishing}
                 />
+                {excerptError ? (
+                  <p
+                    id="frontlit-blog-excerpt-error"
+                    className="mt-1 text-sm text-destructive"
+                    role="alert"
+                  >
+                    {excerptError}
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -335,7 +381,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
                 initialContent={blog.draftContent}
                 onChange={(content) => void handleContentChange(content)}
                 placeholder="Start writing…"
-                className="h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
+                className="blog-writing-editor h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
                 contentClassName="max-w-[46rem]"
                 editorClassName="writing-editor-content min-h-[420px]"
                 beforeContent={
@@ -362,9 +408,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
           className="flex h-full min-h-0 w-full items-center justify-center overflow-hidden bg-background"
         >
           <div className="px-6 text-center">
-            {loading ? (
-              <CourseLitLoading label="Loading blog…" />
-            ) : null}
+            {loading ? <CourseLitLoading label="Loading blog…" /> : null}
             {error ? (
               <p className="text-sm text-destructive" role="alert">
                 {error}

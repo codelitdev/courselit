@@ -262,6 +262,11 @@ textarea:not([data-slot]):focus {
   box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
+.tiptap-editor.blog-writing-editor:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .tiptap-editor .ProseMirror {
   min-height: 240px;
   width: 100%;

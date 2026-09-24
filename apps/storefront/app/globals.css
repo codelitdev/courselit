@@ -26,6 +26,16 @@
 
 @source "../../../packages/page-blocks/src";
 
+.newsletter-signup-fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .newsletter-signup-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

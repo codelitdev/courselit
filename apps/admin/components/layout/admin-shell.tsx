@@ -22,7 +22,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isLoginPage = pathname.startsWith("/login");
   const isFullScreenPageEditor = /^\/pages\/[^/]+\/edit\/?$/.test(pathname);
-  const isFullScreenBlogEditor = /^\/blogs\/[^/]+\/edit\/?$/.test(pathname);
+  const isFullScreenBlogEditor = /^(?:\/website)?\/blogs\/[^/]+\/edit\/?$/.test(
+    pathname,
+  );
   const isFullScreenMailEditor = /^\/mails\/editor\/[^/]+\/?$/.test(pathname);
   const isFullScreenTeamInvitation = /^\/team-invitations\/[^/]+\/?$/.test(pathname);
   const schoolOptional = SCHOOL_OPTIONAL_PREFIXES.some((prefix) =>
