@@ -8,6 +8,8 @@ import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
 
+export const AUTH_COOKIE_PREFIX = "courselit";
+
 export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
   return createOAuthProviderOptions({
     loginPage: `${urls.publicApiUrl}/oauth/login`,
@@ -45,6 +47,9 @@ export function buildBetterAuthOptions(input: {
     secret: input.secret,
     baseURL: input.publicApiUrl,
     basePath: AUTH_BASE_PATH,
+    advanced: {
+      cookiePrefix: AUTH_COOKIE_PREFIX,
+    },
     trustedOrigins: async (request?: Request) => {
       const origins: string[] = [
         input.publicApiUrl,
@@ -233,7 +238,7 @@ export async function sendVerificationOTP(
 
 export const AUTH_BASE_PATH = "/api/auth";
 export const LEARNER_AUTH_BASE_PATH = "/api/auth";
-export const ADMIN_SESSION_COOKIE_NAME = "better-auth.session_token";
+export const ADMIN_SESSION_COOKIE_NAME = `${AUTH_COOKIE_PREFIX}.session_token`;
 export const adminAuthOptions = buildBetterAuthOptions;
 
 export function authUrls(

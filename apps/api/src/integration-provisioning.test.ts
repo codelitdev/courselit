@@ -69,6 +69,7 @@ describe("CourseLit FrontLit provisioning", () => {
 
     let provisionAttempts = 0;
     let requestedPages: unknown;
+    const configuredHomepageIds: string[] = [];
     const operations: FrontLitOperations = {
       provisionTeam: async (input) => {
         provisionAttempts += 1;
@@ -91,6 +92,9 @@ describe("CourseLit FrontLit provisioning", () => {
           slug,
           status: "published",
         })),
+      configureSharedChrome: async (_key, homepageId) => {
+        configuredHomepageIds.push(homepageId);
+      },
     };
 
     await expect(
@@ -108,6 +112,7 @@ describe("CourseLit FrontLit provisioning", () => {
       ),
     ).resolves.toBe(true);
     expect(requestedPages).toEqual(COURSELIT_FRONTLIT_PROVISION_PAGES);
+    expect(configuredHomepageIds).toEqual([]);
 
     const [retryingIntegration] = await runtime.db
       .select()
@@ -168,6 +173,7 @@ describe("CourseLit FrontLit provisioning", () => {
         ),
       );
     expect(ready).toMatchObject({ status: "ready", remoteTeamId: "team_1" });
+    expect(configuredHomepageIds).toEqual(["page-home"]);
     expect(ready!.encryptedTeamKey).not.toContain("fl_live_school");
     expect(done).toMatchObject({ status: "done", attempts: 1 });
     await runtime.close();

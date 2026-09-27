@@ -1,5 +1,5 @@
 import { Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import "./globals.css";
 import { CodeInjector } from "../components/code-injector";
 import { SchoolThemeProvider } from "../components/school-theme-provider";
@@ -16,9 +16,32 @@ const splineSansMono = Spline_Sans_Mono({
   variable: "--font-mono",
 });
 
-export const metadata = {
-  title: "CourseLit",
-};
+export async function generateMetadata() {
+  const settings = await getSettings(await requestHost());
+  const metadataBase = settings?.canonicalHost
+    ? new URL(`https://${settings.canonicalHost}`)
+    : undefined;
+  const title = settings?.title?.trim() || "CourseLit";
+  const subtitle = settings?.subtitle?.trim();
+  const siteLogoUrl =
+    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
+      ? settings.logo.url.trim()
+      : "/icon.svg";
+
+  return {
+    ...(metadataBase ? { metadataBase } : {}),
+    title: {
+      default: subtitle ? `${title} | ${subtitle}` : title,
+      template: `%s | ${title}`,
+    },
+    description: subtitle || undefined,
+    icons: {
+      icon: siteLogoUrl,
+      shortcut: siteLogoUrl,
+      apple: siteLogoUrl,
+    },
+  };
+}
 
 function StorefrontProviders({
   children,
@@ -60,8 +83,10 @@ async function ConfiguredStorefront({
 }) {
   const settings = await getSettings(host);
   const siteLogoUrl =
-    typeof settings?.logo?.url === "string" ? settings.logo.url : null;
-  const siteLogoAlt = settings?.logo?.alt ?? null;
+    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
+      ? settings.logo.url.trim()
+      : "/icon.svg";
+  const siteLogoAlt = settings?.logo?.alt ?? "CourseLit";
 
   return (
     <>
@@ -93,13 +118,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${hankenGrotesk.variable} ${splineSansMono.variable} font-sans`}
     >
       <body className="antialiased">
-        <Suspense
-          fallback={
-            <StorefrontProviders>
-              {children}
-            </StorefrontProviders>
-          }
-        >
+        <Suspense fallback={<StorefrontProviders>{children}</StorefrontProviders>}>
           <ConfiguredStorefront host={host}>{children}</ConfiguredStorefront>
         </Suspense>
       </body>

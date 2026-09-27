@@ -9,7 +9,7 @@ if (!process.env.NO_PROXY?.includes("127.0.0.1")) {
 
 import { createObservability, type Observability } from "@codelitdev/observability";
 import { type Clock, frozenClock, systemClock } from "@codelitdev/platform";
-import { PGlite } from "@electric-sql/pglite";
+import type { PGlite } from "@electric-sql/pglite";
 import { toNodeHandler } from "better-auth/node";
 import { drizzle as drizzlePostgres } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/pglite";
@@ -51,11 +51,11 @@ export async function createPgliteRuntime(options: {
   observability?: Observability;
   authSecret?: string;
   billingMode?: "cloud" | "oss";
-  customDomainVerifier?: (hostname: string, token: string) => Promise<boolean>;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
+  const { PGlite } = await import("@electric-sql/pglite");
   const client = new PGlite();
   const db = drizzle(client, {
     schema: { ...schema, ...billingSchema },
@@ -142,7 +142,6 @@ export async function createPgliteRuntime(options: {
     databaseReady: true,
     logger: options.logger ?? observability.logger,
     observability,
-    customDomainVerifier: options.customDomainVerifier,
     paymentProvider: options.paymentProvider,
     sendLit: sendLitConfig(),
     auth,

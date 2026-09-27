@@ -85,17 +85,17 @@ const CREATE_NAV: PermissionedNavItem[] = [
     icon: Mail,
     items: [
       {
-        href: "/mails?tab=broadcasts",
+        href: "/mails/broadcasts",
         label: "Broadcasts",
         requiredPermission: "contacts:read",
       },
       {
-        href: "/mails?tab=sequences",
+        href: "/mails/sequences",
         label: "Sequences",
         requiredPermission: "contacts:read",
       },
       {
-        href: "/mails?tab=templates",
+        href: "/mails/templates",
         label: "Templates",
         requiredPermission: "contacts:read",
       },
@@ -116,28 +116,7 @@ const SECONDARY_NAV: PermissionedNavItem[] = [
     icon: LibraryBig,
     requiredPermission: "media:read",
   },
-  {
-    href: "#",
-    label: "Settings",
-    icon: Settings,
-    items: [
-      {
-        href: "/settings?tab=payment",
-        label: "Payments",
-        requiredPermission: "commerce:read",
-      },
-      {
-        href: "/settings?tab=team",
-        label: "Team",
-        requiredPermission: "members:read",
-      },
-      {
-        href: "/settings?tab=api-keys",
-        label: "API keys",
-        requiredPermission: "api_keys:read",
-      },
-    ],
-  },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function filterNav(

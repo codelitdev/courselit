@@ -25,7 +25,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isFullScreenBlogEditor = /^(?:\/website)?\/blogs\/[^/]+\/edit\/?$/.test(
     pathname,
   );
-  const isFullScreenMailEditor = /^\/mails\/editor\/[^/]+\/?$/.test(pathname);
+  const isFullScreenMailEditor =
+    /^\/mails\/(?:editor\/[^/]+|templates\/[^/]+\/edit)\/?$/.test(pathname);
   const isFullScreenTeamInvitation = /^\/team-invitations\/[^/]+\/?$/.test(pathname);
   const schoolOptional = SCHOOL_OPTIONAL_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix),

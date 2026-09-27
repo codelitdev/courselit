@@ -10,47 +10,10 @@ import {
 import {
   getPublicCommunity,
   getPublicProduct,
-  type PublicPage,
+  getSettings,
 } from "@/lib/courselit-public";
+import { metadataForPublicPage } from "@/lib/public-page-metadata";
 import { requestHost } from "@/lib/request-host";
-
-function metadataImageUrl(image: Record<string, unknown> | null): string | undefined {
-  for (const key of ["file", "url", "src"]) {
-    const value = image?.[key];
-    if (typeof value === "string" && value.trim()) return value;
-  }
-  return undefined;
-}
-
-export function metadataForPublicPage(
-  page: PublicPage | null,
-  fallbackTitle: string,
-): Metadata {
-  if (!page) return { title: fallbackTitle };
-
-  const title = page.title || page.name || fallbackTitle;
-  const description = page.description ?? undefined;
-  const socialImage = metadataImageUrl(page.socialImage);
-  const robots =
-    page.robotsAllowed === null
-      ? undefined
-      : { index: page.robotsAllowed !== false, follow: page.robotsAllowed !== false };
-
-  return {
-    title,
-    description,
-    robots,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      ...(socialImage ? { images: [{ url: socialImage }] } : {}),
-    },
-    twitter: socialImage
-      ? { card: "summary_large_image", images: [socialImage] }
-      : undefined,
-  };
-}
 
 interface Props {
   params: Promise<{ slug?: string[] }>;
@@ -59,23 +22,49 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const pageSlug = (slug ?? []).join("/");
+  const host = await requestHost();
+  const settings = await getSettings(host);
+  const siteTitle = settings?.title?.trim() || "CourseLit";
+  const siteLogoUrl =
+    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
+      ? settings.logo.url.trim()
+      : "/icon.svg";
+
   const systemRoute = publicSystemRouteForSlug(pageSlug);
   if (systemRoute) {
-    return { title: systemRoute.charAt(0).toUpperCase() + systemRoute.slice(1) };
+    const routeTitle = systemRoute.charAt(0).toUpperCase() + systemRoute.slice(1);
+    return {
+      title: { absolute: `${routeTitle} | ${siteTitle}` },
+      description: settings?.subtitle?.trim() || undefined,
+      ...(settings?.canonicalHost
+        ? {
+            alternates: {
+              canonical: `/${pageSlug
+                .split("/")
+                .filter(Boolean)
+                .map(encodeURIComponent)
+                .join("/")}`,
+            },
+          }
+        : {}),
+      icons: {
+        icon: siteLogoUrl,
+        shortcut: siteLogoUrl,
+        apple: siteLogoUrl,
+      },
+    };
   }
 
   if (!pageSlug) {
     const { page } = await loadPublicPage("");
-    return metadataForPublicPage(page, "CourseLit");
+    return metadataForPublicPage(page, siteTitle, settings, true);
   }
-
-  const host = await requestHost();
 
   const product = await getPublicProduct(host, pageSlug);
   if (product) {
     const { page } = await loadPublicPage(product.slug);
     return {
-      ...metadataForPublicPage(page, product.title),
+      ...metadataForPublicPage(page, product.title, settings, false),
       alternates: {
         canonical: `/p/${encodeURIComponent(product.slug || product.id)}`,
       },
@@ -86,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (community) {
     const { page } = await loadPublicPage(community.slug);
     return {
-      ...metadataForPublicPage(page, community.name),
+      ...metadataForPublicPage(page, community.name, settings, false),
       alternates: {
         canonical: `/p/${encodeURIComponent(community.slug || community.id)}`,
       },
@@ -95,9 +84,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { page } = await loadPublicPage(pageSlug);
   if (!page) {
-    return { title: "Page not found" };
+    return {
+      title: { absolute: `Page not found | ${siteTitle}` },
+      icons: {
+        icon: siteLogoUrl,
+        shortcut: siteLogoUrl,
+        apple: siteLogoUrl,
+      },
+    };
   }
-  return metadataForPublicPage(page, page.title || page.name || "CourseLit");
+  return metadataForPublicPage(
+    page,
+    page.title || page.name || siteTitle,
+    settings,
+    false,
+  );
 }
 
 export default async function PublicSiteCatchAllPage({ params }: Props) {

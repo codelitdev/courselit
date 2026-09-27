@@ -1,5 +1,3 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { resolveTxt } from "node:dns/promises";
 import {
   type Clock,
   createPlatformError,
@@ -8,6 +6,16 @@ import {
 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import {
+  attachFrontLitCustomDomain,
+  frontLitConfig,
+  getFrontLitDomainSettings,
+  removeFrontLitCustomDomain,
+  type FrontLitConfig,
+  type FrontLitDomainSettings,
+  verifyFrontLitCustomDomain,
+} from "./frontlit-client.js";
+import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { normalizeCustomHostname } from "./school-host.js";
 import type { AppDb } from "./types.js";
 
@@ -17,6 +25,7 @@ export type SchoolHostDto = {
   verificationStatus: "verified" | "unverified";
   verifiedAt: string | null;
   isPrimary: boolean;
+  verificationRecords?: FrontLitDomainSettings["verificationRecords"];
 };
 
 export type CreateSchoolHostResult = {
@@ -28,43 +37,172 @@ export type CreateSchoolHostResult = {
   };
 };
 
-function toDto(row: typeof schema.schoolHosts.$inferSelect): SchoolHostDto {
+type FrontLitConnection = {
+  apiKey: string;
+  config: FrontLitConfig;
+};
+
+function toDto(
+  row: typeof schema.schoolHosts.$inferSelect,
+  verificationRecords: FrontLitDomainSettings["verificationRecords"] = null,
+): SchoolHostDto {
   return {
     hostname: row.hostname,
     kind: row.kind,
     verificationStatus: row.verificationStatus,
     verifiedAt: row.verifiedAt?.toISOString() ?? null,
     isPrimary: row.isPrimary,
+    ...(row.kind === "custom" ? { verificationRecords } : {}),
   };
 }
 
-function tokenDigest(token: string): string {
-  return createHash("sha256").update(token, "utf8").digest("hex");
-}
+async function getFrontLitConnection(
+  db: AppDb,
+  schoolId: string,
+): Promise<FrontLitConnection | null> {
+  const rows = await db
+    .select()
+    .from(schema.schoolIntegrations)
+    .where(
+      and(
+        eq(schema.schoolIntegrations.schoolId, schoolId),
+        eq(schema.schoolIntegrations.provider, "frontlit"),
+        eq(schema.schoolIntegrations.status, "ready"),
+      ),
+    )
+    .limit(1);
+  const integration = rows[0];
+  if (!integration?.encryptedTeamKey || !integration.server) return null;
 
-function tokenMatches(token: string, digest: string): boolean {
-  const actual = Buffer.from(tokenDigest(token), "hex");
-  const expected = Buffer.from(digest, "hex");
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
-}
-
-function verificationRecord(hostname: string, token: string) {
   return {
-    method: "dns_txt" as const,
-    name: `_courselit-verification.${hostname}`,
-    value: token,
+    apiKey: decryptIntegrationSecret(integration.encryptedTeamKey),
+    config: {
+      ...frontLitConfig(),
+      server: integration.server.replace(/\/$/, ""),
+      provisioningSecret: null,
+    },
   };
+}
+
+async function syncCustomHost(
+  db: AppDb,
+  schoolId: string,
+  settings: FrontLitDomainSettings,
+  clock: Clock,
+): Promise<typeof schema.schoolHosts.$inferSelect | null> {
+  const hostname = settings.customDomain?.hostname ?? null;
+  const currentRows = await db
+    .select()
+    .from(schema.schoolHosts)
+    .where(
+      and(
+        eq(schema.schoolHosts.schoolId, schoolId),
+        eq(schema.schoolHosts.kind, "custom"),
+      ),
+    );
+
+  if (!hostname) {
+    if (currentRows.length > 0) {
+      await db
+        .delete(schema.schoolHosts)
+        .where(
+          and(
+            eq(schema.schoolHosts.schoolId, schoolId),
+            eq(schema.schoolHosts.kind, "custom"),
+          ),
+        );
+    }
+    return null;
+  }
+
+  const claimed = await db
+    .select({ id: schema.schoolHosts.id, schoolId: schema.schoolHosts.schoolId })
+    .from(schema.schoolHosts)
+    .where(eq(schema.schoolHosts.hostname, hostname))
+    .limit(1);
+  if (claimed[0] && claimed[0].schoolId !== schoolId) {
+    throw new Error("FrontLit domain is already mapped to another school");
+  }
+
+  const now = clock.now();
+  const verified = settings.customDomain?.status === "verified";
+  const existing = currentRows.find((row) => row.hostname === hostname);
+  if (existing) {
+    const [updated] = await db
+      .update(schema.schoolHosts)
+      .set({
+        verificationStatus: verified ? "verified" : "unverified",
+        verificationTokenDigest: null,
+        verifiedAt: verified
+          ? settings.customDomain?.verifiedAt
+            ? new Date(settings.customDomain.verifiedAt)
+            : now
+          : null,
+        updatedAt: now,
+      })
+      .where(eq(schema.schoolHosts.id, existing.id))
+      .returning();
+    return updated;
+  }
+
+  if (currentRows.length > 0) {
+    await db
+      .delete(schema.schoolHosts)
+      .where(
+        and(
+          eq(schema.schoolHosts.schoolId, schoolId),
+          eq(schema.schoolHosts.kind, "custom"),
+        ),
+      );
+  }
+  const [created] = await db
+    .insert(schema.schoolHosts)
+    .values({
+      id: uuidv7(clock),
+      schoolId,
+      hostname,
+      kind: "custom",
+      verificationStatus: verified ? "verified" : "unverified",
+      verificationTokenDigest: null,
+      verifiedAt: verified
+        ? settings.customDomain?.verifiedAt
+          ? new Date(settings.customDomain.verifiedAt)
+          : now
+        : null,
+      isPrimary: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  return created;
 }
 
 export async function listSchoolHosts(
   db: AppDb,
   schoolId: string,
+  clock: Clock,
 ): Promise<SchoolHostDto[]> {
+  const connection = await getFrontLitConnection(db, schoolId);
+  let settings: FrontLitDomainSettings | null = null;
+  if (connection) {
+    settings = await getFrontLitDomainSettings(connection.apiKey, {
+      config: connection.config,
+    });
+    await syncCustomHost(db, schoolId, settings, clock);
+  }
+
   const rows = await db
     .select()
     .from(schema.schoolHosts)
     .where(eq(schema.schoolHosts.schoolId, schoolId));
-  return rows.map(toDto);
+  return rows.map((row) =>
+    toDto(
+      row,
+      row.kind === "custom" && row.hostname === settings?.customDomain?.hostname
+        ? settings.verificationRecords
+        : null,
+    ),
+  );
 }
 
 export async function createSchoolCustomHost(
@@ -83,12 +221,13 @@ export async function createSchoolCustomHost(
   if (!hostname) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
+
   const existing = await db
-    .select({ id: schema.schoolHosts.id })
+    .select({ id: schema.schoolHosts.id, schoolId: schema.schoolHosts.schoolId })
     .from(schema.schoolHosts)
     .where(eq(schema.schoolHosts.hostname, hostname))
     .limit(1);
-  if (existing[0]) {
+  if (existing[0] && existing[0].schoolId !== input.schoolId) {
     return {
       ok: false,
       error: createPlatformError("conflict", {
@@ -97,22 +236,41 @@ export async function createSchoolCustomHost(
     };
   }
 
+  const connection = await getFrontLitConnection(db, input.schoolId);
+  if (!connection) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "website_setup_pending" },
+      }),
+    };
+  }
+  let settings = await getFrontLitDomainSettings(connection.apiKey, {
+    config: connection.config,
+  });
+  if (settings.customDomain?.hostname !== hostname) {
+    if (settings.customDomain) {
+      return {
+        ok: false,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "custom_domain_already_attached" },
+        }),
+      };
+    }
+    settings = await attachFrontLitCustomDomain(
+      connection.apiKey,
+      hostname,
+      { config: connection.config },
+    );
+  }
+
+  const row = await syncCustomHost(db, input.schoolId, settings, clock);
+  if (!row || !settings.verificationRecords) {
+    return { ok: false, error: createPlatformError("internal_error") };
+  }
+
   const now = clock.now();
-  const token = randomBytes(32).toString("base64url");
-  const row = {
-    id: uuidv7(clock),
-    schoolId: input.schoolId,
-    hostname,
-    kind: "custom" as const,
-    verificationStatus: "unverified" as const,
-    verificationTokenDigest: tokenDigest(token),
-    verifiedAt: null,
-    isPrimary: false,
-    createdAt: now,
-    updatedAt: now,
-  };
   await db.transaction(async (tx) => {
-    await tx.insert(schema.schoolHosts).values(row);
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: input.schoolId,
@@ -124,11 +282,16 @@ export async function createSchoolCustomHost(
       createdAt: now,
     });
   });
+
   return {
     ok: true,
     value: {
-      host: toDto(row),
-      verification: verificationRecord(hostname, token),
+      host: toDto(row, settings.verificationRecords),
+      verification: {
+        method: "dns_txt",
+        name: settings.verificationRecords.txtName,
+        value: settings.verificationRecords.txtValue,
+      },
     },
   };
 }
@@ -139,93 +302,44 @@ export async function verifySchoolCustomHost(
     schoolId: string;
     actorId: string;
     hostname: string;
-    token: string;
     requestId: string;
-    verify: (hostname: string, token: string) => Promise<boolean>;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolHostDto } | { ok: false; error: PlatformError }> {
   const hostname = normalizeCustomHostname(input.hostname);
-  const token = input.token.trim();
-  if (!hostname || token.length === 0) {
+  if (!hostname) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
-  const rows = await db
-    .select()
-    .from(schema.schoolHosts)
-    .where(
-      and(
-        eq(schema.schoolHosts.schoolId, input.schoolId),
-        eq(schema.schoolHosts.hostname, hostname),
-      ),
-    )
-    .limit(1);
-  const row = rows[0];
+  const connection = await getFrontLitConnection(db, input.schoolId);
+  if (!connection) {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
+  let settings = await getFrontLitDomainSettings(connection.apiKey, {
+    config: connection.config,
+  });
+  if (settings.customDomain?.hostname !== hostname) {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
+  settings = await verifyFrontLitCustomDomain(connection.apiKey, {
+    config: connection.config,
+  });
+  const row = await syncCustomHost(db, input.schoolId, settings, clock);
   if (!row) return { ok: false, error: createPlatformError("not_found") };
-  if (row.kind !== "custom") {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "primary_host_cannot_be_verified" },
-      }),
-    };
-  }
-  if (row.verificationStatus === "verified") {
-    return { ok: true, value: toDto(row) };
-  }
-  if (!row.verificationTokenDigest) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "verification_unavailable" },
-      }),
-    };
-  }
-  if (!tokenMatches(token, row.verificationTokenDigest)) {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "invalid_verification_token" },
-      }),
-    };
-  }
-  if (!(await input.verify(hostname, token))) {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "dns_txt_not_found" },
-      }),
-    };
-  }
+
   const now = clock.now();
-  await db.transaction(async (tx) => {
-    await tx
-      .update(schema.schoolHosts)
-      .set({
-        verificationStatus: "verified",
-        verificationTokenDigest: null,
-        verifiedAt: now,
-        updatedAt: now,
-      })
-      .where(eq(schema.schoolHosts.id, row.id));
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: input.schoolId,
-      actorId: input.actorId,
-      action: "school.host_verified",
-      resourceType: "school_host",
-      resourceId: hostname,
-      requestId: input.requestId,
-      createdAt: now,
-    });
+  await db.insert(schema.auditEvents).values({
+    id: uuidv7(clock),
+    schoolId: input.schoolId,
+    actorId: input.actorId,
+    action: "school.host_verified",
+    resourceType: "school_host",
+    resourceId: hostname,
+    requestId: input.requestId,
+    createdAt: now,
   });
   return {
     ok: true,
-    value: {
-      ...toDto(row),
-      verificationStatus: "verified",
-      verifiedAt: now.toISOString(),
-    },
+    value: toDto(row, settings.verificationRecords),
   };
 }
 
@@ -261,6 +375,18 @@ export async function deleteSchoolCustomHost(
       }),
     };
   }
+
+  const connection = await getFrontLitConnection(db, input.schoolId);
+  if (!connection) return { ok: false, error: createPlatformError("not_found") };
+  const settings = await getFrontLitDomainSettings(connection.apiKey, {
+    config: connection.config,
+  });
+  if (settings.customDomain?.hostname === hostname) {
+    await removeFrontLitCustomDomain(connection.apiKey, {
+      config: connection.config,
+    });
+  }
+
   const now = clock.now();
   await db.transaction(async (tx) => {
     await tx.delete(schema.schoolHosts).where(eq(schema.schoolHosts.id, row.id));
@@ -276,16 +402,4 @@ export async function deleteSchoolCustomHost(
     });
   });
   return { ok: true };
-}
-
-export async function verifyCustomDomainTxt(
-  hostname: string,
-  token: string,
-): Promise<boolean> {
-  try {
-    const records = await resolveTxt(`_courselit-verification.${hostname}`);
-    return records.flat().includes(token);
-  } catch {
-    return false;
-  }
 }

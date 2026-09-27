@@ -10,6 +10,7 @@ import {
 } from "./contact-filters.js";
 import {
   COURSELIT_FRONTLIT_PROVISION_PAGES,
+  configureCourseLitSharedChrome,
   FrontLitApiError,
   type FrontLitConfig,
   type FrontLitContentSummary,
@@ -50,12 +51,14 @@ export type FrontLitOperations = {
   provisionTeam: typeof provisionFrontLitTeam;
   setSubdomain: typeof setFrontLitSubdomain;
   listPages: typeof listFrontLitPages;
+  configureSharedChrome: typeof configureCourseLitSharedChrome;
 };
 
 const defaultOperations: FrontLitOperations = {
   provisionTeam: provisionFrontLitTeam,
   setSubdomain: setFrontLitSubdomain,
   listPages: listFrontLitPages,
+  configureSharedChrome: configureCourseLitSharedChrome,
 };
 
 export type SendLitOperations = {
@@ -233,6 +236,11 @@ async function provisionOneFrontLitSchool(
       `FrontLit mandatory pages are missing: ${missing.join(", ")}`,
     );
   }
+  const homepage = pages.find((page) => page.slug === "");
+  if (!homepage) {
+    throw new IntegrationActionRequiredError("FrontLit homepage is missing");
+  }
+  await operations.configureSharedChrome(teamApiKey, homepage.id, { config });
 
   const syncedAt = clock.now();
   await updateIntegration(db, job.schoolId, "frontlit", {

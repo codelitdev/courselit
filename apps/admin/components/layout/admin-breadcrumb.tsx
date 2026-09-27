@@ -165,20 +165,72 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       { label: "Blogs" },
     ];
   }
+  if (
+    clean === "/website/settings/branding" ||
+    clean === "/website/settings/code-injection"
+  ) {
+    return [
+      { label: "Website", href: "/website/pages" },
+      { label: "Settings", href: "/website/settings/branding" },
+      { label: clean.endsWith("/branding") ? "Branding" : "Code injection" },
+    ];
+  }
   if (clean === "/website/settings") {
     return [
       { label: "Website", href: "/website/pages" },
       { label: "Settings" },
     ];
   }
+  if (clean === "/mails") {
+    return [{ label: "Mails" }];
+  }
+  if (
+    clean === "/mails/broadcasts" ||
+    clean === "/mails/sequences" ||
+    clean === "/mails/templates"
+  ) {
+    const tab = clean.split("/")[2];
+    const tabLabels: Record<string, string> = {
+      broadcasts: "Broadcasts",
+      sequences: "Sequences",
+      templates: "Templates",
+    };
+    return [
+      { label: "Mails", href: "/mails/broadcasts" },
+      { label: tabLabels[tab] },
+    ];
+  }
+  if (/^\/mails\/sequences\/[^/]+\/edit$/.test(clean)) {
+    return [
+      { label: "Mails", href: "/mails/broadcasts" },
+      { label: "Sequences", href: "/mails/sequences" },
+      { label: "Sequence" },
+    ];
+  }
   if (clean === "/mails/settings") {
     return [
-      { label: "Mails", href: "/mails?tab=broadcasts" },
+      { label: "Mails", href: "/mails/broadcasts" },
       { label: "Settings" },
     ];
   }
   if (clean === "/settings") {
     return [{ label: "Settings" }];
+  }
+  if (
+    clean === "/settings/payment" ||
+    clean === "/settings/team" ||
+    clean === "/settings/api-keys"
+  ) {
+    const tabLabels: Record<string, string> = {
+      payment: "Payments",
+      team: "Team",
+      "api-keys": "API keys",
+    };
+    const tab = clean.split("/")[2];
+    return [
+      { label: "Settings", href: "/settings" },
+      { label: tabLabels[tab] },
+    ];
   }
   if (clean.startsWith("/settings/")) {
     return [

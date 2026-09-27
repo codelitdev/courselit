@@ -15,13 +15,39 @@ import {
 } from "./sendlit-client.js";
 
 describe("sendlit-client", () => {
-  it("parses configuration correctly with development defaults", () => {
+  it("uses configured server and organization key in development", () => {
     const config = sendLitConfig({
       NODE_ENV: "development",
       SENDLIT_SERVER: "http://example.com:4101/",
+      SENDLIT_ORGANIZATION_API_KEY: " sl_org_live_development ",
     });
     expect(config.server).toBe("http://example.com:4101");
-    expect(config.provisioningApiKey).toBeTruthy();
+    expect(config.provisioningApiKey).toBe("sl_org_live_development");
+  });
+
+  it("does not provide implicit local configuration values", () => {
+    const config = sendLitConfig({ NODE_ENV: "development" });
+
+    expect(config.server).toBeNull();
+    expect(config.provisioningApiKey).toBeNull();
+  });
+
+  it("reads the organization API key from SENDLIT_ORGANIZATION_API_KEY", () => {
+    const config = sendLitConfig({
+      NODE_ENV: "production",
+      SENDLIT_ORGANIZATION_API_KEY: "  sl_org_live_configured  ",
+    });
+
+    expect(config.provisioningApiKey).toBe("sl_org_live_configured");
+  });
+
+  it("does not treat SENDLIT_APIKEY as a configuration alias", () => {
+    const config = sendLitConfig({
+      NODE_ENV: "production",
+      SENDLIT_APIKEY: "sl_org_live_legacy",
+    });
+
+    expect(config.provisioningApiKey).toBeNull();
   });
 
   it("throws SendLitApiError when server is not configured", async () => {

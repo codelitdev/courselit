@@ -792,6 +792,18 @@ describe.serial("reference API adapters", () => {
       createdAt: now,
       updatedAt: now,
     });
+    await runtime.db.insert(schema.schoolHosts).values({
+      id: crypto.randomUUID(),
+      schoolId: world.schoolA.id,
+      hostname: "learn.example.com",
+      kind: "custom",
+      verificationStatus: "verified",
+      verificationTokenDigest: null,
+      verifiedAt: now,
+      isPrimary: false,
+      createdAt: now,
+      updatedAt: now,
+    });
 
     const previousFetch = globalThis.fetch;
     globalThis.fetch = (async (input) => {
@@ -871,6 +883,7 @@ describe.serial("reference API adapters", () => {
         themeId: "classic",
         codeInjectionHead: "",
         codeInjectionBody: "",
+        canonicalHost: "learn.example.com",
       });
 
       const saved = await dispatch(runtime, {

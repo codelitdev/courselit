@@ -16,7 +16,6 @@ export type DispatchDeps = AuthRuntime & {
   serviceName: string;
   databaseReady: boolean;
   observability?: Observability;
-  customDomainVerifier?: (hostname: string, token: string) => Promise<boolean>;
   /** Optional in-memory provider used by API tests; production resolves this from school settings. */
   paymentProvider?: PaymentProvider;
   sendLit: SendLitConfig;

@@ -1,6 +1,18 @@
 import { describe, expect, it } from "bun:test";
 import { salesPageLayout, salesPageSlug } from "./frontlit-sales-pages.js";
 
+const sharedChrome = {
+  headerSettings: {
+    ctaLabel: "Join",
+    ctaHref: "/join",
+    links: [{ id: "blog", label: "Blog", href: "/blog" }],
+  },
+  footerSettings: {
+    tagline: "Build, Sell & Market Your Courses And Digital Downloads",
+    columns: [{ id: "resources", title: "Resources", links: [] }],
+  },
+};
+
 describe("CourseLit FrontLit sales pages", () => {
   it("uses FrontLit-compatible slugs for public IDs", () => {
     expect(salesPageSlug("product", "prd_01ABC_def")).toBe(
@@ -18,6 +30,7 @@ describe("CourseLit FrontLit sales pages", () => {
       name: "Course",
       description: "Learn something useful.",
       productKind: "course",
+      sharedChrome,
     });
 
     expect(layout.map((widget) => widget.name)).toEqual([
@@ -26,6 +39,8 @@ describe("CourseLit FrontLit sales pages", () => {
       "courselit-product-curriculum",
       "footer",
     ]);
+    expect(layout[0]?.settings).toEqual(sharedChrome.headerSettings);
+    expect(layout.at(-1)?.settings).toEqual(sharedChrome.footerSettings);
     expect(layout[1]).toMatchObject({
       name: "courselit-product",
       deletable: false,
@@ -47,6 +62,7 @@ describe("CourseLit FrontLit sales pages", () => {
       name: "Download",
       description: "A download.",
       productKind: "download",
+      sharedChrome,
     });
 
     expect(layout.map((widget) => widget.name)).toEqual([
@@ -62,6 +78,7 @@ describe("CourseLit FrontLit sales pages", () => {
       resourceId: "com_1",
       name: "Community",
       description: "Join a community.",
+      sharedChrome,
     });
 
     expect(layout.map((widget) => widget.name)).toEqual([

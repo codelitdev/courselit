@@ -16,6 +16,21 @@
 #   CourseLit Postgres: 5432
 #   FrontLit API:       4100
 #   SendLit API:        4101
+#   Mailpit SMTP:       1026
+#   Mailpit web UI:     8026
+#
+# SendLit uses the locally built codelit/sendlit-api:esp-control image. To
+# headless setup, use the stable, local-only API keys below. They are the
+# Compose defaults; do not reuse them outside this local development stack.
+#
+#   BOOTSTRAP_ORGANIZATION_OWNER_EMAIL=admin@example.com
+#   BOOTSTRAP_DELIVERY_SETUP_API_KEY=sl_org_live_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#   BOOTSTRAP_TEAM_PROVISIONING_API_KEY=sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+#
+# The delivery key is used only by the one-shot delivery initializer. The
+# team-provisioning key is registered during SendLit init and passed to
+# FrontLit. CourseLit itself runs on the host; set the same team key as
+# SENDLIT_ORGANIZATION_API_KEY in apps/api/.env. See apps/api/README.md for setup notes.
 #
 # The host-run CourseLit API/worker should use FRONTLIT_SERVER=http://127.0.0.1:4100
 # and FRONTLIT_APIKEY=courselit-local-frontlit-provisioning-secret in
@@ -70,15 +85,44 @@ services:
       timeout: 5s
       retries: 12
 
-  sendlit-api:
-    image: codelit/sendlit-api:latest
-    restart: unless-stopped
+  # Applies migrations and registers any configured organization keys once.
+  # Bootstrap secrets are deliberately absent from the long-running API.
+  sendlit-init:
+    image: codelit/sendlit-api:esp-control
+    pull_policy: if_not_present
+    restart: "no"
     depends_on:
       postgres:
         condition: service_healthy
       sendlit-redis:
         condition: service_healthy
       frontlit-sendlit-db-init:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -ec
+      - |
+        node apps/api/dist/db/migrate.js
+        exec node apps/api/dist/bootstrap-cli.js
+    environment:
+      NODE_ENV: development
+      DB_CONNECTION_STRING: postgres://courselit:courselit@postgres:5432/sendlit
+      REDIS_HOST: sendlit-redis
+      REDIS_PORT: 6379
+      BETTER_AUTH_SECRET: "${SENDLIT_BETTER_AUTH_SECRET:-courselit-local-sendlit-better-auth-secret}"
+      PIXEL_SIGNING_SECRET: "${SENDLIT_PIXEL_SIGNING_SECRET:-courselit-local-sendlit-pixel-signing}"
+      ESP_CREDENTIALS_ENCRYPTION_KEY: "${SENDLIT_ESP_CREDENTIALS_ENCRYPTION_KEY:-courselit-local-sendlit-esp-key-32b}"
+      SUPPRESSION_HASH_KEY: "${SENDLIT_SUPPRESSION_HASH_KEY:-courselit-local-sendlit-suppression}"
+      BOOTSTRAP_ORGANIZATION_OWNER_EMAIL: "${BOOTSTRAP_ORGANIZATION_OWNER_EMAIL:-admin@example.com}"
+      BOOTSTRAP_DELIVERY_SETUP_API_KEY: "${BOOTSTRAP_DELIVERY_SETUP_API_KEY:-sl_org_live_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+      BOOTSTRAP_TEAM_PROVISIONING_API_KEY: "${BOOTSTRAP_TEAM_PROVISIONING_API_KEY:-sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb}"
+
+  sendlit-api:
+    image: codelit/sendlit-api:esp-control
+    pull_policy: if_not_present
+    restart: unless-stopped
+    depends_on:
+      sendlit-init:
         condition: service_completed_successfully
     command:
       - sh
@@ -101,14 +145,53 @@ services:
       PIXEL_SIGNING_SECRET: "${SENDLIT_PIXEL_SIGNING_SECRET:-courselit-local-sendlit-pixel-signing}"
       ESP_CREDENTIALS_ENCRYPTION_KEY: "${SENDLIT_ESP_CREDENTIALS_ENCRYPTION_KEY:-courselit-local-sendlit-esp-key-32b}"
       SUPPRESSION_HASH_KEY: "${SENDLIT_SUPPRESSION_HASH_KEY:-courselit-local-sendlit-suppression}"
-      SUPER_ADMIN_EMAIL: "${SENDLIT_SUPER_ADMIN_EMAIL:-admin@example.com}"
+      # The following two lines are just an explicit safeguard against accidentally passing the keys
+      BOOTSTRAP_DELIVERY_SETUP_API_KEY: ""
+      BOOTSTRAP_TEAM_PROVISIONING_API_KEY: ""
     ports:
-      - "${SENDLIT_API_PORT:-4101}:3001"
+      - "127.0.0.1:${SENDLIT_API_PORT:-4101}:3001"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 12
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1026}:1025"
+      - "${MAILPIT_HTTP_PORT:-8026}:8025"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8025/"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # One-time local delivery setup. It persists a completion marker, tests the
+  # explicit local recipient, activates Mailpit, and sets the org default only
+  # when no different default has already been selected by an operator.
+  sendlit-delivery-init:
+    image: codelit/sendlit-api:esp-control
+    pull_policy: if_not_present
+    restart: "no"
+    user: "0:0"
+    depends_on:
+      sendlit-api:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    command: ["node", "/opt/sendlit-local-delivery-setup.mjs"]
+    environment:
+      SENDLIT_API_BASE_URL: http://sendlit-api:3001
+      SENDLIT_DELIVERY_SETUP_API_KEY: "${BOOTSTRAP_DELIVERY_SETUP_API_KEY:-sl_org_live_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+      SENDLIT_DELIVERY_ESP_NAME: "${SENDLIT_DELIVERY_ESP_NAME:-CourseLit Local Mailpit}"
+      SENDLIT_DELIVERY_FROM_NAME: "${SENDLIT_DELIVERY_FROM_NAME:-CourseLit Local}"
+      SENDLIT_DELIVERY_FROM_EMAIL: "${SENDLIT_DELIVERY_FROM_EMAIL:-courselit@localhost.test}"
+      SENDLIT_DELIVERY_TEST_TO: "${SENDLIT_DELIVERY_TEST_TO:-admin@example.com}"
+    volumes:
+      - ./scripts/sendlit-local-delivery-setup.mjs:/opt/sendlit-local-delivery-setup.mjs:ro
+      - courselit-local-sendlit-delivery-setup:/var/lib/sendlit-delivery-setup
 
   frontlit-api:
     image: codelit/frontlit-api:latest
@@ -117,6 +200,8 @@ services:
       postgres:
         condition: service_healthy
       frontlit-sendlit-db-init:
+        condition: service_completed_successfully
+      sendlit-delivery-init:
         condition: service_completed_successfully
     command:
       - sh
@@ -138,7 +223,7 @@ services:
       ENABLE_TRUST_PROXY: "${FRONTLIT_ENABLE_TRUST_PROXY:-false}"
       AUTH_COOKIE_DOMAIN: "${FRONTLIT_AUTH_COOKIE_DOMAIN:-}"
       SENDLIT_API_URL: http://sendlit-api:3001
-      SENDLIT_ORGANIZATION_API_KEY: "${SENDLIT_ORGANIZATION_API_KEY:-}"
+      SENDLIT_ORGANIZATION_API_KEY: "${BOOTSTRAP_TEAM_PROVISIONING_API_KEY:-sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb}"
       MEDIALIT_APIKEY: "${MEDIALIT_APIKEY:-}"
       MEDIALIT_SERVER: "${MEDIALIT_SERVER:-https://api.medialit.cloud}"
       UNSPLASH_ACCESS_KEY: "${UNSPLASH_ACCESS_KEY:-}"
@@ -160,3 +245,4 @@ services:
 volumes:
   courselit-local-postgres-data:
   courselit-local-sendlit-redis-data:
+  courselit-local-sendlit-delivery-setup:

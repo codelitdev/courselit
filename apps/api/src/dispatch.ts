@@ -303,7 +303,6 @@ import {
   createSchoolCustomHost,
   deleteSchoolCustomHost,
   listSchoolHosts,
-  verifyCustomDomainTxt,
   verifySchoolCustomHost,
 } from "./school-hosts.js";
 import {
@@ -619,17 +618,17 @@ export async function dispatch(
     if (learnerAuth.kind !== "authenticated" && path.startsWith("/v1/learner/")) {
       const rawCookie = request.headers.cookie ?? request.headers.Cookie;
       const cookieHeader = Array.isArray(rawCookie) ? rawCookie.join("; ") : rawCookie;
-      const hasBetterAuthCookie =
+      const hasAdminSessionCookie =
         typeof cookieHeader === "string" &&
         cookieHeader.split(";").some((part) => {
           const name = part.trim().split("=", 1)[0];
           return (
-            name === "better-auth.session_token" ||
-            name?.startsWith("better-auth.session_token.") ||
-            name?.startsWith("__Secure-better-auth.session_token")
+            name === ADMIN_SESSION_COOKIE_NAME ||
+            name?.startsWith(`${ADMIN_SESSION_COOKIE_NAME}.`) ||
+            name?.startsWith(`__Secure-${ADMIN_SESSION_COOKIE_NAME}`)
           );
         });
-      if (hasBetterAuthCookie) {
+      if (hasAdminSessionCookie) {
         const globalIdentity = await authenticateHttpRequest(
           requestHeaders(request),
           deps,
@@ -858,12 +857,24 @@ export async function dispatch(
           deps.db,
           resolved.value.school.schoolId,
         );
+        const [verifiedCustomHost] = await deps.db
+          .select({ hostname: schema.schoolHosts.hostname })
+          .from(schema.schoolHosts)
+          .where(
+            and(
+              eq(schema.schoolHosts.schoolId, resolved.value.school.schoolId),
+              eq(schema.schoolHosts.kind, "custom"),
+              eq(schema.schoolHosts.verificationStatus, "verified"),
+            ),
+          )
+          .limit(1);
         return {
           status: 200,
           body: {
             ...settings,
             codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
             codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
+            canonicalHost: verifiedCustomHost?.hostname ?? null,
           },
         };
       } catch (error) {
@@ -3563,6 +3574,7 @@ export async function dispatch(
           search: query.get("search") ?? undefined,
           tag: query.get("tag") ?? undefined,
           status: query.get("status") ?? undefined,
+          filter: query.get("filter") ?? undefined,
           cursor: query.get("cursor") ?? undefined,
           limit: query.get("limit") ? Number(query.get("limit")) : undefined,
         });
@@ -5359,7 +5371,10 @@ export async function dispatch(
       }
       return {
         status: 200,
-        body: { items: await listSchoolHosts(deps.db, context.tenantId!) },
+        body: {
+          items: await listSchoolHosts(deps.db, context.tenantId!, deps.clock),
+          platformDomain: process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app",
+        },
       };
     }
 
@@ -5390,8 +5405,7 @@ export async function dispatch(
       if (!context.permissions.has("school:write")) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed = verifySchoolHostBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
+      if (!verifySchoolHostBodySchema.safeParse(request.body ?? {}).success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
       const result = await verifySchoolCustomHost(
@@ -5400,9 +5414,7 @@ export async function dispatch(
           schoolId: context.tenantId!,
           actorId: context.principalId,
           hostname: decodeURIComponent(verifyHostMatch[1]!),
-          token: parsed.data.token,
           requestId: context.requestId,
-          verify: deps.customDomainVerifier ?? verifyCustomDomainTxt,
         },
         deps.clock,
       );

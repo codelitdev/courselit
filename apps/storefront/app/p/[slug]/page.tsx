@@ -3,7 +3,11 @@ import { notFound } from "next/navigation";
 import { PublicCommunityDetail } from "@/components/public-community-detail";
 import { PublicProductDetail } from "@/components/public-product-detail";
 import { loadPublicPage, PublicSitePage } from "@/components/public-site-page";
-import { getPublicCommunity, getPublicProduct } from "@/lib/courselit-public";
+import {
+  getPublicCommunity,
+  getPublicProduct,
+  getSettings,
+} from "@/lib/courselit-public";
 import { metadataForPublicPage } from "@/lib/public-page-metadata";
 import { requestHost } from "@/lib/request-host";
 
@@ -14,6 +18,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const host = await requestHost();
+  const settings = await getSettings(host);
   const product = await getPublicProduct(host, slug);
   const community = product ? null : await getPublicCommunity(host, slug);
   const resource = product ?? community;
@@ -21,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { page } = await loadPublicPage(resource.slug);
   return {
-    ...metadataForPublicPage(page, product ? product.title : community!.name),
+    ...metadataForPublicPage(page, product ? product.title : community!.name, settings),
     alternates: { canonical: `/p/${encodeURIComponent(resource.slug)}` },
   };
 }

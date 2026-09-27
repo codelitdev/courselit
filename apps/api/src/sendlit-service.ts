@@ -393,7 +393,15 @@ export async function listSubscribers(
   db: AppDb,
   schoolId: string,
   clock: Clock,
-  query: { offset?: number; limit?: number; search?: string; tag?: string; status?: string; cursor?: string } = {},
+  query: {
+    offset?: number;
+    limit?: number;
+    search?: string;
+    tag?: string;
+    status?: string;
+    filter?: string;
+    cursor?: string;
+  } = {},
   config?: SendLitConfig,
 ): Promise<Result<{ items: SendLitContact[]; total: number }, PlatformError>> {
   return withSendLitAuth(
@@ -408,7 +416,7 @@ export async function listSubscribers(
           rowsPerPage: query.limit,
           q: query.search,
           tag: query.tag,
-          filter: query.status,
+          filter: query.filter ?? query.status,
         },
         { config: cfg },
       ),
@@ -673,6 +681,7 @@ export async function createSequence(
             {
               subject: normalizedInput.title || defaultTitle,
               templateId: normalizedInput.templateId,
+              delayHours: 0,
             },
             { config: cfg },
           );
@@ -708,7 +717,14 @@ export async function updateSequence(
   schoolId: string,
   clock: Clock,
   sequenceId: string,
-  input: { title?: string; templateId?: string; scheduledFor?: string; segmentId?: string },
+  input: {
+    title?: string;
+    triggerType?: string | null;
+    triggerData?: string | null;
+    filter?: unknown;
+    excludeFilter?: unknown;
+    emailsOrder?: string[];
+  },
   config?: SendLitConfig,
 ): Promise<Result<SendLitSequence, PlatformError>> {
   return withSendLitAuth(
@@ -741,7 +757,7 @@ export async function addSequenceEmail(
   schoolId: string,
   clock: Clock,
   sequenceId: string,
-  input: { subject: string; templateId?: string; delayHours?: number },
+  input: { subject: string; templateId: string; delayHours?: number },
   config?: SendLitConfig,
 ): Promise<Result<SendLitSequenceEmail, PlatformError>> {
   return withSendLitAuth(

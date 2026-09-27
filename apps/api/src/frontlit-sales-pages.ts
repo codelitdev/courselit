@@ -7,6 +7,7 @@ import {
   type FrontLitConfig,
   type FrontLitWidget,
   frontLitConfig,
+  getFrontLitPage,
   listFrontLitPages,
   publishFrontLitPage,
   updateFrontLitPage,
@@ -59,6 +60,10 @@ export function salesPageLayout(input: {
   name: string;
   description: string;
   productKind?: "course" | "download";
+  sharedChrome: {
+    headerSettings: Record<string, unknown>;
+    footerSettings: Record<string, unknown>;
+  };
 }): FrontLitWidget[] {
   const isProduct = input.resourceType === "product";
   const layout: FrontLitWidget[] = [
@@ -68,6 +73,7 @@ export function salesPageLayout(input: {
       deletable: false,
       moveable: false,
       shared: true,
+      settings: input.sharedChrome.headerSettings,
     },
   ];
 
@@ -111,6 +117,7 @@ export function salesPageLayout(input: {
     deletable: false,
     moveable: false,
     shared: true,
+    settings: input.sharedChrome.footerSettings,
   });
   return layout;
 }
@@ -193,10 +200,26 @@ export async function ensureSalesPageJobs(db: AppDb, clock: Clock): Promise<void
   const [products, communities, jobs] = await Promise.all([
     db
       .select({ id: schema.products.id, schoolId: schema.products.schoolId })
-      .from(schema.products),
+      .from(schema.products)
+      .innerJoin(
+        schema.schoolIntegrations,
+        and(
+          eq(schema.schoolIntegrations.schoolId, schema.products.schoolId),
+          eq(schema.schoolIntegrations.provider, "frontlit"),
+          eq(schema.schoolIntegrations.status, "ready"),
+        ),
+      ),
     db
       .select({ id: schema.communities.id, schoolId: schema.communities.schoolId })
       .from(schema.communities)
+      .innerJoin(
+        schema.schoolIntegrations,
+        and(
+          eq(schema.schoolIntegrations.schoolId, schema.communities.schoolId),
+          eq(schema.schoolIntegrations.provider, "frontlit"),
+          eq(schema.schoolIntegrations.status, "ready"),
+        ),
+      )
       .where(isNull(schema.communities.deletedAt)),
     db
       .select({
@@ -392,6 +415,7 @@ async function salesPageSource(
 }
 
 export type SalesPageOperations = {
+  getPage: typeof getFrontLitPage;
   listPages: typeof listFrontLitPages;
   createPage: typeof createFrontLitPage;
   updatePage: typeof updateFrontLitPage;
@@ -399,6 +423,7 @@ export type SalesPageOperations = {
 };
 
 const defaultSalesPageOperations: SalesPageOperations = {
+  getPage: getFrontLitPage,
   listPages: listFrontLitPages,
   createPage: createFrontLitPage,
   updatePage: updateFrontLitPage,
@@ -437,7 +462,14 @@ export async function provisionSalesPageJob(
       ),
     )
     .limit(1);
-  if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
+  if (!integration) {
+    throw new FrontLitApiError(
+      "FrontLit school integration is missing",
+      undefined,
+      false,
+    );
+  }
+  if (!integration.encryptedTeamKey || !integration.remoteTeamId) {
     throw new FrontLitApiError("FrontLit school integration is not ready yet");
   }
 
@@ -446,7 +478,32 @@ export async function provisionSalesPageJob(
     server: integration.server || config.server,
     provisioningSecret: null,
   };
+  // Page updates carry the team's shared chrome settings in their header and
+  // footer placeholders. Wait for school provisioning, then reuse its draft
+  // values so publishing this sales page cannot reset site-wide chrome.
+  if (integration.status !== "ready") {
+    throw new FrontLitApiError("FrontLit school integration is not ready yet");
+  }
   const pages = await operations.listPages(teamApiKey, { config: apiConfig });
+  const homepageSummary = pages.find((page) => page.slug === "");
+  if (!homepageSummary) {
+    throw new FrontLitApiError("FrontLit homepage is missing");
+  }
+  const homepage = await operations.getPage(homepageSummary.id, teamApiKey, {
+    config: apiConfig,
+  });
+  const sharedChromeLayout = homepage.draftLayout ?? homepage.layout;
+  const header = sharedChromeLayout.find((widget) => widget.name === "header");
+  const footer = sharedChromeLayout.find((widget) => widget.name === "footer");
+  if (!header || !footer) {
+    throw new FrontLitApiError(
+      "FrontLit homepage is missing shared chrome placeholders",
+    );
+  }
+  const sharedChrome = {
+    headerSettings: header.settings ?? {},
+    footerSettings: footer.settings ?? {},
+  };
   let remote = source.pageId
     ? pages.find((page) => page.id === source.pageId)
     : undefined;
@@ -471,6 +528,7 @@ export async function provisionSalesPageJob(
         name: source.name,
         description: source.description,
         productKind: source.kind,
+        sharedChrome,
       }),
       title: source.name,
       description: source.description,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   COURSELIT_FRONTLIT_PROVISION_PAGES,
   COURSELIT_HOME_PAGE_TEMPLATE,
+  configureCourseLitSharedChrome,
   createFrontLitBlog,
   createFrontLitPage,
   createFrontLitTheme,
@@ -51,9 +52,14 @@ describe("FrontLit client", () => {
       slug: "",
       name: "Homepage",
       deletable: false,
-      layout: COURSELIT_HOME_PAGE_TEMPLATE,
     });
-    expect(COURSELIT_HOME_PAGE_TEMPLATE[0]?.settings?.verticalPadding).toBe("py-0");
+    const pages = COURSELIT_FRONTLIT_PROVISION_PAGES.filter(
+      (page) => typeof page !== "string",
+    );
+    expect(pages[0]?.layout).toEqual([...COURSELIT_HOME_PAGE_TEMPLATE]);
+    expect(pages[1]?.layout).toBeUndefined();
+    expect(pages[2]?.layout).toBeUndefined();
+    expect(COURSELIT_HOME_PAGE_TEMPLATE[0]?.settings?.verticalPadding).toBe("py-1");
     expect(COURSELIT_HOME_PAGE_TEMPLATE[1]?.settings).toMatchObject({
       secondaryButtonCaption: "",
       secondaryButtonAction: "",
@@ -64,10 +70,10 @@ describe("FrontLit client", () => {
     });
     expect(COURSELIT_HOME_PAGE_TEMPLATE[3]?.settings).not.toHaveProperty("subtitle");
     expect(
-      COURSELIT_HOME_PAGE_TEMPLATE.slice(-2).every(
-        (widget) => widget.settings?.verticalPadding === "py-0",
+      COURSELIT_HOME_PAGE_TEMPLATE.slice(-2).map(
+        (widget) => widget.settings?.verticalPadding,
       ),
-    ).toBe(true);
+    ).toEqual(["py-0", "py-1"]);
   });
 
   it("uses the provisioning secret only on the provisioning endpoint", async () => {
@@ -104,6 +110,34 @@ describe("FrontLit client", () => {
       "x-frontlit-apikey": expect.anything(),
     });
     expect(JSON.parse(receivedBody).pages).toEqual(COURSELIT_FRONTLIT_PROVISION_PAGES);
+  });
+
+  it("passes the configured custom-domain DNS profile when provisioning a team", async () => {
+    let receivedBody = "";
+    await provisionFrontLitTeam(
+      {
+        externalId: "tnt_dns_profile",
+        ownerEmail: "owner@example.com",
+        name: "School",
+      },
+      {
+        config: {
+          server: "http://frontlit.test",
+          provisioningSecret: "provisioning-secret",
+          customDomainCnameTarget: "domains.courselit.example",
+          customDomainTxtRecordName: "_courselit-verification",
+        },
+        fetcher: async (_input, init) => {
+          receivedBody = String(init?.body);
+          return Response.json({ teamId: "team_1", name: "School" });
+        },
+      },
+    );
+
+    expect(JSON.parse(receivedBody)).toMatchObject({
+      customDomainCnameTarget: "domains.courselit.example",
+      customDomainTxtRecordName: "_courselit-verification",
+    });
   });
 
   it("classifies authentication failures as operator action", async () => {
@@ -265,6 +299,276 @@ describe("FrontLit client", () => {
       "x-frontlit-provisioning-secret": expect.anything(),
     });
     expect(receivedBody).toBe(JSON.stringify({ name: "Pricing" }));
+  });
+
+  it("configures shared site chrome through the homepage once", async () => {
+    const requests: Array<{ path: string; method: string; body: unknown }> = [];
+    const layout = [
+      {
+        widgetId: "header-1",
+        name: "header",
+        deletable: false,
+        moveable: false,
+        shared: true,
+        settings: {},
+      },
+      {
+        widgetId: "body-1",
+        name: "rich-text",
+        deletable: true,
+        moveable: true,
+        shared: false,
+        settings: { text: "Keep this content" },
+      },
+      {
+        widgetId: "footer-1",
+        name: "footer",
+        deletable: false,
+        moveable: false,
+        shared: true,
+        settings: {},
+      },
+    ];
+    await configureCourseLitSharedChrome("team-key", "page-home", {
+      config: { server: "http://frontlit.test", provisioningSecret: null },
+      fetcher: async (input, init) => {
+        const path = new URL(String(input)).pathname;
+        const method = init?.method ?? "GET";
+        const body = init?.body ? JSON.parse(String(init.body)) : null;
+        requests.push({ path, method, body });
+        const response = {
+          pageId: "page-home",
+          name: "Homepage",
+          slug: "",
+          status: "published",
+          layout,
+          draftLayout: layout,
+        };
+        return new Response(JSON.stringify(response), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    });
+
+    expect(requests.map(({ path, method }) => `${method} ${path}`)).toEqual([
+      "GET /pages/page-home",
+      "PATCH /pages/page-home",
+      "POST /pages/page-home/publish",
+    ]);
+    const patch = requests[1]?.body as { layout: typeof layout };
+    expect(patch.layout[0]?.settings).toMatchObject({
+      logoText: "CourseLit",
+      logoImage: "/icon.svg",
+      ctaLabel: "Join",
+      ctaHref: "/join",
+      links: [
+        { id: "courselit-header-products", label: "Products", href: "/products" },
+        { id: "courselit-header-blog", label: "Blog", href: "/blog" },
+      ],
+    });
+    expect(patch.layout[1]).toEqual(layout[1]);
+    expect(patch.layout[2]?.settings).toMatchObject({
+      logoText: "CourseLit",
+      tagline: "Build, Sell & Market Your Courses And Digital Downloads",
+      copyrightText: "© CourseLit. All rights reserved.",
+      columns: [
+        { title: "Resources", links: [{ label: "Blog", href: "/blog" }] },
+        {
+          title: "Legal",
+          links: [
+            { label: "Terms of use", href: "/terms" },
+            { label: "Privacy policy", href: "/privacy" },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("repairs stale draft chrome when published chrome is already configured", async () => {
+    const header = {
+      widgetId: "header-1",
+      name: "header",
+      deletable: false,
+      moveable: false,
+      shared: true,
+      settings: {
+        logoText: "CourseLit",
+        logoImage: "/icon.svg",
+        ctaLabel: "Join",
+        ctaHref: "/join",
+        links: [
+          { id: "courselit-header-products", label: "Products", href: "/products" },
+          { id: "courselit-header-blog", label: "Blog", href: "/blog" },
+        ],
+      },
+    };
+    const body = {
+      widgetId: "body-1",
+      name: "rich-text",
+      deletable: true,
+      moveable: true,
+      shared: false,
+      settings: { text: "Homepage content" },
+    };
+    const footer = {
+      widgetId: "footer-1",
+      name: "footer",
+      deletable: false,
+      moveable: false,
+      shared: true,
+      settings: {
+        logoText: "CourseLit",
+        tagline: "Build, Sell & Market Your Courses And Digital Downloads",
+        copyrightText: "© CourseLit. All rights reserved.",
+        columns: [
+          {
+            id: "courselit-footer-resources",
+            title: "Resources",
+            links: [{ id: "courselit-footer-blog", label: "Blog", href: "/blog" }],
+          },
+          {
+            id: "courselit-footer-legal",
+            title: "Legal",
+            links: [
+              { id: "courselit-footer-terms", label: "Terms of use", href: "/terms" },
+              {
+                id: "courselit-footer-privacy",
+                label: "Privacy policy",
+                href: "/privacy",
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const publishedLayout = [header, body, footer];
+    const draftLayout = [
+      {
+        ...header,
+        settings: {
+          links: [{ id: "features", label: "Features", href: "/#features" }],
+        },
+      },
+      body,
+      {
+        ...footer,
+        settings: {
+          columns: [
+            { id: "product", title: "Product", links: [] },
+            { id: "resources", title: "Resources", links: [] },
+            { id: "legal", title: "Legal", links: [] },
+          ],
+        },
+      },
+    ];
+    const requests: Array<{ method: string; body: unknown }> = [];
+    await configureCourseLitSharedChrome("team-key", "page-home", {
+      config: { server: "http://frontlit.test", provisioningSecret: null },
+      fetcher: async (_input, init) => {
+        const method = init?.method ?? "GET";
+        const requestBody = init?.body ? JSON.parse(String(init.body)) : null;
+        requests.push({ method, body: requestBody });
+        return new Response(
+          JSON.stringify({
+            pageId: "page-home",
+            name: "Homepage",
+            slug: "",
+            status: "published_with_changes",
+            layout: publishedLayout,
+            draftLayout,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      },
+    });
+
+    expect(requests.map(({ method }) => method)).toEqual(["GET", "PATCH", "POST"]);
+    const patch = requests[1]?.body as { layout: typeof draftLayout };
+    expect(patch.layout[0]?.settings).toMatchObject(header.settings);
+    expect(patch.layout[1]).toEqual(body);
+    expect(patch.layout[2]?.settings).toMatchObject(footer.settings);
+  });
+
+  it("replaces FrontLit default SaaS blocks with COURSELIT_HOME_PAGE_TEMPLATE and clears FrontLit SaaS title", async () => {
+    const defaultFrontLitLayout = [
+      {
+        widgetId: "h",
+        name: "header",
+        deletable: false,
+        moveable: false,
+        shared: true,
+        settings: {},
+      },
+      {
+        widgetId: "hero-1",
+        name: "hero",
+        deletable: true,
+        moveable: true,
+        shared: false,
+        settings: { preTitle: "The front office of your SaaS" },
+      },
+      {
+        widgetId: "feat-1",
+        name: "featured",
+        deletable: true,
+        moveable: true,
+        shared: false,
+        settings: {},
+      },
+      {
+        widgetId: "price-1",
+        name: "pricing",
+        deletable: true,
+        moveable: true,
+        shared: false,
+        settings: {},
+      },
+      {
+        widgetId: "f",
+        name: "footer",
+        deletable: false,
+        moveable: false,
+        shared: true,
+        settings: {},
+      },
+    ];
+    const requests: Array<{ method: string; body: unknown }> = [];
+    await configureCourseLitSharedChrome("team-key", "page-home", {
+      config: { server: "http://frontlit.test", provisioningSecret: null },
+      fetcher: async (_input, init) => {
+        const method = init?.method ?? "GET";
+        const requestBody = init?.body ? JSON.parse(String(init.body)) : null;
+        requests.push({ method, body: requestBody });
+        return new Response(
+          JSON.stringify({
+            pageId: "page-home",
+            name: "Homepage",
+            title: "FrontLit — the front office of your SaaS",
+            description:
+              "Build your website, publish content, support users, and send email from one place.",
+            slug: "",
+            status: "published",
+            layout: defaultFrontLitLayout,
+            draftLayout: defaultFrontLitLayout,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      },
+    });
+
+    const patch = requests[1]?.body as {
+      layout: Array<{ name: string }>;
+      title?: string;
+      description?: string;
+    };
+    expect(patch.title).toBe("");
+    expect(patch.description).toBe("");
+    expect(patch.layout.map((w) => w.name)).toEqual([
+      "header",
+      ...COURSELIT_HOME_PAGE_TEMPLATE.map((w) => w.name),
+      "footer",
+    ]);
   });
 
   it("publishes a page with the stored team key", async () => {
@@ -633,10 +937,14 @@ describe("FrontLit client", () => {
       frontLitConfig({
         FRONTLIT_SERVER: "http://frontlit.test/",
         FRONTLIT_APIKEY: " key ",
+        FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET: " DOMAINS.COURSELIT.EXAMPLE. ",
+        FRONTLIT_CUSTOM_DOMAIN_TXT_RECORD_NAME: " _CourseLit-verification ",
       }),
     ).toEqual({
       server: "http://frontlit.test",
       provisioningSecret: "key",
+      customDomainCnameTarget: "domains.courselit.example",
+      customDomainTxtRecordName: "_courselit-verification",
     });
   });
 });

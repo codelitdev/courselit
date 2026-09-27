@@ -1,6 +1,5 @@
 import { createObservability } from "@codelitdev/observability";
 import { createExpressApp } from "./express-app.js";
-import { startIntegrationWorker } from "./integration-provisioning.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
 import { createPostgresRuntime } from "./runtime.js";
 import { hasSeededWorld, seedWorld } from "./seed.js";
@@ -66,7 +65,6 @@ const server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
   const listening = app.listen(port, () => resolve(listening));
 });
 logger.info({ port }, "courselit api listening");
-const stopIntegrationWorker = startIntegrationWorker(runtime.db, runtime.clock, logger);
 
 if (process.env.SEED === "1") {
   if (await hasSeededWorld(runtime)) {
@@ -92,7 +90,6 @@ if (process.env.SEED === "1") {
 }
 
 const shutdown = () => {
-  stopIntegrationWorker();
   server.close(() => {
     void observability
       .shutdown(1000)

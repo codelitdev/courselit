@@ -316,6 +316,7 @@ The legacy application historically rendered some learner navigation in the same
 
 - An account can own or join multiple schools.
 - A school has a stable public ID, name, subdomain, optional verified custom domains, status, locale, currency, and integration mappings.
+- The storefront serves the school's CourseLit subdomain and verified custom domains. FrontLit provisions each school's DNS routing target and TXT verification-label overrides; its domain API supplies records and checks propagation, while CourseLit mirrors verification into `school_hosts` for request routing. The platform subdomain remains available as a fallback, and the verified custom hostname is the canonical storefront host.
 - School creation is available to authorized Cloud accounts and follows billing policy.
 - Owners and authorized team members can invite by email, resend or revoke invitations, and assign bounded permission scopes. Presets are dashboard conveniences; the stored authority is the effective scope set.
 - Invitation email links use a public invitation ID in the path and keep the one-time secret in the URL fragment. After sign-in, the invitee sees the school, inviter, expiry, and effective access scopes before accepting or rejecting the invitation.
@@ -542,7 +543,7 @@ SendLit boundary when implemented.
 
     ```dotenv
     SENDLIT_SERVER=
-    SENDLIT_APIKEY=
+    SENDLIT_ORGANIZATION_API_KEY=
     SENDLIT_PLATFORM_TEAM_API_KEY=
     EMAIL_HOST=
     EMAIL_PORT=587
@@ -551,11 +552,11 @@ SendLit boundary when implemented.
     EMAIL_FROM=
     ```
 
-- `SENDLIT_SERVER` is the SendLit API origin. `SENDLIT_APIKEY` is an organization API key with the required team-provisioning/lifecycle scopes. The authenticated key determines the SendLit organization; CourseLit must not accept an organization ID from a school or client.
+- `SENDLIT_SERVER` is the SendLit API origin. `SENDLIT_ORGANIZATION_API_KEY` is an organization API key with the required team-provisioning/lifecycle scopes. The authenticated key determines the SendLit organization; CourseLit must not accept an organization ID from a school or client.
 - Each CourseLit school maps one-to-one to a SendLit team inside that organization, using the CourseLit school public ID as the immutable external ID.
 - Provisioning is idempotent within the configured SendLit organization.
 - SendLit returns the team ID and an initial team API key only on first creation. CourseLit must persist that key immediately in the school's integration record, encrypted at rest. Replaying the provisioning request cannot recover it.
-- The deployment-level `SENDLIT_APIKEY` is used for team provisioning and lifecycle operations. The returned school-level team API key is used for that school's contacts, templates, broadcasts, sequences, and delivery APIs.
+- The deployment-level `SENDLIT_ORGANIZATION_API_KEY` is used for team provisioning and lifecycle operations. The returned school-level team API key is used for that school's contacts, templates, broadcasts, sequences, and delivery APIs.
 - CourseLit-owned system email uses `SENDLIT_PLATFORM_TEAM_API_KEY` when it is configured. This deployment-level SendLit team key is used for OTPs, team invitations, and other essential transactional messages; it is independent of every school's marketing team key. If it is absent, CourseLit uses the SMTP settings `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, and `EMAIL_FROM`. If neither provider is configured, system messages are dumped to the API console.
 - School creation commits locally and enqueues SendLit provisioning through the CourseLit outbox; a temporary SendLit outage leaves the integration in a visible `pending` state rather than rolling back the school.
 - Server integration uses a stable, externally supported SendLit API. CourseLit must not import SendLit's private workspace contract or server modules.
@@ -859,7 +860,7 @@ Exit gate: community and course-discussion parity suites pass for owners, modera
 Deliverables:
 
 - school provisioning, credentials, webhook verification, health, reconciliation, and deletion for both CourseLit-owned integrations;
-- validated `FRONTLIT_SERVER` and `FRONTLIT_APIKEY` for site provisioning plus `SENDLIT_SERVER` and `SENDLIT_APIKEY` for the independent CourseLit SendLit integration;
+- validated `FRONTLIT_SERVER` and `FRONTLIT_APIKEY` for site provisioning plus `SENDLIT_SERVER` and `SENDLIT_ORGANIZATION_API_KEY` for the independent CourseLit SendLit integration;
 - idempotent one-team-per-school provisioning, immediate encrypted capture of one-time team keys, and tested key replacement/rotation paths;
 - FrontLit import of pages, blogs, menus, themes, and supported blocks;
 - preserved `Unsupported` placeholders for migrated FrontLit blocks that the alpha page builder/renderer cannot interpret;

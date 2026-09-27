@@ -10,4 +10,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Development tips
 
+- ULTRA IMPORTANT: We want to keep the site loading as instantaneous as possible. Don't add things at discretion which might slow down the public site i.e. everything outside of `/dashboard`. We want our public pages to rank high in the lighthouse score so obsess over page loading speed.
 - All the UI should be made out of page primitives from `@frontlit/page-builder`, so that the entire portal remains themable and is able to adapt to the school theme

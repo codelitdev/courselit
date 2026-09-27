@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  normalizeCourseLitSiteLayout,
-  registerCourseLitBlocks,
-} from "@courselit/page-blocks";
+import { registerCourseLitBlocks } from "@courselit/page-blocks";
 import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
 import { Section } from "@frontlit/page-builder/primitives";
 import type { PageBuilderLinkProps } from "@frontlit/page-builder/renderer";
@@ -58,7 +55,7 @@ export function SitePageRenderer({
   return (
     <SchoolThemeContextProvider theme={theme}>
       <PageRenderer
-        layout={normalizeCourseLitSiteLayout(layout)}
+        layout={layout}
         theme={theme}
         pageData={{
           ...pageData,

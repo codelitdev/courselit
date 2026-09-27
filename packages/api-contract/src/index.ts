@@ -606,6 +606,7 @@ export const publicSiteSettingsSchema = z.object({
   theme: z.record(z.string(), z.unknown()).nullable(),
   codeInjectionHead: z.string(),
   codeInjectionBody: z.string(),
+  canonicalHost: z.string().nullable(),
 });
 export const schoolCodeInjectionSchema = z.object({
   codeInjectionHead: z.string(),
@@ -688,13 +689,22 @@ export const schoolHostSchema = z.object({
   verificationStatus: z.enum(["verified", "unverified"]),
   verifiedAt: z.string().nullable(),
   isPrimary: z.boolean(),
+  verificationRecords: z
+    .object({
+      cnameTarget: z.string(),
+      txtName: z.string(),
+      txtValue: z.string(),
+      kind: z.enum(["cname", "alias"]),
+      txtSatisfied: z.boolean().nullable(),
+      routingSatisfied: z.boolean().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 export const createSchoolHostBodySchema = z.object({
   hostname: z.string().trim().min(3).max(253),
 });
-export const verifySchoolHostBodySchema = z.object({
-  token: z.string().trim().min(1).max(200),
-});
+export const verifySchoolHostBodySchema = z.object({}).strict();
 const mediaResourceTypes = [
   "school_branding",
   "blog_artwork",
@@ -4020,7 +4030,10 @@ export const contract = c.router({
     method: "GET",
     path: "/v1/school/hosts",
     responses: {
-      200: z.object({ items: z.array(schoolHostSchema) }),
+      200: z.object({
+        items: z.array(schoolHostSchema),
+        platformDomain: z.string(),
+      }),
       401: platformErrorSchema,
       403: platformErrorSchema,
     },

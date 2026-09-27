@@ -12,6 +12,7 @@ export interface PublicSettings {
   theme: Record<string, unknown> | null;
   codeInjectionHead: string;
   codeInjectionBody: string;
+  canonicalHost?: string | null;
 }
 
 export interface PublicPage {
@@ -53,7 +54,7 @@ async function getFromApi<T>(
         accept: "application/json",
         "x-forwarded-host": host,
       },
-      ...(options.noStore
+      ...(options.noStore || process.env.NODE_ENV === "development"
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60 } }),
     });

@@ -162,7 +162,23 @@ describe("SendLit Service", () => {
           return new Response(JSON.stringify({ status: "paused" }));
         }
         if (url.includes("/emails") && method === "POST") {
-          return new Response(JSON.stringify({ id: "em_1", subject: body.subject }));
+          const sequenceId = url.match(/\/sequences\/([^/]+)\/emails/)?.[1] ?? "seq_1";
+          return new Response(
+            JSON.stringify({
+              sequenceId,
+              emailsOrder: ["em_1"],
+              emails: [
+                {
+                  emailId: "em_1",
+                  subject: "Welcome",
+                  content: { content: [] },
+                  delayInMillis: 24 * 60 * 60 * 1000,
+                  published: false,
+                },
+              ],
+            }),
+            { status: 201 },
+          );
         }
         if (url.includes("/emails/") && (method === "PATCH" || method === "PUT")) {
           return new Response(JSON.stringify({ id: "em_1", subject: body.subject }));
@@ -275,10 +291,55 @@ describe("SendLit Service", () => {
       });
       expect(createdSeq.ok).toBe(true);
 
+      const sequenceFilter = {
+        aggregator: "and",
+        filters: [{ name: "tag", condition: "is", value: "new-student" }],
+      };
+      const updatedSeq = await updateSequence(runtime.db, schoolId, clock, "seq_1", {
+        title: "Onboarding Flow",
+        triggerType: "tag:added",
+        triggerData: "new-student",
+        filter: sequenceFilter,
+        excludeFilter: null,
+        emailsOrder: ["em_1"],
+      });
+      expect(updatedSeq.ok).toBe(true);
+      expect(
+        fetchCalls.find(
+          (call) =>
+            call.url.endsWith("/sequences/seq_1") &&
+            call.method === "PATCH" &&
+            call.body?.triggerType === "tag:added",
+        )?.body,
+      ).toMatchObject({
+        triggerType: "tag:added",
+        triggerData: "new-student",
+        filter: sequenceFilter,
+        excludeFilter: null,
+        emailsOrder: ["em_1"],
+      });
+
       const seqEmail = await addSequenceEmail(runtime.db, schoolId, clock, "seq_1", {
         subject: "Day 1 Welcome",
+        templateId: "system:blank",
+        delayHours: 0,
       });
       expect(seqEmail.ok).toBe(true);
+      if (seqEmail.ok) expect(seqEmail.value.emailId).toBe("em_1");
+      expect(
+        fetchCalls.find(
+          (call) =>
+            call.url.endsWith("/sequences/seq_1/emails") &&
+            call.method === "POST",
+        )?.body,
+      ).toEqual({ templateId: "system:blank" });
+      expect(
+        fetchCalls.find(
+          (call) =>
+            call.url.endsWith("/sequences/seq_1/emails/em_1") &&
+            call.method === "PATCH",
+        )?.body,
+      ).toMatchObject({ subject: "Day 1 Welcome", delayInMillis: 0 });
 
       const updatedSeqEmail = await updateSequenceEmail(runtime.db, schoolId, clock, "seq_1", "em_1", {
         subject: "Day 1 Hello",
@@ -339,7 +400,7 @@ describe("SendLit Service", () => {
     const world = await seedWorld(runtime, clock);
 
     process.env.SENDLIT_SERVER = "http://127.0.0.1:4101";
-    process.env.SENDLIT_APIKEY = "sl_mock_admin_key";
+    process.env.SENDLIT_ORGANIZATION_API_KEY = "sl_mock_admin_key";
     // Insert schoolA SendLit integration
     await runtime.db
       .insert(schema.schoolIntegrations)

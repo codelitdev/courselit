@@ -2,8 +2,8 @@
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Copy, RefreshCw, Send } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Calendar, Check, Copy, Pause, RefreshCw, Send } from "lucide-react";
 import { defaultEmail, EmailEditor, type Email } from "@sendlit/email-editor";
 import { defaultTemplateEmail } from "@sendlit/email-blocks";
 import { Button } from "@/components/ui/codelit/button";
@@ -18,6 +18,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import {
+  getFutureBroadcastDeliveryDate,
+  isBroadcastScheduled,
+} from "@/lib/broadcast-status";
 
 type BroadcastEmail = {
   emailId: string;
@@ -32,8 +36,23 @@ type SequenceDetail = {
   title?: string;
   type: "broadcast" | "sequence";
   status?: string;
+  report?: { broadcast?: { lockedAt?: number | string | null } };
   emails?: BroadcastEmail[];
 };
+
+async function getResponseError(response: Response, fallback: string): Promise<string> {
+  const body = (await response.json().catch(() => null)) as {
+    details?: { reason?: string };
+    message?: string;
+    error?: string;
+  } | null;
+  return body?.details?.reason || body?.message || body?.error || fallback;
+}
+
+function toLocalInputValue(date: Date): string {
+  const offset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
 
 const MARKETING_VARIABLES = [
   { tag: "{{ subscriber.email }}", description: "Subscriber's email address" },
@@ -106,6 +125,9 @@ export default function EmailBroadcastEditorPage({
 }) {
   const { broadcastId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sequenceEmailId = searchParams.get("emailId");
+  const isSequenceEmailEditor = Boolean(sequenceEmailId);
 
   const [sequence, setSequence] = useState<SequenceDetail | null>(null);
   const [emailId, setEmailId] = useState<string | null>(null);
@@ -116,17 +138,26 @@ export default function EmailBroadcastEditorPage({
   const [saved, setSaved] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
+  const [scheduleConfirmOpen, setScheduleConfirmOpen] = useState(false);
+  const [scheduleDateTime, setScheduleDateTime] = useState("");
+  const [scheduleMinimum, setScheduleMinimum] = useState("");
+  const [scheduling, setScheduling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const bodyRef = useRef<Email | null>(null);
+  const subjectRef = useRef("");
   const lastSavedPayload = useRef<string>("");
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const futureDeliveryDate = getFutureBroadcastDeliveryDate(sequence);
+  const isScheduledBroadcast = !isSequenceEmailEditor && isBroadcastScheduled(sequence);
 
   // Load sequence & email
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    subjectRef.current = "";
 
     async function loadData() {
       try {
@@ -141,11 +172,17 @@ export default function EmailBroadcastEditorPage({
         if (cancelled) return;
 
         setSequence(data);
-        let firstEmail = data.emails?.[0];
-        let targetEmailId = firstEmail?.emailId ?? (firstEmail as any)?.id ?? null;
+        let targetEmail = isSequenceEmailEditor
+          ? data.emails?.find((email) => email.emailId === sequenceEmailId)
+          : data.emails?.[0];
+        let targetEmailId = targetEmail?.emailId ?? (targetEmail as any)?.id ?? null;
+
+        if (isSequenceEmailEditor && !targetEmailId) {
+          throw new Error("Email step not found in this sequence.");
+        }
 
         // If no email exists in the sequence yet, create an initial email automatically
-        if (!targetEmailId) {
+        if (!isSequenceEmailEditor && !targetEmailId) {
           try {
             const addRes = await fetch(
               `/api/v1/school/mails/sequences/${broadcastId}/emails`,
@@ -160,7 +197,7 @@ export default function EmailBroadcastEditorPage({
             );
             if (addRes.ok) {
               const newEmail = (await addRes.json()) as any;
-              firstEmail = newEmail;
+              targetEmail = newEmail;
               targetEmailId = newEmail?.emailId || newEmail?.id || null;
             }
           } catch {
@@ -170,10 +207,13 @@ export default function EmailBroadcastEditorPage({
 
         setEmailId(targetEmailId);
 
-        const initialSubject = firstEmail?.subject || data.title || "Untitled broadcast";
+        const initialSubject =
+          targetEmail?.subject ||
+          (isSequenceEmailEditor ? "Untitled email" : data.title || "Untitled broadcast");
+        subjectRef.current = initialSubject;
         setSubject(initialSubject);
 
-        const parsedBody = parseEmailBody(firstEmail?.content);
+        const parsedBody = parseEmailBody(targetEmail?.content);
         bodyRef.current = parsedBody;
         setEmailBody(parsedBody);
         lastSavedPayload.current = JSON.stringify({
@@ -182,7 +222,13 @@ export default function EmailBroadcastEditorPage({
         });
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load broadcast.");
+          setError(
+            err instanceof Error
+              ? err.message
+              : isSequenceEmailEditor
+                ? "Failed to load email step."
+                : "Failed to load broadcast.",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -199,14 +245,17 @@ export default function EmailBroadcastEditorPage({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [broadcastId]);
+  }, [broadcastId, isSequenceEmailEditor, sequenceEmailId]);
 
   // Save function
   const save = useCallback(
     async (manual = false): Promise<boolean> => {
+      if (!isSequenceEmailEditor && isScheduledBroadcast) return false;
       if (!bodyRef.current || !emailId) return false;
 
-      const currentSubject = subject.trim() || sequence?.title || "Untitled broadcast";
+      const currentSubject =
+        subjectRef.current.trim() ||
+        (isSequenceEmailEditor ? "Untitled email" : sequence?.title || "Untitled broadcast");
       const payloadString = JSON.stringify({
         subject: currentSubject,
         content: bodyRef.current,
@@ -230,7 +279,7 @@ export default function EmailBroadcastEditorPage({
             body: JSON.stringify({
               subject: currentSubject,
               content: bodyRef.current,
-              published: true,
+              ...(!isSequenceEmailEditor ? { published: true } : {}),
             }),
           },
         );
@@ -240,7 +289,7 @@ export default function EmailBroadcastEditorPage({
         }
 
         // 2. Also update sequence title if changed
-        if (sequence?.title !== currentSubject) {
+        if (!isSequenceEmailEditor && sequence?.title !== currentSubject) {
           await fetch(`/api/v1/school/mails/sequences/${broadcastId}`, {
             method: "PATCH",
             credentials: "include",
@@ -260,7 +309,7 @@ export default function EmailBroadcastEditorPage({
         setSaving(false);
       }
     },
-    [broadcastId, emailId, sequence?.title, subject],
+    [broadcastId, emailId, isScheduledBroadcast, isSequenceEmailEditor, sequence?.title],
   );
 
   // Debounced auto-save on body changes
@@ -289,17 +338,34 @@ export default function EmailBroadcastEditorPage({
         throw new Error("Could not save changes before sending.");
       }
 
+      if (!emailId) {
+        throw new Error("This broadcast does not have an email to send.");
+      }
+
+      const emailRes = await fetch(
+        `/api/v1/school/mails/sequences/${broadcastId}/emails/${emailId}`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ delayInMillis: Date.now(), published: true }),
+        },
+      );
+      if (!emailRes.ok) {
+        throw new Error(await getResponseError(emailRes, "Failed to prepare broadcast."));
+      }
+
       const startRes = await fetch(`/api/v1/school/mails/sequences/${broadcastId}/start`, {
         method: "POST",
         credentials: "include",
       });
 
       if (!startRes.ok) {
-        throw new Error("Failed to send broadcast.");
+        throw new Error(await getResponseError(startRes, "Failed to send broadcast."));
       }
 
       setSendConfirmOpen(false);
-      router.push("/mails?tab=broadcasts");
+      router.push(`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send broadcast.");
     } finally {
@@ -307,10 +373,118 @@ export default function EmailBroadcastEditorPage({
     }
   }
 
+  async function handleSchedule() {
+    const sendAt = new Date(scheduleDateTime).getTime();
+    if (!scheduleDateTime || Number.isNaN(sendAt) || sendAt <= Date.now()) {
+      setError("Choose a valid date and time in the future.");
+      return;
+    }
+    if (!emailId) {
+      setError("This broadcast does not have an email to schedule.");
+      return;
+    }
+
+    setScheduling(true);
+    setError(null);
+    try {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+      if (!(await save(true))) {
+        throw new Error("Could not save changes before scheduling.");
+      }
+
+      const emailResponse = await fetch(
+        `/api/v1/school/mails/sequences/${broadcastId}/emails/${emailId}`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ delayInMillis: sendAt, published: true }),
+        },
+      );
+      if (!emailResponse.ok) {
+        throw new Error(
+          await getResponseError(emailResponse, "Unable to save the scheduled time."),
+        );
+      }
+
+      const startResponse = await fetch(
+        `/api/v1/school/mails/sequences/${broadcastId}/start`,
+        { method: "POST", credentials: "include" },
+      );
+      if (!startResponse.ok) {
+        throw new Error(
+          await getResponseError(startResponse, "Unable to schedule this broadcast."),
+        );
+      }
+
+      const startedSequence = (await startResponse.json().catch(() => null)) as
+        | SequenceDetail
+        | null;
+      setSequence((current) =>
+        current
+          ? {
+              ...current,
+              ...startedSequence,
+              status: startedSequence?.status || "active",
+              emails: current.emails?.map((email, index) =>
+                index === 0
+                  ? { ...email, delayInMillis: sendAt, published: true }
+                  : email,
+              ),
+            }
+          : current,
+      );
+      setScheduleConfirmOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to schedule this broadcast.");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  async function handleCancelSchedule() {
+    setScheduling(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/v1/school/mails/sequences/${broadcastId}/pause`,
+        { method: "POST", credentials: "include" },
+      );
+      if (!response.ok) {
+        throw new Error(await getResponseError(response, "Unable to cancel this schedule."));
+      }
+      setSequence((current) => (current ? { ...current, status: "paused" } : current));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to cancel this schedule.");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  function openScheduleDialog() {
+    setError(null);
+    const now = new Date();
+    const firstSelectableMinute = new Date(
+      (Math.floor(now.getTime() / 60_000) + 1) * 60_000,
+    );
+    setScheduleMinimum(toLocalInputValue(firstSelectableMinute));
+    setScheduleDateTime(toLocalInputValue(new Date(now.getTime() + 60 * 60_000)));
+    setScheduleConfirmOpen(true);
+  }
+
+  async function returnToSequence() {
+    if (isSequenceEmailEditor && (await save(true))) {
+      router.push(`/mails/sequences/${encodeURIComponent(broadcastId)}/edit`);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background p-6">
-        <CourseLitLoading label="Loading broadcast editor…" />
+        <CourseLitLoading
+          label={isSequenceEmailEditor ? "Loading email editor…" : "Loading broadcast editor…"}
+        />
       </div>
     );
   }
@@ -322,9 +496,15 @@ export default function EmailBroadcastEditorPage({
           <h2 className="text-lg font-semibold text-destructive">Unable to open editor</h2>
           <p className="text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline">
-            <Link href="/mails?tab=broadcasts">
+            <Link
+              href={
+                isSequenceEmailEditor
+                  ? `/mails/sequences/${encodeURIComponent(broadcastId)}/edit`
+                  : `/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`
+              }
+            >
               <ArrowLeft className="mr-2 size-4" />
-              Back to Mails
+              {isSequenceEmailEditor ? "Back to sequence" : "Back to broadcast"}
             </Link>
           </Button>
         </div>
@@ -337,27 +517,42 @@ export default function EmailBroadcastEditorPage({
       {/* Top Header Bar */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-card px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Button asChild variant="outline" size="sm" className="shrink-0">
-            <Link href="/mails?tab=broadcasts">
+          {isSequenceEmailEditor ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => void returnToSequence()}
+              disabled={saving}
+            >
               <ArrowLeft className="mr-1.5 size-4" />
-              Mails
-            </Link>
-          </Button>
+              Sequence
+            </Button>
+          ) : (
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Link href={`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`}>
+                <ArrowLeft className="mr-1.5 size-4" />
+                Broadcast
+              </Link>
+            </Button>
+          )}
           <div className="flex min-w-0 items-center gap-2">
             <Label htmlFor="editor-broadcast-subject" className="sr-only">
-              Subject
+              {isSequenceEmailEditor ? "Email subject" : "Subject"}
             </Label>
             <Input
               id="editor-broadcast-subject"
               value={subject}
               onChange={(e) => {
+                subjectRef.current = e.target.value;
                 setSubject(e.target.value);
                 if (debounceTimer.current) clearTimeout(debounceTimer.current);
                 debounceTimer.current = setTimeout(() => void save(false), 1000);
               }}
-              placeholder="Broadcast subject line"
+              placeholder={isSequenceEmailEditor ? "Email subject line" : "Broadcast subject line"}
               className="h-8 w-64 md:w-96 text-sm font-medium"
-              disabled={saving || sending}
+              disabled={saving || sending || isScheduledBroadcast}
             />
           </div>
         </div>
@@ -381,26 +576,75 @@ export default function EmailBroadcastEditorPage({
             ) : null}
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void save(true)}
-            disabled={saving || sending}
-          >
-            Save draft
-          </Button>
-
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setSendConfirmOpen(true)}
-            disabled={saving || sending}
-            className="gap-1.5"
-          >
-            <Send className="size-3.5" />
-            Send now
-          </Button>
+          {!isSequenceEmailEditor ? (
+            isScheduledBroadcast ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+                <Calendar className="size-4" />
+                <span className="whitespace-nowrap">
+                  Scheduled for {futureDeliveryDate?.toLocaleString()}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void handleCancelSchedule()}
+                  disabled={saving || sending || scheduling}
+                  className="gap-1.5"
+                >
+                  <Pause className="size-3.5" />
+                  {scheduling ? "Canceling…" : "Cancel send"}
+                </Button>
+              </div>
+            ) : sequence?.status === "draft" || sequence?.status === "paused" ? (
+              <>
+                {futureDeliveryDate ? (
+                  <span className="text-xs text-amber-700" role="status">
+                    Delivery time saved · not active ({futureDeliveryDate.toLocaleString()})
+                  </span>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void save(true)}
+                  disabled={saving || sending || scheduling}
+                >
+                  Save draft
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openScheduleDialog}
+                  disabled={saving || sending || scheduling}
+                  className="gap-1.5"
+                >
+                  <Calendar className="size-3.5" />
+                  Schedule
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setSendConfirmOpen(true)}
+                  disabled={saving || sending || scheduling}
+                  className="gap-1.5"
+                >
+                  <Send className="size-3.5" />
+                  Send now
+                </Button>
+              </>
+            ) : null
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void save(true)}
+              disabled={saving || sending || scheduling}
+            >
+              Save
+            </Button>
+          )}
         </div>
       </header>
 
@@ -439,7 +683,13 @@ export default function EmailBroadcastEditorPage({
         {/* Email Editor Canvas */}
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
           {emailBody ? (
-            <EmailEditor email={emailBody} onChange={handleBodyChange} />
+            <div
+              className={isScheduledBroadcast ? "pointer-events-none opacity-80" : undefined}
+              aria-disabled={isScheduledBroadcast}
+              inert={isScheduledBroadcast}
+            >
+              <EmailEditor email={emailBody} onChange={handleBodyChange} />
+            </div>
           ) : null}
         </main>
       </div>
@@ -469,6 +719,51 @@ export default function EmailBroadcastEditorPage({
               disabled={sending}
             >
               {sending ? "Sending…" : "Send broadcast"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={scheduleConfirmOpen}
+        onOpenChange={(open) => {
+          if (!scheduling) setScheduleConfirmOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule this broadcast?</DialogTitle>
+            <DialogDescription>
+              “{subject || sequence?.title || "Untitled"}” will be sent to eligible
+              audience contacts at the selected time.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 py-2">
+            <Label htmlFor="broadcast-schedule-time">Delivery date &amp; time</Label>
+            <Input
+              id="broadcast-schedule-time"
+              type="datetime-local"
+              value={scheduleDateTime}
+              min={scheduleMinimum}
+              onChange={(event) => setScheduleDateTime(event.target.value)}
+              disabled={scheduling}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setScheduleConfirmOpen(false)}
+              disabled={scheduling}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleSchedule()}
+              disabled={!scheduleDateTime || scheduling || saving}
+            >
+              {scheduling ? "Scheduling…" : "Schedule broadcast"}
             </Button>
           </DialogFooter>
         </DialogContent>

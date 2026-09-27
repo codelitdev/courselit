@@ -14,7 +14,6 @@ export type {
   CourseLitProductPreview,
   CourseLitSalesPageData,
 } from "./blocks/shared/types";
-export { normalizeCourseLitSiteLayout } from "./site-layout";
 
 export function registerCourseLitBlocks() {
   if (!getWidget(BANNER_BLOCK)) registerBlock(Banner);

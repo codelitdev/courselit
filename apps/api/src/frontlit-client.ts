@@ -9,6 +9,28 @@ import type { MediaRef } from "@courselit/api-contract";
 export type FrontLitConfig = {
   server: string | null;
   provisioningSecret: string | null;
+  customDomainCnameTarget?: string | null;
+  customDomainTxtRecordName?: string | null;
+};
+
+export type FrontLitDomainSettings = {
+  subdomain: { name: string; hostname: string } | null;
+  customDomain: {
+    hostname: string;
+    status: "pending" | "verified" | "failed";
+    verifiedAt: string | null;
+  } | null;
+  canonicalHost: string | null;
+  verificationRecords: {
+    cnameTarget: string;
+    txtName: string;
+    txtValue: string;
+    kind: "cname" | "alias";
+    txtSatisfied: boolean | null;
+    routingSatisfied: boolean | null;
+  } | null;
+  subdomainPublic: boolean;
+  platformDomain: string;
 };
 
 export type FrontLitProvisionResult = {
@@ -31,6 +53,8 @@ export type FrontLitProvisionPage =
   | {
       slug: string;
       name?: string;
+      title?: string;
+      description?: string;
       deletable?: boolean;
       layout?: readonly FrontLitProvisionWidget[];
     };
@@ -62,6 +86,46 @@ const provisionWidget = (
   shared: false,
   settings,
 });
+
+const COURSELIT_HEADER_SETTINGS = {
+  logoText: "CourseLit",
+  logoImage: "/icon.svg",
+  ctaLabel: "Join",
+  ctaHref: "/join",
+  links: [
+    { id: "courselit-header-products", label: "Products", href: "/products" },
+    { id: "courselit-header-blog", label: "Blog", href: "/blog" },
+  ],
+} as const;
+
+const COURSELIT_FOOTER_SETTINGS = {
+  logoText: "CourseLit",
+  tagline: "Build, Sell & Market Your Courses And Digital Downloads",
+  copyrightText: "© CourseLit. All rights reserved.",
+  columns: [
+    {
+      id: "courselit-footer-resources",
+      title: "Resources",
+      links: [{ id: "courselit-footer-blog", label: "Blog", href: "/blog" }],
+    },
+    {
+      id: "courselit-footer-legal",
+      title: "Legal",
+      links: [
+        {
+          id: "courselit-footer-terms",
+          label: "Terms of use",
+          href: "/terms",
+        },
+        {
+          id: "courselit-footer-privacy",
+          label: "Privacy policy",
+          href: "/privacy",
+        },
+      ],
+    },
+  ],
+} as const;
 
 export const COURSELIT_HOME_PAGE_TEMPLATE: readonly FrontLitProvisionWidget[] = [
   provisionWidget("courselit-home-intro", "rich-text", {
@@ -170,11 +234,25 @@ export const COURSELIT_FRONTLIT_PROVISION_PAGES: readonly FrontLitProvisionPage[
   {
     slug: "",
     name: "Homepage",
+    title: "",
+    description: "",
     deletable: false,
     layout: COURSELIT_HOME_PAGE_TEMPLATE,
   },
-  { slug: "terms", name: "Terms of Service", deletable: false },
-  { slug: "privacy", name: "Privacy policy", deletable: false },
+  {
+    slug: "terms",
+    name: "Terms of Service",
+    title: "Terms of Service",
+    description: "",
+    deletable: false,
+  },
+  {
+    slug: "privacy",
+    name: "Privacy policy",
+    title: "Privacy policy",
+    description: "",
+    deletable: false,
+  },
 ];
 
 export type FrontLitContentSummary = {
@@ -346,6 +424,12 @@ export function frontLitConfig(
     provisioningSecret:
       env.FRONTLIT_APIKEY?.trim() ||
       (localDefaults ? "courselit-local-frontlit-provisioning-secret" : null),
+    customDomainCnameTarget:
+      env.FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET?.trim()
+        .toLowerCase()
+        .replace(/\.$/, "") || null,
+    customDomainTxtRecordName:
+      env.FRONTLIT_CUSTOM_DOMAIN_TXT_RECORD_NAME?.trim().toLowerCase() || null,
   };
 }
 
@@ -456,7 +540,7 @@ async function requestJson<T>(
   config: FrontLitConfig,
   path: string,
   options: {
-    method?: "GET" | "POST" | "PATCH";
+    method?: "GET" | "POST" | "PATCH" | "DELETE";
     apiKey?: string;
     provisioningSecret?: string;
     body?: unknown;
@@ -534,8 +618,69 @@ export async function provisionFrontLitTeam(
     {
       method: "POST",
       provisioningSecret: config.provisioningSecret,
-      body: input,
+      body: {
+        ...input,
+        ...(config.customDomainCnameTarget
+          ? { customDomainCnameTarget: config.customDomainCnameTarget }
+          : {}),
+        ...(config.customDomainTxtRecordName
+          ? { customDomainTxtRecordName: config.customDomainTxtRecordName }
+          : {}),
+      },
     },
+    options.fetcher,
+  );
+}
+
+export async function getFrontLitDomainSettings(
+  teamApiKey: string,
+  options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
+): Promise<FrontLitDomainSettings> {
+  const config = options.config ?? frontLitConfig();
+  return requestJson<FrontLitDomainSettings>(
+    config,
+    "/domain",
+    { apiKey: teamApiKey },
+    options.fetcher,
+  );
+}
+
+export async function attachFrontLitCustomDomain(
+  teamApiKey: string,
+  hostname: string,
+  options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
+): Promise<FrontLitDomainSettings> {
+  const config = options.config ?? frontLitConfig();
+  return requestJson<FrontLitDomainSettings>(
+    config,
+    "/domain/custom",
+    { method: "POST", apiKey: teamApiKey, body: { hostname } },
+    options.fetcher,
+  );
+}
+
+export async function verifyFrontLitCustomDomain(
+  teamApiKey: string,
+  options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
+): Promise<FrontLitDomainSettings> {
+  const config = options.config ?? frontLitConfig();
+  return requestJson<FrontLitDomainSettings>(
+    config,
+    "/domain/custom/verify",
+    { method: "POST", apiKey: teamApiKey },
+    options.fetcher,
+  );
+}
+
+export async function removeFrontLitCustomDomain(
+  teamApiKey: string,
+  options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
+): Promise<FrontLitDomainSettings> {
+  const config = options.config ?? frontLitConfig();
+  return requestJson<FrontLitDomainSettings>(
+    config,
+    "/domain/custom",
+    { method: "DELETE", apiKey: teamApiKey },
     options.fetcher,
   );
 }
@@ -618,6 +763,94 @@ export async function updateFrontLitPage(
     options.fetcher,
   );
   return toFrontLitPage(page);
+}
+
+function isFrontLitDefaultSaaSLayout(layout: FrontLitWidget[]): boolean {
+  return layout.some(
+    (w) =>
+      w.name === "featured" ||
+      w.name === "pricing" ||
+      (w.name === "hero" &&
+        typeof w.settings?.preTitle === "string" &&
+        w.settings.preTitle.includes("front office")),
+  );
+}
+
+/** FrontLit stores header and footer settings once per team. Its page API
+ * carries them in the required layout placeholders, so configuring the
+ * homepage once sets the shared site chrome for every page. */
+export async function configureCourseLitSharedChrome(
+  teamApiKey: string,
+  homepageId: string,
+  options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
+): Promise<void> {
+  const page = await getFrontLitPage(homepageId, teamApiKey, options);
+  const desiredSettings = {
+    header: COURSELIT_HEADER_SETTINGS,
+    footer: COURSELIT_FOOTER_SETTINGS,
+  } as const;
+  const draftLayout = page.draftLayout ?? page.layout;
+  const layoutHasDesiredSettings = (layout: FrontLitWidget[]) =>
+    Object.entries(desiredSettings).every(([name, settings]) => {
+      const widget = layout.find((item) => item.name === name);
+      return (
+        widget &&
+        Object.entries(settings).every(
+          ([key, value]) =>
+            JSON.stringify(widget.settings?.[key]) === JSON.stringify(value),
+        )
+      );
+    });
+  const hasFrontLitSaaSTitle =
+    Boolean(page.title?.includes("FrontLit")) ||
+    Boolean(page.draftTitle?.includes("FrontLit"));
+  const configured =
+    layoutHasDesiredSettings(page.layout) &&
+    layoutHasDesiredSettings(draftLayout) &&
+    !isFrontLitDefaultSaaSLayout(page.layout) &&
+    !isFrontLitDefaultSaaSLayout(draftLayout) &&
+    !hasFrontLitSaaSTitle;
+  if (configured) return;
+
+  if (
+    !draftLayout.some((widget) => widget.name === "header") ||
+    !draftLayout.some((widget) => widget.name === "footer")
+  ) {
+    throw new FrontLitApiError(
+      "FrontLit homepage is missing shared chrome placeholders",
+    );
+  }
+
+  const headerWidget = draftLayout.find((w) => w.name === "header")!;
+  const footerWidget = draftLayout.find((w) => w.name === "footer")!;
+
+  const updatedHeader: FrontLitWidget = {
+    ...headerWidget,
+    settings: {
+      ...headerWidget.settings,
+      ...desiredSettings.header,
+    },
+  };
+  const updatedFooter: FrontLitWidget = {
+    ...footerWidget,
+    settings: {
+      ...footerWidget.settings,
+      ...desiredSettings.footer,
+    },
+  };
+
+  const bodyWidgets: FrontLitWidget[] = isFrontLitDefaultSaaSLayout(draftLayout)
+    ? [...COURSELIT_HOME_PAGE_TEMPLATE]
+    : draftLayout.filter((w) => w.name !== "header" && w.name !== "footer");
+
+  const layout: FrontLitWidget[] = [updatedHeader, ...bodyWidgets, updatedFooter];
+  const patch: Parameters<typeof updateFrontLitPage>[1] = { layout };
+  if (hasFrontLitSaaSTitle) {
+    patch.title = "";
+    patch.description = "";
+  }
+  await updateFrontLitPage(homepageId, patch, teamApiKey, options);
+  await publishFrontLitPage(homepageId, teamApiKey, options);
 }
 
 export async function getFrontLitSettings(

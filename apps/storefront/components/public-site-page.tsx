@@ -38,24 +38,11 @@ export function publicSystemRouteForSlug(
     : undefined;
 }
 
-function defaultChromeWidget(name: "header" | "footer"): WidgetInstance {
-  return {
-    widgetId: `join-${name}`,
-    name,
-    deletable: false,
-    moveable: false,
-    shared: true,
-    settings: {},
-  };
-}
-
 function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
-  const header =
-    chrome.find((instance) => instance.name === "header") ?? defaultChromeWidget("header");
-  const footer =
-    chrome.find((instance) => instance.name === "footer") ?? defaultChromeWidget("footer");
+  const header = chrome.find((instance) => instance.name === "header");
+  const footer = chrome.find((instance) => instance.name === "footer");
   return [
-    header,
+    ...(header ? [header] : []),
     {
       widgetId: "join-community",
       name: "courselit-community",
@@ -64,7 +51,7 @@ function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
       shared: false,
       settings: { textPosition: "left", textAlignment: "left" },
     },
-    footer,
+    ...(footer ? [footer] : []),
   ];
 }
 
@@ -106,8 +93,10 @@ export async function PublicSitePage({
   if (!resolvedPage && !allowEmpty) notFound();
 
   const siteLogoUrl =
-    typeof settings?.logo?.url === "string" ? settings.logo.url : null;
-  const siteLogoAlt = settings?.logo?.alt ?? null;
+    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
+      ? settings.logo.url.trim()
+      : "/icon.svg";
+  const siteLogoAlt = settings?.logo?.alt ?? "CourseLit";
 
   const salesProduct =
     salesResource?.resourceType === "product"
@@ -172,10 +161,6 @@ export async function PublicSitePage({
         }
       : {}),
   };
-  const siteName =
-    settings?.title?.trim() && settings.title.trim().toLowerCase() !== "frontlit"
-      ? settings.title.trim()
-      : "CourseLit";
   const chromeLayout: WidgetInstance[] =
     systemRoute && !isSalesPage
       ? (resolvedPage?.layout ?? []).filter(
@@ -224,34 +209,6 @@ export async function PublicSitePage({
     }
     return instance;
   });
-  const brandedLayout = renderLayout.map((instance) => {
-    if (instance.name !== "header" && instance.name !== "footer") return instance;
-    const currentSettings = instance.settings ?? {};
-    const logoText = currentSettings.logoText;
-    const copyrightText = currentSettings.copyrightText;
-    const tagline = currentSettings.tagline;
-    return {
-      ...instance,
-      settings: {
-        ...currentSettings,
-        ...(typeof logoText !== "string" || logoText.trim().toLowerCase() === "frontlit"
-          ? { logoText: siteName }
-          : {}),
-        ...(instance.name === "footer" &&
-        typeof copyrightText === "string" &&
-        copyrightText.toLowerCase().includes("frontlit")
-          ? { copyrightText: copyrightText.replace(/frontlit/gi, siteName) }
-          : instance.name === "footer" && typeof copyrightText !== "string"
-            ? { copyrightText: `© ${siteName}. All rights reserved.` }
-            : {}),
-        ...(instance.name === "footer" &&
-        (typeof tagline !== "string" || tagline.toLowerCase().includes("frontlit"))
-          ? { tagline: "Build, publish, and grow your audience from one dashboard." }
-          : {}),
-      },
-    };
-  });
-
   let systemContent = providedSystemContent ?? null;
   if (providedSystemContent === undefined && systemRoute === "blog") {
     const articles = await listPublicArticles(host);
@@ -294,7 +251,7 @@ export async function PublicSitePage({
 
   return (
     <SitePageRenderer
-      layout={brandedLayout}
+      layout={renderLayout}
       themeId={settings?.themeId ?? null}
       themeStyle={settings?.theme ?? null}
       siteLogoUrl={siteLogoUrl}

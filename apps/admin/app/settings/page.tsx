@@ -1,12 +1,12 @@
 "use client";
 
-import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
 import {
   Check,
   Code,
   Copy,
   CreditCard,
   ExternalLink,
+  Globe,
   Info,
   Key,
   Mail,
@@ -16,12 +16,14 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
+import { DomainSettings } from "@/components/website/domain-settings";
 import {
   Card,
   CardContent,
@@ -52,7 +54,7 @@ import currencies from "@/data/currencies.json";
 
 const GENERAL_SETTINGS_TABS = ["payment", "team", "api-keys"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
-const WEBSITE_SETTINGS_TABS = ["branding", "code-injection"] as const;
+const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
 type SettingsTab =
   | (typeof GENERAL_SETTINGS_TABS)[number]
@@ -91,31 +93,55 @@ type SchoolItem = {
 export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedTab = isSettingsTab(searchParams.get("tab"), mode)
-    ? searchParams.get("tab")!
-    : mode === "website"
-      ? "branding"
+  const pathname = usePathname();
+  const pathTab =
+    searchParams.get("tab") ??
+    (mode === "website"
+      ? pathname.split("/")[3] ?? "branding"
       : mode === "mails"
         ? "delivery"
-        : "payment";
+        : pathname.split("/")[2] ?? "payment");
+  const selectedTab =
+    isSettingsTab(pathTab, mode)
+      ? pathTab
+      : mode === "website"
+        ? "branding"
+        : mode === "mails"
+          ? "delivery"
+          : "payment";
+  const pageDetails =
+    mode === "website"
+      ? {
+          title: "Website settings",
+          description: "Manage your website branding, domain, and code injection.",
+        }
+        : mode === "mails"
+          ? {
+              title: "Mail delivery",
+              description: "Set the mailing address used to meet email compliance requirements.",
+            }
+          : {
+              title: "Settings",
+              description: "Manage team access, API access, and payment settings for this school.",
+            };
 
-  useEffect(() => {
-    const legacyTab = searchParams.get("tab");
-    if (mode === "website" && legacyTab === "payment") {
-      router.replace("/settings?tab=payment", { scroll: false });
-      return;
-    }
+  function selectWebsiteTab(tab: string) {
+    if (mode !== "website") return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "branding") params.delete("tab");
+    else params.set("tab", tab);
+    const query = params.toString();
+    router.replace(`/website/settings${query ? `?${query}` : ""}`, { scroll: false });
+  }
+
+  function selectGeneralTab(tab: string) {
     if (mode !== "general") return;
-    if (legacyTab === "branding") {
-      router.replace("/website/settings?tab=branding", { scroll: false });
-    } else if (legacyTab === "code-injection") {
-      router.replace("/website/settings?tab=code-injection", { scroll: false });
-    } else if (legacyTab === "mails") {
-      router.replace("/mails/settings", { scroll: false });
-    } else if (legacyTab === "miscellaneous") {
-      router.replace("/settings?tab=api-keys", { scroll: false });
-    }
-  }, [mode, router, searchParams]);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "payment") params.delete("tab");
+    else params.set("tab", tab);
+    const query = params.toString();
+    router.replace(`/settings${query ? `?${query}` : ""}`, { scroll: false });
+  }
 
   const [currency, setCurrency] = useState("USD");
   const [currencySaving, setCurrencySaving] = useState(false);
@@ -247,26 +273,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
       .catch(() => setApiKeys([]));
   }, [mode, schoolId]);
 
-  function selectTab(tab: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    const settingsPath =
-      mode === "website"
-        ? "/website/settings"
-        : mode === "mails"
-          ? "/mails/settings"
-          : "/settings";
-    if (
-      (mode === "website" && tab === "branding") ||
-      (mode === "mails" && tab === "delivery") ||
-      (mode === "general" && tab === "payment")
-    ) {
-      params.delete("tab");
-    }
-    else params.set("tab", tab);
-    const query = params.toString();
-    router.replace(`${settingsPath}${query ? `?${query}` : ""}`, { scroll: false });
-  }
-
   async function copyWebhook() {
     try {
       await navigator.clipboard.writeText(webhookUrl);
@@ -369,78 +375,51 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     <AuthGate>
       <div className="page-shell">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {mode === "website"
-              ? "Website settings"
-              : mode === "mails"
-                ? "Mail settings"
-                : "Settings"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "website"
-              ? "Manage your website branding and code injection."
-              : mode === "mails"
-                ? "Manage mail delivery settings for this school."
-                : "Manage team access, API access, and payment settings for this school."}
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{pageDetails.title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{pageDetails.description}</p>
         </header>
 
-        <PlatformTabs
-          value={selectedTab}
-          onValueChange={selectTab}
-          ariaLabel={
-            mode === "website"
-              ? "Website settings"
-              : mode === "mails"
-                ? "Mail settings"
-                : "School settings"
-          }
-          items={
-            mode === "website"
-              ? [
-                  {
-                    value: "branding",
-                    label: "Branding",
-                    icon: <Palette className="size-4" />,
-                  },
-                  {
-                    value: "code-injection",
-                    label: "Code Injection",
-                    icon: <Code className="size-4" />,
-                  },
-                ]
-              : mode === "mails"
-                ? [
-                    {
-                      value: "delivery",
-                      label: "Mail delivery",
-                      icon: <Mail className="size-4" />,
-                    },
-                  ]
-              : [
-                  {
-                    value: "payment",
-                    label: "Payments",
-                    icon: <CreditCard className="size-4" />,
-                  },
-                  {
-                    value: "team",
-                    label: "Team",
-                    icon: <Users className="size-4" />,
-                  },
-                  {
-                    value: "api-keys",
-                    label: "API keys",
-                    icon: <Key className="size-4" />,
-                  },
-                ]
-          }
-        >
-          <PlatformTabsContent value="branding" className="w-full pt-4">
-            <BrandingSettings />
-          </PlatformTabsContent>
+        {mode === "website" ? (
+          <PlatformTabs
+            value={selectedTab}
+            onValueChange={selectWebsiteTab}
+            ariaLabel="Website settings"
+            items={[
+              { value: "branding", label: "Branding", icon: <Palette className="size-4" /> },
+              { value: "code-injection", label: "Code Injection", icon: <Code className="size-4" /> },
+              { value: "domain", label: "Domain", icon: <Globe className="size-4" /> },
+            ]}
+          >
+            <PlatformTabsContent value="branding" className="w-full pt-4">
+              <BrandingSettings />
+            </PlatformTabsContent>
+            <PlatformTabsContent value="code-injection" className="w-full pt-4">
+              <CodeInjectionSettings />
+            </PlatformTabsContent>
+            <PlatformTabsContent value="domain" className="w-full pt-4">
+              <DomainSettings />
+            </PlatformTabsContent>
+          </PlatformTabs>
+        ) : null}
 
-          <PlatformTabsContent value="payment" className="space-y-6 pt-4">
+        {mode !== "website" ? (
+          <PlatformTabs
+            value={selectedTab}
+            onValueChange={mode === "general" ? selectGeneralTab : undefined}
+            ariaLabel={mode === "mails" ? "Mail settings" : "School settings"}
+            items={
+              mode === "mails"
+                ? [{ value: "delivery", label: "Mail delivery", icon: <Mail className="size-4" /> }]
+                : [
+                    { value: "payment", label: "Payments", icon: <CreditCard className="size-4" /> },
+                    { value: "team", label: "Team", icon: <Users className="size-4" /> },
+                    { value: "api-keys", label: "API keys", icon: <Key className="size-4" /> },
+                  ]
+            }
+          >
+          <PlatformTabsContent value="payment" className="w-full">
+          {mode === "general" && selectedTab === "payment" ? (
+            <div className="space-y-6 pt-4">
             <form
               className="space-y-4"
               onSubmit={(event) => {
@@ -676,14 +655,13 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 </Button>
               </CardContent>
             </Card>
+            </div>
+          ) : null}
           </PlatformTabsContent>
 
-          <PlatformTabsContent value="code-injection" className="w-full pt-4">
-            <CodeInjectionSettings />
-          </PlatformTabsContent>
-
-          {mode === "mails" ? (
-            <PlatformTabsContent value="delivery" className="pt-4">
+          <PlatformTabsContent value="delivery" className="w-full">
+          {mode === "mails" && selectedTab === "delivery" ? (
+            <div className="pt-4">
               <form
                 className="space-y-4"
                 onSubmit={(event) => {
@@ -723,17 +701,15 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                   ) : null}
                 </div>
               </form>
-            </PlatformTabsContent>
+            </div>
           ) : null}
+          </PlatformTabsContent>
 
-          {mode === "general" ? (
-            <PlatformTabsContent
-              value="api-keys"
-              className="space-y-4 pt-4"
-            >
+          <PlatformTabsContent value="api-keys" className="w-full">
+          {mode === "general" && selectedTab === "api-keys" ? (
+            <div className="space-y-4 pt-4">
             <Card>
               <CardHeader>
-                <CardTitle>API Keys</CardTitle>
                 <CardDescription>
                   Keys for the public product and learner APIs.{" "}
                   <a
@@ -781,15 +757,19 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 )}
               </CardContent>
             </Card>
-            </PlatformTabsContent>
+            </div>
           ) : null}
+          </PlatformTabsContent>
 
-          {mode === "general" ? (
-            <PlatformTabsContent value="team" className="w-full pt-4">
+          <PlatformTabsContent value="team" className="w-full">
+          {mode === "general" && selectedTab === "team" ? (
+            <div className="w-full pt-4">
               <TeamSettings />
-            </PlatformTabsContent>
+            </div>
           ) : null}
-        </PlatformTabs>
+          </PlatformTabsContent>
+          </PlatformTabs>
+        ) : null}
 
         
 

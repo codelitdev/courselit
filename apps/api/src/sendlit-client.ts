@@ -23,16 +23,9 @@ export class SendLitApiError extends Error {
 export function sendLitConfig(
   env: Record<string, string | undefined> = process.env,
 ): SendLitConfig {
-  const localDefaults = env.NODE_ENV === "development";
   return {
-    server:
-      env.SENDLIT_SERVER?.trim().replace(/\/$/, "") ||
-      (localDefaults ? "http://127.0.0.1:4101" : null),
-    provisioningApiKey:
-      env.SENDLIT_APIKEY?.trim() ||
-      (localDefaults
-        ? "sl_org_live_D6NfA32ZPv4ideNpRtdp61N9_JIvbv3-5_0b6ucELfc"
-        : null),
+    server: env.SENDLIT_SERVER?.trim().replace(/\/$/, "") || null,
+    provisioningApiKey: env.SENDLIT_ORGANIZATION_API_KEY?.trim() || null,
   };
 }
 
@@ -162,8 +155,8 @@ export type SendLitSequence = {
   status?: string;
   templateId?: string;
   emails?: SendLitSequenceEmail[];
-  triggerType?: string;
-  triggerData?: string;
+  triggerType?: string | null;
+  triggerData?: string | null;
   filter?: unknown;
   excludeFilter?: unknown;
   emailsOrder?: string[];
@@ -194,6 +187,24 @@ export function normalizeSendLitSequence(raw: any): SendLitSequence {
     id: sequenceId,
     emails,
   };
+}
+
+function normalizeSequenceEmailResponse(
+  raw: any,
+  expectedEmailId?: string,
+): SendLitSequenceEmail {
+  if (raw && typeof raw === "object" && Array.isArray(raw.emails)) {
+    const sequence = normalizeSendLitSequence(raw);
+    const emailId =
+      expectedEmailId ||
+      sequence.emailsOrder?.[sequence.emailsOrder.length - 1];
+    const email = sequence.emails?.find((item) => item.emailId === emailId);
+    if (email) return email;
+    throw new Error("SendLit did not include the email in its sequence response.");
+  }
+
+  // Keep compatibility with SendLit responses that return the email directly.
+  return normalizeSendLitSequenceEmail(raw);
 }
 
 export function normalizeSendLitTemplate(raw: any): SendLitTemplate {
@@ -313,7 +324,11 @@ export async function provisionSendLitTeam(
 ): Promise<SendLitProvisionTeamResult> {
   const config = options.config ?? sendLitConfig();
   if (!config.provisioningApiKey) {
-    throw new SendLitApiError("SENDLIT_APIKEY is not configured", undefined, false);
+    throw new SendLitApiError(
+      "SENDLIT_ORGANIZATION_API_KEY is not configured",
+      undefined,
+      false,
+    );
   }
   return requestJson<SendLitProvisionTeamResult>(
     config,
@@ -334,7 +349,11 @@ export async function rotateSendLitTeamKey(
 ): Promise<{ keyId: string; key: string }> {
   const config = options.config ?? sendLitConfig();
   if (!config.provisioningApiKey) {
-    throw new SendLitApiError("SENDLIT_APIKEY is not configured", undefined, false);
+    throw new SendLitApiError(
+      "SENDLIT_ORGANIZATION_API_KEY is not configured",
+      undefined,
+      false,
+    );
   }
   return requestJson<{ keyId: string; key: string }>(
     config,
@@ -868,8 +887,8 @@ export async function updateSendLitSequence(
   sequenceId: string,
   input: {
     title?: string;
-    triggerType?: string;
-    triggerData?: string;
+    triggerType?: string | null;
+    triggerData?: string | null;
     filter?: unknown;
     excludeFilter?: unknown;
     emailsOrder?: string[];
@@ -908,30 +927,43 @@ export async function addSendLitSequenceEmail(
     content?: unknown;
     delayInMillis?: number;
     delayHours?: number;
-    templateId?: string;
+    templateId: string;
   },
   options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
 ): Promise<SendLitSequenceEmail> {
   const config = options.config ?? sendLitConfig();
+  const raw = await requestJson<any>(
+    config,
+    `/sequences/${encodeURIComponent(sequenceId)}/emails`,
+    { method: "POST", teamApiKey, body: { templateId: input.templateId } },
+    options.fetcher,
+  );
+  const created = normalizeSequenceEmailResponse(raw);
   const delayInMillis =
     input.delayInMillis !== undefined
       ? input.delayInMillis
       : input.delayHours !== undefined
-      ? input.delayHours * 3600 * 1000
-      : 0;
-  const body = {
-    subject: input.subject,
-    content: input.content ?? { html: "" },
-    delayInMillis,
-    ...(input.templateId ? { templateId: input.templateId } : {}),
-  };
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/emails`,
-    { method: "POST", teamApiKey, body },
-    options.fetcher,
+        ? input.delayHours * 3600 * 1000
+        : undefined;
+  const update: {
+    subject?: string;
+    content?: unknown;
+    delayInMillis?: number;
+  } = {};
+  if (input.subject !== created.subject) update.subject = input.subject;
+  if (input.content !== undefined) update.content = input.content;
+  if (delayInMillis !== undefined && delayInMillis !== created.delayInMillis) {
+    update.delayInMillis = delayInMillis;
+  }
+
+  if (Object.keys(update).length === 0) return created;
+  return updateSendLitSequenceEmail(
+    teamApiKey,
+    sequenceId,
+    created.emailId,
+    update,
+    options,
   );
-  return normalizeSendLitSequenceEmail(raw);
 }
 
 export async function updateSendLitSequenceEmail(
@@ -953,7 +985,7 @@ export async function updateSendLitSequenceEmail(
     { method: "PATCH", teamApiKey, body: input },
     options.fetcher,
   );
-  return normalizeSendLitSequenceEmail(raw);
+  return normalizeSequenceEmailResponse(raw, emailId);
 }
 
 export async function deleteSendLitSequenceEmail(

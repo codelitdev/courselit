@@ -4,7 +4,6 @@ import {
   BANNER_BLOCK,
   type CourseLitCommunityPreview,
   type CourseLitProductPreview,
-  normalizeCourseLitSiteLayout,
   PRODUCT_CURRICULUM_BLOCK,
   registerCourseLitBlocks,
 } from "@courselit/page-blocks";
@@ -130,6 +129,10 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     | { resourceType: "community"; resource: CourseLitCommunityPreview }
     | null
   >(null);
+  const [siteLogo, setSiteLogo] = useState<{ url: string; alt: string }>({
+    url: "/icon.svg",
+    alt: "CourseLit",
+  });
   const salesResourceType =
     requestedSalesResourceType === "product" ||
     requestedSalesResourceType === "community"
@@ -184,6 +187,12 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         appliedThemeSnapshotRef.current = activeTheme
           ? themeSnapshot(activeTheme)
           : null;
+        const logoUrl =
+          typeof settings.logo?.url === "string" && settings.logo.url.trim()
+            ? settings.logo.url.trim()
+            : "/icon.svg";
+        const logoAlt = settings.logo?.alt?.trim() || "CourseLit";
+        setSiteLogo({ url: logoUrl, alt: logoAlt });
         setInitialTheme(activeTheme);
         setCustomThemes(mappedThemes);
         setPage(loaded);
@@ -304,7 +313,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         socialImage?: PageBuilderState["seo"]["socialImage"];
         robotsAllowed?: boolean;
       } = {
-        layout: normalizeCourseLitSiteLayout(state.layout) as FrontLitWidget[],
+        layout: state.layout as FrontLitWidget[],
       };
       if (state.seo.title != null) pagePatch.title = state.seo.title;
       if (state.seo.description != null) pagePatch.description = state.seo.description;
@@ -470,20 +479,20 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
           <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
             <PageBuilder
               key={`${resetKey}-${salesPreview ? `ready-${salesPreview.resourceType}-${salesPreview.resourceType === "product" ? salesPreview.resource.kind : "community"}` : `pending-${salesResourceType ?? "none"}`}`}
-              initialLayout={normalizeCourseLitSiteLayout(
-                normalizeSalesLayout(
-                  page.draftLayout ?? page.layout,
-                  salesPreview?.resourceType ?? salesResourceType,
-                  page.salesResourceKind ??
-                    (salesPreview?.resourceType === "product"
-                      ? salesPreview.resource.kind
-                      : null),
-                ),
+              initialLayout={normalizeSalesLayout(
+                page.draftLayout ?? page.layout,
+                salesPreview?.resourceType ?? salesResourceType,
+                page.salesResourceKind ??
+                  (salesPreview?.resourceType === "product"
+                    ? salesPreview.resource.kind
+                    : null),
               )}
               initialTheme={initialTheme}
               themes={{ system: COURSELIT_SYSTEM_THEMES, custom: customThemes ?? [] }}
               pageData={{
                 pageType: "custom",
+                siteLogoUrl: siteLogo.url,
+                siteLogoAlt: siteLogo.alt,
                 ...(salesPreview
                   ? {
                       courseLitSalesData: {
