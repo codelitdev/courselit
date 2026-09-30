@@ -259,6 +259,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(productWorkspace).toContain("Invite a customer");
     expect(productWorkspace).toContain("storefrontUrl");
+    expect(productWorkspace).toContain("storefrontHost");
     expect(productWorkspace).toContain(publicProductPath);
     expect(productWorkspace).toContain("Edit page");
     expect(productWorkspace).toContain(
@@ -266,7 +267,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain('aria-label="Share product"');
-    expect(productWorkspace).toContain("NEXT_PUBLIC_STOREFRONT_ORIGIN");
+    expect(productWorkspace).toContain("school?.storefrontHost");
     expect(productWorkspace).toContain("Enable a discussion space for this course");
     expect(productWorkspace).toContain("Lead Magnet");
     expect(productWorkspace).toContain("Danger zone");

@@ -6,11 +6,13 @@ import { AuthGate } from "@/components/auth-gate";
 import { CourseLitLoading } from "@/components/loading";
 import { CreateSchoolDialog } from "@/components/layout/create-school-dialog";
 import { Button } from "@/components/ui/codelit/button";
+import { storefrontUrl } from "@/lib/storefront-url";
 
 type SchoolItem = {
   id: string;
   name: string;
   subdomain: string;
+  storefrontHost?: string | null;
   status: string;
   locale: string;
   currency: string;
@@ -105,6 +107,7 @@ export default function SchoolsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {schools.map((school) => {
               const isSelected = Boolean(school.selected);
+              const publicSiteUrl = storefrontUrl("/", school.storefrontHost);
               return (
                 <div
                   key={school.id}
@@ -124,7 +127,7 @@ export default function SchoolsPage() {
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                           <Globe className="size-3 shrink-0" />
                           <span className="truncate">
-                            {school.subdomain}.courselit.app
+                            {school.storefrontHost ?? "Public domain not configured"}
                           </span>
                         </div>
                       </div>
@@ -146,16 +149,18 @@ export default function SchoolsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <a
-                        href={`http://${school.subdomain}.localhost:3001`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors p-1"
-                        title="Open public site"
-                      >
-                        <ExternalLink className="size-3.5" />
-                        <span className="sr-only">Visit site</span>
-                      </a>
+                      {publicSiteUrl ? (
+                        <a
+                          href={publicSiteUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors p-1"
+                          title="Open public site"
+                        >
+                          <ExternalLink className="size-3.5" />
+                          <span className="sr-only">Visit site</span>
+                        </a>
+                      ) : null}
 
                       {!isSelected && (
                         <Button

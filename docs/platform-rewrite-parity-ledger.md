@@ -332,8 +332,8 @@ evidence and the production regression cases are ported.
   currency. Product actions that already have target routes are retained: Preview and
   Manage/publishing remain links, while Invite a customer is an in-place dialog backed
   by the existing admin membership-grant contract. The source share control is adapted
-  to copy the storefront app's `/courses/:productId` URL using
-  `NEXT_PUBLIC_STOREFRONT_ORIGIN`; FrontLit-owned View page/Edit page actions remain
+  to copy the storefront app's `/courses/:productId` URL using the school's
+  API-resolved runtime host; FrontLit-owned View page/Edit page actions remain
   explicitly deferred to the FrontLit milestone rather than being represented by
   misleading links. The dashboard must not be replaced with generic
   content/learner/description cards.
@@ -655,7 +655,7 @@ The following variable names are referenced by current CourseLit source or deplo
 | Group                | Current names                                                                                                                             | Target action                                                                                  |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Database/runtime     | `DB_CONNECTION_STRING`, `DB_TRANSACTIONS`, `PORT`, `NODE_ENV`, `DEPLOY_ENV`, `CACHE_DIR`, `MULTITENANT`, `DOMAIN_NAME_FOR_SINGLE_TENANCY` | Replace Mongo settings with PostgreSQL and explicit API/worker configuration                   |
-| Auth/security        | `AUTH_SECRET`, `COURSELIT_JWT_SECRET`, `SESSION_COOKIE_CACHE_MAX_AGE`, `SUPER_ADMIN_EMAIL`, CAPTCHA/Turnstile names                       | Split admin and learner auth secrets; validate at startup; never expose server secrets         |
+| Auth/security        | `AUTH_SECRET`, `COURSELIT_JWT_SECRET`, `SESSION_COOKIE_CACHE_MAX_AGE`, `SUPER_ADMIN_EMAIL`, CAPTCHA/Turnstile names                       | Use the shared Better Auth secret; validate at startup; never expose server secrets             |
 | Queue                | `QUEUE_SERVER`, `REDIS_HOST`, `REDIS_PORT`, `SEQUENCE_BOUNCE_LIMIT`, `SEQUENCE_DELAY_BETWEEN_MAILS`, `NEXT_PUBLIC_RELATIVE_DRIP_UNIT_MS`  | Remove sequence settings; retain only selected durable-job configuration                       |
 | Email/inbound        | `EMAIL_FROM`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, inbound provider variables, `PIXEL_SIGNING_SECRET`                  | Move marketing delivery/tracking to SendLit; decide reply-by-email ownership                   |
 | Media                | `MEDIALIT_SERVER`, `MEDIALIT_APIKEY`, `SCORM_PACKAGE_SIZE_LIMIT`                                                                          | Retain with startup validation, secret redaction, and per-school catalog semantics             |

@@ -5,8 +5,8 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthGate } from "../components/auth-gate";
-import { CourseLitLoading } from "../components/loading";
-import { type CurrentAccount } from "../components/layout/nav-user";
+import { CourseLitInlineLoading, CourseLitLoading } from "../components/loading";
+import { useAdminShellContext } from "../components/layout/admin-shell-context";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/codelit/button";
 import {
@@ -40,13 +40,6 @@ const SALES_CHART_CONFIG = {
   },
 } satisfies ChartConfig;
 
-type School = {
-  id: string;
-  name: string;
-  subdomain?: string;
-  selected?: boolean;
-};
-
 type SchoolOverview = {
   range: OverviewRange;
   currency: string;
@@ -61,43 +54,23 @@ type SchoolOverview = {
 };
 
 export default function HomePage() {
-  const [account, setAccount] = useState<CurrentAccount | null>(null);
-  const [schools, setSchools] = useState<School[]>([]);
+  const shell = useAdminShellContext();
+  const account = shell?.account ?? null;
+  const schools = shell?.schools ?? [];
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<SchoolOverview | null>(null);
   const [overviewRange, setOverviewRange] = useState<OverviewRange>("7d");
 
   const selected = schools.find((school) => school.selected) ?? schools[0] ?? null;
   const selectedSchoolId = selected?.id;
-  const visitSiteUrl = selected ? storefrontUrl("/", selected.subdomain) : null;
+  const visitSiteUrl = selected ? storefrontUrl("/", selected.storefrontHost) : null;
 
   useEffect(() => {
-    void fetch("/api/auth/get-session", {
-      cache: "no-store",
-      credentials: "include",
-    })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        const body = (await response.json()) as { user?: CurrentAccount };
-        return body.user ?? null;
-      })
-      .then((user) => setAccount(user))
-      .catch(() => setAccount(null));
-  }, []);
-
-  useEffect(() => {
-    void fetch("/api/v1/schools", {
-      credentials: "include",
-      cache: "no-store",
-    })
-      .then((response) => (response.ok ? response.json() : { items: [] }))
-      .then((body: { items?: School[] }) => setSchools(body.items ?? []))
-      .catch(() => setSchools([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSchoolId) return;
+    if (!selectedSchoolId) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
     setOverview(null);
     void fetch(`/api/v1/school/overview?range=${overviewRange}`, {
       headers: { "x-school-id": selectedSchoolId },
@@ -106,7 +79,13 @@ export default function HomePage() {
     })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: SchoolOverview | null) => setOverview(body))
-      .catch(() => setOverview(null));
+      .catch(() => setOverview(null))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [overviewRange, selectedSchoolId]);
 
   const firstName = account?.name?.trim().split(/\s+/)[0];
@@ -186,7 +165,7 @@ export default function HomePage() {
                 />
               </>
             ) : (
-              <CourseLitLoading label="Loading activity…" className="rounded-xl border bg-card p-8" />
+              <CourseLitInlineLoading label="Loading activity…" className="rounded-xl border bg-card p-8" />
             )}
           </div>
         )}

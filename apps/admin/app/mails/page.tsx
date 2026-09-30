@@ -192,7 +192,7 @@ export default function MailsPage() {
   }[selectedTab];
 
   const [school, setSchool] = useState<School | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Broadcasts state
@@ -450,7 +450,8 @@ export default function MailsPage() {
           await loadTabData(selected, selectedTab);
         }
       })
-      .catch(() => setError("Unable to load school context."));
+      .catch(() => setError("Unable to load school context."))
+      .finally(() => setLoading(false));
   }, [loadTabData, pathname, selectedTab]);
 
   const customChooserTemplates: ChooserEmailTemplate[] = useMemo(() => {

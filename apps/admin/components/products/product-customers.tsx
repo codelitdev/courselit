@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
-import { CourseLitLoading } from "@/components/loading";
+import { CourseLitInlineLoading, CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/codelit/button";
@@ -362,7 +362,7 @@ export function ProductCustomers({ productId }: { productId: string }) {
               </DialogDescription>
             </DialogHeader>
             {progressLoading ? (
-              <CourseLitLoading label="Loading progress…" className="py-6" />
+              <CourseLitInlineLoading label="Loading progress…" className="py-6" />
             ) : progressError ? (
               <p className="py-6 text-sm text-destructive" role="alert">
                 {progressError}

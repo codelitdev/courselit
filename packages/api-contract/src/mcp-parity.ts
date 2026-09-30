@@ -144,6 +144,17 @@ export const mcpParityManifest = [
     },
   },
   {
+    capability: "public.host.resolve",
+    rest: { operationId: "resolvePublicHost" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Custom-host ownership is an infrastructure edge-routing check, not an application capability exposed over MCP.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "public.communities.list",
     rest: { operationId: "listPublicCommunities" },
     parity: "exempt",
@@ -1138,7 +1149,8 @@ export const mcpParityManifest = [
     rest: { operationId: "createSchoolTeamInvitation" },
     parity: "exempt",
     exemption: {
-      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      reason:
+        "Invitation delivery is a browser and email workflow, not an MCP capability.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -1148,7 +1160,8 @@ export const mcpParityManifest = [
     rest: { operationId: "resendSchoolTeamInvitation" },
     parity: "exempt",
     exemption: {
-      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      reason:
+        "Invitation delivery is a browser and email workflow, not an MCP capability.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -1158,7 +1171,8 @@ export const mcpParityManifest = [
     rest: { operationId: "revokeSchoolTeamInvitation" },
     parity: "exempt",
     exemption: {
-      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      reason:
+        "Invitation delivery is a browser and email workflow, not an MCP capability.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },

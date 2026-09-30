@@ -30,11 +30,16 @@ RUN addgroup -S -g 1001 courselit \
 COPY --from=prod-deps /app/package.json ./package.json
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/apps/api/package.json ./apps/api/package.json
+COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=prod-deps /app/packages/api-contract/package.json ./packages/api-contract/package.json
+COPY --from=prod-deps /app/packages/api-contract/node_modules ./packages/api-contract/node_modules
 COPY --from=builder --chown=courselit:courselit /app/apps/api/src ./apps/api/src
 COPY --from=builder --chown=courselit:courselit /app/apps/api/drizzle ./apps/api/drizzle
 COPY --from=builder --chown=courselit:courselit /app/apps/api/scripts/migrate.mjs ./apps/api/scripts/migrate.mjs
 COPY --from=builder --chown=courselit:courselit /app/packages/api-contract/src ./packages/api-contract/src
+
+# Verify production workspace links and migration imports in the final image.
+RUN cd apps/api && bun -e 'try { await import("./scripts/migrate.mjs"); } catch (error) { if (error.message !== "DATABASE_URL_REQUIRED") throw error; }'
 
 USER courselit
 EXPOSE 4000

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
-import { loadSchoolByPublicId } from "./schools.js";
+import { listSchoolsForUser, loadSchoolByPublicId } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 
@@ -123,6 +123,57 @@ async function readyFrontLitIntegration(
 }
 
 describe.serial("school custom host lifecycle", () => {
+  it("returns runtime storefront hosts and prefers a verified custom host", async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalPlatformDomain = process.env.PLATFORM_SITE_DOMAIN;
+    const originalFrontLitServer = process.env.FRONTLIT_SERVER;
+    process.env.NODE_ENV = "test";
+    process.env.PLATFORM_SITE_DOMAIN = "schools.example.test";
+    delete process.env.FRONTLIT_SERVER;
+
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const initialSchools = await listSchoolsForUser(runtime.db, world.owner.id);
+      expect(
+        initialSchools.find((school) => school.id === world.schoolA.publicId)?.storefrontHost,
+      ).toBe("school-a.schools.example.test");
+
+      const [schoolRow] = await runtime.db
+        .select({ id: schema.schools.id })
+        .from(schema.schools)
+        .where(eq(schema.schools.id, world.schoolA.id))
+        .limit(1);
+      const now = clock.now();
+      await runtime.db.insert(schema.schoolHosts).values({
+        id: crypto.randomUUID(),
+        schoolId: schoolRow!.id,
+        hostname: "learn.school-a.example.net",
+        kind: "custom",
+        verificationStatus: "verified",
+        verificationTokenDigest: null,
+        verifiedAt: now,
+        isPrimary: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const updatedSchools = await listSchoolsForUser(runtime.db, world.owner.id);
+      expect(
+        updatedSchools.find((school) => school.id === world.schoolA.publicId)?.storefrontHost,
+      ).toBe("learn.school-a.example.net");
+    } finally {
+      await runtime.close();
+      if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = originalNodeEnv;
+      if (originalPlatformDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
+      else process.env.PLATFORM_SITE_DOMAIN = originalPlatformDomain;
+      if (originalFrontLitServer === undefined) delete process.env.FRONTLIT_SERVER;
+      else process.env.FRONTLIT_SERVER = originalFrontLitServer;
+    }
+  });
+
   it("adds, verifies, resolves, removes, and reuses a custom host", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });

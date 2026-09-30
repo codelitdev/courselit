@@ -1,4 +1,8 @@
+"use client";
+
 import { Loader } from "@codelitdev/design-system";
+import { useContext, useId, useLayoutEffect } from "react";
+import { AdminShellContext } from "@/components/layout/admin-shell-context";
 import { cn } from "@/lib/utils";
 
 type LoadingProps = {
@@ -9,6 +13,27 @@ type LoadingProps = {
 
 /** The standard icon-only CourseLit loading state used by the admin application. */
 export function CourseLitLoading({
+  label = "Loading",
+  className,
+  size = 48,
+}: LoadingProps) {
+  const shell = useContext(AdminShellContext);
+  const id = useId();
+
+  useLayoutEffect(() => {
+    if (!shell) return;
+    shell.registerPageLoading(id, label);
+    return () => shell.clearPageLoading(id);
+  }, [id, label, shell]);
+
+  if (shell) return null;
+
+  return (
+    <CourseLitInlineLoading label={label} className={className} size={size} />
+  );
+}
+
+export function CourseLitInlineLoading({
   label = "Loading",
   className,
   size = 48,

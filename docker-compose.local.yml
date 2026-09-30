@@ -194,7 +194,7 @@ services:
       - courselit-local-sendlit-delivery-setup:/var/lib/sendlit-delivery-setup
 
   frontlit-api:
-    image: codelit/frontlit-api:latest
+    image: codelit/frontlit-api:domain-provisioning
     restart: unless-stopped
     depends_on:
       postgres:

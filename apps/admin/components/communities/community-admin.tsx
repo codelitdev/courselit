@@ -70,6 +70,7 @@ type School = {
   id: string;
   name: string;
   subdomain?: string;
+  storefrontHost?: string | null;
   currency: string;
   permissions?: readonly string[];
   selected?: boolean;
@@ -415,7 +416,7 @@ export function CommunityAdmin({
     if (!community || !school) return;
     const url = storefrontUrl(
       `/p/${encodeURIComponent(community.slug)}`,
-      school.subdomain,
+      school.storefrontHost,
     );
     if (!url) {
       setError("Unable to build the public community URL.");

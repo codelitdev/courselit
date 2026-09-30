@@ -339,26 +339,18 @@ The legacy application historically rendered some learner navigation in the same
 
 ### 9.3 Learner authentication
 
-- Learner identity is scoped to one school, with unique normalized email per school where email is present.
-- Learner identity is always school-local. The rewrite does not create a global learner account shared across schools.
-- A school can enable supported methods such as email OTP, Google, and SAML/OIDC SSO.
-- Learner auth accounts, sessions, provider links, verification state, and SSO configuration are stored separately from admin auth tables.
-- The learner Better Auth realm is served at `/api/learner-auth`, uses its own
-  auth tables and `LEARNER_AUTH_SECRET`, and uses the
-  `courselit-learner.*` cookie namespace. Admin cookies and learner cookies use
-  distinct names and session validation; the storefront app proxy never forwards
-  admin cookies to learner-auth or learner API routes.
-- School host resolution occurs before learner authentication and is server-verified.
-- An identity from one school cannot be replayed against another school's host.
-- Account linking is explicit and audited. Email equality is not sufficient to link accounts.
-- The supported admin-to-learner link flow is an admin-authenticated, short-lived,
-  single-use handoff. The admin app creates the handoff for the current school;
-  after the learner authenticates with any configured learner method, CourseLit
-  links that learner principal to the initiating admin principal. The handoff
-  carries no email-based identity assertion and is never accepted as a reusable
-  learner credential. Provider identities (OTP, password, social, and SSO) link
-  to the learner principal first; they do not link directly to an admin user.
-- Deactivated learners cannot create sessions but their historical commercial records remain subject to retention policy.
+- Authentication uses one global CourseLit account backed by Better Auth; there is
+  no separate learner auth realm, auth table set, or learner-only auth secret.
+- Learner access is school-scoped: the global account resolves to a school account,
+  and active learner memberships grant access to products or communities.
+- V1 login methods are Email OTP and platform Google. School login settings govern
+  which methods are admitted, and session provenance is checked on school hosts.
+- School host resolution and school-session creation are server-authoritative;
+  sessions are bound to their school and cannot be replayed on another school's host.
+- One person can use their global account across schools, with a separate school
+  account and staff or learner relationships in each school.
+- Deactivated school accounts and revoked staff or learner relationships fail
+  authorization immediately; historical commerce records remain subject to retention policy.
 
 ### 9.4 Products and lessons
 

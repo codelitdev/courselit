@@ -12,7 +12,6 @@ import {
   Settings,
   Target,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import { type NavItem, NavMain } from "@/components/layout/nav-main";
 import { type CurrentAccount, NavUser } from "@/components/layout/nav-user";
@@ -136,46 +135,15 @@ function filterNav(
   });
 }
 
-export function AppSidebar() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [currentSchoolId, setCurrentSchoolId] = useState<string | null>(null);
-  const [account, setAccount] = useState<CurrentAccount | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // Load session
-    fetch("/api/auth/get-session", { cache: "no-store", credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const session = (await res.json()) as { user?: CurrentAccount };
-        return session.user ?? null;
-      })
-      .then((user) => {
-        if (!cancelled && user) setAccount(user);
-      })
-      .catch(() => {});
-
-    // Load schools
-    fetch("/api/v1/schools", { cache: "no-store", credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return (await res.json()) as { items?: School[] };
-      })
-      .then((body) => {
-        if (cancelled || !body) return;
-        const items = body.items ?? [];
-        setSchools(items);
-        const selected = items.find((s) => s.selected);
-        if (selected) setCurrentSchoolId(selected.id);
-        else if (items[0]) setCurrentSchoolId(items[0].id);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+export function AppSidebar({
+  schools,
+  account,
+}: {
+  schools: School[];
+  account: CurrentAccount | null;
+}) {
+  const currentSchoolId =
+    schools.find((school) => school.selected)?.id ?? schools[0]?.id ?? null;
 
   const currentSchool =
     schools.find((school) => school.id === currentSchoolId) ??

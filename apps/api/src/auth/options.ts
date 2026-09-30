@@ -191,7 +191,10 @@ export async function sendVerificationOTP(
     otp: string;
     type: "sign-in" | "email-verification" | "forget-password" | "change-email";
   },
-  options?: { env?: { NODE_ENV?: string } },
+  options?: {
+    env?: { NODE_ENV?: string };
+    deliver?: typeof sendSystemMail;
+  },
 ) {
   const subject =
     params.type === "sign-in"
@@ -224,11 +227,11 @@ export async function sendVerificationOTP(
   const text = `${description} ${params.otp} (expires in 5 minutes)`;
 
   const env = options?.env ?? process.env;
-  if (env.NODE_ENV !== "production" || !process.env.RESEND_API_KEY) {
+  if (env.NODE_ENV !== "production") {
     console.info(`[CourseLit OTP] ${params.type} for ${params.email}: ${params.otp}`);
   }
 
-  await sendSystemMail({
+  await (options?.deliver ?? sendSystemMail)({
     to: params.email,
     subject,
     text,

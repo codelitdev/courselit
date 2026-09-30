@@ -82,7 +82,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
   app.all("/api/learner-auth/*", (req, res) => {
     req.url = req.url.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
-    if (req.originalUrl) req.originalUrl = req.originalUrl.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
+    if (req.originalUrl)
+      req.originalUrl = req.originalUrl.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
     return authNodeHandler(req, res);
   });
   app.use(
@@ -228,7 +229,9 @@ export function createExpressApp(deps: DispatchDeps): Express {
           recipientId: learnerAuth.value.schoolAccount.id,
         },
         (event) => {
-          res.write(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`);
+          res.write(
+            `event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`,
+          );
         },
       );
       req.on("close", () => {
@@ -249,15 +252,22 @@ export function createExpressApp(deps: DispatchDeps): Express {
         res.status(401).end();
         return;
       }
-      const schoolPublicId = typeof req.query.schoolId === "string" ? req.query.schoolId : "";
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(schoolPublicId);
+      const schoolPublicId =
+        typeof req.query.schoolId === "string" ? req.query.schoolId : "";
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          schoolPublicId,
+        );
       const [school] = await deps.db
         .select({ id: schema.schools.id })
         .from(schema.schools)
         .where(
           isUuid
             ? eq(schema.schools.id, schoolPublicId)
-            : or(eq(schema.schools.publicId, schoolPublicId), eq(schema.schools.subdomain, schoolPublicId))
+            : or(
+                eq(schema.schools.publicId, schoolPublicId),
+                eq(schema.schools.subdomain, schoolPublicId),
+              ),
         )
         .limit(1);
       if (!school) {
@@ -295,14 +305,16 @@ export function createExpressApp(deps: DispatchDeps): Express {
           recipientId: membership.schoolAccountId,
         },
         (event) => {
-          res.write(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`);
+          res.write(
+            `event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`,
+          );
         },
       );
       req.on("close", () => {
         unsubscribe();
       });
     } catch (error) {
-            next(error);
+      next(error);
     }
   });
 
@@ -327,7 +339,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
       headers: input.req.headers,
       body: input.req.body,
     });
-        for (const [name, value] of Object.entries(response.headers ?? {})) {
+    for (const [name, value] of Object.entries(response.headers ?? {})) {
       input.res.setHeader(name, value);
     }
     return { status: response.status, body: response.body } as never;
@@ -335,6 +347,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
   const router = server.router(contract, {
     health: forward,
     ready: forward,
+    resolvePublicHost: forward,
     listProducts: forward,
     listPublicProducts: forward,
     listPublicCommunities: forward,

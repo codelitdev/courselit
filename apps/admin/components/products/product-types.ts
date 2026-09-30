@@ -103,6 +103,7 @@ export type School = {
   id: string;
   name: string;
   subdomain?: string;
+  storefrontHost?: string | null;
   currency: string;
   permissions?: readonly CourseLitPermission[] | readonly string[];
   selected?: boolean;

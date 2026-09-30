@@ -24,6 +24,7 @@ export type School = {
   id: string;
   name: string;
   subdomain?: string;
+  storefrontHost?: string | null;
   status?: string;
   permissions?: readonly CourseLitPermission[];
   selected?: boolean;
@@ -68,8 +69,8 @@ export function TeamSwitcher({
 
   const title = currentSchool?.name ?? "Choose a school";
   const subtitle = currentSchool
-    ? currentSchool.subdomain
-      ? `${currentSchool.subdomain}.courselit.app`
+    ? currentSchool.storefrontHost
+      ? currentSchool.storefrontHost
       : "Active school"
     : "No active school";
 
@@ -138,9 +139,9 @@ export function TeamSwitcher({
                         <span className="min-w-0 truncate text-sm font-medium">
                           {school.name}
                         </span>
-                        {school.subdomain && (
+                        {school.storefrontHost && (
                           <span className="truncate text-xs text-muted-foreground">
-                            {school.subdomain}.courselit.app
+                            {school.storefrontHost}
                           </span>
                         )}
                       </div>

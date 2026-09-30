@@ -6,8 +6,7 @@ function encryptionKey(secretOverride?: string): Buffer {
   const secret =
     secretOverride?.trim() ||
     process.env.INTEGRATIONS_ENCRYPTION_KEY?.trim() ||
-    process.env.AUTH_SECRET?.trim() ||
-    process.env.LEARNER_AUTH_SECRET?.trim();
+    process.env.AUTH_SECRET?.trim();
   if (!secret) throw new Error("INTEGRATIONS_ENCRYPTION_KEY_REQUIRED");
   return createHash("sha256").update(secret).digest();
 }

@@ -46,7 +46,7 @@ export default function ContactsPage() {
 
   // Contacts state
   const [contacts, setContacts] = useState<ContactItem[]>([]);
-  const [loadingContacts, setLoadingContacts] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(true);
 
   // Segments and Filters state
   const [segments, setSegments] = useState<ContactFilterSegment[]>([]);
@@ -116,7 +116,8 @@ export default function ContactsPage() {
           await Promise.all([loadContacts(selected), loadSegments(selected)]);
         }
       })
-      .catch(() => setError("Unable to load school context."));
+      .catch(() => setError("Unable to load school context."))
+      .finally(() => setLoadingContacts(false));
   }, [loadContacts, loadSegments]);
 
   // Filter contacts based on ContactFilterWithAggregator

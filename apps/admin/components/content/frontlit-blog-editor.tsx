@@ -31,6 +31,7 @@ type BlogDraft = {
 type School = {
   id: string;
   subdomain?: string;
+  storefrontHost?: string | null;
   selected?: boolean;
 };
 
@@ -74,7 +75,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     : excerptSaveError;
   const liveBlogUrl =
     blog && blog.status !== "draft" && school
-      ? storefrontUrl(`/blog/${encodeURIComponent(blog.slug)}`, school.subdomain)
+      ? storefrontUrl(`/blog/${encodeURIComponent(blog.slug)}`, school.storefrontHost)
       : null;
 
   useSetBreadcrumb([

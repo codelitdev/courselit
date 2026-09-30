@@ -81,15 +81,26 @@ describe("system mail delivery", () => {
     });
   });
 
-  it("dumps mail to the console when neither provider is configured", async () => {
+  it("dumps mail to the console in non-production when no provider is configured", async () => {
     const info = spyOn(console, "info").mockImplementation(() => undefined);
 
     const result = await sendSystemMail(message, {
-      env: { NODE_ENV: "production" },
+      env: { NODE_ENV: "development" },
     });
 
     expect(result).toBe("console");
     expect(info).toHaveBeenCalledWith("[CourseLit] System email", message);
+    info.mockRestore();
+  });
+
+  it("does not log system mail content in production when no provider is configured", async () => {
+    const info = spyOn(console, "info").mockImplementation(() => undefined);
+
+    await expect(
+      sendSystemMail(message, { env: { NODE_ENV: "production" } }),
+    ).rejects.toThrow("System email delivery is not configured");
+
+    expect(info).not.toHaveBeenCalled();
     info.mockRestore();
   });
 });

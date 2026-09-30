@@ -28,13 +28,11 @@ async function proxy(
     if (incomingHost) headers.set("x-forwarded-host", incomingHost);
     const rawCookie = request.headers.get("cookie");
     if (rawCookie) {
-      const isBetterAuthCookie = (name: string) =>
-        name.startsWith("better-auth.") ||
-        name.startsWith("__Secure-better-auth.") ||
-        name.startsWith("courselit-learner.") ||
-        name.startsWith("courselit-learner-") ||
-        name.startsWith("__Secure-courselit-learner.") ||
-        name.startsWith("__Secure-courselit-learner-");
+      const isCourseLitSessionCookie = (name: string) =>
+        name === "courselit.session_token" ||
+        name.startsWith("courselit.session_token.") ||
+        name === "__Secure-courselit.session_token" ||
+        name.startsWith("__Secure-courselit.session_token.");
       const includeBetterAuth =
         isAuth || (path[0] === "v1" && suffix === "v1/learner/me");
       const cookies = rawCookie
@@ -45,7 +43,7 @@ async function proxy(
           const name = part.split("=", 1)[0];
           return (
             name === "courselit.learner.session" ||
-            (includeBetterAuth && isBetterAuthCookie(name))
+            (includeBetterAuth && isCourseLitSessionCookie(name))
           );
         });
       if (cookies.length > 0) {
@@ -65,12 +63,7 @@ async function proxy(
       redirect: "manual",
     });
     const outputHeaders = new Headers();
-    for (const name of [
-      "content-type",
-      "location",
-      "x-request-id",
-      "retry-after",
-    ]) {
+    for (const name of ["content-type", "location", "x-request-id", "retry-after"]) {
       const value = response.headers.get(name);
       if (value) outputHeaders.set(name, value);
     }

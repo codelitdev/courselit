@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
-import { CourseLitLoadingIcon } from "@/components/loading";
+import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { PageHeader } from "@/components/layout/page-header";
 import type { ProductKind, School } from "@/components/products/product-types";
 import { Button } from "@/components/ui/codelit/button";
@@ -27,6 +27,7 @@ export default function NewProductPage() {
   const [kind, setKind] = useState<ProductKind>("course");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingSchool, setLoadingSchool] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useSetBreadcrumb([
@@ -40,7 +41,8 @@ export default function NewProductPage() {
       .then((body: { items?: School[] }) => {
         setSchool(body.items?.find((item) => item.selected) ?? body.items?.[0] ?? null);
       })
-      .catch(() => setError("Unable to load the active school."));
+      .catch(() => setError("Unable to load the active school."))
+      .finally(() => setLoadingSchool(false));
   }, []);
 
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -82,6 +84,7 @@ export default function NewProductPage() {
   return (
     <AuthGate>
       <div className="page-shell">
+        {loadingSchool ? <CourseLitLoading label="Loading product setup…" /> : null}
         <PageHeader
           title="New product"
           description="Create a new course or digital download."

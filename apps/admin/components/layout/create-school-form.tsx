@@ -2,7 +2,10 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
-import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
+import {
+  CourseLitInlineLoading,
+  CourseLitLoadingIcon,
+} from "@/components/loading";
 import { DialogFooter } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import {
@@ -13,12 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Field, FieldLabel } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 
 function slugify(text: string): string {
   return text
@@ -231,10 +229,10 @@ export function CreateSchoolForm({
               setSubdomain(slugify(event.target.value));
             }}
           />
-          <InputGroupAddon align="inline-end">
-            <InputGroupText>.courselit.app</InputGroupText>
-          </InputGroupAddon>
         </InputGroup>
+        <p className="text-xs text-muted-foreground">
+          Your school address uses the domain configured for this CourseLit deployment.
+        </p>
       </Field>
 
       {showPlanSelector ? (
@@ -289,7 +287,7 @@ export function CreateSchoolForm({
               {offer.trialDays ? ` · ${offer.trialDays}-day trial` : ""}
             </p>
           ) : paidCheckoutUnavailable ? null : (
-            <CourseLitLoading
+            <CourseLitInlineLoading
               label="Loading the current provider-configured price…"
               className="justify-start"
             />

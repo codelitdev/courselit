@@ -4,6 +4,7 @@ import { MediaUploadDialog, type SelectedMedia } from "@frontlit/media-uploader"
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
+import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Select,
@@ -32,6 +33,7 @@ export default function MediaPage() {
   const [category, setCategory] = useState<MediaCategory>("library");
   const [accessPolicy, setAccessPolicy] = useState<MediaAccessPolicy>("private");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [uploadOpen, setUploadOpen] = useState(false);
   const adapters = useCourseLitMediaUploader({
     schoolId: school?.id ?? "",
@@ -65,7 +67,8 @@ export default function MediaPage() {
           }
         }
       })
-      .catch(() => setError("Unable to load the media library."));
+      .catch(() => setError("Unable to load the media library."))
+      .finally(() => setLoading(false));
     // The initial request intentionally runs once for the selected school.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -128,6 +131,7 @@ export default function MediaPage() {
   return (
     <AuthGate>
       <main className="page-shell">
+        {loading ? <CourseLitLoading label="Loading media library…" /> : null}
         <PageHeader
           title="Media library"
           description="Upload once, reuse safely, and see where assets are used."

@@ -508,6 +508,83 @@ describe.serial("reference API adapters", () => {
     await runtime.close();
   });
 
+  it("resolves only verified custom hosts belonging to non-deleted schools", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const now = clock.now();
+    await runtime.db.insert(schema.schoolHosts).values([
+      {
+        id: crypto.randomUUID(),
+        schoolId: world.schoolA.id,
+        hostname: "learn.example.com",
+        kind: "custom",
+        verificationStatus: "verified",
+        verificationTokenDigest: null,
+        verifiedAt: now,
+        isPrimary: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: crypto.randomUUID(),
+        schoolId: world.schoolA.id,
+        hostname: "pending.example.com",
+        kind: "custom",
+        verificationStatus: "unverified",
+        verificationTokenDigest: null,
+        verifiedAt: null,
+        isPrimary: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: crypto.randomUUID(),
+        schoolId: world.schoolA.id,
+        hostname: "native.example.com",
+        kind: "subdomain",
+        verificationStatus: "verified",
+        verificationTokenDigest: null,
+        verifiedAt: now,
+        isPrimary: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+
+    const verified = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/resolve-host?host=LEARN.EXAMPLE.COM.",
+      headers: {},
+    });
+    expect(verified).toEqual({ status: 200, body: { resolved: true } });
+
+    for (const host of [
+      "pending.example.com",
+      "native.example.com",
+      "unknown.example.com",
+    ]) {
+      const unresolved = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/public/resolve-host?host=${encodeURIComponent(host)}`,
+        headers: {},
+      });
+      expect(unresolved.status).toBe(404);
+    }
+
+    await runtime.db
+      .update(schema.schools)
+      .set({ status: "deleted" })
+      .where(eq(schema.schools.id, world.schoolA.id));
+    const deletedSchoolHost = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/resolve-host?host=learn.example.com",
+      headers: {},
+    });
+    expect(deletedSchoolHost.status).toBe(404);
+    await runtime.close();
+  });
+
   it("mounts the shared contract through the Express ts-rest adapter", async () => {
     const runtime = await createPgliteRuntime({
       clock: freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z")),
@@ -531,6 +608,7 @@ describe.serial("reference API adapters", () => {
     expect(document.paths["/v1/learner/products/{productId}/download"]).toBeDefined();
     expect(document.paths["/v1/learner/lessons/{lessonId}/complete"]).toBeDefined();
     expect(document.paths["/v1/learner/community-posts/{postId}"]).toBeDefined();
+    expect(document.paths["/v1/public/resolve-host"]).toBeDefined();
     expect(document.paths["/v1/public/site/settings"]).toBeDefined();
     expect(document.paths["/v1/public/site/pages"]).toBeDefined();
     expect(document.paths["/v1/public/site/blogs"]).toBeDefined();
@@ -562,6 +640,10 @@ describe.serial("reference API adapters", () => {
     expect(
       document.paths["/v1/products/{productId}/certificate-template"],
     ).toBeDefined();
+    const invalidHostLookup = await fetch(
+      `http://127.0.0.1:${address.port}/v1/public/resolve-host`,
+    );
+    expect(invalidHostLookup.status).toBe(400);
     const docs = await fetch(`http://127.0.0.1:${address.port}/docs`);
     expect(docs.status).toBe(200);
     expect(docs.headers.get("content-type")).toContain("text/html");

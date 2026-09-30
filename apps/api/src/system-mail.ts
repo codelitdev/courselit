@@ -70,8 +70,9 @@ function smtpConfig(env: Environment) {
  * Delivers CourseLit-owned system mail using the deployment-level provider.
  * SendLit intentionally wins over SMTP when its platform team key is set;
  * school-level SendLit teams are reserved for school-owned marketing mail.
- * With neither provider configured, the complete message is dumped to the
- * API console so local development and recovery workflows remain usable.
+ * With neither provider configured, non-production environments dump the
+ * message to the API console for local development. Production fails closed
+ * rather than logging sensitive message contents such as authentication codes.
  */
 export async function sendSystemMail(
   message: SystemMailMessage,
@@ -124,6 +125,12 @@ export async function sendSystemMail(
     } catch (error) {
       throw new SystemMailDeliveryError("SMTP system mail delivery failed", error);
     }
+  }
+
+  if (env.NODE_ENV === "production") {
+    throw new SystemMailDeliveryError(
+      "System email delivery is not configured",
+    );
   }
 
   console.info("[CourseLit] System email", message); // eslint-disable-line no-console

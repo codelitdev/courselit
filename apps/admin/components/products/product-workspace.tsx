@@ -794,14 +794,17 @@ export function ProductWorkspace({
         `/api/v1/products/${encodeURIComponent(productId)}/preview`,
         { method: "POST", body: JSON.stringify({ ttlSeconds: 900 }) },
       );
-      const storefrontOrigin = process.env.NEXT_PUBLIC_STOREFRONT_ORIGIN;
-      if (!storefrontOrigin) {
+      const previewUrl = storefrontUrl(
+        `/courses/${encodeURIComponent(productId)}#preview=${encodeURIComponent(grant.token)}`,
+        school?.storefrontHost,
+      );
+      if (!previewUrl) {
         setNotice(
-          "Preview token created. Set NEXT_PUBLIC_STOREFRONT_ORIGIN to open it automatically.",
+          "Preview token created, but this school has no public storefront hostname configured.",
         );
       } else {
         window.open(
-          `${storefrontOrigin.replace(/\/$/, "")}/courses/${encodeURIComponent(productId)}#preview=${encodeURIComponent(grant.token)}`,
+          previewUrl,
           "_blank",
           "noopener,noreferrer",
         );
@@ -847,7 +850,7 @@ export function ProductWorkspace({
   async function shareProduct() {
     if (!product) return;
     const publicProductPath = product.slug ? `/p/${encodeURIComponent(product.slug)}` : `/product/${encodeURIComponent(product.id)}`;
-    const url = storefrontUrl(publicProductPath, school?.subdomain);
+    const url = storefrontUrl(publicProductPath, school?.storefrontHost);
     if (!url) {
       setError("Unable to build the public product URL.");
       return;

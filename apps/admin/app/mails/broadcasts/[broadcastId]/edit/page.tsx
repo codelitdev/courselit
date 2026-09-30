@@ -8,6 +8,7 @@ import { ContactFilterBuilder, EmailPreview, type ContactFilterWithAggregator, t
 import { Badge } from "@codelitdev/design-system";
 import { AuthGate } from "@/components/auth-gate";
 import { PageHeader } from "@/components/layout/page-header";
+import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { Button } from "@/components/ui/codelit/button";
 import {
@@ -416,7 +417,7 @@ export default function BroadcastDetailsPage({
     <AuthGate>
       <main className="page-shell space-y-6">
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">Loading broadcast…</div>
+          <CourseLitLoading label="Loading broadcast…" />
         ) : error && !broadcast ? (
           <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             {error}

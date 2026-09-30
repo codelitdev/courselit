@@ -6,7 +6,7 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, inArray, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { frontLitConfig, getPublicFrontLitSettings } from "./frontlit-client.js";
 import { normalizeEmail } from "./invitations.js";
@@ -31,6 +31,7 @@ export type SchoolDto = {
   id: string;
   name: string;
   subdomain: string;
+  storefrontHost: string | null;
   status: "active" | "read_only" | "maintenance" | "migrating" | "deleted";
   locale: string;
   currency: string;
@@ -47,16 +48,28 @@ export type SchoolDto = {
 
 type SchoolWebsiteDto = NonNullable<SchoolDto["website"]>;
 
+function defaultStorefrontHost(subdomain: string): string | null {
+  const configuredDomain = process.env.PLATFORM_SITE_DOMAIN?.trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
+  const domain =
+    configuredDomain || (process.env.NODE_ENV === "development" ? "localhost" : null);
+  return domain ? `${subdomain}.${domain}` : null;
+}
+
 export function toSchoolDto(
   row: typeof schema.schools.$inferSelect,
   selected?: boolean,
   permissions?: readonly CourseLitPermission[],
   website?: SchoolWebsiteDto,
+  storefrontHost: string | null = defaultStorefrontHost(row.subdomain),
 ): SchoolDto {
   return {
     id: row.publicId,
     name: row.name,
     subdomain: row.subdomain,
+    storefrontHost,
     status: row.status,
     locale: row.locale,
     currency: row.currency,
@@ -297,6 +310,22 @@ export async function listSchoolsForUser(
         eq(schema.schoolAccounts.status, "active"),
       ),
     );
+  const schoolIds = rows.map((row) => row.school.id);
+  const verifiedCustomHosts = schoolIds.length
+    ? await db
+        .select({ schoolId: schema.schoolHosts.schoolId, hostname: schema.schoolHosts.hostname })
+        .from(schema.schoolHosts)
+        .where(
+          and(
+            inArray(schema.schoolHosts.schoolId, schoolIds),
+            eq(schema.schoolHosts.kind, "custom"),
+            eq(schema.schoolHosts.verificationStatus, "verified"),
+          ),
+        )
+    : [];
+  const customHostBySchoolId = new Map(
+    verifiedCustomHosts.map((host) => [host.schoolId, host.hostname]),
+  );
   const config = frontLitConfig();
   const websiteBySchoolId = new Map<string, SchoolWebsiteDto>();
   if (config.server) {
@@ -336,6 +365,7 @@ export async function listSchoolsForUser(
         ? OWNER_PERMISSIONS
         : [...parsePermissions(row.membership.permissions)],
       websiteBySchoolId.get(row.school.id),
+      customHostBySchoolId.get(row.school.id) ?? defaultStorefrontHost(row.school.subdomain),
     ),
   );
 }

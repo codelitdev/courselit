@@ -25,6 +25,12 @@ Optionally set `FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET` and
 domains on newly provisioned FrontLit teams. Use a stable CourseLit ingress
 alias; the TXT setting is a relative DNS record label.
 
+`GET /v1/public/resolve-host?host=<hostname>` is the edge host-router's
+ownership check for school custom domains. It returns success only for a
+verified custom host attached to a non-deleted school and reveals no school
+identity. Native CourseLit subdomains are handled by the named wildcard Caddy
+route and are not claimed by this resolver.
+
 ### Local SendLit shared delivery
 
 `docker-compose.local.yml` can bootstrap a local SendLit organization, create

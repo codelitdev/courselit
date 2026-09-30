@@ -4,7 +4,7 @@ import { DollarSign, Download, GraduationCap, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Resources } from "@/components/resources";
-import { CourseLitLoading } from "@/components/loading";
+import { CourseLitInlineLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import type { Product, School } from "./product-types";
 
@@ -66,7 +66,7 @@ function MetricCard({
         <Icon className="size-4 text-muted-foreground" />
       </div>
       {loading ? (
-        <CourseLitLoading label={`Loading ${title}…`} className="mt-4 justify-start" />
+        <CourseLitInlineLoading label={`Loading ${title}…`} className="mt-4 justify-start" />
       ) : (
         <>
           <p className="mt-3 text-2xl font-semibold">{value}</p>
@@ -116,7 +116,7 @@ function SalesChart({
     <section className="rounded-xl border bg-card p-5">
       <h2 className="text-xl font-semibold">Sales</h2>
       {loading ? (
-        <CourseLitLoading label="Loading sales…" className="mt-5 h-60" />
+        <CourseLitInlineLoading label="Loading sales…" className="mt-5 h-60" />
       ) : (
         <div className="mt-5" role="img" aria-label={`Sales trend in ${currency}`}>
           <div className="grid grid-cols-[max-content_minmax(0,1fr)] gap-2">

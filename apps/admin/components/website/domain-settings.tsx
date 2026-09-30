@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
+import { CourseLitLoading } from "@/components/loading";
 
 type VerificationRecords = {
   cnameTarget: string;
@@ -69,6 +70,7 @@ export function DomainSettings() {
   const [hosts, setHosts] = useState<HostsResponse | null>(null);
   const [hostname, setHostname] = useState("");
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
 
@@ -83,17 +85,23 @@ export function DomainSettings() {
       .then((body: { items?: Array<{ id: string; selected?: boolean }> }) => {
         const selected = body.items?.find((item) => item.selected) ?? body.items?.[0];
         if (active && selected) setSchoolId(selected.id);
-        else if (active) setLoading(false);
+        else if (active) {
+          setLoading(false);
+          setInitialLoading(false);
+        }
       })
       .catch(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setInitialLoading(false);
+        }
       });
     return () => {
       active = false;
     };
   }, []);
 
-  async function loadHosts(id = schoolId) {
+  async function loadHosts(id = schoolId, initial = false) {
     if (!id) return;
     setLoading(true);
     try {
@@ -108,11 +116,12 @@ export function DomainSettings() {
       toast.error(error instanceof Error ? error.message : "Unable to load domains.");
     } finally {
       setLoading(false);
+      if (initial) setInitialLoading(false);
     }
   }
 
   useEffect(() => {
-    if (schoolId) void loadHosts(schoolId);
+    if (schoolId) void loadHosts(schoolId, true);
     // loadHosts is intentionally not a dependency: this effect follows the selected school.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
@@ -218,6 +227,7 @@ export function DomainSettings() {
 
   return (
     <div className="space-y-6">
+      {initialLoading ? <CourseLitLoading label="Loading domain settings…" /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Default domain</CardTitle>

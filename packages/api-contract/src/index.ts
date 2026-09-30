@@ -438,6 +438,7 @@ export const schoolSchema = z.object({
   id: z.string(),
   name: z.string(),
   subdomain: z.string(),
+  storefrontHost: z.string().nullable(),
   status: z.enum(["active", "read_only", "maintenance", "migrating", "deleted"]),
   locale: z.string(),
   currency: z.string(),
@@ -1473,7 +1474,9 @@ export const updateContactMarketingBodySchema = z.object({
   subscribed: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
 });
-export type UpdateContactMarketingBody = z.infer<typeof updateContactMarketingBodySchema>;
+export type UpdateContactMarketingBody = z.infer<
+  typeof updateContactMarketingBodySchema
+>;
 
 export const filterPreviewBodySchema = z.object({
   filter: contactFilterSetSchema,
@@ -2490,6 +2493,16 @@ export const contract = c.router({
       400: platformErrorSchema,
       403: platformErrorSchema,
     },
+  },
+  resolvePublicHost: {
+    method: "GET",
+    path: "/v1/public/resolve-host",
+    query: z.object({ host: z.string().trim().min(1).max(253) }),
+    responses: {
+      200: z.object({ resolved: z.literal(true) }),
+      404: platformErrorSchema,
+    },
+    summary: "Check whether a verified custom host is assigned to a school",
   },
   createCheckoutSession: {
     method: "POST",

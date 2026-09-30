@@ -4,6 +4,7 @@ import { Button } from "@codelitdev/design-system";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { AuthGate } from "../../components/auth-gate";
+import { CourseLitLoading } from "../../components/loading";
 import { PageHeader } from "@/components/layout/page-header";
 
 type School = { id: string; name: string; selected?: boolean };
@@ -17,6 +18,7 @@ type Template = {
 export default function CertificatesPage() {
   const [school, setSchool] = useState<School | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -47,7 +49,8 @@ export default function CertificatesPage() {
         setSchool(selected);
         if (selected) await load(selected);
       })
-      .catch(() => setError("Unable to load certificate templates."));
+      .catch(() => setError("Unable to load certificate templates."))
+      .finally(() => setLoading(false));
   }, []);
 
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -107,6 +110,7 @@ export default function CertificatesPage() {
   return (
     <AuthGate>
       <main className="page-shell">
+        {loading ? <CourseLitLoading label="Loading certificates…" /> : null}
         <PageHeader
           title="Certificates"
           description="Manage the templates used when learners complete courses."
