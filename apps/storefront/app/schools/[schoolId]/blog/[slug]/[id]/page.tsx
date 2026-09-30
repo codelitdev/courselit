@@ -4,17 +4,26 @@ import { loadPublicPage } from "@/components/public-site-page";
 import { getPublicArticleBySlug } from "@/lib/courselit-public";
 
 interface Props {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ schoolId: string; slug: string; id: string }>;
 }
 
-async function loadBlogArticle({ slug, id }: { slug: string; id: string }) {
-  const { host } = await loadPublicPage("");
+async function loadBlogArticle({
+  slug,
+  id,
+  schoolId,
+}: {
+  slug: string;
+  id: string;
+  schoolId?: string;
+}) {
+  const { host } = await loadPublicPage("", schoolId);
   const article = await getPublicArticleBySlug(host, slug);
   return article?.documentId === id ? article : null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await loadBlogArticle(await params);
+  const { schoolId, slug, id } = await params;
+  const article = await loadBlogArticle({ slug, id, schoolId });
   if (!article) return { title: "Post not found" };
   const image = article.featuredImage;
   const imageUrl = image?.url ?? null;
@@ -26,9 +35,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PublicBlogArticlePage({ params }: Props) {
-  const route = await params;
-  const article = await loadBlogArticle(route);
+  const { schoolId, slug, id } = await params;
+  const article = await loadBlogArticle({ slug, id, schoolId });
   if (!article) notFound();
-  if (article.documentId !== route.id) notFound();
+  if (article.documentId !== id) notFound();
   redirect(`/blog/${encodeURIComponent(article.slug)}`);
 }

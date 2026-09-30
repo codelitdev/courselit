@@ -13,16 +13,15 @@ import {
   getSettings,
 } from "@/lib/courselit-public";
 import { metadataForPublicPage } from "@/lib/public-page-metadata";
-import { requestHost } from "@/lib/request-host";
 
 interface Props {
-  params: Promise<{ slug?: string[] }>;
+  params: Promise<{ schoolId: string; slug?: string[] }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { schoolId, slug } = await params;
   const pageSlug = (slug ?? []).join("/");
-  const host = await requestHost();
+  const host = schoolId;
   const settings = await getSettings(host);
   const siteTitle = settings?.title?.trim() || "CourseLit";
   const siteLogoUrl =
@@ -56,13 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   if (!pageSlug) {
-    const { page } = await loadPublicPage("");
+    const { page } = await loadPublicPage("", schoolId);
     return metadataForPublicPage(page, siteTitle, settings, true);
   }
 
   const product = await getPublicProduct(host, pageSlug);
   if (product) {
-    const { page } = await loadPublicPage(product.slug);
+    const { page } = await loadPublicPage(product.slug, schoolId);
     return {
       ...metadataForPublicPage(page, product.title, settings, false),
       alternates: {
@@ -73,7 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const community = await getPublicCommunity(host, pageSlug);
   if (community) {
-    const { page } = await loadPublicPage(community.slug);
+    const { page } = await loadPublicPage(community.slug, schoolId);
     return {
       ...metadataForPublicPage(page, community.name, settings, false),
       alternates: {
@@ -82,7 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const { page } = await loadPublicPage(pageSlug);
+  const { page } = await loadPublicPage(pageSlug, schoolId);
   if (!page) {
     return {
       title: { absolute: `Page not found | ${siteTitle}` },
@@ -102,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PublicSiteCatchAllPage({ params }: Props) {
-  const { slug } = await params;
+  const { schoolId, slug } = await params;
   const pageSlug = (slug ?? []).join("/");
   const systemRoute: PublicSystemRoute | undefined = publicSystemRouteForSlug(pageSlug);
 
@@ -112,11 +111,12 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
         pageSlug={pageSlug}
         allowEmpty={!pageSlug}
         systemRoute={systemRoute}
+        schoolId={schoolId}
       />
     );
   }
 
-  const host = await requestHost();
+  const host = schoolId;
 
   const product = await getPublicProduct(host, pageSlug);
   if (product) {
@@ -129,6 +129,7 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
         systemRoute="product"
         systemContent={<PublicProductDetail productId={product.id} />}
         salesResource={{ resourceType: "product", resourceId: product.id }}
+        schoolId={schoolId}
       />
     );
   }
@@ -144,9 +145,10 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
         systemRoute="community"
         systemContent={<PublicCommunityDetail communityId={community.id} />}
         salesResource={{ resourceType: "community", resourceId: community.id }}
+        schoolId={schoolId}
       />
     );
   }
 
-  return <PublicSitePage pageSlug={pageSlug} allowEmpty={false} />;
+  return <PublicSitePage pageSlug={pageSlug} allowEmpty={false} schoolId={schoolId} />;
 }

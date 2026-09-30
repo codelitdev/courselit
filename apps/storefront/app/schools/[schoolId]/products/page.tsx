@@ -10,6 +10,18 @@ export const metadata: Metadata = {
  * school's homepage header/footer and active theme; it is not a persisted
  * FrontLit page.
  */
-export default function PublicProductsPage() {
-  return <PublicSitePage pageSlug="products" allowEmpty systemRoute="products" />;
+export default async function PublicProductsPage({
+  params,
+}: {
+  params: Promise<{ schoolId: string }>;
+}) {
+  const { schoolId } = await params;
+  return (
+    <PublicSitePage
+      pageSlug="products"
+      allowEmpty
+      systemRoute="products"
+      schoolId={schoolId}
+    />
+  );
 }

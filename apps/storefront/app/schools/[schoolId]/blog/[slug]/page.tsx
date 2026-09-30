@@ -5,11 +5,11 @@ import { loadPublicPage, PublicSitePage } from "@/components/public-site-page";
 import { getPublicArticleBySlug, listPublicArticles } from "@/lib/courselit-public";
 
 interface Props {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ schoolId: string; slug: string }>;
 }
 
-async function loadBlogArticle(slug: string) {
-  const { host } = await loadPublicPage("");
+async function loadBlogArticle(slug: string, schoolId?: string) {
+  const { host } = await loadPublicPage("", schoolId);
   const bySlug = await getPublicArticleBySlug(host, slug);
   if (bySlug) return bySlug;
   const articles = await listPublicArticles(host);
@@ -17,15 +17,16 @@ async function loadBlogArticle(slug: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await loadBlogArticle((await params).slug);
+  const { schoolId, slug } = await params;
+  const article = await loadBlogArticle(slug, schoolId);
   return article
     ? { title: article.title ?? article.slug }
     : { title: "Post not found" };
 }
 
 export default async function PublicBlogArticlePage({ params }: Props) {
-  const { slug } = await params;
-  const article = await loadBlogArticle(slug);
+  const { schoolId, slug } = await params;
+  const article = await loadBlogArticle(slug, schoolId);
   if (!article) notFound();
   if (article.documentId === slug) {
     redirect(`/blog/${encodeURIComponent(article.slug)}`);
@@ -36,6 +37,7 @@ export default async function PublicBlogArticlePage({ params }: Props) {
       pageSlug={`blog/${article.slug}`}
       systemRoute="blog"
       systemContent={<PublicBlogArticle article={article} />}
+      schoolId={schoolId}
     />
   );
 }

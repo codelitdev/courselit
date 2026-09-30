@@ -155,6 +155,17 @@ export const mcpParityManifest = [
     },
   },
   {
+    capability: "public.school.resolve",
+    rest: { operationId: "resolveStorefrontSchool" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Storefront school resolution is an internal proxy-routing check, not an application capability exposed over MCP.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "public.communities.list",
     rest: { operationId: "listPublicCommunities" },
     parity: "exempt",

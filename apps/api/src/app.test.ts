@@ -585,6 +585,82 @@ describe.serial("reference API adapters", () => {
     await runtime.close();
   });
 
+  it("resolves storefront school identities for subdomains, custom domains, and query params", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const now = clock.now();
+    await runtime.db.insert(schema.schoolHosts).values([
+      {
+        id: crypto.randomUUID(),
+        schoolId: world.schoolA.id,
+        hostname: "learn.acme.org",
+        kind: "custom",
+        verificationStatus: "verified",
+        verificationTokenDigest: null,
+        verifiedAt: now,
+        isPrimary: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+
+    // 1. Resolve by verified custom domain
+    const customHost = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/school/resolve?host=learn.acme.org",
+      headers: {},
+    });
+    expect(customHost).toEqual({
+      status: 200,
+      body: {
+        schoolId: world.schoolA.publicId,
+        subdomain: "school-a",
+        name: "School A",
+      },
+    });
+
+    // 2. Resolve by platform subdomain
+    const subdomainHost = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/school/resolve?host=school-a.courselit.app",
+      headers: {},
+    });
+    expect(subdomainHost).toEqual({
+      status: 200,
+      body: {
+        schoolId: world.schoolA.publicId,
+        subdomain: "school-a",
+        name: "School A",
+      },
+    });
+
+    // 3. Resolve by explicit school query param
+    const explicitSchool = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/public/school/resolve?school=${world.schoolA.publicId}`,
+      headers: {},
+    });
+    expect(explicitSchool).toEqual({
+      status: 200,
+      body: {
+        schoolId: world.schoolA.publicId,
+        subdomain: "school-a",
+        name: "School A",
+      },
+    });
+
+    // 4. Reject unknown host
+    const unknownHost = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/public/school/resolve?host=unknown.example.com",
+      headers: {},
+    });
+    expect(unknownHost.status).toBe(404);
+
+    await runtime.close();
+  });
+
   it("mounts the shared contract through the Express ts-rest adapter", async () => {
     const runtime = await createPgliteRuntime({
       clock: freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z")),

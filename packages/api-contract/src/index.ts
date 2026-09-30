@@ -2504,6 +2504,23 @@ export const contract = c.router({
     },
     summary: "Check whether a verified custom host is assigned to a school",
   },
+  resolveStorefrontSchool: {
+    method: "GET",
+    path: "/v1/public/school/resolve",
+    query: z.object({
+      host: z.string().trim().max(253).optional(),
+      school: z.string().trim().max(253).optional(),
+    }),
+    responses: {
+      200: z.object({
+        schoolId: z.string(),
+        subdomain: z.string(),
+        name: z.string(),
+      }),
+      404: platformErrorSchema,
+    },
+    summary: "Resolve a school identity for storefront proxy routing",
+  },
   createCheckoutSession: {
     method: "POST",
     path: "/v1/storefront/checkout-sessions",

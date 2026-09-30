@@ -9,22 +9,21 @@ import {
   getSettings,
 } from "@/lib/courselit-public";
 import { metadataForPublicPage } from "@/lib/public-page-metadata";
-import { requestHost } from "@/lib/request-host";
 
 interface Props {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ schoolId: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const host = await requestHost();
+  const { schoolId, slug } = await params;
+  const host = schoolId;
   const settings = await getSettings(host);
   const product = await getPublicProduct(host, slug);
   const community = product ? null : await getPublicCommunity(host, slug);
   const resource = product ?? community;
   if (!resource) return { title: "Page not found" };
 
-  const { page } = await loadPublicPage(resource.slug);
+  const { page } = await loadPublicPage(resource.slug, schoolId);
   return {
     ...metadataForPublicPage(page, product ? product.title : community!.name, settings),
     alternates: { canonical: `/p/${encodeURIComponent(resource.slug)}` },
@@ -32,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PublicSalesPage({ params }: Props) {
-  const { slug } = await params;
-  const host = await requestHost();
+  const { schoolId, slug } = await params;
+  const host = schoolId;
   const product = await getPublicProduct(host, slug);
   if (product) {
     return (
@@ -45,6 +44,7 @@ export default async function PublicSalesPage({ params }: Props) {
         systemRoute="product"
         systemContent={<PublicProductDetail productId={product.id} />}
         salesResource={{ resourceType: "product", resourceId: product.id }}
+        schoolId={schoolId}
       />
     );
   }
@@ -60,6 +60,7 @@ export default async function PublicSalesPage({ params }: Props) {
         systemRoute="community"
         systemContent={<PublicCommunityDetail communityId={community.id} />}
         salesResource={{ resourceType: "community", resourceId: community.id }}
+        schoolId={schoolId}
       />
     );
   }

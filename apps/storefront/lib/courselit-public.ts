@@ -42,21 +42,51 @@ export interface PublicArticle {
   updatedAt: string | null;
 }
 
+export interface ResolvedSchool {
+  schoolId: string;
+  subdomain: string;
+  name: string;
+}
+
+export async function resolveSchoolIdentity(
+  host?: string,
+  school?: string,
+): Promise<ResolvedSchool | null> {
+  try {
+    const url = new URL(`${API_URL}/v1/public/school/resolve`);
+    if (host) url.searchParams.set("host", host);
+    if (school) url.searchParams.set("school", school);
+    const response = await fetch(url.toString(), {
+      headers: { accept: "application/json" },
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as ResolvedSchool;
+  } catch {
+    return null;
+  }
+}
+
 async function getFromApi<T>(
   path: string,
-  host: string,
-  options: { noStore?: boolean } = {},
+  schoolIdOrHost: string,
+  options: { noStore?: boolean; tags?: string[] } = {},
 ): Promise<T | null> {
-  if (!host) return null;
+  if (!schoolIdOrHost) return null;
   try {
+    const headers: Record<string, string> = {
+      accept: "application/json",
+      "x-school-id": schoolIdOrHost,
+    };
+    if (schoolIdOrHost.includes(".")) {
+      headers["x-forwarded-host"] = schoolIdOrHost;
+    }
+    const tags = options.tags ?? [`school-${schoolIdOrHost}`];
     const response = await fetch(`${API_URL}${path}`, {
-      headers: {
-        accept: "application/json",
-        "x-forwarded-host": host,
-      },
+      headers,
       ...(options.noStore || process.env.NODE_ENV === "development"
         ? { cache: "no-store" as const }
-        : { next: { revalidate: 60 } }),
+        : { next: { revalidate: 60, tags } }),
     });
     if (!response.ok) return null;
     return (await response.json()) as T;
@@ -65,10 +95,15 @@ async function getFromApi<T>(
   }
 }
 
-export function getSettings(host: string): Promise<PublicSettings | null> {
-  return getFromApi<PublicSettings>("/v1/public/site/settings", host, {
-    noStore: true,
-  });
+export function getSettings(
+  schoolIdOrHost: string,
+  options: { noStore?: boolean } = {},
+): Promise<PublicSettings | null> {
+  return getFromApi<PublicSettings>(
+    "/v1/public/site/settings",
+    schoolIdOrHost,
+    options,
+  );
 }
 
 /** Pass an empty slug to resolve the homepage. */

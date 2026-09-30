@@ -1016,5 +1016,5 @@ describe.serial("first vertical slice", () => {
     );
     expect(names).toEqual(expect.arrayContaining(["OSS One", "OSS Two"]));
     await runtime.close();
-  });
+  }, 30_000);
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { COURSELIT_CLASSIC_THEME } from "@courselit/page-blocks/theme";
 import type { Theme, ThemeStyle } from "@frontlit/page-builder/models";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 
@@ -36,12 +37,7 @@ export function SchoolThemeContextProvider({
 
 export function useSchoolThemeStyle(): ThemeStyle {
   const theme = useContext(SchoolThemeContext);
-  if (!theme) {
-    throw new Error(
-      "useSchoolThemeStyle must be used under SchoolThemeContextProvider",
-    );
-  }
-  return theme.theme;
+  return theme?.theme ?? COURSELIT_CLASSIC_THEME.theme;
 }
 
 export function SchoolBrandContextProvider({

@@ -25,5 +25,6 @@
 - Learner checkout payments, invoices, entitlements, refunds, and provider webhooks should not call or depend on the platform billing bundle.
 
 ## Testing instructions
+- If we are removing a functionality, remember to clean up obsolete tests.
 
 ## PR instructions

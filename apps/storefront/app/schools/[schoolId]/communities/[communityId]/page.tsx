@@ -8,15 +8,16 @@ export const metadata: Metadata = {
 export default async function PublicCommunityDetailPage({
   params,
 }: {
-  params: Promise<{ communityId: string }>;
+  params: Promise<{ schoolId: string; communityId: string }>;
 }) {
-  const { communityId } = await params;
+  const { schoolId, communityId } = await params;
   return (
     <PublicSitePage
       pageSlug=""
       allowEmpty
       systemRoute="community"
       salesResource={{ resourceType: "community", resourceId: communityId }}
+      schoolId={schoolId}
     />
   );
 }

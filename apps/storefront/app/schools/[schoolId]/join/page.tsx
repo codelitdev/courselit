@@ -10,6 +10,18 @@ export const metadata: Metadata = {
  * school's homepage header/footer plus the Community page block; it is not a
  * persisted FrontLit sales page.
  */
-export default function JoinPage() {
-  return <PublicSitePage pageSlug="join" allowEmpty systemRoute="join" />;
+export default async function JoinPage({
+  params,
+}: {
+  params: Promise<{ schoolId: string }>;
+}) {
+  const { schoolId } = await params;
+  return (
+    <PublicSitePage
+      pageSlug="join"
+      allowEmpty
+      systemRoute="join"
+      schoolId={schoolId}
+    />
+  );
 }

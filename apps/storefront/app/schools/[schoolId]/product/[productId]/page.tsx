@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default async function PublicProductDetailPage({
   params,
 }: {
-  params: Promise<{ productId: string }>;
+  params: Promise<{ schoolId: string; productId: string }>;
 }) {
-  const { productId } = await params;
+  const { schoolId, productId } = await params;
   return (
     <PublicSitePage
       pageSlug=""
@@ -19,6 +19,7 @@ export default async function PublicProductDetailPage({
       systemRoute="product"
       salesResource={{ resourceType: "product", resourceId: productId }}
       systemContent={<PublicProductDetail productId={productId} />}
+      schoolId={schoolId}
     />
   );
 }

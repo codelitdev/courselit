@@ -44,14 +44,14 @@ describe.serial("school team memberships and permissions", () => {
     const regularMember = body.members.find((m) => m.name === "Member");
     expect(ownerMember).toBeDefined();
     expect(ownerMember?.isOwner).toBe(true);
-    expect(ownerMember?.effectivePermissions?.length).toBe(36);
+    expect(ownerMember?.effectivePermissions?.length).toBe(35);
     expect(regularMember).toBeDefined();
     expect(regularMember?.isOwner).toBe(false);
     expect(regularMember?.version).toBe(1);
 
     expect(body.viewer.name).toBe("Owner");
     expect(body.viewer.isOwner).toBe(true);
-    expect(body.viewer.permissions.length).toBe(36);
+    expect(body.viewer.permissions.length).toBe(35);
 
     await runtime.close();
   });

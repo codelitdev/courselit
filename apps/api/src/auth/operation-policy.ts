@@ -277,6 +277,8 @@ export const OPERATION_POLICIES = {
   markAllAdminNotificationsRead: schoolSessionOp(["members:read"]),
 
   // Public catalog & storefront
+  resolvePublicHost: publicOp(),
+  resolveStorefrontSchool: publicOp(),
   listPublicProducts: publicOp(),
   listPublicCommunities: publicOp(),
   getPublicCommunity: publicOp(),

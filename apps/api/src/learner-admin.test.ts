@@ -276,25 +276,8 @@ describe.serial("admin learner management", () => {
       .select()
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
-    await runtime.db.insert(schema.learnerMemberships).values({
-      id: uuidv7(clock),
-      publicId: createPublicId("lrm", clock),
-      schoolId: world.schoolA.id,
-      paymentPlanId: null,
-      schoolAccountId: ownerAccountId,
-      entityType: "community",
-      entityId: communityRow!.publicId,
-      isIncludedInPlan: false,
-      parentMembershipId: null,
-      status: "active",
-      role: "moderate",
-      joiningReason: "",
-      rejectionReason: null,
-      createdAt: now,
-      updatedAt: now,
-    });
 
-    // The owner's account already exists in schoolAccounts
+    // The owner's account already exists in schoolAccounts and was linked to the provisioned community membership
     const accounts = await runtime.db
       .select()
       .from(schema.schoolAccounts)
@@ -303,6 +286,62 @@ describe.serial("admin learner management", () => {
       );
     expect(accounts).toHaveLength(1);
     expect(accounts[0]!.email).toBe(world.owner.email);
+
+    const ownerMemberships = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, world.schoolA.id),
+          eq(schema.learnerMemberships.schoolAccountId, ownerAccountId),
+          eq(schema.learnerMemberships.entityType, "community"),
+        ),
+      );
+    expect(ownerMemberships).toHaveLength(1);
+    expect(ownerMemberships[0]!.entityId).toBe(communityRow!.publicId);
+
+    // Another staff member can also be granted a learner membership via their unified school account
+    const [memberAccount] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.member.id),
+        ),
+      );
+    const memberAccountId = memberAccount!.id;
+
+    await runtime.db.insert(schema.learnerMemberships).values({
+      id: uuidv7(clock),
+      publicId: createPublicId("lrm", clock),
+      schoolId: world.schoolA.id,
+      paymentPlanId: null,
+      schoolAccountId: memberAccountId,
+      entityType: "community",
+      entityId: communityRow!.publicId,
+      isIncludedInPlan: false,
+      parentMembershipId: null,
+      status: "active",
+      role: "post",
+      joiningReason: "",
+      rejectionReason: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const memberMemberships = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, world.schoolA.id),
+          eq(schema.learnerMemberships.schoolAccountId, memberAccountId),
+          eq(schema.learnerMemberships.entityType, "community"),
+        ),
+      );
+    expect(memberMemberships).toHaveLength(1);
+    expect(memberMemberships[0]!.schoolAccountId).toBe(memberAccountId);
 
     await runtime.close();
   });

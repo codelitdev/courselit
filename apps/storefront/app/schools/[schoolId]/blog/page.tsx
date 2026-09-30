@@ -3,6 +3,18 @@ import { PublicSitePage } from "@/components/public-site-page";
 
 export const metadata: Metadata = { title: "Blog" };
 
-export default function PublicBlogPage() {
-  return <PublicSitePage pageSlug="blog" allowEmpty systemRoute="blog" />;
+export default async function PublicBlogPage({
+  params,
+}: {
+  params: Promise<{ schoolId: string }>;
+}) {
+  const { schoolId } = await params;
+  return (
+    <PublicSitePage
+      pageSlug="blog"
+      allowEmpty
+      systemRoute="blog"
+      schoolId={schoolId}
+    />
+  );
 }

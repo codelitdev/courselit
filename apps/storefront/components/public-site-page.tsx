@@ -55,8 +55,8 @@ function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
   ];
 }
 
-export async function loadPublicPage(pageSlug: string) {
-  const host = await requestHost();
+export async function loadPublicPage(pageSlug: string, schoolId?: string) {
+  const host = schoolId ?? (await requestHost());
   const page = await getPageBySlug(host, pageSlug);
   return { host, pageSlug, page };
 }
@@ -69,6 +69,7 @@ export async function PublicSitePage({
   systemRoute,
   systemContent: providedSystemContent,
   salesResource,
+  schoolId,
 }: {
   pageSlug: string;
   salesPageSlug?: string;
@@ -81,10 +82,12 @@ export async function PublicSitePage({
   salesResource?:
     | { resourceType: "product"; resourceId: string }
     | { resourceType: "community"; resourceId: string };
+  schoolId?: string;
 }) {
   const isSalesPage = Boolean(salesPageSlug);
   const { host, page } = await loadPublicPage(
     salesPageSlug ?? (systemRoute ? "" : pageSlug),
+    schoolId,
   );
   const settings = await getSettings(host);
   const fallbackPage =

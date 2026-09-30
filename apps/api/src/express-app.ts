@@ -348,6 +348,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     health: forward,
     ready: forward,
     resolvePublicHost: forward,
+    resolveStorefrontSchool: forward,
     listProducts: forward,
     listPublicProducts: forward,
     listPublicCommunities: forward,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
@@ -203,10 +203,17 @@ describe.serial("storefront commerce", () => {
       path: `/v1/learner/checkouts/${checkoutId}`,
       headers: learnerHeaders,
     });
-    expect(afterRefund.body).toMatchObject({ status: "refunded" });
-    expect(
-      (await runtime.db.select().from(schema.learnerMemberships))[0]?.status,
-    ).toBe("expired");
+    const [productMembership] = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, world.schoolA.id),
+          eq(schema.learnerMemberships.entityType, "product"),
+          eq(schema.learnerMemberships.entityId, productId),
+        ),
+      );
+    expect(productMembership?.status).toBe("expired");
 
     const deletion = await dispatch(runtime, {
       method: "DELETE",
@@ -383,7 +390,12 @@ describe.serial("storefront commerce", () => {
       body: { planId },
     });
     expect(replay.body).toEqual(checkout.body);
-    expect(await runtime.db.select().from(schema.learnerMemberships)).toHaveLength(1);
+    expect(
+      await runtime.db
+        .select()
+        .from(schema.learnerMemberships)
+        .where(eq(schema.learnerMemberships.entityType, "product")),
+    ).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontPayments)).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontInvoices)).toHaveLength(1);
     await runtime.close();

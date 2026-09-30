@@ -523,6 +523,53 @@ export async function dispatch(
         : errorResponse(createPlatformError("not_found"));
     }
 
+    if (request.method === "GET" && path === "/v1/public/school/resolve") {
+      const explicitSchool =
+        query.get("school")?.trim() || (headerSchoolId(request.headers) ?? "");
+      const hostParam =
+        query.get("host")?.trim() || (hostnameFromHeaders(request.headers) ?? "");
+
+      let loadedSchool = null;
+
+      if (explicitSchool) {
+        loadedSchool = await loadSchoolByPublicId(deps.db, explicitSchool);
+      }
+
+      if (!loadedSchool && hostParam) {
+        const lookupKey = schoolLookupKeyFromHost(hostParam);
+        if (lookupKey) {
+          loadedSchool = await loadSchoolByPublicId(deps.db, lookupKey);
+        }
+      }
+
+      if (
+        !loadedSchool &&
+        (!hostParam || hostParam === "localhost" || hostParam === "127.0.0.1")
+      ) {
+        const allSchools = await deps.db
+          .select()
+          .from(schema.schools)
+          .where(ne(schema.schools.status, "deleted"))
+          .limit(2);
+        if (allSchools.length === 1 && allSchools[0]) {
+          loadedSchool = allSchools[0];
+        }
+      }
+
+      if (!loadedSchool || loadedSchool.status === "deleted") {
+        return errorResponse(createPlatformError("not_found"));
+      }
+
+      return {
+        status: 200,
+        body: {
+          schoolId: loadedSchool.publicId,
+          subdomain: loadedSchool.subdomain,
+          name: loadedSchool.name,
+        },
+      };
+    }
+
     const paymentWebhookMatch =
       /^\/v1\/storefront\/webhooks\/(stripe|lemonsqueezy|razorpay)$/.exec(path);
     if (request.method === "POST" && paymentWebhookMatch) {
