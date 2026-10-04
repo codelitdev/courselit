@@ -22,7 +22,8 @@ jobs:
       - run: bun install
         if: ${{ !hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
+      # Pinned to the CLI release that wrote this file. `sync` moves it.
+      - run: bunx @codelitdev/platform-cli@0.2.0 doctor
       - run: bun run --filter "*/api" check:drift
-      - run: bun run test
-      - run: bun run typecheck
-      - run: bun run build
+      # Fails when the API package has no `test:conformance` script.
+      - run: bun run --filter "*/api" test:conformance

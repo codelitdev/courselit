@@ -63,6 +63,7 @@ CourseLit's authentication layer aligns directly with the architectural contract
 
 1. **Protocol & Authentication Boundary**:
    - `@codelitdev/oauth-server-kit` provides the reusable OAuth 2.0 / OIDC provider options (`createOAuthProviderOptions`), session verification (`resolveBetterAuthSession`), access token bearer verification (`verifyOAuthAccessToken`), hosted login/consent routing (`createOAuthPagesRouter`), and MCP OAuth discovery (`createMcpOAuthDiscoveryRoutes`).
+   - The product's Better Auth server adds `@better-auth/cimd` for MCP Client ID Metadata Documents. OAuth discovery advertises CIMD; unauthenticated DCR remains enabled and rate-limited for older MCP clients.
    - The kit authenticates people and OAuth clients and outputs a neutral `AuthenticatedIdentity` whose `subject` is the verified Better Auth user ID (`user.id`).
    - **The kit does not define, create, or persist product account rows.** It remains completely agnostic of tenant concepts, school structures, permissions, and roles.
 

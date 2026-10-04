@@ -40,7 +40,9 @@ export async function authenticateHttpRequest(
   if (selected.kind === "absent") {
     return mapTransportAuthentication({ kind: "absent" }, { transport: "http" });
   }
-  if (selected.kind === "ambiguous") {
+  // Rejects "ambiguous" and, from @codelitdev/platform 0.1.0, "malformed"
+  // (an Authorization header that is not `Bearer <token>`); never falls back.
+  if ("error" in selected) {
     return { kind: "rejected", error: selected.error };
   }
   const presented = selected.credential;
@@ -164,7 +166,9 @@ export async function authenticateMcpRequest(
   if (selected.kind === "absent") {
     return mapTransportAuthentication({ kind: "absent" }, { transport: "mcp" });
   }
-  if (selected.kind === "ambiguous") {
+  // Rejects "ambiguous" and, from @codelitdev/platform 0.1.0, "malformed"
+  // (an Authorization header that is not `Bearer <token>`); never falls back.
+  if ("error" in selected) {
     return { kind: "rejected", error: selected.error };
   }
   const presented = selected.credential;

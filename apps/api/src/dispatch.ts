@@ -627,7 +627,13 @@ export async function dispatch(
       return {
         status: result.status,
         body: result.body,
-        headers: result.headers,
+        headers:
+          result.status === 401
+            ? {
+                ...result.headers,
+                "WWW-Authenticate": `Bearer resource_metadata="${deps.auth.publicApiUrl}/.well-known/oauth-protected-resource/mcp"`,
+              }
+            : result.headers,
       };
     }
 

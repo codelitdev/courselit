@@ -4142,7 +4142,7 @@ export const contract = c.router({
     path: "/v1/api-keys",
     body: z.object({
       permissions: z.array(z.string()).default([]),
-      expiresAt: z.iso.datetime().optional(),
+      expiresAt: z.string().datetime().optional(),
     }),
     responses: {
       201: apiKeySchema.required({ raw: true }),

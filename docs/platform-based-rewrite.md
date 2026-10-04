@@ -191,7 +191,7 @@ flowchart LR
 - OpenAPI generated from the runtime contract and served at `/docs` with the raw document at `/openapi.json`.
 - Better Auth and `@codelitdev/oauth-server-kit` for the admin authorization server.
 - A distinct school-scoped learner auth configuration and persistence boundary.
-- `@codelitdev/mcp-server-kit` mounted at `/mcp` with OAuth discovery and dynamic client registration.
+- `@codelitdev/mcp-server-kit` mounted at `/mcp` with OAuth discovery, CIMD, and DCR compatibility.
 - Drizzle ORM with PostgreSQL.
 - Platform billing, observability, audit, readiness, and shutdown composition.
 - Storefront payment and sister-product webhook endpoints.
@@ -251,7 +251,7 @@ packages/
   integration-clients/
 ```
 
-Packages are introduced only where two or more applications need the same stable contract or UI behavior. Server business logic remains in `apps/api` unless reuse is demonstrated. The generated Platform manifest and managed-file hashes remain intact so `platform-cli doctor` and `platform-cli upgrade` continue to work.
+Packages are introduced only where two or more applications need the same stable contract or UI behavior. Server business logic remains in `apps/api` unless reuse is demonstrated. The generated Platform manifest and managed-file hashes remain intact so `platform-cli doctor` and `platform-cli sync` continue to work.
 
 The target workspace uses Bun, matching the Platform preset. Existing reusable CourseLit packages are ported selectively; the rewrite must not carry every legacy workspace forward by default.
 
@@ -671,7 +671,7 @@ Initial contract groups are:
 
 - MCP exposes admin/integration operations, not learner browser operations.
 - Every MCP tool has an explicit school permission and OAuth scope.
-- DCR, authorization-server metadata, protected-resource metadata, PKCE, scopes, and bearer challenges follow the Platform MCP/OAuth contract.
+- CIMD, authorization-server metadata, protected-resource metadata, PKCE, scopes, and bearer challenges follow the Platform MCP/OAuth contract. Rate-limited DCR remains available for older clients.
 - Operations unsuitable for MCP are recorded in a parity registry with a reason, such as provider webhooks, binary transfer, browser redirects, and learner session endpoints.
 - Destructive and financial tools require explicit confirmation semantics where supported and always produce audit records.
 
@@ -948,7 +948,7 @@ Tenant escape, credential confusion, duplicate charges, lost paid entitlement, m
 - Resolve tenancy from verified host mapping or an authenticated school-bound credential; never trust arbitrary tenant headers from the public edge.
 - Apply authorization in the shared service before any tenant-owned read or write.
 - Keep admin, learner, MCP, API-key, worker, integration, and webhook credentials distinct by audience and precedence.
-- Use PKCE for public OAuth clients and support the Platform MCP discovery/DCR contract.
+- Use PKCE for public OAuth clients and support MCP discovery with CIMD and rate-limited DCR compatibility.
 - Encrypt persisted provider credentials and support rotation without downtime.
 - Rate-limit auth, API-key verification, checkout, webhook, public forms, and expensive learner operations.
 - Use CSRF protection and strict origin checks on cookie-authenticated mutations.

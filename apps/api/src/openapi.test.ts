@@ -80,4 +80,25 @@ describe("CourseLit OpenAPI tags", () => {
       }
     }
   });
+
+  it("generates request and query schemas from the zod contract", () => {
+    // @ts-rest/open-api emits `{}` for schemas from an unsupported zod major
+    // instead of failing, so check that real schemas come through.
+    const createCommunity = document.paths["/v1/communities"]?.post as {
+      requestBody?: { content: Record<string, { schema: Record<string, unknown> }> };
+    };
+    expect(
+      createCommunity.requestBody?.content["application/json"]?.schema,
+    ).toMatchObject({
+      type: "object",
+      properties: { name: { type: "string", minLength: 1, maxLength: 200 } },
+    });
+
+    const listCommunities = document.paths["/v1/communities"]?.get as {
+      parameters?: Array<{ name: string; schema?: Record<string, unknown> }>;
+    };
+    for (const parameter of listCommunities.parameters ?? []) {
+      expect(parameter.schema).not.toEqual({});
+    }
+  });
 });

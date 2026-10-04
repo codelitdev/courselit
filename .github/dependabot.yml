@@ -1,0 +1,15 @@
+# Product-owned. Opens one grouped pull request when a CodeLit Platform
+# release is published; all @codelitdev packages release under one version.
+# The platform conformance workflow gates the pull request.
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "@codelitdev/*"
+    groups:
+      codelit-platform:
+        patterns:
+          - "@codelitdev/*"

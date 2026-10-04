@@ -1,4 +1,5 @@
 import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
+import { cimd } from "@better-auth/cimd";
 import { emailOTP } from "better-auth/plugins";
 import { jwt } from "better-auth/plugins/jwt";
 import { oauthProvider } from "@better-auth/oauth-provider";
@@ -7,8 +8,10 @@ import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
+import { fetchClientMetadataResource } from "./cimd-fetch.js";
 
 export const AUTH_COOKIE_PREFIX = "courselit";
+export const MCP_SCOPES_SUPPORTED = ["data:read"] as const;
 
 export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
   return createOAuthProviderOptions({
@@ -16,6 +19,8 @@ export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
     consentPage: `${urls.publicApiUrl}/oauth/consent`,
     scopes: ["openid", "profile", "email", "offline_access", "data:read"],
     validAudiences: [urls.restResource, urls.mcpResource],
+    allowDynamicClientRegistration: true,
+    allowUnauthenticatedDynamicClientRegistration: true,
     clientRegistrationDefaultScopes: ["openid", "profile", "email"],
     clientRegistrationAllowedScopes: ["offline_access", "data:read"],
   });
@@ -180,9 +185,19 @@ export function buildBetterAuthOptions(input: {
           await sendVerificationOTP({ email, otp, type });
         },
       }),
-      oauthProvider(oauthProviderInput(urls)),
+      oauthProvider({
+        ...oauthProviderInput(urls),
+        clientRegistrationDefaultResources: [urls.mcpResource],
+      }),
+      cimd({
+        fetchClientMetadataResource,
+        metadataProfile: "mcp-2026-07-28",
+        metadataRevalidationInterval: "60m",
+        metadataFetchPolicy: { minimumFetchInterval: 0 },
+        originBoundFields: ["post_logout_redirect_uris", "client_uri"],
+      }),
     ],
-  };
+  } satisfies BetterAuthOptions;
 }
 
 export async function sendVerificationOTP(

@@ -158,6 +158,7 @@ The boundary is:
 | --- | --- |
 | Global user, provider identities, OTP verification rows, and sessions | Better Auth |
 | Better Auth OAuth-provider configuration, hosted login/consent plumbing, access-token verification, resource audiences, and MCP protected-resource discovery | `@codelitdev/oauth-server-kit` |
+| MCP Client ID Metadata Documents (CIMD), secure metadata fetch, and DCR compatibility policy | CourseLit's Better Auth configuration with `@better-auth/cimd` |
 | CourseLit account meaning and global profile | CourseLit, represented by the Better Auth `user` row |
 | School-local profile and actor identity | CourseLit `school_accounts` |
 | Staff permissions and learner entitlements | CourseLit memberships |

@@ -3,6 +3,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { oauthProvider } from "@better-auth/oauth-provider";
+import { cimd } from "@better-auth/cimd";
+import { fetchClientMetadataResource } from "@better-auth/cimd/node";
 import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
 import { getSchema } from "better-auth/db";
 import { emailOTP } from "better-auth/plugins/email-otp";
@@ -25,16 +27,23 @@ const authOptions = {
     emailOTP({
       async sendVerificationOTP() {},
     }),
-    oauthProvider(
-      createOAuthProviderOptions({
+    oauthProvider({
+      ...createOAuthProviderOptions({
         loginPage: `${publicApiUrl}/oauth/login`,
         consentPage: `${publicApiUrl}/oauth/consent`,
         scopes: ["openid", "profile", "email", "offline_access", "data:read"],
         validAudiences: [`${publicApiUrl}/api`, `${publicApiUrl}/mcp`],
+        allowDynamicClientRegistration: true,
+        allowUnauthenticatedDynamicClientRegistration: true,
         clientRegistrationDefaultScopes: ["openid", "profile", "email"],
         clientRegistrationAllowedScopes: ["offline_access", "data:read"],
       }),
-    ),
+      clientRegistrationDefaultResources: [`${publicApiUrl}/mcp`],
+    }),
+    cimd({
+      fetchClientMetadataResource,
+      metadataProfile: "mcp-2026-07-28",
+    }),
   ],
 };
 

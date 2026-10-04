@@ -1,4 +1,5 @@
 import { createOAuthPagesRouter } from "@codelitdev/oauth-server-kit/express";
+import { createMcpOAuthDiscoveryRoutes } from "@codelitdev/oauth-server-kit/mcp";
 import {
   createPlatformError,
   readOrCreateRequestId,
@@ -8,8 +9,13 @@ import { contract } from "@courselit/api-contract";
 import { createExpressEndpoints, initServer } from "@ts-rest/express";
 import { toNodeHandler } from "better-auth/node";
 import express, { type Express, type RequestHandler } from "express";
+import rateLimit from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
-import { AUTH_BASE_PATH, LEARNER_AUTH_BASE_PATH } from "./auth/options.js";
+import {
+  AUTH_BASE_PATH,
+  LEARNER_AUTH_BASE_PATH,
+  MCP_SCOPES_SUPPORTED,
+} from "./auth/options.js";
 import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
@@ -79,6 +85,28 @@ export function createExpressApp(deps: DispatchDeps): Express {
     next();
   });
   const authNodeHandler = toNodeHandler(deps.auth.auth);
+  app.use(
+    createMcpOAuthDiscoveryRoutes({
+      auth: deps.auth.auth,
+      oauthResourceClient: deps.auth.oauthResourceClient,
+      resourceUrl: deps.auth.mcpResource,
+      scopesSupported: [...MCP_SCOPES_SUPPORTED],
+      allowedOrigins: "*",
+    }),
+  );
+  app.post(
+    `${AUTH_BASE_PATH}/oauth2/register`,
+    rateLimit({
+      windowMs: 60_000,
+      max: 20,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        error: "too_many_requests",
+        error_description: "Too many client registration requests.",
+      },
+    }),
+  );
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
   app.all("/api/learner-auth/*", (req, res) => {
     req.url = req.url.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);

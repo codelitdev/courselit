@@ -18,8 +18,7 @@
     "esbuild": "0.28.2",
     "postcss": "8.5.28",
     "qs": "6.16.0",
-    "ts-deepmerge": "8.0.0",
-    "zod": "4.5.4"
+    "ts-deepmerge": "8.0.0"
   },
   "patchedDependencies": {
     "@anatine/zod-openapi@1.14.2": "patches/@anatine__zod-openapi@1.14.2.patch"
