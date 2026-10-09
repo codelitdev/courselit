@@ -1,5 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
-import { FetchBuilder } from "@courselit/utils";
+import {
+    FetchBuilder,
+    lessonTypeSupportsAttachments,
+    lessonTypeSupportsDescription,
+} from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
     LESSON_TYPE_AUDIO,
@@ -34,7 +38,11 @@ import {
 } from "@courselit/common-models";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
-import { isEnrolled, isLessonCompleted } from "../../../ui-lib/utils";
+import {
+    hasTextEditorContent,
+    isEnrolled,
+    isLessonCompleted,
+} from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import ScormViewer from "./scorm-viewer";
@@ -96,22 +104,10 @@ export const LessonViewer = ({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
     const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
-    const supportsDescription = Boolean(
-        lesson &&
-            Constants.LessonTypesWithDescription.some(
-                (type) =>
-                    String.prototype.toUpperCase.call(type) === lesson.type,
-            ),
-    );
-    const supportsAttachments = Boolean(
-        lesson &&
-            Constants.LessonTypesWithAttachments.some(
-                (type) =>
-                    String.prototype.toUpperCase.call(type) === lesson.type,
-            ),
-    );
-    const hasDescription = Boolean(
-        (lesson?.description as TextEditorContent | undefined)?.content?.length,
+    const supportsDescription = lessonTypeSupportsDescription(lesson?.type);
+    const supportsAttachments = lessonTypeSupportsAttachments(lesson?.type);
+    const hasDescription = hasTextEditorContent(
+        lesson?.description as TextEditorContent | undefined,
     );
     const isViewerEnrolled = Boolean(
         lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),

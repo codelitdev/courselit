@@ -5,11 +5,12 @@ import CourseModel from "@/models/Course";
 import LessonModel from "@/models/Lesson";
 import ActivityModel from "@/models/Activity";
 import { createLesson, deleteLesson, updateLesson } from "../logic";
-import { deleteMedia, sealMedia } from "@/services/medialit";
+import { deleteMedia, getMedia, sealMedia } from "@/services/medialit";
 import { responses } from "@/config/strings";
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn(),
+    getMedia: jest.fn(),
     sealMedia: jest.fn(),
 }));
 
@@ -114,7 +115,42 @@ describe("Lesson description and attachments", () => {
         await LessonModel.deleteMany({ domain: testDomain._id });
         (sealMedia as jest.Mock).mockReset();
         (deleteMedia as jest.Mock).mockReset();
-        (sealMedia as jest.Mock).mockResolvedValue(undefined);
+        (getMedia as jest.Mock).mockReset();
+        // By default every file was uploaded by this school.
+        (sealMedia as jest.Mock).mockImplementation(
+            async (mediaId: string) => ({
+                ...attachment(mediaId, `${mediaId}.pdf`),
+                file: mediaUrl(mediaId),
+                group: testDomain.name,
+            }),
+        );
+        (getMedia as jest.Mock).mockImplementation(async (mediaId: string) => ({
+            mediaId,
+            group: testDomain.name,
+        }));
+    });
+
+    const linkTo = (mediaId: string) => ({
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: "Worksheet",
+                        marks: [
+                            {
+                                type: "link",
+                                attrs: {
+                                    href: `https://media.example.com/${mediaId}/main.pdf`,
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
     });
 
     const createVideoLesson = async (
@@ -180,6 +216,7 @@ describe("Lesson description and attachments", () => {
             async (mediaId: string) => ({
                 ...attachment(mediaId, `${mediaId}.pdf`),
                 file: "https://media.example.com/private.pdf",
+                group: testDomain.name,
             }),
         );
 
@@ -492,5 +529,144 @@ describe("Lesson description and attachments", () => {
         expect(await LessonModel.findOne({ lessonId: lesson.lessonId })).toBe(
             null,
         );
+    });
+    it("rejects an attachment uploaded by another school", async () => {
+        (sealMedia as jest.Mock).mockImplementation(
+            async (mediaId: string) => ({
+                mediaId,
+                group: "another-school",
+            }),
+        );
+
+        await expect(
+            createVideoLesson({
+                attachments: [attachment(id("foreign"), "foreign.pdf")],
+            }),
+        ).rejects.toThrow(responses.lesson_attachment_not_allowed);
+    });
+
+    it("rejects the lesson's own media as an attachment", async () => {
+        const mediaId = id("main-video");
+        const lesson = await createVideoLesson({
+            media: attachment(mediaId, "video.mp4"),
+        });
+
+        await expect(
+            updateLesson(
+                {
+                    id: lesson.lessonId,
+                    attachments: [attachment(mediaId, "video.mp4")],
+                } as any,
+                ownerCtx,
+            ),
+        ).rejects.toThrow(responses.lesson_attachment_not_allowed);
+        expect(deleteMedia).not.toHaveBeenCalled();
+    });
+
+    it("rejects an attachment another lesson is already using", async () => {
+        const mediaId = id("shared-attachment");
+        await LessonModel.create({
+            domain: testDomain._id,
+            lessonId: id("other-lesson"),
+            title: "Other lesson",
+            type: Constants.LessonType.VIDEO,
+            creatorId: owner.userId,
+            courseId: course.courseId,
+            groupId,
+            attachments: [attachment(mediaId, "shared.pdf")],
+        });
+
+        await expect(
+            createVideoLesson({
+                attachments: [attachment(mediaId, "shared.pdf")],
+            }),
+        ).rejects.toThrow(responses.lesson_attachment_not_allowed);
+    });
+
+    it("keeps existing attachments without sealing them again", async () => {
+        const keptId = id("kept-stale-attachment");
+        const addedId = id("added-attachment");
+        const lesson = await createVideoLesson({
+            attachments: [attachment(keptId, "kept.pdf")],
+        });
+
+        // The kept file has since disappeared from the media service.
+        (sealMedia as jest.Mock).mockClear();
+        (sealMedia as jest.Mock).mockImplementation(async (mediaId: string) => {
+            if (mediaId === keptId) {
+                throw new Error("Media not found");
+            }
+            return {
+                ...attachment(mediaId, `${mediaId}.pdf`),
+                group: testDomain.name,
+            };
+        });
+
+        const updated = await updateLesson(
+            {
+                id: lesson.lessonId,
+                attachments: [
+                    attachment(keptId, "kept.pdf"),
+                    attachment(addedId, "added.pdf"),
+                ],
+            } as any,
+            ownerCtx,
+        );
+
+        expect(sealMedia).not.toHaveBeenCalledWith(keptId);
+        expect(updated.attachments!.map((item: any) => item.mediaId)).toEqual([
+            keptId,
+            addedId,
+        ]);
+    });
+
+    it("stores a repeated attachment once", async () => {
+        const mediaId = id("repeated-attachment");
+        const lesson = await createVideoLesson({
+            attachments: [
+                attachment(mediaId, "handout.pdf"),
+                attachment(mediaId, "handout.pdf"),
+            ],
+        });
+
+        expect(lesson.attachments).toHaveLength(1);
+    });
+
+    it("does not delete removed media that another school owns", async () => {
+        const mediaId = id("foreign-stored-attachment");
+        const lesson = await createVideoLesson({
+            attachments: [attachment(mediaId, "handout.pdf")],
+        });
+        (getMedia as jest.Mock).mockResolvedValue({
+            mediaId,
+            group: "another-school",
+        });
+
+        await updateLesson(
+            { id: lesson.lessonId, attachments: [] } as any,
+            ownerCtx,
+        );
+
+        expect(deleteMedia).not.toHaveBeenCalled();
+    });
+
+    it("neither seals nor deletes files a description only links to", async () => {
+        const linkedId = id("linked-media");
+        const lesson = await createVideoLesson({
+            description: JSON.stringify(linkTo(linkedId)),
+        });
+
+        expect(sealMedia).not.toHaveBeenCalledWith(linkedId);
+
+        await updateLesson(
+            {
+                id: lesson.lessonId,
+                description: JSON.stringify({ type: "doc", content: [] }),
+            } as any,
+            ownerCtx,
+        );
+        await deleteLesson(lesson.lessonId, ownerCtx);
+
+        expect(deleteMedia).not.toHaveBeenCalledWith(linkedId);
     });
 });

@@ -40,8 +40,10 @@ export function toExistingLessonPayload(
         content: Object.prototype.hasOwnProperty.call(body, "content")
             ? JSON.stringify(body.content)
             : undefined,
-        description: Object.prototype.hasOwnProperty.call(body, "description")
-            ? JSON.stringify(body.description)
-            : undefined,
+        // A null description means none, rather than the string "null".
+        description:
+            body.description === undefined || body.description === null
+                ? undefined
+                : JSON.stringify(body.description),
     };
 }

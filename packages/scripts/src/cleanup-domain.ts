@@ -44,7 +44,10 @@ import type {
 } from "@courselit/orm-models";
 import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
-import { extractMediaIDs } from "@courselit/utils";
+import {
+    extractMediaIDs,
+    extractMediaIDsFromNodeSources,
+} from "@courselit/utils";
 import CommonModels from "@courselit/common-models";
 const { CommunityMediaTypes, Constants } = CommonModels;
 
@@ -267,6 +270,16 @@ async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
     for (const lesson of lessons) {
         if (lesson.media?.mediaId) {
             cleanupTasks.push(deleteMedia(lesson.media.mediaId));
+        }
+        for (const attachment of lesson.attachments || []) {
+            if (attachment.mediaId) {
+                cleanupTasks.push(deleteMedia(attachment.mediaId));
+            }
+        }
+        for (const mediaId of Array.from(
+            extractMediaIDsFromNodeSources(lesson.description),
+        )) {
+            cleanupTasks.push(deleteMedia(mediaId));
         }
         if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
             const extractedMediaIds = extractMediaIDs(

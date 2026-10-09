@@ -52,6 +52,7 @@ import {
     LESSON_RESOURCES_LABEL,
     LESSON_RESOURCES_TOOLTIP,
     LESSON_RESOURCES_SAVE_LESSON_FIRST,
+    LESSON_RESOURCES_SAVED,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
@@ -65,9 +66,13 @@ import {
     UIConstants,
 } from "@courselit/common-models";
 import { useToast, Chip } from "@courselit/components-library";
-import { FetchBuilder } from "@courselit/utils";
+import {
+    FetchBuilder,
+    lessonTypeSupportsAttachments,
+    lessonTypeSupportsDescription,
+} from "@courselit/utils";
 import { LessonContentRenderer } from "./lesson-content-renderer";
-import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
+import { isTextEditorNonEmpty, toMediaInput, truncate } from "@ui-lib/utils";
 import { Separator } from "@components/ui/separator";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { LessonSkeleton } from "./skeleton";
@@ -98,14 +103,6 @@ const mediaLessonTypes: LessonType[] = [
     Constants.LessonType.AUDIO,
     Constants.LessonType.PDF,
     Constants.LessonType.FILE,
-];
-
-const descriptionLessonTypes: LessonType[] = [
-    ...Constants.LessonTypesWithDescription,
-];
-
-const attachmentLessonTypes: LessonType[] = [
-    ...Constants.LessonTypesWithAttachments,
 ];
 
 type LessonError = Partial<Record<keyof Lesson, string>>;
@@ -171,12 +168,8 @@ export default function LessonPage() {
     const [attachments, setAttachments] = useState<Partial<Media>[]>([]);
     const [isLoading, setIsLoading] = useState(isEditing);
     const isMediaLesson = mediaLessonTypes.includes(lesson.type as LessonType);
-    const supportsDescription = descriptionLessonTypes.includes(
-        lesson.type as LessonType,
-    );
-    const supportsAttachments = attachmentLessonTypes.includes(
-        lesson.type as LessonType,
-    );
+    const supportsDescription = lessonTypeSupportsDescription(lesson.type);
+    const supportsAttachments = lessonTypeSupportsAttachments(lesson.type);
 
     useEffect(() => {
         if (product && !lesson.lessonId) {
@@ -422,12 +415,15 @@ export default function LessonPage() {
         try {
             const response = await fetch.exec();
             if (response.lesson) {
+                // Lessons that take resources reopen for editing, since
+                // resources can only be added once the lesson exists.
                 if (
                     [
                         Constants.LessonType.TEXT,
                         Constants.LessonType.EMBED,
                         Constants.LessonType.QUIZ,
-                    ].includes(lesson.type as any)
+                    ].includes(lesson.type as any) &&
+                    !supportsAttachments
                 ) {
                     router.replace(`/dashboard/product/${productId}/content`);
                 } else {
@@ -466,14 +462,7 @@ export default function LessonPage() {
                 query,
                 variables: {
                     id: lesson?.lessonId,
-                    attachments: nextAttachments.map((attachment) =>
-                        Object.assign({}, attachment, {
-                            file:
-                                attachment.access === "public"
-                                    ? attachment.file
-                                    : null,
-                        }),
-                    ),
+                    attachments: nextAttachments.map(toMediaInput),
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -483,7 +472,7 @@ export default function LessonPage() {
             await fetch.exec();
             toast({
                 title: TOAST_TITLE_SUCCESS,
-                description: "Lesson updated",
+                description: LESSON_RESOURCES_SAVED,
             });
         } catch (err: any) {
             setAttachments(previousAttachments);

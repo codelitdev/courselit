@@ -910,6 +910,8 @@ export const LESSON_RESOURCES_TOOLTIP =
 export const LESSON_RESOURCES_SAVE_LESSON_FIRST =
     "Save the lesson to enable resource uploads";
 export const LESSON_RESOURCES_ADD = "Add a resource";
+export const LESSON_RESOURCES_SAVED =
+    "Resources saved. Save the lesson to keep any other changes.";
 export const LESSON_RESOURCES_HEADER = "Resources";
 export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
 export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";

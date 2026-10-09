@@ -177,6 +177,34 @@ describe("/api/products/{productId}/lessons", () => {
         });
     });
 
+    it("treats a null description on create as no description", async () => {
+        (createLesson as jest.Mock).mockResolvedValue({
+            lessonId: "lesson-1",
+            title: "Intro",
+            type: "video",
+            courseId: "course-1",
+            groupId: "group-1",
+            published: false,
+            requiresEnrollment: true,
+        });
+
+        const { POST } = await import("../route");
+        const response = await POST(
+            request({
+                title: "Intro",
+                type: "video",
+                groupId: "group-1",
+                description: null,
+            }),
+            { params: Promise.resolve({ productId: "course-1" }) },
+        );
+
+        expect(response.status).toBe(201);
+        expect(
+            (createLesson as jest.Mock).mock.calls[0][0].description,
+        ).toBeUndefined();
+    });
+
     it("rejects unsupported lesson create fields before invoking existing lesson logic", async () => {
         const { POST } = await import("../route");
         const response = await POST(

@@ -17,7 +17,7 @@ import {
 } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { deleteMedia, sealMedia } from "../../services/medialit";
+import { deleteMedia, getMedia, sealMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
 import {
     Constants,
@@ -29,7 +29,13 @@ import {
     User,
 } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
-import { checkPermission, extractMediaIDs } from "@courselit/utils";
+import {
+    checkPermission,
+    extractMediaIDs,
+    extractMediaIDsFromNodeSources,
+    lessonTypeSupportsAttachments,
+    lessonTypeSupportsDescription,
+} from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/orm-models";
 import CertificateModel from "../../models/Certificate";
@@ -204,10 +210,16 @@ function validateLessonDescriptionOrThrow(description?: string | null) {
     }
 }
 
-// A lesson can reference many media, and the media service may no longer know
-// about some of them. A failed cleanup must not take the whole deletion down.
-async function deleteMediaQuietly(mediaId: string) {
+// Descriptions and attachments reference media by id, so only delete media
+// this school uploaded. The media service may also no longer know about some
+// of them, and a failed cleanup must not take the surrounding change down.
+async function deleteOwnedMediaQuietly(mediaId: string, ctx: GQLContext) {
     try {
+        const media = await getMedia(mediaId);
+        if (media?.group !== ctx.subdomain.name) {
+            return false;
+        }
+
         return await deleteMedia(mediaId);
     } catch (err: any) {
         error(err.message, { mediaId });
@@ -221,22 +233,12 @@ function validateLessonFieldSupportOrThrow({
     type,
     description,
     attachments,
-}: {
-    type: Lesson["type"];
-    description?: string | null;
-    attachments?: Partial<Media>[] | null;
-}) {
-    const supportsDescription = (
-        Constants.LessonTypesWithDescription as readonly string[]
-    ).includes(type);
-    if (description && !supportsDescription) {
+}: Pick<LessonWithStringContent, "type" | "description" | "attachments">) {
+    if (description && !lessonTypeSupportsDescription(type)) {
         throw new Error(responses.lesson_description_not_supported);
     }
 
-    const supportsAttachments = (
-        Constants.LessonTypesWithAttachments as readonly string[]
-    ).includes(type);
-    if (attachments?.length && !supportsAttachments) {
+    if (attachments?.length && !lessonTypeSupportsAttachments(type)) {
         throw new Error(responses.lesson_attachments_not_supported);
     }
 }
@@ -255,7 +257,13 @@ async function sealLessonMedia(media?: Partial<Media> | null) {
     return sealedMedia;
 }
 
-async function sealLessonAttachments(attachments?: Partial<Media>[] | null) {
+// Attachments already on the lesson are kept as stored, so a file the media
+// service has since lost cannot block edits to the rest of the list.
+async function sealLessonAttachments(
+    attachments: Partial<Media>[] | null | undefined,
+    ctx: GQLContext,
+    lesson?: Lesson,
+): Promise<Media[]> {
     if (!attachments?.length) {
         return [];
     }
@@ -264,13 +272,56 @@ async function sealLessonAttachments(attachments?: Partial<Media>[] | null) {
         throw new Error(responses.invalid_input);
     }
 
-    const sealedAttachments = await Promise.all(
-        attachments.map((attachment) => sealLessonMedia(attachment)),
+    const storedAttachments = new Map(
+        (lesson?.attachments || []).map((attachment) => [
+            attachment.mediaId,
+            attachment as Media,
+        ]),
     );
+    const sealedAttachments = new Map<string, Media>();
+    for (const attachment of attachments) {
+        const mediaId = attachment.mediaId!;
+        if (sealedAttachments.has(mediaId)) {
+            continue;
+        }
 
-    return sealedAttachments.filter((attachment): attachment is Media =>
-        Boolean(attachment),
-    );
+        sealedAttachments.set(
+            mediaId,
+            storedAttachments.get(mediaId) ??
+                (await sealNewLessonAttachment(mediaId, ctx, lesson)),
+        );
+    }
+
+    return Array.from(sealedAttachments.values());
+}
+
+// Removing an attachment deletes its media, so a new attachment must be a file
+// this school uploaded that no lesson is already using.
+async function sealNewLessonAttachment(
+    mediaId: string,
+    ctx: GQLContext,
+    lesson?: Lesson,
+): Promise<Media> {
+    if (mediaId === lesson?.media?.mediaId) {
+        throw new Error(responses.lesson_attachment_not_allowed);
+    }
+
+    const usedByAnotherLesson = await LessonModel.exists({
+        domain: ctx.subdomain._id,
+        ...(lesson ? { lessonId: { $ne: lesson.lessonId } } : {}),
+        $or: [{ "media.mediaId": mediaId }, { "attachments.mediaId": mediaId }],
+    });
+    if (usedByAnotherLesson) {
+        throw new Error(responses.lesson_attachment_not_allowed);
+    }
+
+    const sealedMedia = await sealMedia(mediaId);
+    if (!sealedMedia || sealedMedia.group !== ctx.subdomain.name) {
+        throw new Error(responses.lesson_attachment_not_allowed);
+    }
+
+    delete sealedMedia.file;
+    return sealedMedia;
 }
 
 export const createLesson = async (
@@ -316,9 +367,13 @@ export const createLesson = async (
             description: lessonData.description
                 ? await replaceTempMediaWithSealedMediaInProseMirrorDoc(
                       lessonData.description,
+                      true,
                   )
                 : undefined,
-            attachments: await sealLessonAttachments(lessonData.attachments),
+            attachments: await sealLessonAttachments(
+                lessonData.attachments,
+                ctx,
+            ),
             downloadable: lessonData.downloadable,
             creatorId: ctx.user.userId,
             courseId: course.courseId,
@@ -406,13 +461,17 @@ export const updateLesson = async (
         lessonData,
         "description",
     );
+    // Description and attachment media is only deleted if this school owns it.
+    const ownedMediaIdsMarkedForDeletion: string[] = [];
     if (descriptionUpdated) {
         validateLessonDescriptionOrThrow(lessonData.description);
-        contentMediaIdsMarkedForDeletion.push(
-            ...getDeletedMediaIds(
-                JSON.stringify(lesson.description || ""),
-                (lessonData.description ?? "") as string,
-            ),
+        const nextDescriptionMediaIds = extractMediaIDsFromNodeSources(
+            lessonData.description ?? "",
+        );
+        ownedMediaIdsMarkedForDeletion.push(
+            ...Array.from(
+                extractMediaIDsFromNodeSources(lesson.description),
+            ).filter((mediaId) => !nextDescriptionMediaIds.has(mediaId)),
         );
     }
 
@@ -433,7 +492,7 @@ export const updateLesson = async (
                 attachment.mediaId &&
                 !retainedMediaIds.has(attachment.mediaId)
             ) {
-                contentMediaIdsMarkedForDeletion.push(attachment.mediaId);
+                ownedMediaIdsMarkedForDeletion.push(attachment.mediaId);
             }
         }
     }
@@ -458,10 +517,13 @@ export const updateLesson = async (
             lesson.description =
                 await replaceTempMediaWithSealedMediaInProseMirrorDoc(
                     lessonData.description || "",
+                    true,
                 );
         } else if (key === "attachments") {
             lesson.attachments = await sealLessonAttachments(
                 lessonData.attachments,
+                ctx,
+                lesson,
             );
         } else if (key !== "lessonId" && key !== "id") {
             lesson[key] = lessonData[key];
@@ -479,6 +541,9 @@ export const updateLesson = async (
             error(err.message, { mediaId, lessonId: lesson.lessonId });
         }
     }
+    for (const mediaId of ownedMediaIdsMarkedForDeletion) {
+        await deleteOwnedMediaQuietly(mediaId, ctx);
+    }
 
     return lesson;
 };
@@ -495,17 +560,16 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
         for (const attachment of lesson.attachments || []) {
             if (attachment.mediaId) {
-                cleanupTasks.push(deleteMediaQuietly(attachment.mediaId));
+                cleanupTasks.push(
+                    deleteOwnedMediaQuietly(attachment.mediaId, ctx),
+                );
             }
         }
 
-        if (lesson.description) {
-            const descriptionMediaIds = extractMediaIDs(
-                JSON.stringify(lesson.description),
-            );
-            for (const mediaId of Array.from(descriptionMediaIds)) {
-                cleanupTasks.push(deleteMediaQuietly(mediaId));
-            }
+        for (const mediaId of Array.from(
+            extractMediaIDsFromNodeSources(lesson.description),
+        )) {
+            cleanupTasks.push(deleteOwnedMediaQuietly(mediaId, ctx));
         }
 
         if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
