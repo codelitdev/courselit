@@ -8,10 +8,12 @@ import {
     GraphQLBoolean,
     GraphQLInt,
     GraphQLFloat,
+    GraphQLList,
 } from "graphql";
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
+import { error } from "@/services/logger";
 import { GraphQLJSONObject } from "graphql-type-json";
 
 const { text, audio, video, pdf, quiz, file, embed, scorm } = constants;
@@ -58,6 +60,23 @@ const lessonType = new GraphQLObjectType({
             type: mediaTypes.mediaType,
             resolve: (lesson, _, __, ___) => getMedia(lesson.media),
         },
+        description: { type: GraphQLJSONObject },
+        attachments: {
+            type: new GraphQLList(mediaTypes.mediaType),
+            // A resource the media service has lost is returned as stored, so
+            // the lesson still loads and the editor can remove it.
+            resolve: (lesson, _, __, ___) =>
+                Promise.all(
+                    (lesson.attachments || []).map((attachment) =>
+                        getMedia(attachment).catch((err) => {
+                            error(err.message, {
+                                mediaId: attachment.mediaId,
+                            });
+                            return attachment;
+                        }),
+                    ),
+                ),
+        },
         prevLesson: { type: GraphQLString },
         nextLesson: { type: GraphQLString },
     },
@@ -98,6 +117,8 @@ const lessonInputType = new GraphQLInputObjectType({
         },
         content: { type: GraphQLString },
         // media: { type: mediaTypes.mediaInputType },
+        description: { type: GraphQLString },
+        attachments: { type: new GraphQLList(mediaTypes.mediaInputType) },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
         published: { type: GraphQLBoolean },
@@ -114,6 +135,8 @@ const lessonUpdateType = new GraphQLInputObjectType({
         title: { type: GraphQLString },
         content: { type: GraphQLString },
         media: { type: mediaTypes.mediaInputType },
+        description: { type: GraphQLString },
+        attachments: { type: new GraphQLList(mediaTypes.mediaInputType) },
         downloadable: { type: GraphQLBoolean },
         requiresEnrollment: {
             description: DESCRIPTION_REQUIRES_ENROLLMENT,

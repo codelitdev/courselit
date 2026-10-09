@@ -1,5 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
-import { FetchBuilder } from "@courselit/utils";
+import {
+    FetchBuilder,
+    lessonTypeSupportsAttachments,
+    lessonTypeSupportsDescription,
+} from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
     LESSON_TYPE_AUDIO,
@@ -20,6 +24,7 @@ import {
     ENROLL_BUTTON_TEXT,
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
+    LESSON_RESOURCES_HEADER,
 } from "@/ui-config/strings";
 import { Link, Skeleton, useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
@@ -33,7 +38,11 @@ import {
 } from "@courselit/common-models";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
-import { isEnrolled, isLessonCompleted } from "../../../ui-lib/utils";
+import {
+    hasTextEditorContent,
+    isEnrolled,
+    isLessonCompleted,
+} from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import ScormViewer from "./scorm-viewer";
@@ -95,6 +104,11 @@ export const LessonViewer = ({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
     const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const supportsDescription = lessonTypeSupportsDescription(lesson?.type);
+    const supportsAttachments = lessonTypeSupportsAttachments(lesson?.type);
+    const hasDescription = hasTextEditorContent(
+        lesson?.description as TextEditorContent | undefined,
+    );
     const isViewerEnrolled = Boolean(
         lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),
     );
@@ -137,7 +151,14 @@ export const LessonViewer = ({
                     requiresEnrollment,
                     courseId,
                     prevLesson,
-                    nextLesson
+                    nextLesson,
+                    description,
+                    attachments {
+                        mediaId,
+                        file,
+                        caption,
+                        originalFileName
+                    }
                 }
             }
         `;
@@ -414,6 +435,50 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
+                        {supportsDescription && hasDescription && (
+                            <WidgetErrorBoundary widgetName="text-editor">
+                                <div className="mt-6">
+                                    <TextRenderer
+                                        json={
+                                            lesson.description as TextEditorContent
+                                        }
+                                        theme={theme.theme}
+                                    />
+                                </div>
+                            </WidgetErrorBoundary>
+                        )}
+                        {supportsAttachments && lesson.attachments?.length ? (
+                            <div className="mt-8 flex flex-col gap-2">
+                                <Text1
+                                    theme={theme.theme}
+                                    className="font-semibold"
+                                >
+                                    {LESSON_RESOURCES_HEADER}
+                                </Text1>
+                                <div className="flex flex-col items-start gap-2">
+                                    {lesson.attachments
+                                        .filter((attachment) => attachment.file)
+                                        .map((attachment, index) => (
+                                            <Link
+                                                key={
+                                                    attachment.mediaId || index
+                                                }
+                                                href={attachment.file as string}
+                                            >
+                                                <Button
+                                                    theme={theme.theme}
+                                                    variant="secondary"
+                                                    className="flex gap-1 items-center"
+                                                >
+                                                    <ArrowDownward />
+                                                    {attachment.caption ||
+                                                        attachment.originalFileName}
+                                                </Button>
+                                            </Link>
+                                        ))}
+                                </div>
+                            </div>
+                        ) : null}
                         {isViewerEnrolled && !isPreview && (
                             <div className="mt-8 flex flex-col gap-4">
                                 <div className="flex justify-start">

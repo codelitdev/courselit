@@ -26,6 +26,8 @@ export interface Lesson {
         | typeof scorm;
     content?: Quiz | TextEditorContent | ScormContent | { value: string };
     media?: Media;
+    description?: TextEditorContent;
+    attachments?: Media[];
     downloadable: boolean;
     creatorId: string;
     courseId: string;
@@ -45,6 +47,8 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     },
     content: { type: mongoose.Schema.Types.Mixed, default: {} },
     media: MediaSchema,
+    description: { type: mongoose.Schema.Types.Mixed },
+    attachments: { type: [MediaSchema], default: [] },
     downloadable: { type: Boolean, default: false },
     creatorId: { type: String, required: true },
     courseId: { type: String, required: true },

@@ -9,11 +9,12 @@ import "@testing-library/jest-dom";
 // Mock dependencies
 // Module-level variable to control lesson ID for edit mode
 let mockLessonId: string | null = null;
+const mockReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
     useRouter: () => ({
         push: jest.fn(),
-        replace: jest.fn(),
+        replace: mockReplace,
     }),
     useParams: () => ({
         id: "product-1",
@@ -47,6 +48,10 @@ jest.mock("@/hooks/use-product", () => ({
 }));
 
 jest.mock("@courselit/utils", () => ({
+    lessonTypeSupportsDescription:
+        jest.requireActual("@courselit/utils").lessonTypeSupportsDescription,
+    lessonTypeSupportsAttachments:
+        jest.requireActual("@courselit/utils").lessonTypeSupportsAttachments,
     FetchBuilder: jest.fn().mockImplementation(() => ({
         setUrl: jest.fn().mockReturnThis(),
         setPayload: jest.fn().mockReturnThis(),
@@ -58,6 +63,9 @@ jest.mock("@courselit/utils", () => ({
 
 jest.mock("@courselit/text-editor", () => ({
     emptyDoc: { type: "doc", content: [] },
+    Editor: ({ placeholder }: any) => (
+        <div data-testid="description-editor">{placeholder}</div>
+    ),
 }));
 
 jest.mock("@courselit/components-library", () => ({
@@ -70,6 +78,9 @@ jest.mock("@courselit/components-library", () => ({
         isUploading: false,
         uploadProgress: 0,
     }),
+    MediaSelector: ({ title, srcTitle }: any) => (
+        <div data-testid="media-selector">{title || srcTitle}</div>
+    ),
 }));
 
 jest.mock("../lesson-content-renderer", () => ({
@@ -179,6 +190,7 @@ jest.mock("@ui-lib/utils", () => ({
         return !!content && content.value !== "";
     },
     truncate: (str: string) => str,
+    toMediaInput: (media: any) => media,
 }));
 
 describe("LessonPage", () => {
@@ -309,6 +321,34 @@ describe("LessonPage", () => {
 
         await waitFor(() => {
             expect(mockExec).toHaveBeenCalled();
+        });
+    });
+
+    it("reopens a new text lesson for editing so resources can be added", async () => {
+        mockReplace.mockClear();
+        const mockExec = jest.fn().mockResolvedValue({
+            lesson: { lessonId: "new-lesson-id" },
+        });
+        (FetchBuilder as unknown as jest.Mock).mockImplementation(() => ({
+            setUrl: jest.fn().mockReturnThis(),
+            setPayload: jest.fn().mockReturnThis(),
+            setIsGraphQLEndpoint: jest.fn().mockReturnThis(),
+            build: jest.fn().mockReturnThis(),
+            exec: mockExec,
+        }));
+
+        render(<LessonPage />, { wrapper });
+
+        fireEvent.change(screen.getByPlaceholderText("Enter lesson title"), {
+            target: { value: "New Lesson" },
+        });
+        fireEvent.click(screen.getByText("Update Content"));
+        fireEvent.click(screen.getByText("Save Lesson"));
+
+        await waitFor(() => {
+            expect(mockReplace).toHaveBeenCalledWith(
+                "/dashboard/product/product-1/content/section/section-1/lesson?id=new-lesson-id",
+            );
         });
     });
 
@@ -943,5 +983,33 @@ describe("LessonPage", () => {
                 expect(capturedPayload.variables.lessonData).toBeDefined();
             }
         });
+    });
+    describe("description and resources sections", () => {
+        it.each([
+            [Constants.LessonType.TEXT, false, true],
+            [Constants.LessonType.VIDEO, true, true],
+            [Constants.LessonType.AUDIO, true, true],
+            [Constants.LessonType.EMBED, true, true],
+            [Constants.LessonType.PDF, true, false],
+            [Constants.LessonType.FILE, true, false],
+            [Constants.LessonType.QUIZ, false, false],
+            [Constants.LessonType.SCORM, false, false],
+        ])(
+            "on a %s lesson shows description=%s and resources=%s",
+            async (type, expectsDescription, expectsResources) => {
+                render(<LessonPage />, { wrapper });
+
+                fireEvent.click(screen.getByTestId(`radio-item-${type}`));
+
+                await waitFor(() => {
+                    expect(
+                        screen.queryByTestId("description-editor") !== null,
+                    ).toBe(expectsDescription);
+                });
+                expect(screen.queryByText("Add a resource") !== null).toBe(
+                    expectsResources,
+                );
+            },
+        );
     });
 });

@@ -4,6 +4,8 @@ type LessonDocument = {
     type: string;
     content?: unknown;
     media?: unknown;
+    description?: unknown;
+    attachments?: unknown;
     downloadable?: boolean;
     courseId: string;
     groupId: string;
@@ -18,6 +20,8 @@ export function serializeLesson(lesson: LessonDocument) {
         type: lesson.type,
         content: lesson.content,
         media: lesson.media,
+        description: lesson.description,
+        attachments: lesson.attachments,
         downloadable: lesson.downloadable,
         courseId: lesson.courseId,
         groupId: lesson.groupId,
@@ -36,5 +40,10 @@ export function toExistingLessonPayload(
         content: Object.prototype.hasOwnProperty.call(body, "content")
             ? JSON.stringify(body.content)
             : undefined,
+        // A null description means none, rather than the string "null".
+        description:
+            body.description === undefined || body.description === null
+                ? undefined
+                : JSON.stringify(body.description),
     };
 }

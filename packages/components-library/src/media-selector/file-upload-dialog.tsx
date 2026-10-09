@@ -119,6 +119,7 @@ export function FileUploadAlertDialog({
         <AlertDialog open={open}>
             <AlertDialogTrigger asChild>
                 <Button
+                    type="button"
                     className="w-full"
                     size="sm"
                     disabled={disabled}

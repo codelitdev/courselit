@@ -44,7 +44,10 @@ import type {
 } from "@courselit/orm-models";
 import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
-import { extractMediaIDs } from "@courselit/utils";
+import {
+    extractMediaIDs,
+    extractMediaIDsFromNodeSources,
+} from "@courselit/utils";
 import CommonModels from "@courselit/common-models";
 const { CommunityMediaTypes, Constants } = CommonModels;
 
@@ -76,6 +79,23 @@ async function deleteMedia(mediaId: string) {
     } catch (error) {
         console.log("Can't delete media", mediaId, error);
     }
+}
+
+// Description images and attachments reference media by id, which may belong
+// to another school on the same media service, so only delete our own.
+async function deleteOwnedMedia(mediaId: string, domainName: string) {
+    try {
+        const medialitClient = getMediaLitClient();
+        const media = await medialitClient.get(mediaId);
+        if (media?.group !== domainName) {
+            return;
+        }
+    } catch (error) {
+        console.log("Can't fetch media", mediaId, error);
+        return;
+    }
+
+    await deleteMedia(mediaId);
 }
 
 const DomainModel = mongoose.model("Domain", DomainSchema);
@@ -152,7 +172,11 @@ async function cleanupDomain(name: string) {
         domain: domain._id,
     }).lean()) as InternalCourse[];
     for (const product of products) {
-        await deleteProduct({ product, domain: domain._id });
+        await deleteProduct({
+            product,
+            domain: domain._id,
+            domainName: domain.name,
+        });
     }
 
     await CommunityPostSubscriberModel.deleteMany({ domain: domain._id });
@@ -183,9 +207,11 @@ async function cleanupDomain(name: string) {
 async function deleteProduct({
     product,
     domain,
+    domainName,
 }: {
     product: InternalCourse;
     domain: mongoose.Types.ObjectId;
+    domainName: string;
 }) {
     const certificateTemplate =
         await CertificateTemplateModel.findOne<InternalCertificateTemplate | null>(
@@ -208,7 +234,7 @@ async function deleteProduct({
         domain,
         productId: product.courseId,
     });
-    await deleteLessons(product.courseId, domain);
+    await deleteLessons(product.courseId, domain, domainName);
     if (product.featuredImage) {
         await deleteMedia(product.featuredImage.mediaId);
     }
@@ -256,7 +282,11 @@ async function deletePage({
     });
 }
 
-async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
+async function deleteLessons(
+    id: string,
+    domain: mongoose.Types.ObjectId,
+    domainName: string,
+) {
     const lessons = (await LessonModel.find({
         courseId: id,
         domain,
@@ -267,6 +297,18 @@ async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
     for (const lesson of lessons) {
         if (lesson.media?.mediaId) {
             cleanupTasks.push(deleteMedia(lesson.media.mediaId));
+        }
+        for (const attachment of lesson.attachments || []) {
+            if (attachment.mediaId) {
+                cleanupTasks.push(
+                    deleteOwnedMedia(attachment.mediaId, domainName),
+                );
+            }
+        }
+        for (const mediaId of Array.from(
+            extractMediaIDsFromNodeSources(lesson.description),
+        )) {
+            cleanupTasks.push(deleteOwnedMedia(mediaId, domainName));
         }
         if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
             const extractedMediaIds = extractMediaIDs(

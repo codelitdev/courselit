@@ -3,6 +3,7 @@ import type {
     CommunityMemberStatus,
     CommunityReportStatus,
     Features,
+    Media,
     Membership,
     MembershipRole,
     Page,
@@ -323,6 +324,22 @@ export function isTextEditorNonEmpty(content: TextEditorContent) {
     );
 }
 
+// Unlike isTextEditorNonEmpty, this also counts a document holding only an
+// image, and treats a lone empty paragraph (a cleared editor) as empty.
+export function hasTextEditorContent(content?: TextEditorContent) {
+    const nodes = content?.content || [];
+    if (nodes.length > 1) {
+        return true;
+    }
+
+    const [node] = nodes;
+    return Boolean(
+        node &&
+            (node.type !== "paragraph" ||
+                (Array.isArray(node.content) && node.content.length > 0)),
+    );
+}
+
 export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
     const statusCycle = [
         Constants.MembershipStatus.PENDING,
@@ -393,4 +410,15 @@ export function hasCommunityPermission(
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     return memberRoleIndex >= requiredRoleIndex;
+}
+
+// Shapes media for a MediaInput, dropping the file URL of private media so a
+// signed, expiring URL is never stored.
+export function toMediaInput(media: Partial<Media>): Partial<Media> {
+    return Object.assign({}, media, {
+        file:
+            media.access === Constants.MediaAccessType.PUBLIC
+                ? media.file
+                : null,
+    });
 }
