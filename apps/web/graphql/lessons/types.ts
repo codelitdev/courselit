@@ -13,6 +13,7 @@ import {
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
+import { error } from "@/services/logger";
 import { GraphQLJSONObject } from "graphql-type-json";
 
 const { text, audio, video, pdf, quiz, file, embed, scorm } = constants;
@@ -62,10 +63,17 @@ const lessonType = new GraphQLObjectType({
         description: { type: GraphQLJSONObject },
         attachments: {
             type: new GraphQLList(mediaTypes.mediaType),
+            // A resource the media service has lost is returned as stored, so
+            // the lesson still loads and the editor can remove it.
             resolve: (lesson, _, __, ___) =>
                 Promise.all(
                     (lesson.attachments || []).map((attachment) =>
-                        getMedia(attachment),
+                        getMedia(attachment).catch((err) => {
+                            error(err.message, {
+                                mediaId: attachment.mediaId,
+                            });
+                            return attachment;
+                        }),
                     ),
                 ),
         },

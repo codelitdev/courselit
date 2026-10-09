@@ -669,4 +669,110 @@ describe("Lesson description and attachments", () => {
 
         expect(deleteMedia).not.toHaveBeenCalledWith(linkedId);
     });
+
+    it("rejects the new lesson's own media as an attachment on create", async () => {
+        const mediaId = id("create-main-video");
+
+        await expect(
+            createVideoLesson({
+                media: attachment(mediaId, "video.mp4"),
+                attachments: [attachment(mediaId, "video.mp4")],
+            }),
+        ).rejects.toThrow(responses.lesson_attachment_not_allowed);
+    });
+
+    it("rejects a lesson's media that is already a resource", async () => {
+        const mediaId = id("resource-as-media");
+        await LessonModel.create({
+            domain: testDomain._id,
+            lessonId: id("resource-owner-lesson"),
+            title: "Other lesson",
+            type: Constants.LessonType.VIDEO,
+            creatorId: owner.userId,
+            courseId: course.courseId,
+            groupId,
+            attachments: [attachment(mediaId, "shared.pdf")],
+        });
+        const lesson = await createVideoLesson();
+
+        await expect(
+            updateLesson(
+                {
+                    id: lesson.lessonId,
+                    media: attachment(mediaId, "shared.pdf"),
+                } as any,
+                ownerCtx,
+            ),
+        ).rejects.toThrow(responses.lesson_media_used_as_attachment);
+        await expect(
+            createVideoLesson({ media: attachment(mediaId, "shared.pdf") }),
+        ).rejects.toThrow(responses.lesson_media_used_as_attachment);
+    });
+
+    it("does not delete a removed description image another lesson uses", async () => {
+        const mediaId = id("shared-description-image");
+        await LessonModel.create({
+            domain: testDomain._id,
+            lessonId: id("image-owner-lesson"),
+            title: "Other lesson",
+            type: Constants.LessonType.VIDEO,
+            creatorId: owner.userId,
+            courseId: course.courseId,
+            groupId,
+            media: attachment(mediaId, "image.jpg"),
+        });
+        const lesson = await createVideoLesson({
+            description: JSON.stringify(docWithImage(mediaId)),
+        });
+
+        await updateLesson(
+            {
+                id: lesson.lessonId,
+                description: JSON.stringify({ type: "doc", content: [] }),
+            } as any,
+            ownerCtx,
+        );
+        await deleteLesson(lesson.lessonId, ownerCtx);
+
+        expect(deleteMedia).not.toHaveBeenCalledWith(mediaId);
+    });
+
+    it("rejects attachments that are not a list", async () => {
+        await expect(createVideoLesson({ attachments: {} })).rejects.toThrow(
+            responses.invalid_input,
+        );
+
+        const lesson = await createVideoLesson();
+        await expect(
+            updateLesson(
+                { id: lesson.lessonId, attachments: {} } as any,
+                ownerCtx,
+            ),
+        ).rejects.toThrow(responses.invalid_input);
+    });
+
+    it("keeps the file url only on public attachments", async () => {
+        const publicId = id("public-attachment");
+        const privateId = id("private-attachment");
+        (sealMedia as jest.Mock).mockImplementation(
+            async (mediaId: string) => ({
+                ...attachment(mediaId, `${mediaId}.pdf`),
+                access: mediaId === publicId ? "public" : "private",
+                group: testDomain.name,
+            }),
+        );
+
+        const lesson = await createVideoLesson({
+            attachments: [
+                attachment(publicId, "public.pdf"),
+                attachment(privateId, "private.pdf"),
+            ],
+        });
+
+        const [stored, storedPrivate] = lesson.attachments as any[];
+        expect(stored.file).toBe(
+            `https://media.example.com/${publicId}/main.pdf`,
+        );
+        expect(storedPrivate.file).toBeUndefined();
+    });
 });

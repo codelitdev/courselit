@@ -40,6 +40,8 @@ export const responses = {
         "This lesson type does not support resources",
     lesson_attachment_not_allowed:
         "This file can't be added as a resource. Upload it to this lesson instead",
+    lesson_media_used_as_attachment:
+        "This file is a lesson resource, so it can't also be a lesson's media. Upload it again instead",
     file_is_required: "A file is required",
     error_in_moving_file: "Error in moving file",
     success: "success",

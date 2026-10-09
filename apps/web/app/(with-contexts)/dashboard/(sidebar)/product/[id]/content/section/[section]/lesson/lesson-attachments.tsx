@@ -32,6 +32,7 @@ export function LessonAttachments({
                     strings={{}}
                     type="lesson"
                     deleteOnRemove={false}
+                    disabled={disabled}
                     onSelection={() => {}}
                     onRemove={() => {
                         onChange(attachments.filter((_, i) => i !== index));

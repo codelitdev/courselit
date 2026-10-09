@@ -166,6 +166,7 @@ export default function LessonPage() {
         TextEditorEmptyDoc as unknown as TextEditorContent,
     );
     const [attachments, setAttachments] = useState<Partial<Media>[]>([]);
+    const [savingAttachments, setSavingAttachments] = useState(false);
     const [isLoading, setIsLoading] = useState(isEditing);
     const isMediaLesson = mediaLessonTypes.includes(lesson.type as LessonType);
     const supportsDescription = lessonTypeSupportsDescription(lesson.type);
@@ -415,16 +416,9 @@ export default function LessonPage() {
         try {
             const response = await fetch.exec();
             if (response.lesson) {
-                // Lessons that take resources reopen for editing, since
-                // resources can only be added once the lesson exists.
-                if (
-                    [
-                        Constants.LessonType.TEXT,
-                        Constants.LessonType.EMBED,
-                        Constants.LessonType.QUIZ,
-                    ].includes(lesson.type as any) &&
-                    !supportsAttachments
-                ) {
+                // Text and embed lessons now take resources, which can only be
+                // added once the lesson exists, so only quizzes skip reopening.
+                if (lesson.type === Constants.LessonType.QUIZ) {
                     router.replace(`/dashboard/product/${productId}/content`);
                 } else {
                     router.replace(
@@ -442,9 +436,16 @@ export default function LessonPage() {
         }
     };
 
+    // Each save sends the whole list and the server deletes whatever is
+    // missing from it, so saves must not overlap.
     const saveAttachments = async (nextAttachments: Partial<Media>[]) => {
+        if (savingAttachments) {
+            return;
+        }
+
         const previousAttachments = attachments;
         setAttachments(nextAttachments);
+        setSavingAttachments(true);
 
         const query = `
             mutation ($id: ID!, $attachments: [MediaInput]) {
@@ -481,6 +482,8 @@ export default function LessonPage() {
                 description: err.message,
                 variant: "destructive",
             });
+        } finally {
+            setSavingAttachments(false);
         }
     };
 
@@ -758,7 +761,10 @@ export default function LessonPage() {
                                     </div>
                                     <LessonAttachments
                                         attachments={attachments}
-                                        disabled={!lesson.lessonId}
+                                        disabled={
+                                            !lesson.lessonId ||
+                                            savingAttachments
+                                        }
                                         onChange={saveAttachments}
                                     />
                                     {!lesson.lessonId && (
