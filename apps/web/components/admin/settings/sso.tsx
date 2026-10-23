@@ -306,7 +306,7 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                         <Resources
                             links={[
                                 {
-                                    href: "https://docs.courselit.app/en/schools/sso",
+                                    href: "https://docs.courselit.app/schools/sso",
                                     text: "Setup SSO",
                                 },
                             ]}

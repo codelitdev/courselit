@@ -351,7 +351,7 @@ export default function GoogleProvider({ address }: GoogleProviderProps) {
                         <Resources
                             links={[
                                 {
-                                    href: "https://docs.courselit.app/en/schools/google-sign-in",
+                                    href: "https://docs.courselit.app/schools/google-sign-in",
                                     text: "Set up Google sign in",
                                 },
                             ]}

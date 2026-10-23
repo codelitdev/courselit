@@ -598,7 +598,7 @@ export default function Page() {
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/users/notifications/",
+                        href: "https://docs.courselit.app/users/notifications/",
                         text: NOTIFICATION_SETTINGS_RESOURCE_TEXT,
                     },
                 ]}
