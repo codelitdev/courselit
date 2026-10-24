@@ -52,7 +52,7 @@ export default function Page() {
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/communities/introduction/",
+                        href: "https://docs.courselit.app/communities/introduction/",
                         text: "Create a community",
                     },
                 ]}

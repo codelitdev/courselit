@@ -453,11 +453,11 @@ export default function DashboardPage() {
             <Resources
                 links={[
                     {
-                        href: `https://docs.courselit.app/en/courses/add-content/`,
+                        href: `https://docs.courselit.app/courses/add-content/`,
                         text: "Add content to a product",
                     },
                     {
-                        href: `https://docs.courselit.app/en/courses/add-content/`,
+                        href: `https://docs.courselit.app/courses/add-content/`,
                         text: "Understanding product dashboard",
                     },
                 ]}
