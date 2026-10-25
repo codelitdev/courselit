@@ -266,11 +266,11 @@ export default function Page() {
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/courses/introduction/",
+                        href: "https://docs.courselit.app/courses/introduction/",
                         text: "Create a course",
                     },
                     {
-                        href: "https://docs.courselit.app/en/downloads/introduction/",
+                        href: "https://docs.courselit.app/downloads/introduction/",
                         text: "Create a digital download",
                     },
                 ]}

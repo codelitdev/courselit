@@ -108,7 +108,7 @@ export default function SegmentEditor2({
                         </DropdownMenuLabel>
                         <div className="text-xs text-muted-foreground px-2 pb-2">
                             {USER_SEGMENT_DESCRIPTION}{" "}
-                            <DocumentationLink path="/en/users/segments" />
+                            <DocumentationLink path="/users/segments" />
                         </div>
                         {segments.map((segment) => (
                             <DropdownMenuItem

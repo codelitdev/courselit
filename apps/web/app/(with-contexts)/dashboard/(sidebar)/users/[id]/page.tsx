@@ -523,7 +523,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
                             <CardDescription>
                                 <span>
                                     {USER_PERMISSION_AREA_SUBTEXT}{" "}
-                                    <DocumentationLink path="/en/users/permissions/" />
+                                    <DocumentationLink path="/users/permissions/" />
                                     .
                                 </span>
                             </CardDescription>

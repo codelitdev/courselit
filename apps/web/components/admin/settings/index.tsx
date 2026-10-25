@@ -1149,7 +1149,7 @@ const Settings = (props: SettingsProps) => {
                                     }{" "}
                                     <a
                                         className="underline"
-                                        href="https://docs.courselit.app/en/schools/set-up-payments"
+                                        href="https://docs.courselit.app/schools/set-up-payments"
                                         target="_blank"
                                         rel="noreferrer"
                                     >
@@ -1184,7 +1184,7 @@ const Settings = (props: SettingsProps) => {
                     <Resources
                         links={[
                             {
-                                href: "https://docs.courselit.app/en/schools/set-up-payments/",
+                                href: "https://docs.courselit.app/schools/set-up-payments/",
                                 text: SETTINGS_RESOURCE_PAYMENT,
                             },
                         ]}
