@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import type { PublicPage, PublicSettings } from "./courselit-public";
 
-function imageUrl(image: Record<string, unknown> | null): string | undefined {
-  for (const key of ["file", "url", "src"]) {
-    const value = image?.[key];
-    if (typeof value === "string" && value.trim()) return value;
-  }
-  return undefined;
+function imageUrl(image: { url?: unknown } | null): string | undefined {
+  return typeof image?.url === "string" && image.url.trim() ? image.url : undefined;
 }
 
 export function metadataForPublicPage(
@@ -21,18 +17,12 @@ export function metadataForPublicPage(
   let title: string;
   if (isHomepage) {
     const rawTitle = page?.title?.trim();
-    const isExcludedTitle =
-      !rawTitle ||
-      rawTitle.includes("FrontLit") ||
-      rawTitle.toLowerCase() === "homepage";
+    const isExcludedTitle = !rawTitle || rawTitle.toLowerCase() === "homepage";
     const homeTitle = isExcludedTitle ? siteTitle : rawTitle;
     title = siteSubtitle ? `${homeTitle} | ${siteSubtitle}` : homeTitle;
   } else {
     const rawTitle = page?.title?.trim();
-    const isExcludedTitle =
-      !rawTitle ||
-      rawTitle.includes("FrontLit") ||
-      rawTitle.toLowerCase() === "homepage";
+    const isExcludedTitle = !rawTitle || rawTitle.toLowerCase() === "homepage";
     const specificTitle = isExcludedTitle ? fallbackTitle : rawTitle;
     title =
       siteTitle && specificTitle !== siteTitle
@@ -41,12 +31,7 @@ export function metadataForPublicPage(
   }
 
   const rawDescription = page?.description?.trim();
-  const isExcludedDescription =
-    !rawDescription ||
-    rawDescription.includes("FrontLit") ||
-    rawDescription.toLowerCase().includes("front office") ||
-    rawDescription.includes("Build your website, publish content");
-  const description = isExcludedDescription ? siteSubtitle : rawDescription;
+  const description = rawDescription || siteSubtitle;
 
   const siteLogoUrl =
     typeof settings?.logo?.url === "string" && settings.logo.url.trim()

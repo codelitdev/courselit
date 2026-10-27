@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 /**
  * Community join is a system-owned public surface. It is composed from the
  * school's homepage header/footer plus the Community page block; it is not a
- * persisted FrontLit sales page.
+ * persisted sales page.
  */
 export default async function JoinPage({
   params,

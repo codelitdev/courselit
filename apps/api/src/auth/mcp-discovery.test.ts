@@ -35,7 +35,7 @@ it("publishes CIMD and DCR discovery and challenges unauthenticated MCP clients"
     expect(await resourceMetadataResponse.json()).toMatchObject({
       resource: runtime.auth.mcpResource,
       authorization_servers: [runtime.auth.issuer],
-      scopes_supported: ["data:read"],
+      scopes_supported: ["data:read", "data:write", "offline_access"],
     });
 
     const unauthenticated = await fetch(`${origin}/mcp`, {

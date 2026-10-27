@@ -9,18 +9,6 @@ import {
   COURSELIT_SIGNED_UP_FIELD,
 } from "./contact-filters.js";
 import {
-  COURSELIT_FRONTLIT_PROVISION_PAGES,
-  configureCourseLitSharedChrome,
-  FrontLitApiError,
-  type FrontLitConfig,
-  type FrontLitContentSummary,
-  frontLitConfig,
-  listFrontLitPages,
-  provisionFrontLitTeam,
-  setFrontLitSubdomain,
-} from "./frontlit-client.js";
-import { ensureSalesPageJobs, provisionSalesPageJob } from "./frontlit-sales-pages.js";
-import {
   addSendLitContactTag,
   createSendLitContact,
   deleteSendLitContact,
@@ -40,26 +28,7 @@ import {
   encryptIntegrationSecret,
 } from "./utils/integration-secrets.js";
 
-// These are the only system pages CourseLit requires for a school. FrontLit
-// owns the page content and blog posts. CourseLit builds its dynamic index
-// routes from the homepage chrome in the storefront app, so only these three
-// pages are persisted in FrontLit.
-const REQUIRED_FRONTLIT_SLUGS = ["", "terms", "privacy"] as const;
 const MAX_ERROR_LENGTH = 2000;
-
-export type FrontLitOperations = {
-  provisionTeam: typeof provisionFrontLitTeam;
-  setSubdomain: typeof setFrontLitSubdomain;
-  listPages: typeof listFrontLitPages;
-  configureSharedChrome: typeof configureCourseLitSharedChrome;
-};
-
-const defaultOperations: FrontLitOperations = {
-  provisionTeam: provisionFrontLitTeam,
-  setSubdomain: setFrontLitSubdomain,
-  listPages: listFrontLitPages,
-  configureSharedChrome: configureCourseLitSharedChrome,
-};
 
 export type SendLitOperations = {
   provisionTeam: typeof provisionSendLitTeam;
@@ -88,31 +57,6 @@ type IntegrationRow = typeof schema.schoolIntegrations.$inferSelect;
 
 class IntegrationActionRequiredError extends Error {}
 
-function asPayload(job: IntegrationJob): {
-  externalId: string;
-  ownerEmail: string;
-  name: string;
-  subdomain: string;
-  pages: typeof COURSELIT_FRONTLIT_PROVISION_PAGES;
-} {
-  const payload = job.payload;
-  if (
-    typeof payload.externalId !== "string" ||
-    typeof payload.ownerEmail !== "string" ||
-    typeof payload.name !== "string" ||
-    typeof payload.subdomain !== "string"
-  ) {
-    throw new IntegrationActionRequiredError("Invalid FrontLit provisioning payload");
-  }
-  return {
-    externalId: payload.externalId,
-    ownerEmail: payload.ownerEmail,
-    name: payload.name,
-    subdomain: payload.subdomain,
-    pages: COURSELIT_FRONTLIT_PROVISION_PAGES,
-  };
-}
-
 function safeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   return message.replace(/\s+/g, " ").trim().slice(0, MAX_ERROR_LENGTH);
@@ -121,15 +65,7 @@ function safeError(error: unknown): string {
 function isActionRequired(error: unknown): boolean {
   return (
     error instanceof IntegrationActionRequiredError ||
-    (error instanceof FrontLitApiError && !error.retryable) ||
     (error instanceof SendLitApiError && !error.retryable)
-  );
-}
-
-function missingMandatoryPages(pages: FrontLitContentSummary[]): string[] {
-  const slugs = new Set(pages.map((page) => page.slug));
-  return REQUIRED_FRONTLIT_SLUGS.filter((slug) => !slugs.has(slug)).map((slug) =>
-    slug ? `/${slug}` : "/",
   );
 }
 
@@ -166,90 +102,6 @@ async function updateIntegration(
         eq(schema.schoolIntegrations.provider, provider),
       ),
     );
-}
-
-async function provisionOneFrontLitSchool(
-  db: AppDb,
-  job: IntegrationJob,
-  clock: Clock,
-  operations: FrontLitOperations,
-  config: FrontLitConfig,
-): Promise<void> {
-  const payload = asPayload(job);
-  if (!payload.ownerEmail) {
-    throw new IntegrationActionRequiredError("School owner email is missing");
-  }
-
-  if (!config.server || !config.provisioningSecret) {
-    await updateIntegration(db, job.schoolId, "frontlit", {
-      status: "action_required",
-      server: config.server ?? "",
-      lastError: "FRONTLIT_CONFIGURATION_MISSING",
-      updatedAt: clock.now(),
-    });
-    throw new IntegrationActionRequiredError("FrontLit configuration is missing");
-  }
-
-  const attemptAt = clock.now();
-  await updateIntegration(db, job.schoolId, "frontlit", {
-    status: "provisioning",
-    server: config.server,
-    lastAttemptAt: attemptAt,
-    lastError: null,
-    updatedAt: attemptAt,
-  });
-
-  const integration = await getIntegration(db, job.schoolId, "frontlit");
-  if (!integration) {
-    throw new IntegrationActionRequiredError("FrontLit integration mapping is missing");
-  }
-
-  let teamId = integration.remoteTeamId;
-  let teamApiKey = integration.encryptedTeamKey
-    ? decryptIntegrationSecret(integration.encryptedTeamKey)
-    : null;
-
-  if (!teamId || !teamApiKey) {
-    const provisioned = await operations.provisionTeam(payload, { config });
-    teamId = provisioned.teamId;
-    teamApiKey = provisioned.apiKey ?? teamApiKey;
-    if (!teamId || !teamApiKey) {
-      throw new IntegrationActionRequiredError(
-        "FrontLit did not return a team API key; key recovery is required",
-      );
-    }
-
-    await updateIntegration(db, job.schoolId, "frontlit", {
-      remoteTeamId: teamId,
-      encryptedTeamKey: encryptIntegrationSecret(teamApiKey),
-      status: "provisioning",
-      updatedAt: clock.now(),
-    });
-  }
-
-  await operations.setSubdomain(teamApiKey, payload.subdomain, { config });
-
-  const pages = await operations.listPages(teamApiKey, { config });
-  const missing = missingMandatoryPages(pages);
-  if (missing.length > 0) {
-    throw new IntegrationActionRequiredError(
-      `FrontLit mandatory pages are missing: ${missing.join(", ")}`,
-    );
-  }
-  const homepage = pages.find((page) => page.slug === "");
-  if (!homepage) {
-    throw new IntegrationActionRequiredError("FrontLit homepage is missing");
-  }
-  await operations.configureSharedChrome(teamApiKey, homepage.id, { config });
-
-  const syncedAt = clock.now();
-  await updateIntegration(db, job.schoolId, "frontlit", {
-    remoteTeamId: teamId,
-    status: "ready",
-    lastSuccessfulSyncAt: syncedAt,
-    lastError: null,
-    updatedAt: syncedAt,
-  });
 }
 
 async function provisionOneSendLitSchool(
@@ -622,7 +474,7 @@ function backoffMs(attempts: number): number {
 async function claimNextJob(
   db: AppDb,
   now: Date,
-  allowedProviders: schema.IntegrationProvider[] = ["frontlit", "sendlit"],
+  allowedProviders: schema.IntegrationProvider[] = ["sendlit"],
 ): Promise<IntegrationJob | null> {
   const [candidate] = await db
     .select()
@@ -662,7 +514,7 @@ export async function requeueStaleJobs(db: AppDb, now: Date): Promise<number> {
     })
     .where(
       and(
-        inArray(schema.integrationOutboxJobs.provider, ["frontlit", "sendlit"]),
+        eq(schema.integrationOutboxJobs.provider, "sendlit"),
         eq(schema.integrationOutboxJobs.status, "processing"),
         lt(schema.integrationOutboxJobs.updatedAt, staleBefore),
       ),
@@ -699,7 +551,7 @@ async function failJob(
     message = "sendlit_quota_exceeded";
     actionRequired = true;
   }
-  if (job.type === "provision_frontlit" || job.type === "provision_sendlit") {
+  if (job.type === "provision_sendlit") {
     await updateIntegration(db, job.schoolId, job.provider, {
       status: actionRequired ? "action_required" : "pending",
       lastError: message,
@@ -724,51 +576,13 @@ export async function processNextIntegrationJob(
   db: AppDb,
   clock: Clock,
   logger: Logger,
-  operations: FrontLitOperations = defaultOperations,
-  config: FrontLitConfig = frontLitConfig(),
   sendLitOperations: SendLitOperations = defaultSendLitOperations,
   sendLitCfg: SendLitConfig = sendLitConfig(),
 ): Promise<boolean> {
-  const allowedProviders: schema.IntegrationProvider[] = [];
-  if (config.server) {
-    allowedProviders.push("frontlit");
-  }
-  if (sendLitCfg.server) {
-    allowedProviders.push("sendlit");
-  }
-  if (allowedProviders.length === 0) return false;
+  if (!sendLitCfg.server) return false;
 
-  const job = await claimNextJob(db, clock.now(), allowedProviders);
+  const job = await claimNextJob(db, clock.now(), ["sendlit"]);
   if (!job) return false;
-
-  if (job.provider === "frontlit") {
-    try {
-      if (job.type === "provision_sales_page") {
-        await provisionSalesPageJob(db, job, clock, config);
-      } else if (job.type === "provision_frontlit") {
-        await provisionOneFrontLitSchool(db, job, clock, operations, config);
-      } else {
-        throw new IntegrationActionRequiredError(
-          `Unknown FrontLit job type: ${job.type}`,
-        );
-      }
-      await finishJob(db, job, clock);
-    } catch (error) {
-      const actionRequired = isActionRequired(error);
-      await failJob(db, job, clock, error, actionRequired);
-      logger.warn(
-        {
-          jobId: job.id,
-          schoolId: job.schoolId,
-          attempts: job.attempts + 1,
-          actionRequired,
-          error: safeError(error),
-        },
-        "FrontLit integration job failed",
-      );
-    }
-    return true;
-  }
 
   if (job.provider === "sendlit") {
     try {
@@ -811,7 +625,6 @@ export function startIntegrationWorker(
   logger: Logger,
   options: {
     intervalMs?: number;
-    operations?: FrontLitOperations;
     sendLitOperations?: SendLitOperations;
   } = {},
 ): () => void {
@@ -821,13 +634,10 @@ export function startIntegrationWorker(
   async function tick() {
     if (stopped) return;
     try {
-      await ensureSalesPageJobs(db, clock);
       let processed = await processNextIntegrationJob(
         db,
         clock,
         logger,
-        options.operations,
-        frontLitConfig(),
         options.sendLitOperations,
         sendLitConfig(),
       );
@@ -836,8 +646,6 @@ export function startIntegrationWorker(
           db,
           clock,
           logger,
-          options.operations,
-          frontLitConfig(),
           options.sendLitOperations,
           sendLitConfig(),
         );

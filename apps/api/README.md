@@ -2,28 +2,45 @@
 
 Product-owned application services live here.
 
-## FrontLit and SendLit provisioning
+## Website
 
-School creation commits the CourseLit school first and queues an idempotent
-FrontLit team-provisioning job. Run the API worker alongside the API process:
+Pages, blog posts, themes, and site settings are stored in CourseLit's own
+database (`website_settings`, `website_pages`, `blog_posts`, `website_themes`)
+and rendered with `@frontlit/page-builder`. School creation provisions the
+website in the same transaction: the homepage, terms, and privacy pages, plus a
+sales page for the school community. Products and communities create and keep
+their own sales page in sync.
+
+Editors write to draft columns; publishing copies the draft into the published
+columns the storefront reads. The header and footer are stored once per school
+in `website_settings` (draft and published copies) and filled into every page
+on read. Publishing any page publishes the shared header and footer too.
+
+### Custom domains
+
+A school attaches one custom domain from the admin. CourseLit issues a TXT
+token; the school publishes it at `<record name>.<domain>` and points the
+domain at the routing target with a CNAME (an ALIAS or flattened CNAME at the
+apex). Verification checks both. Configure the instructions with:
+
+| Setting | Default |
+|---|---|
+| `CUSTOM_DOMAIN_CNAME_TARGET` | `sites.<PLATFORM_SITE_DOMAIN>` |
+| `CUSTOM_DOMAIN_TXT_RECORD_NAME` | `_courselit-verification` |
+| `CUSTOM_DOMAIN_A_RECORDS` | unset (apex domains only need to resolve) |
+
+## SendLit provisioning
+
+School creation queues an idempotent SendLit team-provisioning job. Run the
+API worker alongside the API process:
 
 ```sh
 bun run dev:worker
 ```
 
-The worker stores the returned FrontLit team key encrypted, claims the school
-subdomain, and verifies CourseLit's three system pages in FrontLit:
-homepage, terms, and privacy. FrontLit-specific pages are outside this
-provisioning contract.
-CourseLit's SendLit team provisioning is a separate integration and is not a
-dependency of this flow. A FrontLit outage therefore leaves the school usable
-and converges when FrontLit is available again. The default local settings match
-`docker-compose.local.yml`; production must provide an explicit
-`FRONTLIT_SERVER`, `FRONTLIT_APIKEY`, and `INTEGRATIONS_ENCRYPTION_KEY`.
-Optionally set `FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET` and
-`FRONTLIT_CUSTOM_DOMAIN_TXT_RECORD_NAME` to supply DNS instructions for custom
-domains on newly provisioned FrontLit teams. Use a stable CourseLit ingress
-alias; the TXT setting is a relative DNS record label.
+The worker stores the returned SendLit team key encrypted with
+`INTEGRATIONS_ENCRYPTION_KEY`. A SendLit outage leaves the school usable and
+converges when SendLit is available again.
 
 `GET /v1/public/resolve-host?host=<hostname>` is the edge host-router's
 ownership check for school custom domains. It returns success only for a
@@ -69,10 +86,9 @@ it as the default for new teams with automatic grants. Mailpit is available at
 be redirected with `SENDLIT_DELIVERY_TEST_TO` in the root `.env`. SMTP stays
 inside the Compose network at `mailpit:1025`.
 Wait for `sendlit-delivery-init` to complete before starting the host-run
-CourseLit API/worker; Compose also gates the FrontLit API on that setup job.
+CourseLit API/worker.
 
-FrontLit receives the team-provisioning key from Compose. CourseLit’s API and
-worker run on the host and read their SendLit settings from the environment;
+CourseLit’s API and worker run on the host and read their SendLit settings from the environment;
 they do not inherit the Compose values. Set `SENDLIT_SERVER` and
 `SENDLIT_ORGANIZATION_API_KEY` in `apps/api/.env` explicitly. For local use,
 set the organization key to the same value as

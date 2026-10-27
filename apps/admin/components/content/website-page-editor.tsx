@@ -25,18 +25,18 @@ import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import {
   contentStatusLabel,
-  type FrontLitPage,
-  type FrontLitSettings,
-  type FrontLitTheme,
-  type FrontLitWidget,
-  frontLitRequest,
+  type WebsitePage,
+  type WebsiteSettings,
+  type WebsiteTheme,
+  type WebsiteWidget,
+  websiteRequest,
   resolveEditorRedirect,
-} from "@/lib/frontlit-content";
+} from "@/lib/website-content";
 import {
   persistCustomThemes,
   resolveEditorTheme,
   themeSnapshot,
-} from "@/lib/frontlit-theme";
+} from "@/lib/website-theme";
 
 registerCourseLitBlocks();
 
@@ -106,7 +106,7 @@ function normalizeSalesLayout(
   return normalized;
 }
 
-export function FrontLitPageEditor({ pageId }: { pageId: string }) {
+export function WebsitePageEditor({ pageId }: { pageId: string }) {
   const searchParams = useSearchParams();
   const redirectTo = resolveEditorRedirect(
     searchParams.get("redirectTo"),
@@ -114,7 +114,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
   );
   const requestedSalesResourceType = searchParams.get("resourceType");
   const requestedSalesResourceId = searchParams.get("resourceId");
-  const [page, setPage] = useState<FrontLitPage | null>(null);
+  const [page, setPage] = useState<WebsitePage | null>(null);
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,9 +129,16 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     | { resourceType: "community"; resource: CourseLitCommunityPreview }
     | null
   >(null);
-  const [siteLogo, setSiteLogo] = useState<{ url: string; alt: string }>({
-    url: "/icon.svg",
-    alt: "CourseLit",
+  const [siteBranding, setSiteBranding] = useState<{
+    title: string | null;
+    subtitle: string | null;
+    logoUrl: string;
+    logoAlt: string;
+  }>({
+    title: null,
+    subtitle: null,
+    logoUrl: "/icon.svg",
+    logoAlt: "CourseLit",
   });
   const salesResourceType =
     requestedSalesResourceType === "product" ||
@@ -139,9 +146,6 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
       ? requestedSalesResourceType
       : (page?.salesResourceType ?? null);
   const salesResourceId = requestedSalesResourceId ?? page?.salesResourceId ?? null;
-  const salesPageSlug = page?.slug ?? null;
-  const isLikelySalesPage =
-    page?.name.trim().toLowerCase().endsWith(" sales page") ?? false;
   const themeAliasesRef = useRef(new Map<string, string>());
   const knownThemeIdsRef = useRef(new Set<string>());
   const themeSnapshotsRef = useRef(new Map<string, string>());
@@ -157,13 +161,13 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     let active = true;
     setLoading(true);
     void Promise.all([
-      frontLitRequest<FrontLitPage>(
+      websiteRequest<WebsitePage>(
         `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
       ),
-      frontLitRequest<{ items: FrontLitTheme[] }>(
+      websiteRequest<{ items: WebsiteTheme[] }>(
         "/api/v1/school/website/branding/themes",
       ),
-      frontLitRequest<FrontLitSettings>("/api/v1/school/website/branding"),
+      websiteRequest<WebsiteSettings>("/api/v1/school/website/branding"),
     ])
       .then(([loaded, savedThemes, settings]) => {
         if (!active) return;
@@ -192,7 +196,12 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
             ? settings.logo.url.trim()
             : "/icon.svg";
         const logoAlt = settings.logo?.alt?.trim() || "CourseLit";
-        setSiteLogo({ url: logoUrl, alt: logoAlt });
+        setSiteBranding({
+          title: settings.title,
+          subtitle: settings.subtitle,
+          logoUrl,
+          logoAlt,
+        });
         setInitialTheme(activeTheme);
         setCustomThemes(mappedThemes);
         setPage(loaded);
@@ -213,25 +222,18 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
   }, [pageId]);
 
   useEffect(() => {
-    const inferredResourceId =
-      !salesResourceType && isLikelySalesPage ? salesPageSlug : null;
-    if (
-      (salesResourceType !== "product" &&
-        salesResourceType !== "community" &&
-        !inferredResourceId) ||
-      (!salesResourceId && !inferredResourceId)
-    ) {
+    if (!salesResourceType || !salesResourceId) {
       setSalesPreview(null);
       return;
     }
     let active = true;
     const loadPlans = (path: string) =>
-      frontLitRequest<{ items: CourseLitProductPreview["plans"] }>(path)
+      websiteRequest<{ items: CourseLitProductPreview["plans"] }>(path)
         .then((response) => response.items ?? [])
         .catch(() => []);
     const loadProduct = (id: string) =>
       Promise.all([
-        frontLitRequest<CourseLitProductPreview>(
+        websiteRequest<CourseLitProductPreview>(
           `/api/v1/products/${encodeURIComponent(id)}`,
         ),
         loadPlans(`/api/v1/storefront/products/${encodeURIComponent(id)}/plans`),
@@ -241,7 +243,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
       }));
     const loadCommunity = (id: string) =>
       Promise.all([
-        frontLitRequest<CourseLitCommunityPreview>(
+        websiteRequest<CourseLitCommunityPreview>(
           `/api/v1/communities/${encodeURIComponent(id)}`,
         ),
         loadPlans(`/api/v1/communities/${encodeURIComponent(id)}/plans`),
@@ -251,12 +253,8 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
       }));
     const load =
       salesResourceType === "product"
-        ? loadProduct(salesResourceId!)
-        : salesResourceType === "community"
-          ? loadCommunity(salesResourceId!)
-          : loadProduct(inferredResourceId!).catch(() =>
-              loadCommunity(inferredResourceId!),
-            );
+        ? loadProduct(salesResourceId)
+        : loadCommunity(salesResourceId);
     void load
       .then((preview) => {
         if (active) setSalesPreview(preview);
@@ -267,7 +265,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     return () => {
       active = false;
     };
-  }, [isLikelySalesPage, salesPageSlug, salesResourceId, salesResourceType]);
+  }, [salesResourceId, salesResourceType]);
 
   async function handleChange(state: PageBuilderState) {
     setSaving(true);
@@ -278,12 +276,12 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         knownIds: knownThemeIdsRef.current,
         snapshots: themeSnapshotsRef.current,
         create: (input) =>
-          frontLitRequest<FrontLitTheme>("/api/v1/school/website/branding/themes", {
+          websiteRequest<WebsiteTheme>("/api/v1/school/website/branding/themes", {
             method: "POST",
             body: JSON.stringify(input),
           }),
         update: (themeId, patch) =>
-          frontLitRequest<FrontLitTheme>(
+          websiteRequest<WebsiteTheme>(
             `/api/v1/school/website/branding/themes/${encodeURIComponent(themeId)}`,
             { method: "PATCH", body: JSON.stringify(patch) },
           ),
@@ -295,7 +293,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         appliedThemeIdRef.current !== selectedThemeId ||
         appliedThemeSnapshotRef.current !== selectedThemeSnapshot
       ) {
-        await frontLitRequest<FrontLitSettings>("/api/v1/school/website/branding", {
+        await websiteRequest<WebsiteSettings>("/api/v1/school/website/branding", {
           method: "PATCH",
           body: JSON.stringify({ themeId: selectedThemeId }),
         });
@@ -303,27 +301,24 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         appliedThemeSnapshotRef.current = selectedThemeSnapshot;
       }
 
-      // Older FrontLit API images reject an explicit null socialImage even
-      // though the current contract permits it. Omit an unset value so a
-      // theme change is not blocked by an unrelated SEO field.
       const pagePatch: {
-        layout: FrontLitWidget[];
+        layout: WebsiteWidget[];
         title?: string;
         description?: string;
         socialImage?: PageBuilderState["seo"]["socialImage"];
         robotsAllowed?: boolean;
       } = {
-        layout: state.layout as FrontLitWidget[],
+        layout: state.layout as WebsiteWidget[],
       };
       if (state.seo.title != null) pagePatch.title = state.seo.title;
       if (state.seo.description != null) pagePatch.description = state.seo.description;
-      if (state.seo.socialImage != null) {
+      if (state.seo.socialImage !== undefined) {
         pagePatch.socialImage = state.seo.socialImage;
       }
       if (state.seo.robotsAllowed != null) {
         pagePatch.robotsAllowed = state.seo.robotsAllowed;
       }
-      const updated = await frontLitRequest<FrontLitPage>(
+      const updated = await websiteRequest<WebsitePage>(
         `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
         {
           method: "PATCH",
@@ -345,7 +340,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setSaving(true);
     setError(null);
     try {
-      const updated = await frontLitRequest<FrontLitPage>(
+      const updated = await websiteRequest<WebsitePage>(
         `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
         { method: "PATCH", body: JSON.stringify({ slug: nextSlug }) },
       );
@@ -365,7 +360,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setError(null);
     setNotice(null);
     try {
-      const published = await frontLitRequest<FrontLitPage>(
+      const published = await websiteRequest<WebsitePage>(
         `/api/v1/school/website/pages/${encodeURIComponent(pageId)}/publish`,
         { method: "POST" },
       );
@@ -383,7 +378,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setError(null);
     setNotice(null);
     try {
-      const reverted = await frontLitRequest<FrontLitPage>(
+      const reverted = await websiteRequest<WebsitePage>(
         `/api/v1/school/website/pages/${encodeURIComponent(pageId)}/discard-draft`,
         { method: "POST" },
       );
@@ -422,12 +417,12 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
           {page ? (
             <div className="flex flex-wrap items-center gap-2">
               <div className="hidden items-center gap-2 lg:flex">
-                <Label htmlFor="frontlit-page-slug" className="sr-only">
+                <Label htmlFor="website-page-slug" className="sr-only">
                   Page URL
                 </Label>
                 <span className="text-sm text-muted-foreground">/</span>
                 <Input
-                  id="frontlit-page-slug"
+                  id="website-page-slug"
                   value={slug}
                   onChange={(event) => setSlug(event.target.value)}
                   onBlur={() => void handleSlugSave()}
@@ -491,8 +486,10 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
               themes={{ system: COURSELIT_SYSTEM_THEMES, custom: customThemes ?? [] }}
               pageData={{
                 pageType: "custom",
-                siteLogoUrl: siteLogo.url,
-                siteLogoAlt: siteLogo.alt,
+                siteTitle: siteBranding.title,
+                siteSubtitle: siteBranding.subtitle,
+                siteLogoUrl: siteBranding.logoUrl,
+                siteLogoAlt: siteBranding.logoAlt,
                 ...(salesPreview
                   ? {
                       courseLitSalesData: {

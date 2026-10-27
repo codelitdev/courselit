@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { AppDb } from "./types.js";
 
@@ -61,5 +61,19 @@ export async function resourceSlugTaken(
             .limit(1)
         : [],
   ]);
-  return products.length > 0 || communities.length > 0;
+  // Ordinary website pages share the storefront's top-level URL space. A
+  // resource's own sales page always follows the resource slug.
+  const [page] = await db
+    .select({ id: schema.websitePages.id })
+    .from(schema.websitePages)
+    .where(
+      and(
+        eq(schema.websitePages.schoolId, input.schoolId),
+        eq(schema.websitePages.slug, input.slug),
+        isNull(schema.websitePages.productId),
+        isNull(schema.websitePages.communityId),
+      ),
+    )
+    .limit(1);
+  return products.length > 0 || communities.length > 0 || Boolean(page);
 }

@@ -1,5 +1,4 @@
 import type { MediaRef } from "@courselit/api-contract";
-import { sql } from "drizzle-orm";
 import {
   boolean,
   jsonb,
@@ -20,8 +19,6 @@ export const products = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    /** The saved public sales page in the school's website service. */
-    salesPageId: text("sales_page_id").default(sql`null`),
     kind: text("kind").$type<"course" | "download">().notNull(),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
     slug: text("slug").notNull(),

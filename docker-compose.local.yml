@@ -1,9 +1,4 @@
-# Local development dependencies for CourseLit and its FrontLit/SendLit
-# integrations.
-#
-# FrontLit uses its published API image. Its local runtime settings are
-# supplied below; secrets can be overridden from the shell or a project .env
-# file without requiring a FrontLit checkout.
+# Local development dependencies for CourseLit and its SendLit integration.
 #
 # CourseLit's API, admin app, and storefront app continue to run on the host:
 #
@@ -14,12 +9,11 @@
 #
 # Host ports:
 #   CourseLit Postgres: 5432
-#   FrontLit API:       4100
 #   SendLit API:        4101
 #   Mailpit SMTP:       1026
 #   Mailpit web UI:     8026
 #
-# SendLit uses the locally built codelit/sendlit-api:esp-control image. To
+# SendLit uses the locally built codelit/sendlit image. To
 # headless setup, use the stable, local-only API keys below. They are the
 # Compose defaults; do not reuse them outside this local development stack.
 #
@@ -28,13 +22,9 @@
 #   BOOTSTRAP_TEAM_PROVISIONING_API_KEY=sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 #
 # The delivery key is used only by the one-shot delivery initializer. The
-# team-provisioning key is registered during SendLit init and passed to
-# FrontLit. CourseLit itself runs on the host; set the same team key as
-# SENDLIT_ORGANIZATION_API_KEY in apps/api/.env. See apps/api/README.md for setup notes.
-#
-# The host-run CourseLit API/worker should use FRONTLIT_SERVER=http://127.0.0.1:4100
-# and FRONTLIT_APIKEY=courselit-local-frontlit-provisioning-secret in
-# apps/api/.env (the latter matches the local FrontLit container default).
+# team-provisioning key is registered during SendLit init. CourseLit itself
+# runs on the host; set the same team key as SENDLIT_ORGANIZATION_API_KEY in
+# apps/api/.env. See apps/api/README.md for setup notes.
 services:
   postgres:
     image: pgvector/pgvector:pg17
@@ -53,9 +43,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # Creates the sister-product databases on both fresh and existing volumes.
+  # Creates the SendLit database on both fresh and existing volumes.
   # This is a client-only helper; Postgres remains a single shared server.
-  frontlit-sendlit-db-init:
+  sendlit-db-init:
     image: postgres:17-alpine
     restart: "no"
     depends_on:
@@ -67,7 +57,7 @@ services:
       - sh
       - -ec
       - |
-        for database in frontlit sendlit; do
+        for database in sendlit; do
           if ! psql -h postgres -U courselit -d courselit -tAc "SELECT 1 FROM pg_database WHERE datname = '$$database'" | grep -q 1; then
             psql -h postgres -U courselit -d courselit -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$$database\" OWNER courselit"
           fi
@@ -88,7 +78,7 @@ services:
   # Applies migrations and registers any configured organization keys once.
   # Bootstrap secrets are deliberately absent from the long-running API.
   sendlit-init:
-    image: codelit/sendlit-api:esp-control
+    image: codelit/sendlit
     pull_policy: if_not_present
     restart: "no"
     depends_on:
@@ -96,14 +86,14 @@ services:
         condition: service_healthy
       sendlit-redis:
         condition: service_healthy
-      frontlit-sendlit-db-init:
+      sendlit-db-init:
         condition: service_completed_successfully
     command:
       - sh
       - -ec
       - |
-        node apps/api/dist/db/migrate.js
-        exec node apps/api/dist/bootstrap-cli.js
+        bun apps/api/src/db/migrate.ts
+        exec bun apps/api/src/bootstrap-cli.ts
     environment:
       NODE_ENV: development
       DB_CONNECTION_STRING: postgres://courselit:courselit@postgres:5432/sendlit
@@ -118,7 +108,7 @@ services:
       BOOTSTRAP_TEAM_PROVISIONING_API_KEY: "${BOOTSTRAP_TEAM_PROVISIONING_API_KEY:-sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb}"
 
   sendlit-api:
-    image: codelit/sendlit-api:esp-control
+    image: codelit/sendlit
     pull_policy: if_not_present
     restart: unless-stopped
     depends_on:
@@ -128,8 +118,8 @@ services:
       - sh
       - -ec
       - |
-        node apps/api/dist/db/migrate.js
-        exec node apps/api/dist/index.js
+        bun apps/api/src/db/migrate.ts
+        exec bun apps/api/src/index.ts
     environment:
       SENDLIT_DEPLOYMENT_MODE: "${SENDLIT_DEPLOYMENT_MODE:-oss}"
       NODE_ENV: "${SENDLIT_NODE_ENV:-development}"
@@ -151,7 +141,7 @@ services:
     ports:
       - "127.0.0.1:${SENDLIT_API_PORT:-4101}:3001"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -172,7 +162,7 @@ services:
   # explicit local recipient, activates Mailpit, and sets the org default only
   # when no different default has already been selected by an operator.
   sendlit-delivery-init:
-    image: codelit/sendlit-api:esp-control
+    image: codelit/sendlit
     pull_policy: if_not_present
     restart: "no"
     user: "0:0"
@@ -192,55 +182,6 @@ services:
     volumes:
       - ./scripts/sendlit-local-delivery-setup.mjs:/opt/sendlit-local-delivery-setup.mjs:ro
       - courselit-local-sendlit-delivery-setup:/var/lib/sendlit-delivery-setup
-
-  frontlit-api:
-    image: codelit/frontlit-api:domain-provisioning
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      frontlit-sendlit-db-init:
-        condition: service_completed_successfully
-      sendlit-delivery-init:
-        condition: service_completed_successfully
-    command:
-      - sh
-      - -ec
-      - |
-        node apps/api/dist/db/migrate.js
-        exec node apps/api/dist/index.js
-    environment:
-      NODE_ENV: "${FRONTLIT_NODE_ENV:-development}"
-      PORT: 4000
-      DB_CONNECTION_STRING: postgres://courselit:courselit@postgres:5432/frontlit
-      MIGRATIONS_FOLDER: /app/apps/api/drizzle
-      API_PUBLIC_URL: "${FRONTLIT_API_PUBLIC_URL:-http://localhost:4100}"
-      WEB_CLIENT: "${FRONTLIT_WEB_CLIENT:-http://localhost:3000}"
-      WEB_BASE_URL: "${FRONTLIT_WEB_BASE_URL:-http://localhost:3000}"
-      SITES_BASE_URL: "${FRONTLIT_SITES_BASE_URL:-http://localhost:3001}"
-      PLATFORM_SITE_DOMAIN: "${FRONTLIT_PLATFORM_SITE_DOMAIN:-localhost}"
-      CUSTOM_DOMAIN_CNAME_TARGET: "${FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET:-sites.localhost}"
-      ENABLE_TRUST_PROXY: "${FRONTLIT_ENABLE_TRUST_PROXY:-false}"
-      AUTH_COOKIE_DOMAIN: "${FRONTLIT_AUTH_COOKIE_DOMAIN:-}"
-      SENDLIT_API_URL: http://sendlit-api:3001
-      SENDLIT_ORGANIZATION_API_KEY: "${BOOTSTRAP_TEAM_PROVISIONING_API_KEY:-sl_org_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb}"
-      MEDIALIT_APIKEY: "${MEDIALIT_APIKEY:-}"
-      MEDIALIT_SERVER: "${MEDIALIT_SERVER:-https://api.medialit.cloud}"
-      UNSPLASH_ACCESS_KEY: "${UNSPLASH_ACCESS_KEY:-}"
-      REVALIDATE_WEBHOOK_SECRET: "${FRONTLIT_REVALIDATE_WEBHOOK_SECRET:-}"
-      INTEGRATIONS_ENCRYPTION_KEY: "${FRONTLIT_INTEGRATIONS_ENCRYPTION_KEY:-}"
-      BETTER_AUTH_SECRET: "${FRONTLIT_BETTER_AUTH_SECRET:-courselit-local-frontlit-better-auth-secret}"
-      PROVISIONING_SECRET: "${FRONTLIT_PROVISIONING_SECRET:-courselit-local-frontlit-provisioning-secret}"
-      SUPER_ADMIN_EMAIL: "${FRONTLIT_SUPER_ADMIN_EMAIL:-admin@example.com}"
-      INBOX_AI_ENABLED: "${FRONTLIT_INBOX_AI_ENABLED:-false}"
-      INBOX_AI_DAILY_TOKEN_BUDGET: "${FRONTLIT_INBOX_AI_DAILY_TOKEN_BUDGET:-100000}"
-    ports:
-      - "${FRONTLIT_API_PORT:-4100}:4000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
 
 volumes:
   courselit-local-postgres-data:

@@ -111,7 +111,7 @@ describe.serial("legacy domain migration", () => {
       .where(eq(schema.schoolHosts.hostname, "pending.imported.example"));
     expect(pendingHosts[0]).toMatchObject({
       verificationStatus: "unverified",
-      verificationTokenDigest: expect.any(String),
+      verificationToken: expect.stringMatching(/^[0-9a-f]{32}$/),
     });
 
     const hosts = await runtime.db

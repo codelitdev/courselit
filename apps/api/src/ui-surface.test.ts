@@ -45,10 +45,10 @@ describe("admin and learner surfaces", () => {
     const mediaPicker = read("admin/components/products/media-picker.tsx");
     const mediaUploader = read("admin/lib/course-media-uploader.ts");
     const mediaLibrary = read("admin/app/media/page.tsx");
-    const contentPages = read("admin/components/content/frontlit-page-list.tsx");
+    const contentPages = read("admin/components/content/website-page-list.tsx");
     const featuredCard = read("admin/components/featured-card.tsx");
-    const pageEditor = read("admin/components/content/frontlit-page-editor.tsx");
-    const blogEditor = read("admin/components/content/frontlit-blog-editor.tsx");
+    const pageEditor = read("admin/components/content/website-page-editor.tsx");
+    const blogEditor = read("admin/components/content/website-blog-editor.tsx");
     const blogFeaturedImage = read("admin/components/content/blog-featured-image.tsx");
     const writingEditorShell = read(
       "admin/components/content/writing-editor-shell.tsx",
@@ -143,10 +143,10 @@ describe("admin and learner surfaces", () => {
     expect(settings).toContain('params.set("tab"');
     expect(branding).toContain('redirect("/website/settings/branding")');
     expect(website).toContain('redirect("/website/pages")');
-    expect(websitePages).toContain("<FrontLitPageList />");
-    expect(websiteBlogs).toContain("<FrontLitPageList onlyBlogs />");
-    expect(websitePageEditor).toContain("<FrontLitPageEditor");
-    expect(websiteBlogEditor).toContain("<FrontLitBlogEditor");
+    expect(websitePages).toContain("<WebsitePageList />");
+    expect(websiteBlogs).toContain("<WebsitePageList onlyBlogs />");
+    expect(websitePageEditor).toContain("<WebsitePageEditor");
+    expect(websiteBlogEditor).toContain("<WebsiteBlogEditor");
     expect(websiteSettings).toContain('return <SettingsPage mode="website" />');
     expect(mailSettings).toContain('return <SettingsPage mode="mails" />');
     expect(teamSettings).toContain('"/api/v1/school/team"');
@@ -520,7 +520,7 @@ describe("admin and learner surfaces", () => {
     expect(pageEditor).toContain("Publish changes");
     expect(pageEditor).toContain('"/api/v1/school/website/branding"');
     expect(pageEditor).toContain("const pagePatch:");
-    expect(pageEditor).toContain("state.seo.socialImage != null");
+    expect(pageEditor).toContain("state.seo.socialImage !== undefined");
     expect(pageEditor).not.toContain("socialImage: state.seo.socialImage ?? null");
     expect(shell).toContain("isFullScreenPageEditor");
     expect(shell).toContain("NotificationsBell");
@@ -651,7 +651,7 @@ describe("admin and learner surfaces", () => {
     expect(publicBlogArticlePage).toContain("encodeURIComponent(article.slug)");
     expect(publicBlogArticlePage).toContain("redirect(");
     expect(publicBlogPage).toContain('systemRoute="blog"');
-    expect(publicBlogByIdPage).toContain("documentId === slug");
+    expect(publicBlogByIdPage).toContain("blogId === slug");
     expect(publicBlogByIdPage).toContain('systemRoute="blog"');
     expect(publicBlogByIdPage).toContain("encodeURIComponent(article.slug)");
     expect(publicBlogByIdPage).toContain("redirect(");
@@ -670,7 +670,6 @@ describe("admin and learner surfaces", () => {
     expect(themeProvider).toContain("getSettings(schoolId)");
     expect(themeProvider).toContain("CodeInjector");
     expect(themeProvider).toContain("codeInjectionBody");
-    expect(themeProvider).not.toContain("resolveFrontLitTeamId");
     expect(home).not.toContain('window.location.replace("/login")');
     expect(publicPage).not.toContain('window.location.replace("/login")');
     expect(surface).toContain("LEARNER_THEME_MODE_KEY");

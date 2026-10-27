@@ -4,14 +4,14 @@ import { Eye, Settings2, X } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
-import { contentStatusLabel, type FrontLitContentStatus } from "@/lib/frontlit-content";
+import { contentStatusLabel, type WebsiteContentStatus } from "@/lib/website-content";
 
 type WritingEditorShellProps = {
   backHref: string;
   backLabel: string;
   contextLabel: string;
   title: string;
-  status: FrontLitContentStatus;
+  status: WebsiteContentStatus;
   updatedAt?: string | null;
   saving: boolean;
   publishing: boolean;

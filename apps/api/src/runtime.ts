@@ -29,7 +29,10 @@ import type { DispatchDeps } from "./deps.js";
 import { type MediaLitClient, MemoryMediaLitClient } from "./media.js";
 import { createMediaLitClientFromEnv } from "./media-lit-client.js";
 import type { PaymentProvider } from "./payments.js";
-import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
+import {
+  TELEMETRY_IDENTIFIER_KEYS,
+  TELEMETRY_PROPERTY_ALLOWLIST,
+} from "./permissions.js";
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { createUnsplashClientFromEnv, type UnsplashClient } from "./unsplash.js";
@@ -127,6 +130,7 @@ export async function createPgliteRuntime(options: {
       logs: { level: "silent" },
       contextPolicy: {
         propertyAllowlist: TELEMETRY_PROPERTY_ALLOWLIST,
+        identifierKeys: TELEMETRY_IDENTIFIER_KEYS,
       },
     });
   return {
@@ -222,6 +226,7 @@ export async function createPostgresRuntime(options: {
       environment: "production",
       contextPolicy: {
         propertyAllowlist: TELEMETRY_PROPERTY_ALLOWLIST,
+        identifierKeys: TELEMETRY_IDENTIFIER_KEYS,
       },
     });
   return {

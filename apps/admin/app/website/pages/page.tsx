@@ -1,5 +1,5 @@
-import { FrontLitPageList } from "@/components/content/frontlit-page-list";
+import { WebsitePageList } from "@/components/content/website-page-list";
 
 export default function WebsitePagesPage() {
-  return <FrontLitPageList />;
+  return <WebsitePageList />;
 }

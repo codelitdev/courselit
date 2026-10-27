@@ -4,6 +4,7 @@ import type { AuthRuntime } from "./auth/authenticate.js";
 import type { BillingBundle } from "./billing.js";
 import type { MediaLitClient } from "./media.js";
 import type { PaymentProvider } from "./payments.js";
+import type { DnsResolver } from "./school-hosts.js";
 import type { SendLitConfig } from "./sendlit-client.js";
 import type { UnsplashClient } from "./unsplash.js";
 
@@ -19,4 +20,6 @@ export type DispatchDeps = AuthRuntime & {
   /** Optional in-memory provider used by API tests; production resolves this from school settings. */
   paymentProvider?: PaymentProvider;
   sendLit: SendLitConfig;
+  /** Optional DNS stub used by API tests for custom domain verification. */
+  dnsResolver?: DnsResolver;
 };

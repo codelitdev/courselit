@@ -16,6 +16,7 @@ import type { AppDb } from "./types.js";
 
 export const MEDIA_RESOURCE_TYPES = [
   "school_branding",
+  "website_page",
   "blog_artwork",
   "product_artwork",
   "product_content",
@@ -440,6 +441,96 @@ export async function reconcileMediaReferencesInTransaction(
     );
   }
   return { ok: true };
+}
+
+/** Collects media identifiers from arbitrary stored content such as page
+ * layouts, rich text documents, and media refs: `mediaId` values and URL-like
+ * `url`/`src` strings that may point at a catalog asset. */
+export function collectMediaCandidates(values: readonly unknown[]): {
+  mediaIds: string[];
+  urls: string[];
+} {
+  const mediaIds = new Set<string>();
+  const urls = new Set<string>();
+  const visit = (node: unknown, depth: number) => {
+    if (!node || typeof node !== "object" || depth > 64) return;
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child, depth + 1);
+      return;
+    }
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (key === "mediaId" && trimmed) mediaIds.add(trimmed);
+        if ((key === "url" || key === "src") && /^https?:\/\//.test(trimmed)) {
+          urls.add(trimmed);
+        }
+      } else {
+        visit(value, depth + 1);
+      }
+    }
+  };
+  for (const value of values) visit(value, 0);
+  return { mediaIds: [...mediaIds], urls: [...urls] };
+}
+
+/** Replaces one resource's media references with the catalog assets found in
+ * `values`. Unlike `reconcileMediaReferencesInTransaction`, unknown or
+ * external media is ignored instead of rejected, because builder content may
+ * embed third-party URLs (for example Unsplash) that never enter the library. */
+export async function syncMediaReferencesForContent(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    resourceType: MediaResourceType;
+    resourceInternalId: string;
+    resourcePublicId: string;
+    values: readonly unknown[];
+  },
+  clock: Clock,
+): Promise<void> {
+  const { mediaIds, urls } = collectMediaCandidates(input.values);
+  const conditions = [];
+  if (mediaIds.length > 0) conditions.push(inArray(schema.media.publicId, mediaIds));
+  if (urls.length > 0) conditions.push(inArray(schema.media.canonicalUrl, urls));
+  const mediaRows =
+    conditions.length === 0
+      ? []
+      : await db
+          .select({ id: schema.media.id })
+          .from(schema.media)
+          .where(
+            and(
+              eq(schema.media.schoolId, input.schoolId),
+              eq(schema.media.status, "active"),
+              or(...conditions),
+            ),
+          );
+  await db
+    .delete(schema.mediaReferences)
+    .where(
+      and(
+        eq(schema.mediaReferences.schoolId, input.schoolId),
+        eq(schema.mediaReferences.resourceType, input.resourceType),
+        eq(schema.mediaReferences.resourceInternalId, input.resourceInternalId),
+      ),
+    );
+  if (mediaRows.length === 0) return;
+  const now = clock.now();
+  await db.insert(schema.mediaReferences).values(
+    [...new Set(mediaRows.map((row) => row.id))].map((mediaId) => ({
+      id: uuidv7(clock),
+      schoolId: input.schoolId,
+      mediaId,
+      resourceType: input.resourceType,
+      resourceInternalId: input.resourceInternalId,
+      resourcePublicId: input.resourcePublicId,
+      parentResourceInternalId: null,
+      parentResourcePublicId: null,
+      createdAt: now,
+      updatedAt: now,
+    })),
+  );
 }
 
 export async function mediaIdsForRichTextContent(

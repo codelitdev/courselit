@@ -18,6 +18,7 @@ import {
 } from "./permissions.js";
 import type { Runtime } from "./runtime.js";
 import { provisionSchoolCommunity } from "./spaces.js";
+import { ensureSalesPage, provisionWebsite } from "./website.js";
 
 export type SeededWorld = {
   owner: {
@@ -124,7 +125,7 @@ async function mintOAuthToken(
     client_id: client.client_id,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "openid profile email offline_access data:read",
+    scope: "openid profile email offline_access data:read data:write",
     state: "state-123",
     code_challenge: proof.challenge,
     code_challenge_method: "S256",
@@ -301,6 +302,8 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
     },
   ]);
 
+  await provisionWebsite(runtime.db, { schoolId: schoolAId }, clock);
+  await provisionWebsite(runtime.db, { schoolId: schoolBId }, clock);
   await provisionSchoolCommunity(
     runtime.db,
     {
@@ -388,8 +391,9 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
   });
 
   const notePublicId = createPublicId("prd", clock);
+  const noteId = uuidv7(clock);
   await runtime.db.insert(schema.products).values({
-    id: uuidv7(clock),
+    id: noteId,
     publicId: notePublicId,
     schoolId: schoolAId,
     kind: "course",
@@ -401,6 +405,20 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
     createdAt: now,
     updatedAt: now,
   });
+  await ensureSalesPage(
+    runtime.db,
+    {
+      schoolId: schoolAId,
+      resourceType: "product",
+      resourceId: noteId,
+      resourcePublicId: notePublicId,
+      name: "Seed product",
+      description: "hello",
+      slug: "seed-product",
+      productKind: "course",
+    },
+    clock,
+  );
 
   if (runtime.billingMode === "oss") {
     return {

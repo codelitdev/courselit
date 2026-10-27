@@ -76,7 +76,7 @@ export async function PublicSitePage({
   allowEmpty?: boolean;
   fallbackToHomepage?: boolean;
   /** Dynamic CourseLit routes reuse the homepage's shared blocks instead of
-   * requiring a persisted FrontLit page. */
+   * requiring a persisted website page. */
   systemRoute?: PublicSystemRoute;
   systemContent?: React.ReactNode;
   salesResource?:
@@ -132,6 +132,10 @@ export async function PublicSitePage({
   const pageData: PageData = {
     pageType: "site",
     pageSlug,
+    siteTitle: settings?.title ?? null,
+    siteSubtitle: settings?.subtitle ?? null,
+    siteLogoUrl,
+    siteLogoAlt,
     ...(salesProduct && salesResource?.resourceType === "product"
       ? {
           courseLitSalesData: {
@@ -250,16 +254,12 @@ export async function PublicSitePage({
           pageData,
         );
 
-  const resolvedPageData = { ...pageData };
-
   return (
     <SitePageRenderer
       layout={renderLayout}
       themeId={settings?.themeId ?? null}
       themeStyle={settings?.theme ?? null}
-      siteLogoUrl={siteLogoUrl}
-      siteLogoAlt={siteLogoAlt}
-      pageData={resolvedPageData}
+      pageData={pageData}
       dataSlots={dataSlots}
     >
       {systemRoute && systemRoute !== "join" && (!isSalesPage || !page) ? (

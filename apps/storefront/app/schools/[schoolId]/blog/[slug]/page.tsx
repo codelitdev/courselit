@@ -13,7 +13,7 @@ async function loadBlogArticle(slug: string, schoolId?: string) {
   const bySlug = await getPublicArticleBySlug(host, slug);
   if (bySlug) return bySlug;
   const articles = await listPublicArticles(host);
-  return articles.items.find((article) => article.documentId === slug) ?? null;
+  return articles.items.find((article) => article.blogId === slug) ?? null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,7 +28,7 @@ export default async function PublicBlogArticlePage({ params }: Props) {
   const { schoolId, slug } = await params;
   const article = await loadBlogArticle(slug, schoolId);
   if (!article) notFound();
-  if (article.documentId === slug) {
+  if (article.blogId === slug) {
     redirect(`/blog/${encodeURIComponent(article.slug)}`);
   }
 

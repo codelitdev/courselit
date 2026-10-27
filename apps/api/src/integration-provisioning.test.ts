@@ -2,11 +2,6 @@ import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
-  COURSELIT_FRONTLIT_PROVISION_PAGES,
-  FrontLitApiError,
-} from "./frontlit-client.js";
-import {
-  type FrontLitOperations,
   processNextIntegrationJob,
   type SendLitOperations,
 } from "./integration-provisioning.js";
@@ -17,21 +12,18 @@ import { seedWorld } from "./seed.js";
 import { SendLitApiError } from "./sendlit-client.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 
-describe("CourseLit FrontLit provisioning", () => {
-  it("queues provisioning in the school transaction and stores the team key encrypted", async () => {
+describe("CourseLit website provisioning", () => {
+  it("creates the website in the school transaction without an integration job", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
     process.env.AUTH_SECRET ??= "integration-test-auth-secret";
-    delete process.env.FRONTLIT_SERVER;
-    delete process.env.FRONTLIT_APIKEY;
-    process.env.NODE_ENV = "test";
 
     const created = await createSchool(
       runtime.db,
       {
-        name: "FrontLit School",
-        subdomain: "frontlit-school",
+        name: "Website School",
+        subdomain: "website-school",
         locale: "en",
         currency: "USD",
         principalId: world.owner.id,
@@ -41,141 +33,39 @@ describe("CourseLit FrontLit provisioning", () => {
     );
     expect(created.ok).toBe(true);
     if (!created.ok) throw new Error("school_creation_failed");
+    const [school] = await runtime.db
+      .select({ id: schema.schools.id })
+      .from(schema.schools)
+      .where(eq(schema.schools.publicId, created.value.id));
 
-    const [integration] = await runtime.db
+    const [settings] = await runtime.db
       .select()
-      .from(schema.schoolIntegrations)
-      .where(
-        and(
-          eq(schema.schoolIntegrations.externalId, created.value.id),
-          eq(schema.schoolIntegrations.provider, "frontlit"),
-        ),
-      );
-    const [job] = await runtime.db
-      .select()
+      .from(schema.websiteSettings)
+      .where(eq(schema.websiteSettings.schoolId, school!.id));
+    expect(settings?.sharedWidgets.header.name).toBe("header");
+
+    const pages = await runtime.db
+      .select({
+        slug: schema.websitePages.slug,
+        communityId: schema.websitePages.communityId,
+        publishedAt: schema.websitePages.publishedAt,
+      })
+      .from(schema.websitePages)
+      .where(eq(schema.websitePages.schoolId, school!.id));
+    expect(pages.map((page) => page.slug).sort()).toEqual([
+      "",
+      "community",
+      "privacy",
+      "terms",
+    ]);
+    expect(pages.every((page) => page.publishedAt !== null)).toBe(true);
+    expect(pages.find((page) => page.slug === "community")?.communityId).toBeTruthy();
+
+    const jobs = await runtime.db
+      .select({ type: schema.integrationOutboxJobs.type })
       .from(schema.integrationOutboxJobs)
-      .where(
-        and(
-          eq(schema.integrationOutboxJobs.schoolId, integration!.schoolId),
-          eq(schema.integrationOutboxJobs.provider, "frontlit"),
-        ),
-      );
-    expect(integration).toMatchObject({
-      provider: "frontlit",
-      externalId: created.value.id,
-      status: "action_required",
-    });
-    expect(job).toMatchObject({ provider: "frontlit", type: "provision_frontlit" });
-
-    let provisionAttempts = 0;
-    let requestedPages: unknown;
-    const configuredHomepageIds: string[] = [];
-    const operations: FrontLitOperations = {
-      provisionTeam: async (input) => {
-        provisionAttempts += 1;
-        requestedPages = input.pages;
-        if (provisionAttempts === 1) {
-          throw new FrontLitApiError("FrontLit is unreachable", 503);
-        }
-        return {
-          teamId: "team_1",
-          name: created.value.name,
-          apiKey: "fl_live_school",
-        };
-      },
-      setSubdomain: async () => undefined,
-      listPages: async () =>
-        ["", "terms", "privacy"].map((slug) => ({
-          id: `page-${slug || "home"}`,
-          name: slug || "Home",
-          kind: "page",
-          slug,
-          status: "published",
-        })),
-      configureSharedChrome: async (_key, homepageId) => {
-        configuredHomepageIds.push(homepageId);
-      },
-    };
-
-    await expect(
-      processNextIntegrationJob(
-        runtime.db,
-        clock,
-        runtime.logger,
-        operations,
-        {
-          server: "http://frontlit.test",
-          provisioningSecret: "secret",
-        },
-        undefined,
-        { server: null, provisioningApiKey: null },
-      ),
-    ).resolves.toBe(true);
-    expect(requestedPages).toEqual(COURSELIT_FRONTLIT_PROVISION_PAGES);
-    expect(configuredHomepageIds).toEqual([]);
-
-    const [retryingIntegration] = await runtime.db
-      .select()
-      .from(schema.schoolIntegrations)
-      .where(
-        and(
-          eq(schema.schoolIntegrations.externalId, created.value.id),
-          eq(schema.schoolIntegrations.provider, "frontlit"),
-        ),
-      );
-    const [retryingJob] = await runtime.db
-      .select()
-      .from(schema.integrationOutboxJobs)
-      .where(
-        and(
-          eq(schema.integrationOutboxJobs.schoolId, integration!.schoolId),
-          eq(schema.integrationOutboxJobs.provider, "frontlit"),
-        ),
-      );
-    expect(retryingIntegration).toMatchObject({ status: "pending" });
-    expect(retryingJob).toMatchObject({ status: "pending", attempts: 1 });
-    await runtime.db
-      .update(schema.integrationOutboxJobs)
-      .set({ nextAttemptAt: clock.now() })
-      .where(eq(schema.integrationOutboxJobs.id, retryingJob!.id));
-
-    await expect(
-      processNextIntegrationJob(
-        runtime.db,
-        clock,
-        runtime.logger,
-        operations,
-        {
-          server: "http://frontlit.test",
-          provisioningSecret: "secret",
-        },
-        undefined,
-        { server: null, provisioningApiKey: null },
-      ),
-    ).resolves.toBe(true);
-
-    const [ready] = await runtime.db
-      .select()
-      .from(schema.schoolIntegrations)
-      .where(
-        and(
-          eq(schema.schoolIntegrations.externalId, created.value.id),
-          eq(schema.schoolIntegrations.provider, "frontlit"),
-        ),
-      );
-    const [done] = await runtime.db
-      .select()
-      .from(schema.integrationOutboxJobs)
-      .where(
-        and(
-          eq(schema.integrationOutboxJobs.schoolId, integration!.schoolId),
-          eq(schema.integrationOutboxJobs.provider, "frontlit"),
-        ),
-      );
-    expect(ready).toMatchObject({ status: "ready", remoteTeamId: "team_1" });
-    expect(configuredHomepageIds).toEqual(["page-home"]);
-    expect(ready!.encryptedTeamKey).not.toContain("fl_live_school");
-    expect(done).toMatchObject({ status: "done", attempts: 1 });
+      .where(eq(schema.integrationOutboxJobs.schoolId, school!.id));
+    expect(jobs.map((job) => job.type)).toEqual(["provision_sendlit"]);
     await runtime.close();
   }, 20000);
 });
@@ -217,8 +107,6 @@ describe("CourseLit SendLit provisioning", () => {
       runtime.db,
       clock,
       runtime.logger,
-      undefined,
-      { server: null, provisioningSecret: null },
       sendLitOperations,
       { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" },
     );
@@ -375,8 +263,6 @@ describe("CourseLit SendLit provisioning", () => {
       runtime.db,
       clock,
       runtime.logger,
-      undefined,
-      undefined,
       sendLitOps,
       { server: "http://sendlit.test", provisioningApiKey: "dummy_provisioning_key" },
     );
@@ -400,8 +286,6 @@ describe("CourseLit SendLit provisioning", () => {
       runtime.db,
       clock,
       runtime.logger,
-      undefined,
-      undefined,
       sendLitOps,
       { server: "http://sendlit.test", provisioningApiKey: "dummy_provisioning_key" },
     );

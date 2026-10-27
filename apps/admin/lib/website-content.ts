@@ -1,9 +1,9 @@
 import type { MediaRef } from "@courselit/api-contract";
 import type { TextEditorContent } from "@frontlit/text-editor";
 
-export type FrontLitContentStatus = "draft" | "published" | "published_with_changes";
+export type WebsiteContentStatus = "draft" | "published" | "published_with_changes";
 
-export type FrontLitWidget = {
+export type WebsiteWidget = {
   widgetId: string;
   name: string;
   deletable: boolean;
@@ -12,7 +12,7 @@ export type FrontLitWidget = {
   settings?: Record<string, unknown>;
 };
 
-export type FrontLitTheme = {
+export type WebsiteTheme = {
   themeId: string;
   name: string;
   style: Record<string, unknown>;
@@ -20,21 +20,21 @@ export type FrontLitTheme = {
   updatedAt: string | null;
 };
 
-export type FrontLitSettings = {
+export type WebsiteSettings = {
   title: string | null;
   subtitle: string | null;
   logo: MediaRef | null;
   themeId: string | null;
 };
 
-export type FrontLitPage = {
+export type WebsitePage = {
   pageId: string;
   name: string;
   slug: string;
   deletable: boolean;
-  status: FrontLitContentStatus;
-  layout: FrontLitWidget[];
-  draftLayout: FrontLitWidget[];
+  status: WebsiteContentStatus;
+  layout: WebsiteWidget[];
+  draftLayout: WebsiteWidget[];
   title?: string | null;
   description?: string | null;
   socialImage?: Record<string, unknown> | null;
@@ -52,10 +52,10 @@ export type FrontLitPage = {
   updatedAt?: string | null;
 };
 
-export type FrontLitBlog = {
-  documentId: string;
+export type WebsiteBlog = {
+  blogId: string;
   slug: string;
-  status: FrontLitContentStatus;
+  status: WebsiteContentStatus;
   featuredImage?: MediaRef | null;
   draftFeaturedImage?: MediaRef | null;
   draftTitle: string;
@@ -65,7 +65,7 @@ export type FrontLitBlog = {
   updatedAt?: string | null;
 };
 
-export async function frontLitRequest<T>(path: string, init?: RequestInit): Promise<T> {
+export async function websiteRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     credentials: "include",
@@ -83,7 +83,7 @@ export async function frontLitRequest<T>(path: string, init?: RequestInit): Prom
   return (await response.json()) as T;
 }
 
-export function contentStatusLabel(status: FrontLitContentStatus): string {
+export function contentStatusLabel(status: WebsiteContentStatus): string {
   if (status === "published_with_changes") return "Published · changes";
   return status === "published" ? "Published" : "Draft";
 }

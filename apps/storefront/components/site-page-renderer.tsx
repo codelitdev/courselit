@@ -22,7 +22,7 @@ function SiteLink(props: PageBuilderLinkProps) {
 }
 
 /** Wraps CourseLit-owned route content in the same themed page primitive used
- * by FrontLit site pages. It intentionally lives under the page renderer's
+ * by website pages. It intentionally lives under the page renderer's
  * theme provider so dynamic system routes use the active school theme. */
 export function SitePageSection({ children }: { children: React.ReactNode }) {
   const theme = useSchoolThemeStyle();
@@ -34,8 +34,6 @@ export function SitePageRenderer({
   themeId,
   themeStyle,
   pageData,
-  siteLogoUrl,
-  siteLogoAlt,
   children,
   dataSlots,
 }: {
@@ -43,8 +41,6 @@ export function SitePageRenderer({
   themeId?: string | null;
   themeStyle?: Record<string, unknown> | null;
   pageData: PageData;
-  siteLogoUrl?: string | null;
-  siteLogoAlt?: string | null;
   children?: React.ReactNode;
   dataSlots?: Record<string, React.ReactNode>;
 }) {
@@ -57,14 +53,9 @@ export function SitePageRenderer({
       <PageRenderer
         layout={layout}
         theme={theme}
-        pageData={{
-          ...pageData,
-          ...(siteLogoUrl ? { siteLogoUrl } : {}),
-          ...(siteLogoAlt ? { siteLogoAlt } : {}),
-        }}
+        pageData={pageData}
         dataSlots={dataSlots}
         nextTheme={nextTheme}
-        themeMode={mode}
         onThemeModeChange={(mode) => {
           if (mode === "light" || mode === "dark") {
             setMode(mode);

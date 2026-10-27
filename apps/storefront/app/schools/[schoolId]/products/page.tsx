@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 /**
  * The catalog is a system-owned public surface. It is composed inside the
  * school's homepage header/footer and active theme; it is not a persisted
- * FrontLit page.
+ * website page.
  */
 export default async function PublicProductsPage({
   params,

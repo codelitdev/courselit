@@ -102,35 +102,6 @@ describe("metadataForPublicPage", () => {
     expect(metadata.alternates?.canonical).toBeUndefined();
   });
 
-  it("filters out FrontLit default title and description", () => {
-    const page = {
-      pageId: "page-1",
-      slug: "",
-      name: "Homepage",
-      title: "FrontLit — the front office of your SaaS",
-      description:
-        "Build your website, publish content, support users, and send email from one place.",
-      layout: [],
-      socialImage: null,
-      robotsAllowed: null,
-      publishedAt: null,
-      updatedAt: null,
-    };
-    const settings = {
-      title: "Anita School",
-      subtitle: "Just a school",
-      logo: null,
-      themeId: null,
-      theme: null,
-      codeInjectionHead: "",
-      codeInjectionBody: "",
-    };
-
-    const metadata = metadataForPublicPage(page, "Anita School", settings, true);
-    expect(metadata.title).toEqual({ absolute: "Anita School | Just a school" });
-    expect(metadata.description).toBe("Just a school");
-  });
-
   it("preserves an authored custom title on other public pages", () => {
     const page = {
       pageId: "page-2",

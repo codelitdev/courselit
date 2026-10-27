@@ -20,7 +20,6 @@ export default function CurriculumWidget({
   settings,
   state: { theme },
   pageData,
-  nextTheme,
 }: WidgetProps<CurriculumSettings>) {
   const data = salesData(pageData);
   const sourceProduct =
@@ -94,12 +93,7 @@ export default function CurriculumWidget({
   }
 
   return (
-    <Section
-      theme={resolvedTheme}
-      id={settings.cssId}
-      background={settings.background}
-      nextTheme={nextTheme}
-    >
+    <Section theme={resolvedTheme} id={settings.cssId} background={settings.background}>
       <div className="flex w-full flex-col gap-6">
         <div
           className={

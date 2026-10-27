@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { schools } from "./schools.js";
 
-export const integrationProviders = ["frontlit", "sendlit", "medialit"] as const;
+export const integrationProviders = ["sendlit", "medialit"] as const;
 export type IntegrationProvider = (typeof integrationProviders)[number];
 
 export const integrationStatuses = [
@@ -31,8 +31,6 @@ export const integrationJobStatuses = [
 export type IntegrationJobStatus = (typeof integrationJobStatuses)[number];
 
 export const integrationJobTypes = [
-  "provision_frontlit",
-  "provision_sales_page",
   "provision_sendlit",
   "sync_sendlit_contact",
   "erase_sendlit_contact",
@@ -110,14 +108,7 @@ export const integrationOutboxJobs = pgTable(
   (table) => ({
     provisionIdentity: uniqueIndex("integration_outbox_jobs_provision_uidx")
       .on(table.schoolId, table.provider, table.type)
-      .where(sql`type IN ('provision_frontlit', 'provision_sendlit')`),
-    salesPageIdentity: uniqueIndex("integration_outbox_jobs_sales_page_uidx")
-      .on(
-        table.schoolId,
-        sql`(${table.payload}->>'resourceType')`,
-        sql`(${table.payload}->>'resourceId')`,
-      )
-      .where(sql`type = 'provision_sales_page'`),
+      .where(sql`type = 'provision_sendlit'`),
     contactSyncCoalesce: uniqueIndex("integration_outbox_jobs_contact_sync_uidx")
       .on(
         table.schoolId,

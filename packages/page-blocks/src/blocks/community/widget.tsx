@@ -28,7 +28,6 @@ export default function CommunityWidget({
   state: { theme },
   pageData,
   editing,
-  nextTheme,
 }: WidgetProps<CommunitySettings>) {
   const data = salesData(pageData);
   const resolvedTheme = sectionTheme(theme.theme, settings);
@@ -66,7 +65,6 @@ export default function CommunityWidget({
         theme={resolvedTheme}
         id={settings.cssId}
         background={settings.background}
-        nextTheme={nextTheme}
       >
         <PageCard
           theme={resolvedTheme}
@@ -103,12 +101,7 @@ export default function CommunityWidget({
   }
 
   return (
-    <Section
-      theme={resolvedTheme}
-      id={settings.cssId}
-      background={settings.background}
-      nextTheme={nextTheme}
-    >
+    <Section theme={resolvedTheme} id={settings.cssId} background={settings.background}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <Caption theme={resolvedTheme}>Community</Caption>

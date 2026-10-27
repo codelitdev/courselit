@@ -50,7 +50,7 @@ export function PublicBlogFeed({
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {items.map((post) => (
-            <Link key={post.documentId} href={`/blog/${post.slug}`}>
+            <Link key={post.blogId} href={`/blog/${post.slug}`}>
               <PageCard
                 theme={theme}
                 isLink

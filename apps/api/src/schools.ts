@@ -8,7 +8,6 @@ import {
 import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, inArray, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { frontLitConfig, getPublicFrontLitSettings } from "./frontlit-client.js";
 import { normalizeEmail } from "./invitations.js";
 import {
   OWNER_PERMISSIONS,
@@ -26,6 +25,7 @@ import {
 } from "./payments.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionSchoolCommunity } from "./spaces.js";
+import { provisionWebsite } from "./website.js";
 
 export type SchoolDto = {
   id: string;
@@ -38,10 +38,6 @@ export type SchoolDto = {
   permissions?: CourseLitPermission[];
   selected?: boolean;
   website?: {
-    status: "pending" | "provisioning" | "ready" | "action_required";
-    teamId: string | null;
-    lastSuccessfulSyncAt: string | null;
-    lastError: string | null;
     logo: MediaRef | null;
   };
 };
@@ -121,9 +117,6 @@ export async function createSchool(
     createdAt: now,
     updatedAt: now,
   };
-
-  const frontLit = frontLitConfig();
-  const frontLitConfigured = Boolean(frontLit.server && frontLit.provisioningSecret);
 
   const sendLit = sendLitConfig();
   const sendLitConfigured = Boolean(sendLit.server && sendLit.provisioningApiKey);
@@ -207,6 +200,7 @@ export async function createSchool(
       requestId: input.requestId ?? "",
       createdAt: now,
     });
+    await provisionWebsite(tx as AppDb, { schoolId }, clock);
     await provisionSchoolCommunity(
       tx as AppDb,
       {
@@ -218,33 +212,6 @@ export async function createSchool(
       },
       clock,
     );
-
-    await tx.insert(schema.schoolIntegrations).values({
-      id: uuidv7(clock),
-      schoolId,
-      provider: "frontlit",
-      server: frontLit.server ?? "",
-      externalId: publicId,
-      status: frontLitConfigured ? "pending" : "action_required",
-      lastError: frontLitConfigured ? null : "FRONTLIT_CONFIGURATION_MISSING",
-      createdAt: now,
-      updatedAt: now,
-    });
-    await tx.insert(schema.integrationOutboxJobs).values({
-      id: uuidv7(clock),
-      schoolId,
-      provider: "frontlit",
-      type: "provision_frontlit",
-      payload: {
-        externalId: publicId,
-        ownerEmail,
-        name: input.name,
-        subdomain: input.subdomain,
-      },
-      nextAttemptAt: now,
-      createdAt: now,
-      updatedAt: now,
-    });
 
     await tx.insert(schema.schoolIntegrations).values({
       id: uuidv7(clock),
@@ -289,7 +256,7 @@ export async function listSchoolsForUser(
     .select({
       school: schema.schools,
       membership: schema.memberships,
-      integration: schema.schoolIntegrations,
+      websiteLogo: schema.websiteSettings.logo,
     })
     .from(schema.memberships)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.memberships.schoolId))
@@ -298,11 +265,8 @@ export async function listSchoolsForUser(
       eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
     )
     .leftJoin(
-      schema.schoolIntegrations,
-      and(
-        eq(schema.schoolIntegrations.schoolId, schema.schools.id),
-        eq(schema.schoolIntegrations.provider, "frontlit"),
-      ),
+      schema.websiteSettings,
+      eq(schema.websiteSettings.schoolId, schema.schools.id),
     )
     .where(
       and(
@@ -326,37 +290,6 @@ export async function listSchoolsForUser(
   const customHostBySchoolId = new Map(
     verifiedCustomHosts.map((host) => [host.schoolId, host.hostname]),
   );
-  const config = frontLitConfig();
-  const websiteBySchoolId = new Map<string, SchoolWebsiteDto>();
-  if (config.server) {
-    await Promise.all(
-      rows.map(async (row) => {
-        const integration = row.integration;
-        if (!integration?.remoteTeamId) return;
-        try {
-          const settings = await getPublicFrontLitSettings(integration.remoteTeamId, {
-            config,
-          });
-          websiteBySchoolId.set(row.school.id, {
-            status: integration.status,
-            teamId: integration.remoteTeamId,
-            lastSuccessfulSyncAt: integration.lastSuccessfulSyncAt?.toISOString() ?? null,
-            lastError: integration.lastError,
-            logo: settings.logo,
-          });
-        } catch {
-          websiteBySchoolId.set(row.school.id, {
-            status: integration.status,
-            teamId: integration.remoteTeamId,
-            lastSuccessfulSyncAt: integration.lastSuccessfulSyncAt?.toISOString() ?? null,
-            lastError: integration.lastError,
-            logo: null,
-          });
-        }
-      }),
-    );
-  }
-
   return rows.map((row) =>
     toSchoolDto(
       row.school,
@@ -364,7 +297,7 @@ export async function listSchoolsForUser(
       row.membership.isOwner
         ? OWNER_PERMISSIONS
         : [...parsePermissions(row.membership.permissions)],
-      websiteBySchoolId.get(row.school.id),
+      { logo: row.websiteLogo ?? null },
       customHostBySchoolId.get(row.school.id) ?? defaultStorefrontHost(row.school.subdomain),
     ),
   );

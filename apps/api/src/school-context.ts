@@ -7,6 +7,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   type CourseLitPermission,
+  narrowToScopes,
   OWNER_PERMISSIONS,
   parsePermissions,
 } from "./permissions.js";
@@ -26,12 +27,33 @@ export type ResolvedSchool = {
   permissions: ReadonlySet<CourseLitPermission>;
 };
 
-export async function resolveSchoolContext(input: {
+type SchoolContextInput = {
   db: AppDb;
   principalId: string;
   credential: PlatformCredential;
   requestedPublicSchoolId: string | null;
-}): Promise<{ ok: true; value: ResolvedSchool } | { ok: false; error: PlatformError }> {
+};
+
+export async function resolveSchoolContext(
+  input: SchoolContextInput,
+): Promise<{ ok: true; value: ResolvedSchool } | { ok: false; error: PlatformError }> {
+  const resolved = await resolveSchool(input);
+  if (!resolved.ok || input.credential.kind !== "oauth") return resolved;
+  return {
+    ok: true,
+    value: {
+      ...resolved.value,
+      permissions: narrowToScopes(
+        resolved.value.permissions,
+        input.credential.scopes ?? [],
+      ),
+    },
+  };
+}
+
+async function resolveSchool(
+  input: SchoolContextInput,
+): Promise<{ ok: true; value: ResolvedSchool } | { ok: false; error: PlatformError }> {
   if (input.credential.kind === "api_key") {
     if (!input.credential.credentialId) {
       return { ok: false, error: createPlatformError("unauthenticated") };

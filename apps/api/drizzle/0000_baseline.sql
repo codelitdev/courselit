@@ -358,7 +358,6 @@ CREATE TABLE "communities" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"public_id" text NOT NULL,
 	"school_id" uuid NOT NULL,
-	"sales_page_id" text DEFAULT null,
 	"name" text NOT NULL,
 	"slug" text NOT NULL,
 	"description" text DEFAULT '' NOT NULL,
@@ -657,7 +656,6 @@ CREATE TABLE "products" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"public_id" text NOT NULL,
 	"school_id" uuid NOT NULL,
-	"sales_page_id" text DEFAULT null,
 	"kind" text NOT NULL,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"slug" text NOT NULL,
@@ -782,7 +780,9 @@ CREATE TABLE "school_hosts" (
 	"hostname" text NOT NULL,
 	"kind" text NOT NULL,
 	"verification_status" text DEFAULT 'unverified' NOT NULL,
-	"verification_token_digest" text,
+	"verification_token" text,
+	"txt_satisfied" boolean,
+	"routing_satisfied" boolean,
 	"verified_at" timestamp with time zone,
 	"is_primary" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
@@ -1005,6 +1005,76 @@ CREATE TABLE "storefront_webhook_events" (
 	"received_at" timestamp with time zone NOT NULL,
 	"processed_at" timestamp with time zone,
 	CONSTRAINT "storefront_webhook_events_provider_event_id_unique" UNIQUE("provider_event_id")
+);
+--> statement-breakpoint
+CREATE TABLE "blog_posts" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"public_id" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"author_school_account_id" uuid,
+	"slug" text NOT NULL,
+	"title" text,
+	"content" jsonb,
+	"excerpt" text,
+	"featured_image" jsonb,
+	"meta" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"published_at" timestamp with time zone,
+	"draft_title" text NOT NULL,
+	"draft_content" jsonb NOT NULL,
+	"draft_excerpt" text,
+	"draft_featured_image" jsonb,
+	"draft_meta" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "blog_posts_public_id_unique" UNIQUE("public_id")
+);
+--> statement-breakpoint
+CREATE TABLE "website_pages" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"public_id" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"product_id" uuid,
+	"community_id" uuid,
+	"name" text NOT NULL,
+	"slug" text NOT NULL,
+	"deletable" boolean DEFAULT true NOT NULL,
+	"layout" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"title" text,
+	"description" text,
+	"social_image" jsonb,
+	"robots_allowed" boolean,
+	"published_at" timestamp with time zone,
+	"draft_layout" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"draft_title" text,
+	"draft_description" text,
+	"draft_social_image" jsonb,
+	"draft_robots_allowed" boolean,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "website_pages_public_id_unique" UNIQUE("public_id")
+);
+--> statement-breakpoint
+CREATE TABLE "website_settings" (
+	"school_id" uuid PRIMARY KEY NOT NULL,
+	"title" text,
+	"subtitle" text,
+	"logo" jsonb,
+	"theme_id" text,
+	"shared_widgets" jsonb NOT NULL,
+	"draft_shared_widgets" jsonb NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "website_themes" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"public_id" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"name" text NOT NULL,
+	"style" jsonb NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "website_themes_public_id_unique" UNIQUE("public_id")
 );
 --> statement-breakpoint
 CREATE TABLE "billing_catalog_revision_items" (
@@ -1353,6 +1423,13 @@ ALTER TABLE "storefront_payments" ADD CONSTRAINT "storefront_payments_checkout_i
 ALTER TABLE "storefront_plans" ADD CONSTRAINT "storefront_plans_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_plans" ADD CONSTRAINT "storefront_plans_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_subscriptions" ADD CONSTRAINT "storefront_subscriptions_checkout_id_storefront_checkout_attempts_id_fk" FOREIGN KEY ("checkout_id") REFERENCES "public"."storefront_checkout_attempts"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_author_school_account_id_school_accounts_id_fk" FOREIGN KEY ("author_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "website_pages" ADD CONSTRAINT "website_pages_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "website_pages" ADD CONSTRAINT "website_pages_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "website_pages" ADD CONSTRAINT "website_pages_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "website_settings" ADD CONSTRAINT "website_settings_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "website_themes" ADD CONSTRAINT "website_themes_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "billing_catalog_revision_items" ADD CONSTRAINT "billing_catalog_revision_items_catalog_revision_id_billing_catalog_revisions_id_fk" FOREIGN KEY ("catalog_revision_id") REFERENCES "public"."billing_catalog_revisions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "billing_catalog_revision_items" ADD CONSTRAINT "billing_catalog_revision_items_billing_price_entry_id_billing_price_entries_id_fk" FOREIGN KEY ("billing_price_entry_id") REFERENCES "public"."billing_price_entries"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "billing_checkout_attempts" ADD CONSTRAINT "billing_checkout_attempts_billable_entity_id_schools_id_fk" FOREIGN KEY ("billable_entity_id") REFERENCES "public"."schools"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -1405,8 +1482,7 @@ CREATE UNIQUE INDEX "community_checkout_provider_checkout_uidx" ON "community_ch
 CREATE UNIQUE INDEX "community_invoices_provider_invoice_uidx" ON "community_invoices" USING btree ("provider_invoice_id") WHERE "community_invoices"."provider_invoice_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "community_invoices_payment_uidx" ON "community_invoices" USING btree ("payment_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "community_subscriptions_provider_subscription_uidx" ON "community_subscriptions" USING btree ("provider_subscription_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "integration_outbox_jobs_provision_uidx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type") WHERE type IN ('provision_frontlit', 'provision_sendlit');--> statement-breakpoint
-CREATE UNIQUE INDEX "integration_outbox_jobs_sales_page_uidx" ON "integration_outbox_jobs" USING btree ("school_id",("payload"->>'resourceType'),("payload"->>'resourceId')) WHERE type = 'provision_sales_page';--> statement-breakpoint
+CREATE UNIQUE INDEX "integration_outbox_jobs_provision_uidx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type") WHERE type = 'provision_sendlit';--> statement-breakpoint
 CREATE UNIQUE INDEX "integration_outbox_jobs_contact_sync_uidx" ON "integration_outbox_jobs" USING btree ("school_id","provider","type",("payload"->>'schoolAccountId')) WHERE status = 'pending' AND type = 'sync_sendlit_contact';--> statement-breakpoint
 CREATE INDEX "integration_outbox_jobs_pending_idx" ON "integration_outbox_jobs" USING btree ("status","next_attempt_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_integrations_school_provider_uidx" ON "school_integrations" USING btree ("school_id","provider");--> statement-breakpoint
@@ -1451,6 +1527,12 @@ CREATE UNIQUE INDEX "storefront_plans_active_subscription_monthly_uidx" ON "stor
 CREATE UNIQUE INDEX "storefront_plans_active_subscription_yearly_uidx" ON "storefront_plans" USING btree ("entity_type","entity_id") WHERE "storefront_plans"."entity_type" = 'product' AND "storefront_plans"."status" = 'active' AND "storefront_plans"."kind" = 'subscription' AND "storefront_plans"."subscription_yearly_amount" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "storefront_plans_active_default_uidx" ON "storefront_plans" USING btree ("entity_type","entity_id") WHERE "storefront_plans"."status" = 'active' AND "storefront_plans"."is_default" = true;--> statement-breakpoint
 CREATE UNIQUE INDEX "storefront_subscriptions_provider_subscription_uidx" ON "storefront_subscriptions" USING btree ("provider_subscription_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "blog_posts_school_slug_uidx" ON "blog_posts" USING btree ("school_id","slug");--> statement-breakpoint
+CREATE INDEX "blog_posts_school_published_idx" ON "blog_posts" USING btree ("school_id","published_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "website_pages_school_slug_uidx" ON "website_pages" USING btree ("school_id","slug");--> statement-breakpoint
+CREATE UNIQUE INDEX "website_pages_product_uidx" ON "website_pages" USING btree ("product_id") WHERE "website_pages"."product_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "website_pages_community_uidx" ON "website_pages" USING btree ("community_id") WHERE "website_pages"."community_id" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX "website_themes_school_idx" ON "website_themes" USING btree ("school_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_catalog_revision_items_revision_key_uidx" ON "billing_catalog_revision_items" USING btree ("catalog_revision_id","offer_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_catalog_revision_items_revision_price_uidx" ON "billing_catalog_revision_items" USING btree ("catalog_revision_id","billing_price_entry_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_catalog_revisions_active_provider_uidx" ON "billing_catalog_revisions" USING btree ("checkout_provider") WHERE "billing_catalog_revisions"."status" = 'active';--> statement-breakpoint

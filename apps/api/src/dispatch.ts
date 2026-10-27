@@ -95,7 +95,7 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import { ActivityType, getSchoolOverview, recordActivity } from "./activities.js";
 import {
   createApiKeyRecord,
@@ -196,31 +196,29 @@ import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { createLearnerDownloadLink } from "./downloads.js";
 import {
-  createFrontLitBlog,
-  createFrontLitPage,
-  createFrontLitTheme,
-  discardFrontLitBlogDraft,
-  discardFrontLitPageDraft,
-  FrontLitApiError,
-  frontLitConfig,
-  getFrontLitBlog,
-  getFrontLitPage,
-  getFrontLitSettings,
-  getPublicFrontLitBlog,
-  getPublicFrontLitPage,
-  getPublicFrontLitSettings,
-  listFrontLitBlogs,
-  listFrontLitPages,
-  listFrontLitThemes,
-  listPublicFrontLitBlogs,
-  publishFrontLitBlog,
-  publishFrontLitPage,
-  updateFrontLitBlog,
-  updateFrontLitPage,
-  updateFrontLitSettings,
-  updateFrontLitTheme,
-} from "./frontlit-client.js";
-import { getSalesPage, isCourseLitSalesPageSlug } from "./frontlit-sales-pages.js";
+  createBlogPost,
+  createWebsitePage,
+  createWebsiteTheme,
+  discardBlogPostDraft,
+  discardWebsitePageDraft,
+  getBlogPost,
+  getPublicWebsiteSettings,
+  getPublishedBlogPost,
+  getPublishedWebsitePage,
+  getSalesPage,
+  getWebsiteBranding,
+  getWebsitePage,
+  listBlogPosts,
+  listPublishedBlogPosts,
+  listWebsitePages,
+  listWebsiteThemes,
+  publishBlogPost,
+  publishWebsitePage,
+  updateBlogPost,
+  updateWebsiteBranding,
+  updateWebsitePage,
+  updateWebsiteTheme,
+} from "./website.js";
 import { processNextIntegrationJob } from "./integration-provisioning.js";
 import {
   acceptInvitation,
@@ -844,35 +842,6 @@ export async function dispatch(
       };
     };
 
-    const resolvePublicFrontLit = async () => {
-      const school = await resolvePublicSchool();
-      if (!school.ok) return school;
-      const [integration] = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, school.value.schoolId),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      if (!integration?.remoteTeamId) {
-        return { ok: false as const, error: createPlatformError("not_found") };
-      }
-      return {
-        ok: true as const,
-        value: {
-          school: school.value,
-          remoteTeamId: integration.remoteTeamId,
-          config: {
-            server: integration.server || frontLitConfig().server,
-            provisioningSecret: null,
-          },
-        },
-      };
-    };
-
     if (request.method === "GET" && path === "/v1/public/school/login-methods") {
       let schoolKey = resolveLearnerSchoolKey(request);
       let school = schoolKey ? await loadSchoolByPublicId(deps.db, schoolKey) : null;
@@ -924,50 +893,34 @@ export async function dispatch(
 
     // Website / Branding
     if (request.method === "GET" && path === "/v1/public/site/settings") {
-      const resolved = await resolvePublicFrontLit();
-      if (!resolved.ok) return errorResponse(resolved.error);
-      try {
-        const settings = await getPublicFrontLitSettings(resolved.value.remoteTeamId, {
-          config: resolved.value.config,
-        });
-        const injection = await getSchoolCodeInjection(
-          deps.db,
-          resolved.value.school.schoolId,
-        );
-        const [verifiedCustomHost] = await deps.db
-          .select({ hostname: schema.schoolHosts.hostname })
-          .from(schema.schoolHosts)
-          .where(
-            and(
-              eq(schema.schoolHosts.schoolId, resolved.value.school.schoolId),
-              eq(schema.schoolHosts.kind, "custom"),
-              eq(schema.schoolHosts.verificationStatus, "verified"),
-            ),
-          )
-          .limit(1);
-        return {
-          status: 200,
-          body: {
-            ...settings,
-            codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
-            codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
-            canonicalHost: verifiedCustomHost?.hostname ?? null,
-          },
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "public.site.settings",
-          context: { school_id: resolved.value.school.publicId },
-        });
-        return errorResponse(
-          createPlatformError(
-            error instanceof FrontLitApiError && error.status === 404
-              ? "not_found"
-              : "internal_error",
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      const settings = await getPublicWebsiteSettings(
+        deps.db,
+        school.value.schoolId,
+        deps.clock,
+      );
+      const injection = await getSchoolCodeInjection(deps.db, school.value.schoolId);
+      const [verifiedCustomHost] = await deps.db
+        .select({ hostname: schema.schoolHosts.hostname })
+        .from(schema.schoolHosts)
+        .where(
+          and(
+            eq(schema.schoolHosts.schoolId, school.value.schoolId),
+            eq(schema.schoolHosts.kind, "custom"),
+            eq(schema.schoolHosts.verificationStatus, "verified"),
           ),
-        );
-      }
+        )
+        .limit(1);
+      return {
+        status: 200,
+        body: {
+          ...settings,
+          codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
+          codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
+          canonicalHost: verifiedCustomHost?.hostname ?? null,
+        },
+      };
     }
 
     // Website / Pages
@@ -976,50 +929,27 @@ export async function dispatch(
       if (slug.length > 200) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const resolved = await resolvePublicFrontLit();
-      if (!resolved.ok) return errorResponse(resolved.error);
-      try {
-        return {
-          status: 200,
-          body: await getPublicFrontLitPage(resolved.value.remoteTeamId, slug, {
-            config: resolved.value.config,
-          }),
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "public.site.pages",
-          context: { school_id: resolved.value.school.publicId, slug },
-        });
-        return errorResponse(
-          createPlatformError(
-            error instanceof FrontLitApiError && error.status === 404
-              ? "not_found"
-              : "internal_error",
-          ),
-        );
-      }
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      const page = await getPublishedWebsitePage(
+        deps.db,
+        school.value.schoolId,
+        slug,
+        deps.clock,
+      );
+      return page
+        ? { status: 200, body: page }
+        : errorResponse(createPlatformError("not_found"));
     }
 
     // Website / Blogs
     if (request.method === "GET" && path === "/v1/public/site/blogs") {
-      const resolved = await resolvePublicFrontLit();
-      if (!resolved.ok) return errorResponse(resolved.error);
-      try {
-        return {
-          status: 200,
-          body: await listPublicFrontLitBlogs(resolved.value.remoteTeamId, {
-            config: resolved.value.config,
-          }),
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "public.site.blogs",
-          context: { school_id: resolved.value.school.publicId },
-        });
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      return {
+        status: 200,
+        body: await listPublishedBlogPosts(deps.db, school.value.schoolId),
+      };
     }
 
     const publicSiteBlogMatch = /^\/v1\/public\/site\/blogs\/([^/]+)$/.exec(path);
@@ -1028,31 +958,13 @@ export async function dispatch(
       if (slug.length === 0 || slug.length > 200) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const resolved = await resolvePublicFrontLit();
-      if (!resolved.ok) return errorResponse(resolved.error);
-      try {
-        return {
-          status: 200,
-          body: await getPublicFrontLitBlog(resolved.value.remoteTeamId, slug, {
-            config: resolved.value.config,
-          }),
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "public.site.blogs.article",
-          context: { school_id: resolved.value.school.publicId, slug },
-        });
-        return errorResponse(
-          createPlatformError(
-            error instanceof FrontLitApiError && error.status === 404
-              ? "not_found"
-              : "internal_error",
-          ),
-        );
-      }
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      const post = await getPublishedBlogPost(deps.db, school.value.schoolId, slug);
+      return post
+        ? { status: 200, body: post }
+        : errorResponse(createPlatformError("not_found"));
     }
-
     if (request.method === "GET" && path === "/v1/public/products") {
       let school: { schoolId: string; publicId: string; currency: string } | null =
         null;
@@ -2769,78 +2681,25 @@ export async function dispatch(
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "POST"
-          ? createSchoolWebsitePageBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        if (request.method === "POST" && parsed?.success) {
-          const page = await createFrontLitPage(parsed.data, teamApiKey, { config });
-          return { status: 201, body: page };
-        }
-        const pages = await listFrontLitPages(teamApiKey, { config });
-        // Sales pages are owned by their product/community. They are edited
-        // from those resource screens, not from the ordinary page list.
-        const [productSalesPages, communitySalesPages] = await Promise.all([
-          deps.db
-            .select({ pageId: schema.products.salesPageId })
-            .from(schema.products)
-            .where(eq(schema.products.schoolId, context.tenantId!)),
-          deps.db
-            .select({ pageId: schema.communities.salesPageId })
-            .from(schema.communities)
-            .where(eq(schema.communities.schoolId, context.tenantId!)),
-        ]);
-        const salesPageIds = new Set(
-          [...productSalesPages, ...communitySalesPages]
-            .map((mapping) => mapping.pageId)
-            .filter((pageId): pageId is string => Boolean(pageId)),
-        );
-        return {
-          status: 200,
-          body: {
-            items: pages.filter(
-              (page) =>
-                !isCourseLitSalesPageSlug(page.slug) && !salesPageIds.has(page.id),
-            ),
-          },
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-pages",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      if (request.method === "POST") {
+        const parsed = createSchoolWebsitePageBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        return errorResponse(createPlatformError("internal_error"));
+        const result = await createWebsitePage(
+          deps.db,
+          context.tenantId!,
+          parsed.data,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 201, body: result.value }
+          : errorResponse(result.error);
       }
+      return {
+        status: 200,
+        body: { items: await listWebsitePages(deps.db, context.tenantId!) },
+      };
     }
     // Website / Branding
     if (
@@ -2852,54 +2711,27 @@ export async function dispatch(
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "PATCH"
-          ? updateSchoolWebsiteBrandingBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const [integration] = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        if (request.method === "PATCH" && parsed?.success) {
-          const settings = await updateFrontLitSettings(parsed.data, teamApiKey, {
-            config,
-          });
-          return { status: 200, body: settings };
-        }
-        const settings = await getFrontLitSettings(teamApiKey, { config });
-        return { status: 200, body: settings };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-branding",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      if (request.method === "PATCH") {
+        const parsed = updateSchoolWebsiteBrandingBodySchema.safeParse(
+          request.body ?? {},
+        );
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
+        const result = await updateWebsiteBranding(
+          deps.db,
+          context.tenantId!,
+          parsed.data,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
       }
+      return {
+        status: 200,
+        body: await getWebsiteBranding(deps.db, context.tenantId!, deps.clock),
+      };
     }
 
     // Website / Blogs
@@ -2912,53 +2744,25 @@ export async function dispatch(
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "POST"
-          ? createSchoolWebsiteBlogBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        if (request.method === "POST" && parsed?.success) {
-          const blog = await createFrontLitBlog(parsed.data, teamApiKey, { config });
-          return { status: 201, body: blog };
-        }
-        const blogs = await listFrontLitBlogs(teamApiKey, { config });
-        return { status: 200, body: { items: blogs } };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-blogs",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      if (request.method === "POST") {
+        const parsed = createSchoolWebsiteBlogBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        return errorResponse(createPlatformError("internal_error"));
+        const result = await createBlogPost(
+          deps.db,
+          context.tenantId!,
+          { title: parsed.data.title, authorUserId: context.principalId },
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 201, body: result.value }
+          : errorResponse(result.error);
       }
+      return {
+        status: 200,
+        body: { items: await listBlogPosts(deps.db, context.tenantId!) },
+      };
     }
     // Website / Branding themes
     if (
@@ -2970,61 +2774,30 @@ export async function dispatch(
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "POST"
-          ? createSchoolWebsiteThemeBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const [integration] = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        if (request.method === "POST" && parsed?.success) {
-          return {
-            status: 201,
-            body: await createFrontLitTheme(parsed.data, teamApiKey, { config }),
-          };
-        }
-        return {
-          status: 200,
-          body: { items: await listFrontLitThemes(teamApiKey, { config }) },
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-branding-themes",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      if (request.method === "POST") {
+        const parsed = createSchoolWebsiteThemeBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
+        return {
+          status: 201,
+          body: await createWebsiteTheme(
+            deps.db,
+            context.tenantId!,
+            parsed.data,
+            deps.clock,
+          ),
+        };
       }
+      return {
+        status: 200,
+        body: { items: await listWebsiteThemes(deps.db, context.tenantId!) },
+      };
     }
 
-    const frontLitThemeMatch =
+    const websiteThemeMatch =
       /^\/v1\/school\/website\/branding\/themes\/([^/]+)$/.exec(path);
-    if (request.method === "PATCH" && frontLitThemeMatch) {
+    if (request.method === "PATCH" && websiteThemeMatch) {
       if (!context.permissions.has("storefront:write")) {
         return errorResponse(createPlatformError("forbidden"));
       }
@@ -3032,407 +2805,125 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const [integration] = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        return {
-          status: 200,
-          body: await updateFrontLitTheme(
-            decodeURIComponent(frontLitThemeMatch[1]!),
-            parsed.data,
-            teamApiKey,
-            { config },
-          ),
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-branding-themes.editor",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 400) {
-          return errorResponse(createPlatformError("validation_failed"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const result = await updateWebsiteTheme(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(websiteThemeMatch[1]!),
+        parsed.data,
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
 
-    const frontLitPageMatch = /^\/v1\/school\/website\/pages\/([^/]+)$/.exec(path);
-    if ((request.method === "GET" || request.method === "PATCH") && frontLitPageMatch) {
+    const websitePageMatch = /^\/v1\/school\/website\/pages\/([^/]+)$/.exec(path);
+    if ((request.method === "GET" || request.method === "PATCH") && websitePageMatch) {
       const requiredPerm =
         request.method === "PATCH" ? "storefront:write" : "storefront:read";
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "PATCH"
-          ? updateSchoolWebsitePageBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const pageId = decodeURIComponent(frontLitPageMatch[1]!);
-        const [productOwner, communityOwner] = await Promise.all([
-          deps.db
-            .select({
-              publicId: schema.products.publicId,
-              kind: schema.products.kind,
-            })
-            .from(schema.products)
-            .where(
-              and(
-                eq(schema.products.schoolId, context.tenantId!),
-                eq(schema.products.salesPageId, pageId),
-              ),
-            )
-            .limit(1),
-          deps.db
-            .select({ publicId: schema.communities.publicId })
-            .from(schema.communities)
-            .where(
-              and(
-                eq(schema.communities.schoolId, context.tenantId!),
-                eq(schema.communities.salesPageId, pageId),
-                isNull(schema.communities.deletedAt),
-              ),
-            )
-            .limit(1),
-        ]);
-        const product = productOwner[0];
-        const community = communityOwner[0];
-        const page =
-          request.method === "PATCH" && parsed?.success
-            ? await updateFrontLitPage(pageId, parsed.data, teamApiKey, { config })
-            : await getFrontLitPage(pageId, teamApiKey, { config });
-        return {
-          status: 200,
-          body: {
-            ...page,
-            ...(product
-              ? {
-                  salesResourceType: "product" as const,
-                  salesResourceId: product.publicId,
-                  salesResourceKind: product.kind,
-                }
-              : community
-                ? {
-                    salesResourceType: "community" as const,
-                    salesResourceId: community.publicId,
-                    salesResourceKind: null,
-                  }
-                : {}),
-          },
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-pages.editor",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      const pageId = decodeURIComponent(websitePageMatch[1]!);
+      if (request.method === "PATCH") {
+        const parsed = updateSchoolWebsitePageBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
+        const result = await updateWebsitePage(
+          deps.db,
+          context.tenantId!,
+          pageId,
+          parsed.data,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
       }
+      const result = await getWebsitePage(deps.db, context.tenantId!, pageId, deps.clock);
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
-    const discardFrontLitPageMatch =
+    const discardWebsitePageMatch =
       /^\/v1\/school\/website\/pages\/([^/]+)\/discard-draft$/.exec(path);
-    if (request.method === "POST" && discardFrontLitPageMatch) {
+    if (request.method === "POST" && discardWebsitePageMatch) {
       if (!context.permissions.has("storefront:write")) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const page = await discardFrontLitPageDraft(
-          decodeURIComponent(discardFrontLitPageMatch[1]!),
-          teamApiKey,
-          { config },
-        );
-        return { status: 200, body: page };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-pages.discard",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const result = await discardWebsitePageDraft(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(discardWebsitePageMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
-    const frontLitBlogMatch = /^\/v1\/school\/website\/blogs\/([^/]+)$/.exec(path);
-    if ((request.method === "GET" || request.method === "PATCH") && frontLitBlogMatch) {
+    const websiteBlogMatch = /^\/v1\/school\/website\/blogs\/([^/]+)$/.exec(path);
+    if ((request.method === "GET" || request.method === "PATCH") && websiteBlogMatch) {
       const requiredPerm =
         request.method === "PATCH" ? "storefront:write" : "storefront:read";
       if (!context.permissions.has(requiredPerm)) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const parsed =
-        request.method === "PATCH"
-          ? updateSchoolWebsiteBlogBodySchema.safeParse(request.body ?? {})
-          : null;
-      if (parsed && !parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const blogId = decodeURIComponent(frontLitBlogMatch[1]!);
-        if (request.method === "PATCH" && parsed?.success) {
-          return {
-            status: 200,
-            body: await updateFrontLitBlog(blogId, parsed.data, teamApiKey, { config }),
-          };
-        }
-        return {
-          status: 200,
-          body: await getFrontLitBlog(blogId, teamApiKey, { config }),
-        };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-blogs.editor",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 400) {
+      const blogId = decodeURIComponent(websiteBlogMatch[1]!);
+      if (request.method === "PATCH") {
+        const parsed = updateSchoolWebsiteBlogBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
+        const result = await updateBlogPost(
+          deps.db,
+          context.tenantId!,
+          blogId,
+          parsed.data,
+          deps.clock,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
       }
+      const result = await getBlogPost(deps.db, context.tenantId!, blogId);
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
-    const discardFrontLitBlogMatch =
+    const discardWebsiteBlogMatch =
       /^\/v1\/school\/website\/blogs\/([^/]+)\/discard-draft$/.exec(path);
-    if (request.method === "POST" && discardFrontLitBlogMatch) {
+    if (request.method === "POST" && discardWebsiteBlogMatch) {
       if (!context.permissions.has("storefront:write")) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const blog = await discardFrontLitBlogDraft(
-          decodeURIComponent(discardFrontLitBlogMatch[1]!),
-          teamApiKey,
-          { config },
-        );
-        return { status: 200, body: blog };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-blogs.discard",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const result = await discardBlogPostDraft(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(discardWebsiteBlogMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
-    const publishFrontLitPageMatch =
+    const publishWebsitePageMatch =
       /^\/v1\/school\/website\/pages\/([^/]+)\/publish$/.exec(path);
-    if (request.method === "POST" && publishFrontLitPageMatch) {
+    if (request.method === "POST" && publishWebsitePageMatch) {
       if (!context.permissions.has("storefront:publish")) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const page = await publishFrontLitPage(
-          decodeURIComponent(publishFrontLitPageMatch[1]!),
-          teamApiKey,
-          { config },
-        );
-        return { status: 200, body: page };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-pages.publish",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const result = await publishWebsitePage(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(publishWebsitePageMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
-    const publishFrontLitBlogMatch =
+    const publishWebsiteBlogMatch =
       /^\/v1\/school\/website\/blogs\/([^/]+)\/publish$/.exec(path);
-    if (request.method === "POST" && publishFrontLitBlogMatch) {
+    if (request.method === "POST" && publishWebsiteBlogMatch) {
       if (!context.permissions.has("storefront:publish")) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const integrationRows = await deps.db
-        .select()
-        .from(schema.schoolIntegrations)
-        .where(
-          and(
-            eq(schema.schoolIntegrations.schoolId, context.tenantId!),
-            eq(schema.schoolIntegrations.provider, "frontlit"),
-          ),
-        )
-        .limit(1);
-      const integration = integrationRows[0];
-      if (!integration?.encryptedTeamKey || !integration.remoteTeamId) {
-        return errorResponse(createPlatformError("conflict"));
-      }
-      try {
-        const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-        const config = {
-          server: integration.server || frontLitConfig().server,
-          provisioningSecret: null,
-        };
-        const blog = await publishFrontLitBlog(
-          decodeURIComponent(publishFrontLitBlogMatch[1]!),
-          teamApiKey,
-          { config },
-        );
-        return { status: 200, body: blog };
-      } catch (error) {
-        deps.observability?.captureException({
-          error,
-          source: "school.website-blogs.publish",
-          context: { school_id: school.value.publicId },
-        });
-        if (error instanceof FrontLitApiError && error.status === 404) {
-          return errorResponse(createPlatformError("not_found"));
-        }
-        if (error instanceof FrontLitApiError && error.status === 409) {
-          return errorResponse(createPlatformError("conflict"));
-        }
-        return errorResponse(createPlatformError("internal_error"));
-      }
+      const result = await publishBlogPost(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(publishWebsiteBlogMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
     if (request.method === "PATCH" && updateSchoolMatch) {
       if (!context.permissions.has("school:write")) {
@@ -5397,7 +4888,7 @@ export async function dispatch(
       return {
         status: 200,
         body: {
-          items: await listSchoolHosts(deps.db, context.tenantId!, deps.clock),
+          items: await listSchoolHosts(deps.db, context.tenantId!),
           platformDomain: process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app",
         },
       };
@@ -5442,6 +4933,7 @@ export async function dispatch(
           requestId: context.requestId,
         },
         deps.clock,
+        { resolver: deps.dnsResolver },
       );
       return result.ok
         ? { status: 200, body: result.value }

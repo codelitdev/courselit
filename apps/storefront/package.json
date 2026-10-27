@@ -11,13 +11,13 @@
     "start": "next start --port 3001"
   },
   "dependencies": {
-    "@codelitdev/design-system": "0.2.0",
-    "@codelitdev/observability": "0.2.0",
+    "@codelitdev/design-system": "0.4.2",
+    "@codelitdev/observability": "0.4.2",
     "@courselit/api-contract": "workspace:*",
     "@courselit/page-blocks": "workspace:*",
-    "@frontlit/media-uploader": "0.1.0-alpha.0",
-    "@frontlit/page-builder": "0.1.0-alpha.2",
-    "@frontlit/text-editor": "0.1.0-alpha.1",
+    "@frontlit/media-uploader": "0.1.0-alpha.1",
+    "@frontlit/page-builder": "0.1.0-alpha.6",
+    "@frontlit/text-editor": "0.1.0-alpha.3",
     "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -51,7 +51,6 @@ export default function BannerWidget({
   state: { theme },
   pageData,
   editing,
-  nextTheme,
 }: WidgetProps<BannerSettings>) {
   const data = salesData(pageData);
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
@@ -65,7 +64,6 @@ export default function BannerWidget({
         theme={resolvedTheme}
         id={settings.cssId}
         background={settings.background}
-        nextTheme={nextTheme}
       >
         <PageCard
           theme={resolvedTheme}
@@ -85,7 +83,6 @@ export default function BannerWidget({
         theme={resolvedTheme}
         id={settings.cssId}
         background={settings.background}
-        nextTheme={nextTheme}
       >
         <PageCard
           theme={resolvedTheme}
@@ -165,7 +162,11 @@ export default function BannerWidget({
         <div className="flex w-full flex-col gap-3">
           <Caption theme={resolvedTheme}>Buy this course</Caption>
           {productPlans.map((plan) => (
-            <PageCard theme={resolvedTheme} key={plan.id} className="flex flex-col gap-2 p-4">
+            <PageCard
+              theme={resolvedTheme}
+              key={plan.id}
+              className="flex flex-col gap-2 p-4"
+            >
               <Header4 theme={resolvedTheme}>{plan.name}</Header4>
               <Text2 theme={resolvedTheme}>{planPrice(plan)}</Text2>
               {leadMagnet && plan.type === "free" ? (
@@ -181,7 +182,11 @@ export default function BannerWidget({
                     void startCheckout(plan.id, "product");
                   }}
                 >
-                  <Label theme={resolvedTheme} className="sr-only" htmlFor="product-lead-email">
+                  <Label
+                    theme={resolvedTheme}
+                    className="sr-only"
+                    htmlFor="product-lead-email"
+                  >
                     Email
                   </Label>
                   <div className="flex w-full items-center gap-2">
@@ -197,7 +202,11 @@ export default function BannerWidget({
                       required
                     />
                   </div>
-                  <Button theme={resolvedTheme} type="submit" disabled={editing || busyPlan !== null}>
+                  <Button
+                    theme={resolvedTheme}
+                    type="submit"
+                    disabled={editing || busyPlan !== null}
+                  >
                     {busyPlan === plan.id ? "Please wait…" : "Get for free"}
                   </Button>
                 </form>
@@ -228,7 +237,11 @@ export default function BannerWidget({
         <div className="flex w-full flex-col gap-3">
           <Caption theme={resolvedTheme}>Included with community</Caption>
           {communityPlans.map((plan) => (
-            <PageCard theme={resolvedTheme} key={plan.id} className="flex flex-col gap-2 p-4">
+            <PageCard
+              theme={resolvedTheme}
+              key={plan.id}
+              className="flex flex-col gap-2 p-4"
+            >
               <Header4 theme={resolvedTheme}>{plan.name}</Header4>
               <Text2 theme={resolvedTheme}>{planPrice(plan)}</Text2>
               <Button
@@ -271,12 +284,7 @@ export default function BannerWidget({
     );
 
   return (
-    <Section
-      theme={resolvedTheme}
-      id={settings.cssId}
-      background={settings.background}
-      nextTheme={nextTheme}
-    >
+    <Section theme={resolvedTheme} id={settings.cssId} background={settings.background}>
       {content}
     </Section>
   );

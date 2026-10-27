@@ -46,7 +46,10 @@ export const schoolHosts = pgTable(
       .$type<"verified" | "unverified">()
       .notNull()
       .default("unverified"),
-    verificationTokenDigest: text("verification_token_digest"),
+    /** Public DNS TXT value issued for custom domain ownership checks. */
+    verificationToken: text("verification_token"),
+    txtSatisfied: boolean("txt_satisfied"),
+    routingSatisfied: boolean("routing_satisfied"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     isPrimary: boolean("is_primary").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

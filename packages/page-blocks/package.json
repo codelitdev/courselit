@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@courselit/api-contract": "workspace:*",
-    "@frontlit/page-builder": "0.1.0-alpha.2",
-    "@frontlit/text-editor": "0.1.0-alpha.1",
+    "@frontlit/page-builder": "0.1.0-alpha.6",
+    "@frontlit/text-editor": "0.1.0-alpha.3",
     "lucide-react": "^1.41.0"
   },
   "devDependencies": {

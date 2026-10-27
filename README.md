@@ -13,7 +13,7 @@ with `bunx @codelitdev/platform-cli@<version> sync`.
    docker compose -f docker-compose.local.yml up -d
    ```
 
-   This starts PostgreSQL, SendLit, FrontLit, and Mailpit. MediaLit is an
+   This starts PostgreSQL, SendLit, and Mailpit. MediaLit is an
    external service, not a Compose service; configure `MEDIALIT_APIKEY` in the
    root `.env` if you need its integration. CourseLit's host-run API also needs
    `SENDLIT_SERVER` and `SENDLIT_ORGANIZATION_API_KEY` in `apps/api/.env`. Use

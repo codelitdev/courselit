@@ -24,7 +24,6 @@ import {
 import { ActivityType, recordActivity } from "./activities.js";
 import { revokeCommunityMembershipAccess } from "./community-commerce.js";
 import * as schema from "./db/schema/index.js";
-import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
 import {
   findLearnerMembership,
   type LearnerMembershipStatus,
@@ -46,6 +45,7 @@ import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
 import { accessibleSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
+import { ensureSalesPage } from "./website.js";
 
 type AdminContext = PlatformRequestContext<string, string, CourseLitPermission>;
 
@@ -1855,7 +1855,6 @@ export async function createCommunity(
         id: uuidv7(clock),
         publicId,
         schoolId: school.schoolId,
-        salesPageId: null,
         name,
         slug,
         description: input.description,
@@ -1870,13 +1869,19 @@ export async function createCommunity(
         updatedAt: now,
       };
       await tx.insert(schema.communities).values(row);
-      await enqueueSalesPageProvisioning(tx as AppDb, {
-        id: uuidv7(clock),
-        schoolId: row.schoolId,
-        resourceType: "community",
-        resourceId: row.id,
-        now,
-      });
+      await ensureSalesPage(
+        tx as AppDb,
+        {
+          schoolId: row.schoolId,
+          resourceType: "community",
+          resourceId: row.id,
+          resourcePublicId: row.publicId,
+          name: row.name,
+          description: row.description,
+          slug: row.slug,
+        },
+        clock,
+      );
       const contentMediaIds = [
         ...(await mediaIdsForRichTextContent(
           tx as AppDb,
@@ -2143,18 +2148,21 @@ export async function updateCommunity(
         .update(schema.communities)
         .set(next)
         .where(eq(schema.communities.id, existing.id));
-      if (
-        input.name !== undefined ||
-        input.slug !== undefined ||
-        input.description !== undefined
-      ) {
-        await enqueueSalesPageProvisioning(tx as AppDb, {
-          id: uuidv7(clock),
-          schoolId: school.schoolId,
-          resourceType: "community",
-          resourceId: existing.id,
-          now,
-        });
+      if (input.name !== undefined || input.slug !== undefined) {
+        const updated = { ...existing, ...next };
+        await ensureSalesPage(
+          tx as AppDb,
+          {
+            schoolId: school.schoolId,
+            resourceType: "community",
+            resourceId: existing.id,
+            resourcePublicId: existing.publicId,
+            name: updated.name,
+            description: updated.description,
+            slug: updated.slug,
+          },
+          clock,
+        );
       }
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),

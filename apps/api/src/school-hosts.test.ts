@@ -5,131 +5,33 @@ import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { listSchoolsForUser, loadSchoolByPublicId } from "./schools.js";
 import { seedWorld } from "./seed.js";
-import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { customDomainConfig, type DnsResolver } from "./school-hosts.js";
 
-type RemoteDomainSettings = {
-  subdomain: { name: string; hostname: string } | null;
-  customDomain: {
-    hostname: string;
-    status: "pending" | "verified" | "failed";
-    verifiedAt: string | null;
-  } | null;
-  canonicalHost: string | null;
-  verificationRecords: {
-    cnameTarget: string;
-    txtName: string;
-    txtValue: string;
-    kind: "cname" | "alias";
-    txtSatisfied: boolean | null;
-    routingSatisfied: boolean | null;
-  } | null;
-  subdomainPublic: boolean;
-  platformDomain: string;
+type DnsRecords = {
+  txt: Record<string, string[][]>;
+  cname: Record<string, string[]>;
+  a: Record<string, string[]>;
 };
 
-function mockFrontLitDomainApi() {
-  let settings: RemoteDomainSettings = {
-    subdomain: { name: "school-a", hostname: "school-a.frontlit.test" },
-    customDomain: null,
-    canonicalHost: "school-a.frontlit.test",
-    verificationRecords: null,
-    subdomainPublic: true,
-    platformDomain: "frontlit.test",
+function stubDns(runtime: Awaited<ReturnType<typeof createPgliteRuntime>>) {
+  const records: DnsRecords = { txt: {}, cname: {}, a: {} };
+  const missing = () => Promise.reject(Object.assign(new Error("ENOTFOUND"), { code: "ENOTFOUND" }));
+  const resolver: DnsResolver = {
+    resolveTxt: (hostname) => (records.txt[hostname] ? Promise.resolve(records.txt[hostname]) : missing()),
+    resolveCname: (hostname) =>
+      records.cname[hostname] ? Promise.resolve(records.cname[hostname]) : missing(),
+    resolve4: (hostname) => (records.a[hostname] ? Promise.resolve(records.a[hostname]) : missing()),
   };
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = (async (input, init) => {
-    const url = String(input);
-    const method = init?.method ?? "GET";
-    if (url.endsWith("/domain") && method === "GET") {
-      return Response.json(settings);
-    }
-    if (url.endsWith("/domain/custom") && method === "POST") {
-      const body = JSON.parse(String(init?.body)) as { hostname: string };
-      settings = {
-        ...settings,
-        customDomain: {
-          hostname: body.hostname,
-          status: "pending",
-          verifiedAt: null,
-        },
-        canonicalHost: settings.subdomain?.hostname ?? null,
-        verificationRecords: {
-          cnameTarget: "domains.courselit.test",
-          txtName: `_courselit-verification.${body.hostname}`,
-          txtValue: "frontlit-dns-token",
-          kind: body.hostname.split(".").length === 2 ? "alias" : "cname",
-          txtSatisfied: null,
-          routingSatisfied: null,
-        },
-      };
-      return Response.json(settings);
-    }
-    if (url.endsWith("/domain/custom/verify") && method === "POST") {
-      if (settings.customDomain) {
-        settings = {
-          ...settings,
-          customDomain: {
-            ...settings.customDomain,
-            status: "verified",
-            verifiedAt: "2026-03-01T00:00:00.000Z",
-          },
-          canonicalHost: settings.customDomain.hostname,
-          verificationRecords: settings.verificationRecords
-            ? { ...settings.verificationRecords, txtSatisfied: true, routingSatisfied: true }
-            : null,
-        };
-      }
-      return Response.json(settings);
-    }
-    if (url.endsWith("/domain/custom") && method === "DELETE") {
-      settings = {
-        ...settings,
-        customDomain: null,
-        canonicalHost: settings.subdomain?.hostname ?? null,
-        verificationRecords: null,
-      };
-      return Response.json(settings);
-    }
-    return Response.json({ error: "unexpected_request" }, { status: 404 });
-  }) as typeof fetch;
-  return {
-    restore() {
-      globalThis.fetch = originalFetch;
-    },
-  };
-}
-
-async function readyFrontLitIntegration(
-  runtime: Awaited<ReturnType<typeof createPgliteRuntime>>,
-  schoolId: string,
-) {
-  process.env.AUTH_SECRET ??= "school-hosts-test-auth-secret";
-  const now = new Date();
-  await runtime.db.insert(schema.schoolIntegrations).values({
-    id: crypto.randomUUID(),
-    schoolId,
-    provider: "frontlit",
-    server: "http://frontlit.test",
-    externalId: `test:${schoolId}`,
-    remoteTeamId: "team_frontlit_1",
-    encryptedTeamKey: encryptIntegrationSecret("frontlit-team-key"),
-    status: "ready",
-    lastAttemptAt: now,
-    lastSuccessfulSyncAt: now,
-    lastError: null,
-    createdAt: now,
-    updatedAt: now,
-  });
+  runtime.dnsResolver = resolver;
+  return records;
 }
 
 describe.serial("school custom host lifecycle", () => {
   it("returns runtime storefront hosts and prefers a verified custom host", async () => {
     const originalNodeEnv = process.env.NODE_ENV;
     const originalPlatformDomain = process.env.PLATFORM_SITE_DOMAIN;
-    const originalFrontLitServer = process.env.FRONTLIT_SERVER;
     process.env.NODE_ENV = "test";
     process.env.PLATFORM_SITE_DOMAIN = "schools.example.test";
-    delete process.env.FRONTLIT_SERVER;
 
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -152,7 +54,7 @@ describe.serial("school custom host lifecycle", () => {
         hostname: "learn.school-a.example.net",
         kind: "custom",
         verificationStatus: "verified",
-        verificationTokenDigest: null,
+        verificationToken: null,
         verifiedAt: now,
         isPrimary: false,
         createdAt: now,
@@ -169,8 +71,6 @@ describe.serial("school custom host lifecycle", () => {
       else process.env.NODE_ENV = originalNodeEnv;
       if (originalPlatformDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
       else process.env.PLATFORM_SITE_DOMAIN = originalPlatformDomain;
-      if (originalFrontLitServer === undefined) delete process.env.FRONTLIT_SERVER;
-      else process.env.FRONTLIT_SERVER = originalFrontLitServer;
     }
   });
 
@@ -178,8 +78,7 @@ describe.serial("school custom host lifecycle", () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
-    await readyFrontLitIntegration(runtime, world.schoolA.id);
-    const frontLit = mockFrontLitDomainApi();
+    const dns = stubDns(runtime);
 
     const created = await dispatch(runtime, {
       method: "POST",
@@ -202,7 +101,8 @@ describe.serial("school custom host lifecycle", () => {
     expect(createdBody.verification.name).toBe(
       "_courselit-verification.learn.example.com",
     );
-    expect(createdBody.verification.value).toBe("frontlit-dns-token");
+    expect(createdBody.verification.value).toMatch(/^[0-9a-f]{32}$/);
+    const token = createdBody.verification.value;
 
     const listed = await dispatch(runtime, {
       method: "GET",
@@ -213,9 +113,57 @@ describe.serial("school custom host lifecycle", () => {
       },
     });
     expect(listed.status).toBe(200);
-    expect(JSON.stringify(listed.body)).toContain("frontlit-dns-token");
+    expect(listed.body).toMatchObject({
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          hostname: "learn.example.com",
+          verificationRecords: {
+            cnameTarget: customDomainConfig().cnameTarget,
+            txtName: "_courselit-verification.learn.example.com",
+            txtValue: token,
+            kind: "cname",
+            txtSatisfied: null,
+            routingSatisfied: null,
+          },
+        }),
+      ]),
+    });
 
     expect(await loadSchoolByPublicId(runtime.db, "learn.example.com")).toBeNull();
+    // Without DNS records the check fails and records which side is missing.
+    const unconfigured = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/school/hosts/learn.example.com/verify",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {},
+    });
+    expect(unconfigured.body).toMatchObject({
+      verificationStatus: "unverified",
+      verificationRecords: { txtSatisfied: false, routingSatisfied: false },
+    });
+    expect(await loadSchoolByPublicId(runtime.db, "learn.example.com")).toBeNull();
+
+    dns.txt["_courselit-verification.learn.example.com"] = [[token]];
+    const txtOnly = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/school/hosts/learn.example.com/verify",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {},
+    });
+    expect(txtOnly.body).toMatchObject({
+      verificationStatus: "unverified",
+      verificationRecords: { txtSatisfied: true, routingSatisfied: false },
+    });
+
+    // A CNAME chain that reaches the target satisfies routing.
+    dns.cname["learn.example.com"] = ["edge.example.net."];
+    dns.cname["edge.example.net"] = [`${customDomainConfig().cnameTarget.toUpperCase()}.`];
     const checkedDns = await dispatch(runtime, {
       method: "POST",
       path: "/v1/school/hosts/learn.example.com/verify",
@@ -281,17 +229,77 @@ describe.serial("school custom host lifecycle", () => {
         "school.host_removed",
       ]),
     );
-    frontLit.restore();
     await runtime.close();
+  });
+
+  it("verifies apex domains through their A records", async () => {
+    const originalARecords = process.env.CUSTOM_DOMAIN_A_RECORDS;
+    process.env.CUSTOM_DOMAIN_A_RECORDS = "203.0.113.10, 203.0.113.11";
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const dns = stubDns(runtime);
+      const headers = {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      };
+      const created = await dispatch(runtime, {
+        method: "POST",
+        path: "/v1/school/hosts",
+        headers,
+        body: { hostname: "example.org" },
+      });
+      expect(created.status).toBe(201);
+      const token = (created.body as { verification: { value: string } }).verification
+        .value;
+      dns.txt["_courselit-verification.example.org"] = [[token.slice(0, 10), token.slice(10)]];
+
+      dns.a["example.org"] = ["203.0.113.10"];
+      const partial = await dispatch(runtime, {
+        method: "POST",
+        path: "/v1/school/hosts/example.org/verify",
+        headers,
+        body: {},
+      });
+      expect(partial.body).toMatchObject({
+        verificationStatus: "unverified",
+        verificationRecords: { kind: "alias", txtSatisfied: true, routingSatisfied: false },
+      });
+
+      dns.a["example.org"] = ["203.0.113.11", "203.0.113.10"];
+      const verified = await dispatch(runtime, {
+        method: "POST",
+        path: "/v1/school/hosts/example.org/verify",
+        headers,
+        body: {},
+      });
+      expect(verified.body).toMatchObject({
+        verificationStatus: "verified",
+        verificationRecords: { txtSatisfied: true, routingSatisfied: true },
+      });
+
+      // Removing the TXT record and re-checking stops serving the domain.
+      delete dns.txt["_courselit-verification.example.org"];
+      const rechecked = await dispatch(runtime, {
+        method: "POST",
+        path: "/v1/school/hosts/example.org/verify",
+        headers,
+        body: {},
+      });
+      expect(rechecked.body).toMatchObject({ verificationStatus: "unverified" });
+      expect(await loadSchoolByPublicId(runtime.db, "example.org")).toBeNull();
+    } finally {
+      await runtime.close();
+      if (originalARecords === undefined) delete process.env.CUSTOM_DOMAIN_A_RECORDS;
+      else process.env.CUSTOM_DOMAIN_A_RECORDS = originalARecords;
+    }
   });
 
   it("enforces admin scope, tenant uniqueness, and primary-host protection", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
-    await readyFrontLitIntegration(runtime, world.schoolA.id);
-    await readyFrontLitIntegration(runtime, world.schoolB.id);
-    const frontLit = mockFrontLitDomainApi();
 
     const member = await dispatch(runtime, {
       method: "POST",
@@ -343,7 +351,6 @@ describe.serial("school custom host lifecycle", () => {
       details: { reason: "primary_host_cannot_be_removed" },
     });
     expect(await loadSchoolByPublicId(runtime.db, "not-a-real-school")).toBeNull();
-    frontLit.restore();
     await runtime.close();
   });
 });

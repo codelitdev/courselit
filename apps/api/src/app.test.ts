@@ -8,7 +8,6 @@ import { dispatch } from "./dispatch.js";
 import { createExpressApp } from "./express-app.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
-import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 
 describe.serial("reference API adapters", () => {
   it("does not run DDL when oauth-server-kit options and schema modules are imported", async () => {
@@ -520,7 +519,7 @@ describe.serial("reference API adapters", () => {
         hostname: "learn.example.com",
         kind: "custom",
         verificationStatus: "verified",
-        verificationTokenDigest: null,
+        verificationToken: null,
         verifiedAt: now,
         isPrimary: false,
         createdAt: now,
@@ -532,7 +531,7 @@ describe.serial("reference API adapters", () => {
         hostname: "pending.example.com",
         kind: "custom",
         verificationStatus: "unverified",
-        verificationTokenDigest: null,
+        verificationToken: null,
         verifiedAt: null,
         isPrimary: false,
         createdAt: now,
@@ -544,7 +543,7 @@ describe.serial("reference API adapters", () => {
         hostname: "native.example.com",
         kind: "subdomain",
         verificationStatus: "verified",
-        verificationTokenDigest: null,
+        verificationToken: null,
         verifiedAt: now,
         isPrimary: true,
         createdAt: now,
@@ -597,7 +596,7 @@ describe.serial("reference API adapters", () => {
         hostname: "learn.acme.org",
         kind: "custom",
         verificationStatus: "verified",
-        verificationTokenDigest: null,
+        verificationToken: null,
         verifiedAt: now,
         isPrimary: false,
         createdAt: now,
@@ -842,242 +841,5 @@ describe.serial("reference API adapters", () => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
     await runtime.close();
-  });
-
-  it("hides CourseLit sales pages from the ordinary FrontLit page list", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock });
-    const world = await seedWorld(runtime, clock);
-    process.env.AUTH_SECRET ??= "integration-test-auth-secret";
-    const now = clock.now();
-    await runtime.db.insert(schema.schoolIntegrations).values({
-      id: "44444444-4444-4444-8444-444444444444",
-      schoolId: world.schoolA.id,
-      provider: "frontlit",
-      server: "http://frontlit.test",
-      externalId: world.schoolA.publicId,
-      remoteTeamId: "team_pages",
-      encryptedTeamKey: encryptIntegrationSecret("frontlit-team-key"),
-      status: "ready",
-      lastAttemptAt: null,
-      lastSuccessfulSyncAt: now,
-      lastError: null,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await runtime.db
-      .update(schema.products)
-      .set({ salesPageId: "page_legacy_sales" })
-      .where(eq(schema.products.publicId, world.noteA.publicId));
-
-    const previousFetch = globalThis.fetch;
-    globalThis.fetch = (async (input) => {
-      expect(String(input)).toBe("http://frontlit.test/pages");
-      return new Response(
-        JSON.stringify({
-          items: [
-            {
-              pageId: "page_home",
-              name: "Homepage",
-              slug: "",
-              status: "published",
-            },
-            {
-              pageId: "page_legacy_sales",
-              name: "Community 1 sales page",
-              slug: "community-1-sales-page",
-              status: "published",
-            },
-            {
-              pageId: "page_reserved_sales",
-              name: "Demo One sales page",
-              slug: "courselit-sales-product-prd-reserved",
-              status: "draft",
-            },
-            {
-              pageId: "page_regular",
-              name: "Refund policy",
-              slug: "refund",
-              status: "published",
-            },
-          ],
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      );
-    }) as typeof fetch;
-
-    try {
-      const response = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/school/website/pages",
-        headers: {
-          cookie: world.owner.sessionCookie,
-          "x-school-id": world.schoolA.publicId,
-        },
-      });
-      expect(response).toMatchObject({
-        status: 200,
-        body: {
-          items: [
-            { id: "page_home", slug: "" },
-            { id: "page_regular", slug: "refund" },
-          ],
-        },
-      });
-    } finally {
-      globalThis.fetch = previousFetch;
-      await runtime.close();
-    }
-  });
-
-  it("serves public site data through CourseLit tenant APIs", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock });
-    const world = await seedWorld(runtime, clock);
-    const now = clock.now();
-    await runtime.db.insert(schema.schoolIntegrations).values({
-      id: "33333333-3333-4333-8333-333333333333",
-      schoolId: world.schoolA.id,
-      provider: "frontlit",
-      server: "http://frontlit.test",
-      externalId: world.schoolA.publicId,
-      remoteTeamId: "team_public",
-      encryptedTeamKey: null,
-      status: "ready",
-      lastAttemptAt: null,
-      lastSuccessfulSyncAt: now,
-      lastError: null,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await runtime.db.insert(schema.schoolHosts).values({
-      id: crypto.randomUUID(),
-      schoolId: world.schoolA.id,
-      hostname: "learn.example.com",
-      kind: "custom",
-      verificationStatus: "verified",
-      verificationTokenDigest: null,
-      verifiedAt: now,
-      isPrimary: false,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const previousFetch = globalThis.fetch;
-    globalThis.fetch = (async (input) => {
-      const url = String(input);
-      if (url.endsWith("/settings")) {
-        return new Response(
-          JSON.stringify({
-            title: "School A",
-            subtitle: "Learn together",
-            logo: null,
-            themeId: "classic",
-            theme: null,
-          }),
-          { status: 200 },
-        );
-      }
-      if (url.includes("/pages?")) {
-        return new Response(
-          JSON.stringify({
-            pageId: "page_home",
-            name: "Homepage",
-            slug: "",
-            layout: [],
-            title: "Welcome",
-            description: null,
-            socialImage: null,
-            robotsAllowed: true,
-            publishedAt: null,
-            updatedAt: null,
-          }),
-          { status: 200 },
-        );
-      }
-      if (url.includes("/content/articles?")) {
-        return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
-      }
-      return new Response(
-        JSON.stringify({
-          documentId: "doc_1",
-          slug: "hello",
-          title: "Hello",
-          content: null,
-          excerpt: null,
-          featuredImage: null,
-          meta: {},
-          publishedAt: null,
-          updatedAt: null,
-        }),
-        { status: 200 },
-      );
-    }) as typeof fetch;
-
-    try {
-      const headers = { "x-forwarded-host": "school-a.localhost:3001" };
-      const settings = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/public/site/settings",
-        headers,
-      });
-      const page = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/public/site/pages?slug=",
-        headers,
-      });
-      const blogs = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/public/site/blogs",
-        headers,
-      });
-      const blog = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/public/site/blogs/hello",
-        headers,
-      });
-      expect(settings.body).toMatchObject({
-        title: "School A",
-        themeId: "classic",
-        codeInjectionHead: "",
-        codeInjectionBody: "",
-        canonicalHost: "learn.example.com",
-      });
-
-      const saved = await dispatch(runtime, {
-        method: "PATCH",
-        path: "/v1/school/code-injection",
-        headers: {
-          cookie: world.owner.sessionCookie,
-          "x-school-id": world.schoolA.publicId,
-        },
-        body: {
-          codeInjectionHead: "<script>window.__head = true</script>",
-          codeInjectionBody: "<script>alert('Hi')</script>",
-        },
-      });
-      expect(saved.status).toBe(200);
-      expect(saved.body).toMatchObject({
-        codeInjectionHead: "<script>window.__head = true</script>",
-        codeInjectionBody: "<script>alert('Hi')</script>",
-      });
-
-      const publicAfterSave = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/public/site/settings",
-        headers,
-      });
-      expect(publicAfterSave.body).toMatchObject({
-        title: "School A",
-        codeInjectionHead: "<script>window.__head = true</script>",
-        codeInjectionBody: "<script>alert('Hi')</script>",
-      });
-      expect(page.body).toMatchObject({ pageId: "page_home", slug: "" });
-      expect(blogs.body).toEqual({ items: [], total: 0 });
-      expect(blog.body).toMatchObject({ documentId: "doc_1", slug: "hello" });
-    } finally {
-      globalThis.fetch = previousFetch;
-      await runtime.close();
-    }
   });
 });

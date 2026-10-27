@@ -446,10 +446,6 @@ export const schoolSchema = z.object({
   selected: z.boolean().optional(),
   website: z
     .object({
-      status: z.enum(["pending", "provisioning", "ready", "action_required"]),
-      teamId: z.string().nullable(),
-      lastSuccessfulSyncAt: z.string().datetime().nullable(),
-      lastError: z.string().nullable(),
       logo: mediaRefSchema.nullable(),
     })
     .nullable()
@@ -520,8 +516,6 @@ export const salesPageSchema = z.object({
   resourceId: z.string(),
   slug: z.string(),
   pageId: z.string().nullable(),
-  status: z.enum(["pending", "provisioning", "ready", "failed"]),
-  lastError: z.string().nullable(),
 });
 export const websiteWidgetSchema = z.object({
   widgetId: z.string(),
@@ -532,6 +526,7 @@ export const websiteWidgetSchema = z.object({
   settings: z.record(z.string(), z.unknown()).optional(),
 });
 export const websitePageSchema = websiteContentSummarySchema.extend({
+  pageId: z.string(),
   deletable: z.boolean(),
   publishedAt: z.string().nullable().optional(),
   layout: z.array(websiteWidgetSchema),
@@ -546,6 +541,9 @@ export const websitePageSchema = websiteContentSummarySchema.extend({
   draftRobotsAllowed: z.boolean().nullable().optional(),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
+  salesResourceType: z.enum(["product", "community"]).optional(),
+  salesResourceId: z.string().optional(),
+  salesResourceKind: z.enum(["course", "download"]).nullable().optional(),
 });
 export const websiteThemeSchema = z.object({
   themeId: z.string(),
@@ -581,6 +579,7 @@ export const updateSchoolWebsiteThemeBodySchema = z
   })
   .strict();
 export const websiteBlogSchema = websiteContentSummarySchema.extend({
+  blogId: z.string(),
   publishedAt: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
   content: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -597,8 +596,7 @@ export const websiteBlogSchema = websiteContentSummarySchema.extend({
 });
 
 /** Published site data exposed by CourseLit for learner/public rendering.
- * Learners never resolve the website provider directly; the CourseLit API owns
- * that integration and returns only public fields here. */
+ * Only published fields are returned; drafts never leave the admin API. */
 export const publicSiteSettingsSchema = z.object({
   title: z.string().nullable(),
   subtitle: z.string().nullable(),
@@ -631,19 +629,21 @@ export const publicSitePageSchema = z.object({
   layout: z.array(websiteWidgetSchema),
   title: z.string().nullable(),
   description: z.string().nullable(),
-  socialImage: z.record(z.string(), z.unknown()).nullable(),
+  socialImage: mediaRefSchema.nullable(),
   robotsAllowed: z.boolean().nullable(),
   publishedAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
 export const publicSiteBlogSchema = z.object({
-  documentId: z.string(),
+  blogId: z.string(),
   slug: z.string(),
   title: z.string().nullable(),
   content: z.record(z.string(), z.unknown()).nullable(),
   excerpt: z.string().nullable(),
   featuredImage: mediaRefSchema.nullable(),
   meta: z.record(z.string(), z.unknown()),
+  author: z.object({ name: z.string(), imageUrl: z.string().nullable() }).nullable(),
+  createdAt: z.string(),
   publishedAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
@@ -708,6 +708,7 @@ export const createSchoolHostBodySchema = z.object({
 export const verifySchoolHostBodySchema = z.object({}).strict();
 const mediaResourceTypes = [
   "school_branding",
+  "website_page",
   "blog_artwork",
   "product_artwork",
   "product_content",

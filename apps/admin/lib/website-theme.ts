@@ -1,12 +1,12 @@
 import { COURSELIT_SYSTEM_THEMES } from "@courselit/page-blocks/theme";
 import type { Theme } from "@frontlit/page-builder/models";
-import type { FrontLitTheme } from "./frontlit-content";
+import type { WebsiteTheme } from "./website-content";
 
 export function themeSnapshot(theme: Theme): string {
   return JSON.stringify({ name: theme.name, theme: theme.theme });
 }
 
-export function toBuilderTheme(theme: FrontLitTheme): Theme {
+export function toBuilderTheme(theme: WebsiteTheme): Theme {
   return {
     id: theme.themeId,
     name: theme.name,
@@ -16,7 +16,7 @@ export function toBuilderTheme(theme: FrontLitTheme): Theme {
 
 export function resolveEditorTheme(
   themeId: string | null,
-  savedThemes: FrontLitTheme[],
+  savedThemes: WebsiteTheme[],
 ): Theme | undefined {
   if (!themeId) return undefined;
   const systemTheme = COURSELIT_SYSTEM_THEMES.find((theme) => theme.id === themeId);
@@ -34,11 +34,11 @@ export async function persistCustomThemes(
     create: (input: {
       name: string;
       style: Record<string, unknown>;
-    }) => Promise<FrontLitTheme>;
+    }) => Promise<WebsiteTheme>;
     update: (
       themeId: string,
       patch: { name: string; style: Record<string, unknown> },
-    ) => Promise<FrontLitTheme>;
+    ) => Promise<WebsiteTheme>;
   },
 ): Promise<void> {
   for (const theme of customThemes) {

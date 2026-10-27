@@ -11,18 +11,37 @@ import { escapeHtml, sendSystemMail } from "../system-mail.js";
 import { fetchClientMetadataResource } from "./cimd-fetch.js";
 
 export const AUTH_COOKIE_PREFIX = "courselit";
-export const MCP_SCOPES_SUPPORTED = ["data:read"] as const;
+export const DATA_READ_SCOPE = "data:read";
+export const DATA_WRITE_SCOPE = "data:write";
+// MCP clients request exactly these. `offline_access` gets them a refresh
+// token instead of a new consent every time the access token expires.
+export const MCP_SCOPES_SUPPORTED = [
+  DATA_READ_SCOPE,
+  DATA_WRITE_SCOPE,
+  "offline_access",
+] as const;
 
 export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
   return createOAuthProviderOptions({
     loginPage: `${urls.publicApiUrl}/oauth/login`,
     consentPage: `${urls.publicApiUrl}/oauth/consent`,
-    scopes: ["openid", "profile", "email", "offline_access", "data:read"],
+    scopes: [
+      "openid",
+      "profile",
+      "email",
+      "offline_access",
+      DATA_READ_SCOPE,
+      DATA_WRITE_SCOPE,
+    ],
     validAudiences: [urls.restResource, urls.mcpResource],
     allowDynamicClientRegistration: true,
     allowUnauthenticatedDynamicClientRegistration: true,
     clientRegistrationDefaultScopes: ["openid", "profile", "email"],
-    clientRegistrationAllowedScopes: ["offline_access", "data:read"],
+    clientRegistrationAllowedScopes: [
+      "offline_access",
+      DATA_READ_SCOPE,
+      DATA_WRITE_SCOPE,
+    ],
   });
 }
 
@@ -39,9 +58,7 @@ export function buildBetterAuthOptions(input: {
   const hasPlatformGoogle = Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
   );
-  const platformDomain = (
-    process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app"
-  )
+  const platformDomain = (process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app")
     .trim()
     .toLowerCase()
     .replace(/^https?:\/\//, "")
@@ -99,8 +116,7 @@ export function buildBetterAuthOptions(input: {
         if (originHeader) {
           try {
             const parsedUrl =
-              originHeader.startsWith("http://") ||
-              originHeader.startsWith("https://")
+              originHeader.startsWith("http://") || originHeader.startsWith("https://")
                 ? new URL(originHeader)
                 : new URL(`http://${originHeader}`);
             const hostname = parsedUrl.hostname.toLowerCase();

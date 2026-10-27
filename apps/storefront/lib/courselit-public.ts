@@ -22,22 +22,22 @@ export interface PublicPage {
   layout: WidgetInstance[];
   title: string | null;
   description: string | null;
-  socialImage: Record<string, unknown> | null;
+  socialImage: MediaRef | null;
   robotsAllowed: boolean | null;
   publishedAt: string | null;
   updatedAt: string | null;
 }
 
 export interface PublicArticle {
-  documentId: string;
+  blogId: string;
   slug: string;
   title: string | null;
   content: TextEditorContent | null;
   excerpt: string | null;
   featuredImage: MediaRef | null;
   meta: Record<string, unknown>;
-  author?: { name: string; imageUrl: string | null } | null;
-  createdAt: string | null;
+  author: { name: string; imageUrl: string | null } | null;
+  createdAt: string;
   publishedAt: string | null;
   updatedAt: string | null;
 }

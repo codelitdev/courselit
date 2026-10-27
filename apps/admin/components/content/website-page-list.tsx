@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 
-type FrontLitContent = {
+type WebsiteContent = {
   id: string;
   name: string;
   kind: "page" | "blog";
@@ -43,14 +43,14 @@ function formatUpdatedAt(value: string | null | undefined): string | null {
   return `Updated ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)}`;
 }
 
-function contentStatusLabel(status: FrontLitContent["status"]): string {
+function contentStatusLabel(status: WebsiteContent["status"]): string {
   if (status === "published_with_changes") return "Published · changes";
   return status === "published" ? "Published" : "Draft";
 }
 
-export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) {
+export function WebsitePageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) {
   const router = useRouter();
-  const [pages, setPages] = useState<FrontLitContent[]>([]);
+  const [pages, setPages] = useState<WebsiteContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -77,7 +77,7 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
               : "Unable to load pages.",
           );
         }
-        return (await response.json()) as { items?: FrontLitContent[] };
+        return (await response.json()) as { items?: WebsiteContent[] };
       })
       .then((pagesBody) => {
         if (!active) return;
@@ -137,7 +137,7 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
           body?.message || `Unable to create the ${onlyBlogs ? "blog" : "page"}.`,
         );
       }
-      const page = (await response.json()) as FrontLitContent;
+      const page = (await response.json()) as WebsiteContent;
       setCreateOpen(false);
       setCreateName("");
       createFormRef.current.name = "";
@@ -264,9 +264,9 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
               </DialogDescription>
             </DialogHeader>
             <div className="mt-5 space-y-2">
-              <Label htmlFor="frontlit-page-name">Name</Label>
+              <Label htmlFor="website-page-name">Name</Label>
               <Input
-                id="frontlit-page-name"
+                id="website-page-name"
                 value={createName}
                 onChange={(event) => {
                   createFormRef.current.name = event.target.value;

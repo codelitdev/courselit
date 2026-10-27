@@ -1,6 +1,9 @@
 import { createObservability } from "@codelitdev/observability";
 import { createExpressApp } from "./express-app.js";
-import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
+import {
+  TELEMETRY_IDENTIFIER_KEYS,
+  TELEMETRY_PROPERTY_ALLOWLIST,
+} from "./permissions.js";
 import { createPostgresRuntime } from "./runtime.js";
 import { hasSeededWorld, seedWorld } from "./seed.js";
 
@@ -35,6 +38,7 @@ const observability = createObservability({
     : {}),
   contextPolicy: {
     propertyAllowlist: TELEMETRY_PROPERTY_ALLOWLIST,
+    identifierKeys: TELEMETRY_IDENTIFIER_KEYS,
   },
 });
 const logger = observability.logger;
@@ -45,9 +49,7 @@ const databaseUrl = process.env.DATABASE_URL;
 const authSecret = process.env.AUTH_SECRET;
 const apiKeyPepper = process.env.API_KEY_PEPPER;
 if (!databaseUrl || !authSecret || !apiKeyPepper) {
-  throw new Error(
-    "DATABASE_URL_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED",
-  );
+  throw new Error("DATABASE_URL_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED");
 }
 const runtime = await createPostgresRuntime({
   logger,

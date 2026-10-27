@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { FrontLitBlogEditor } from "@/components/content/frontlit-blog-editor";
+import { WebsiteBlogEditor } from "@/components/content/website-blog-editor";
 
 export default function EditWebsiteBlogRoute() {
   const params = useParams<{ blogId: string }>();
-  return <FrontLitBlogEditor blogId={params.blogId} />;
+  return <WebsiteBlogEditor blogId={params.blogId} />;
 }

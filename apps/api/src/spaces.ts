@@ -25,6 +25,7 @@ import {
 import type { CourseLitPermission } from "./permissions.js";
 import { accessibleSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
+import { ensureSalesPage } from "./website.js";
 
 type AdminContext = PlatformRequestContext<string, string, CourseLitPermission>;
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
@@ -145,7 +146,6 @@ export async function provisionSchoolCommunity(
     id: communityId,
     publicId: communityPublicId,
     schoolId: input.schoolId,
-    salesPageId: null,
     name: `${input.schoolName} Community`,
     slug: "community",
     description: "",
@@ -159,6 +159,19 @@ export async function provisionSchoolCommunity(
     createdAt: now,
     updatedAt: now,
   });
+  await ensureSalesPage(
+    tx,
+    {
+      schoolId: input.schoolId,
+      resourceType: "community",
+      resourceId: communityId,
+      resourcePublicId: communityPublicId,
+      name: `${input.schoolName} Community`,
+      description: "",
+      slug: "community",
+    },
+    clock,
+  );
   await tx.insert(schema.spaces).values({
     id: spaceId,
     publicId: spacePublicId,

@@ -10,8 +10,6 @@ export type SalesPage = {
   resourceId: string;
   slug: string;
   pageId: string | null;
-  status: "pending" | "provisioning" | "ready" | "failed";
-  lastError: string | null;
 };
 
 export type LessonType =

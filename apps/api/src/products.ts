@@ -21,7 +21,6 @@ import {
   sql,
 } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
 import {
   mediaIdsForRichTextContent,
   mediaRefFromCatalog,
@@ -36,6 +35,7 @@ import {
   syncIncludedProductMemberships,
 } from "./spaces.js";
 import type { AppDb } from "./types.js";
+import { ensureSalesPage } from "./website.js";
 
 export type ProductDto = {
   id: string;
@@ -430,7 +430,6 @@ export async function createProduct(
     id: uuidv7(clock),
     publicId,
     schoolId: ctx.tenantId!,
-    salesPageId: null,
     kind: input.kind,
     status: "draft" as const,
     slug,
@@ -450,13 +449,20 @@ export async function createProduct(
   };
   await db.transaction(async (tx) => {
     await tx.insert(schema.products).values(row);
-    await enqueueSalesPageProvisioning(tx as AppDb, {
-      id: uuidv7(clock),
-      schoolId: row.schoolId,
-      resourceType: "product",
-      resourceId: row.id,
-      now,
-    });
+    await ensureSalesPage(
+      tx as AppDb,
+      {
+        schoolId: row.schoolId,
+        resourceType: "product",
+        resourceId: row.id,
+        resourcePublicId: row.publicId,
+        name: row.title,
+        description: row.description,
+        slug: row.slug,
+        productKind: row.kind,
+      },
+      clock,
+    );
     // The production CourseLit setup creates its first group immediately for
     // both courses and digital downloads. Keep the rewritten product shape
     // aligned so a new course opens with an authoring section ready to use.
@@ -717,18 +723,22 @@ export async function updateProduct(
     if (input.includedWithCommunity !== undefined || status === "published") {
       await syncIncludedProductMemberships(tx as AppDb, ctx.tenantId!, clock);
     }
-    if (
-      input.slug !== undefined ||
-      input.title !== undefined ||
-      input.description !== undefined
-    ) {
-      await enqueueSalesPageProvisioning(tx as AppDb, {
-        id: uuidv7(clock),
-        schoolId: row.schoolId,
-        resourceType: "product",
-        resourceId: row.id,
-        now,
-      });
+    if (input.slug !== undefined || input.title !== undefined) {
+      const updated = { ...row, ...next };
+      await ensureSalesPage(
+        tx as AppDb,
+        {
+          schoolId: row.schoolId,
+          resourceType: "product",
+          resourceId: row.id,
+          resourcePublicId: row.publicId,
+          name: updated.title,
+          description: updated.description,
+          slug: updated.slug,
+          productKind: row.kind,
+        },
+        clock,
+      );
     }
     if (input.description !== undefined) {
       const contentMediaIds = await mediaIdsForRichTextContent(

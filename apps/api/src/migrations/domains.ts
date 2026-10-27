@@ -10,7 +10,9 @@ import * as schema from "../db/schema/index.js";
 import { OWNER_PERMISSIONS, serializePermissions } from "../permissions.js";
 import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "../public-id-prefixes.js";
 import { normalizeCustomHostname } from "../school-host.js";
+import { customDomainConfig } from "../school-hosts.js";
 import type { AppDb } from "../types.js";
+import { provisionWebsite } from "../website.js";
 
 const SOURCE_COLLECTION = "domains";
 const TARGET_TABLE = "schools";
@@ -386,8 +388,8 @@ export async function importLegacyDomains(
       const customVerification =
         domain.customDomain && !domain.customDomainVerified
           ? {
-              value: randomBytes(32).toString("base64url"),
-              name: `_courselit-verification.${domain.customDomain}`,
+              value: randomBytes(16).toString("hex"),
+              name: `${customDomainConfig().txtRecordName}.${domain.customDomain}`,
             }
           : null;
       await db.transaction(async (tx) => {
@@ -426,9 +428,7 @@ export async function importLegacyDomains(
                   verificationStatus: domain.customDomainVerified
                     ? ("verified" as const)
                     : ("unverified" as const),
-                  verificationTokenDigest: customVerification
-                    ? digestForToken(customVerification.value)
-                    : null,
+                  verificationToken: customVerification?.value ?? null,
                   verifiedAt: domain.customDomainVerified
                     ? domain.customDomainVerifiedAt ?? domain.updatedAt
                     : null,
@@ -439,6 +439,7 @@ export async function importLegacyDomains(
               ]
             : []),
         ]);
+        await provisionWebsite(tx as AppDb, { schoolId }, input.clock);
         const [ownerUser] = await tx
           .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
           .from(schema.user)
@@ -548,10 +549,6 @@ export async function importLegacyDomains(
     rejections,
     verificationChallenges,
   };
-}
-
-function digestForToken(value: string): string {
-  return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
 export function readLegacyDomainExport(path: string): readonly unknown[] {

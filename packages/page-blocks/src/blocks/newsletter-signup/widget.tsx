@@ -32,7 +32,6 @@ export default function NewsletterSignupWidget({
   settings,
   state: { theme },
   editing,
-  nextTheme,
 }: WidgetProps<NewsletterSignupSettings>) {
   const resolvedTheme = sectionTheme(theme.theme, settings);
   const inputId = useId();
@@ -68,12 +67,7 @@ export default function NewsletterSignupWidget({
   }
 
   return (
-    <Section
-      theme={resolvedTheme}
-      id={settings.cssId}
-      background={settings.background}
-      nextTheme={nextTheme}
-    >
+    <Section theme={resolvedTheme} id={settings.cssId} background={settings.background}>
       <form
         onSubmit={(event) => void submit(event)}
         className={`flex w-full flex-col gap-4 ${

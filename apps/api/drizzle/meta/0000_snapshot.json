@@ -1,5 +1,5 @@
 {
-  "id": "c6b0a5d5-25c8-4a87-bdd8-822d96577227",
+  "id": "37b35a5c-0571-4933-a750-58e9fc4c055c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -3060,13 +3060,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "sales_page_id": {
-          "name": "sales_page_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "null"
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -4762,35 +4755,7 @@
             }
           ],
           "isUnique": true,
-          "where": "type IN ('provision_frontlit', 'provision_sendlit')",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "integration_outbox_jobs_sales_page_uidx": {
-          "name": "integration_outbox_jobs_sales_page_uidx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "(\"payload\"->>'resourceType')",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "(\"payload\"->>'resourceId')",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "type = 'provision_sales_page'",
+          "where": "type = 'provision_sendlit'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -6066,13 +6031,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "sales_page_id": {
-          "name": "sales_page_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "null"
-        },
         "kind": {
           "name": "kind",
           "type": "text",
@@ -7325,9 +7283,21 @@
           "notNull": true,
           "default": "'unverified'"
         },
-        "verification_token_digest": {
-          "name": "verification_token_digest",
+        "verification_token": {
+          "name": "verification_token",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "txt_satisfied": {
+          "name": "txt_satisfied",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "routing_satisfied": {
+          "name": "routing_satisfied",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": false
         },
@@ -9470,6 +9440,625 @@
           "nullsNotDistinct": false,
           "columns": [
             "provider_event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.blog_posts": {
+      "name": "blog_posts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_school_account_id": {
+          "name": "author_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "excerpt": {
+          "name": "excerpt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "featured_image": {
+          "name": "featured_image",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meta": {
+          "name": "meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_title": {
+          "name": "draft_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "draft_content": {
+          "name": "draft_content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "draft_excerpt": {
+          "name": "draft_excerpt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_featured_image": {
+          "name": "draft_featured_image",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_meta": {
+          "name": "draft_meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "blog_posts_school_slug_uidx": {
+          "name": "blog_posts_school_slug_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "blog_posts_school_published_idx": {
+          "name": "blog_posts_school_published_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "published_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "blog_posts_school_id_schools_id_fk": {
+          "name": "blog_posts_school_id_schools_id_fk",
+          "tableFrom": "blog_posts",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "blog_posts_author_school_account_id_school_accounts_id_fk": {
+          "name": "blog_posts_author_school_account_id_school_accounts_id_fk",
+          "tableFrom": "blog_posts",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "author_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "blog_posts_public_id_unique": {
+          "name": "blog_posts_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.website_pages": {
+      "name": "website_pages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "community_id": {
+          "name": "community_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deletable": {
+          "name": "deletable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "layout": {
+          "name": "layout",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "social_image": {
+          "name": "social_image",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "robots_allowed": {
+          "name": "robots_allowed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_layout": {
+          "name": "draft_layout",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "draft_title": {
+          "name": "draft_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_description": {
+          "name": "draft_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_social_image": {
+          "name": "draft_social_image",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_robots_allowed": {
+          "name": "draft_robots_allowed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "website_pages_school_slug_uidx": {
+          "name": "website_pages_school_slug_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "website_pages_product_uidx": {
+          "name": "website_pages_product_uidx",
+          "columns": [
+            {
+              "expression": "product_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"website_pages\".\"product_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "website_pages_community_uidx": {
+          "name": "website_pages_community_uidx",
+          "columns": [
+            {
+              "expression": "community_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"website_pages\".\"community_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "website_pages_school_id_schools_id_fk": {
+          "name": "website_pages_school_id_schools_id_fk",
+          "tableFrom": "website_pages",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "website_pages_product_id_products_id_fk": {
+          "name": "website_pages_product_id_products_id_fk",
+          "tableFrom": "website_pages",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "website_pages_community_id_communities_id_fk": {
+          "name": "website_pages_community_id_communities_id_fk",
+          "tableFrom": "website_pages",
+          "tableTo": "communities",
+          "columnsFrom": [
+            "community_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "website_pages_public_id_unique": {
+          "name": "website_pages_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.website_settings": {
+      "name": "website_settings",
+      "schema": "",
+      "columns": {
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subtitle": {
+          "name": "subtitle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logo": {
+          "name": "logo",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "theme_id": {
+          "name": "theme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shared_widgets": {
+          "name": "shared_widgets",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "draft_shared_widgets": {
+          "name": "draft_shared_widgets",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "website_settings_school_id_schools_id_fk": {
+          "name": "website_settings_school_id_schools_id_fk",
+          "tableFrom": "website_settings",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.website_themes": {
+      "name": "website_themes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "style": {
+          "name": "style",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "website_themes_school_idx": {
+          "name": "website_themes_school_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "website_themes_school_id_schools_id_fk": {
+          "name": "website_themes_school_id_schools_id_fk",
+          "tableFrom": "website_themes",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "website_themes_public_id_unique": {
+          "name": "website_themes_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
           ]
         }
       },

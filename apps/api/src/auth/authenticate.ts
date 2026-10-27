@@ -96,6 +96,7 @@ export async function authenticateHttpRequest(
       credential: {
         kind: "oauth",
         credentialId: resolved.identity.clientId,
+        scopes: resolved.identity.scopes,
       },
     };
   }
@@ -199,6 +200,7 @@ export async function authenticateMcpRequest(
       credential: {
         kind: "oauth",
         credentialId: resolved.identity.clientId,
+        scopes: resolved.identity.scopes,
       },
     };
   }
@@ -233,7 +235,8 @@ export async function authenticateMcpRequest(
   const matched = keys[0];
   if (
     !matched ||
-    (matched.key.expiresAt && matched.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
+    (matched.key.expiresAt &&
+      matched.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
     !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, matched.key.digest)
   ) {
     return {

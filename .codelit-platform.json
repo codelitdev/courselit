@@ -1,21 +1,13 @@
 {
-    "schemaVersion": 2,
-    "product": {
-        "name": "courselit",
-        "slug": "courselit"
-    },
-    "cliVersion": "0.2.0",
-    "capabilities": [
-        "auth",
-        "mcp",
-        "observability",
-        "billing"
-    ],
-    "managedFiles": {
-        ".github/workflows/platform-conformance.yml": "586a69a3096553349aaf0d1ea36df25f32c4eeef8a713e8f71b7941c2fe4ff85"
-    },
-    "productOwnedGlobs": [
-        "apps/**",
-        "packages/api-contract/**"
-    ]
+  "schemaVersion": 2,
+  "product": {
+    "name": "courselit",
+    "slug": "courselit"
+  },
+  "cliVersion": "0.4.2",
+  "capabilities": ["auth", "mcp", "observability", "billing"],
+  "managedFiles": {
+    ".github/workflows/platform-conformance.yml": "939bf5686a4433b93153ca2b919ba77251c7bf70b17b269cde02606be41535f4"
+  },
+  "productOwnedGlobs": ["apps/**", "packages/api-contract/**"]
 }

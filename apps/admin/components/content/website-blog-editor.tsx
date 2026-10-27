@@ -15,10 +15,10 @@ import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import {
-  type FrontLitBlog,
-  frontLitRequest,
+  type WebsiteBlog,
+  websiteRequest,
   resolveEditorRedirect,
-} from "@/lib/frontlit-content";
+} from "@/lib/website-content";
 import { storefrontUrl } from "@/lib/storefront-url";
 
 type BlogDraft = {
@@ -43,13 +43,13 @@ function tagsFromMeta(meta: Record<string, unknown>): string {
     : "";
 }
 
-export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
+export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
   const searchParams = useSearchParams();
   const redirectTo = resolveEditorRedirect(
     searchParams.get("redirectTo"),
     "/website/blogs",
   );
-  const [blog, setBlog] = useState<FrontLitBlog | null>(null);
+  const [blog, setBlog] = useState<WebsiteBlog | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [draft, setDraft] = useState<BlogDraft>({
     title: "",
@@ -91,7 +91,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     let active = true;
     setLoading(true);
     void Promise.all([
-      frontLitRequest<FrontLitBlog>(
+      websiteRequest<WebsiteBlog>(
         `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}`,
       ),
       fetch("/api/v1/schools", { credentials: "include", cache: "no-store" }).then(
@@ -151,7 +151,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setError(null);
     if ("excerpt" in patch) setExcerptSaveError(null);
     try {
-      const updated = await frontLitRequest<FrontLitBlog>(
+      const updated = await websiteRequest<WebsiteBlog>(
         `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}`,
         { method: "PATCH", body: JSON.stringify(patch) },
       );
@@ -211,7 +211,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setPublishing(true);
     setError(null);
     try {
-      const published = await frontLitRequest<FrontLitBlog>(
+      const published = await websiteRequest<WebsiteBlog>(
         `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}/publish`,
         { method: "POST" },
       );
@@ -230,7 +230,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setPublishing(true);
     setError(null);
     try {
-      const reverted = await frontLitRequest<FrontLitBlog>(
+      const reverted = await websiteRequest<WebsiteBlog>(
         `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}/discard-draft`,
         { method: "POST" },
       );
@@ -273,11 +273,11 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
           settings={
             <div className="space-y-7">
               <div>
-                <Label htmlFor="frontlit-blog-slug">Slug</Label>
+                <Label htmlFor="website-blog-slug">Slug</Label>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">/blog/</span>
                   <Input
-                    id="frontlit-blog-slug"
+                    id="website-blog-slug"
                     value={draft.slug}
                     onChange={(event) => setDraftValue("slug", event.target.value)}
                     onBlur={() => void handleSlugSave()}
@@ -291,7 +291,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
 
               <div>
                 <div className="flex items-center justify-between gap-3">
-                  <Label htmlFor="frontlit-blog-excerpt">Excerpt</Label>
+                  <Label htmlFor="website-blog-excerpt">Excerpt</Label>
                   <span
                     className={
                       excerptTooLong
@@ -303,11 +303,11 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
                   </span>
                 </div>
                 <Textarea
-                  id="frontlit-blog-excerpt"
+                  id="website-blog-excerpt"
                   value={draft.excerpt}
                   aria-invalid={Boolean(excerptError)}
                   aria-describedby={
-                    excerptError ? "frontlit-blog-excerpt-error" : undefined
+                    excerptError ? "website-blog-excerpt-error" : undefined
                   }
                   onChange={(event) => {
                     setDraftValue("excerpt", event.target.value);
@@ -319,7 +319,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
                 />
                 {excerptError ? (
                   <p
-                    id="frontlit-blog-excerpt-error"
+                    id="website-blog-excerpt-error"
                     className="mt-1 text-sm text-destructive"
                     role="alert"
                   >
@@ -329,9 +329,9 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
               </div>
 
               <div>
-                <Label htmlFor="frontlit-blog-tags">Tags</Label>
+                <Label htmlFor="website-blog-tags">Tags</Label>
                 <Input
-                  id="frontlit-blog-tags"
+                  id="website-blog-tags"
                   value={draft.tags}
                   onChange={(event) => {
                     setDraftValue("tags", event.target.value);
