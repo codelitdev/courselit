@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,6 +22,8 @@ import { useToast } from "@courselit/components-library";
 import {
     LOGIN_CODE_INTIMATION_MESSAGE,
     LOGIN_FORM_DISCLAIMER,
+    LOGIN_NO_CODE,
+    BTN_LOGIN_NO_CODE,
     TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
@@ -57,6 +59,10 @@ export function LoginForm({
     const { profile, setProfile } = useContext(ProfileContext);
     const [loginStep, setLoginStep] = useState<LoginStep>("email");
     const [loading, setLoading] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+        null,
+    );
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
     const siteinfo = useContext(SiteInfoContext);
@@ -134,6 +140,28 @@ export function LoginForm({
         }
     }, [profile]);
 
+    useEffect(() => {
+        return () => {
+            if (cooldownTimerRef.current) {
+                clearInterval(cooldownTimerRef.current);
+            }
+        };
+    }, []);
+
+    const startResendCooldown = useCallback(() => {
+        setResendCooldown(30);
+        cooldownTimerRef.current = setInterval(() => {
+            setResendCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(cooldownTimerRef.current!);
+                    cooldownTimerRef.current = null;
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    }, []);
+
     const form = useForm<z.infer<typeof loginFormSchema>>({
         resolver: zodResolver(loginFormSchema as any),
         defaultValues: {
@@ -175,10 +203,16 @@ export function LoginForm({
                 });
             } else {
                 setLoginStep("otp");
+                startResendCooldown();
             }
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleResendOTP = async () => {
+        const emailValue = form.getValues("email");
+        await requestCode(emailValue);
     };
 
     const handleVerifyOTP = async () => {
@@ -310,6 +344,26 @@ export function LoginForm({
                                 >
                                     Verify OTP
                                 </Button>
+                                <div className="flex items-center justify-center gap-2">
+                                    <Caption
+                                        theme={theme.theme}
+                                        className="text-center"
+                                    >
+                                        {LOGIN_NO_CODE}
+                                    </Caption>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        onClick={handleResendOTP}
+                                        disabled={loading || resendCooldown > 0}
+                                        theme={theme.theme}
+                                        className="p-0 h-auto"
+                                    >
+                                        {resendCooldown > 0
+                                            ? `${BTN_LOGIN_NO_CODE} (${resendCooldown}s)`
+                                            : BTN_LOGIN_NO_CODE}
+                                    </Button>
+                                </div>
                             </>
                         )}
                     </form>
