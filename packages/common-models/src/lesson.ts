@@ -15,6 +15,8 @@ export default interface Lesson {
     downloadable: boolean;
     published: boolean;
     media?: Partial<Media>;
+    description?: TextEditorContent;
+    attachments?: Partial<Media>[];
     prevLesson?: string;
     nextLesson?: string;
 }

@@ -15,3 +15,8 @@ export { extractMediaIDs } from "./extract-media-ids";
 export { default as extractVideoId } from "./extract-video-id";
 export { default as normalizeTextEditorContent } from "./normalize-text-editor-content";
 export { default as extractTextFromTextEditorContent } from "./extract-text-from-text-editor-content";
+export { extractMediaIDsFromNodeSources } from "./extract-media-ids-from-node-sources";
+export {
+    lessonTypeSupportsDescription,
+    lessonTypeSupportsAttachments,
+} from "./lesson-type-supports";

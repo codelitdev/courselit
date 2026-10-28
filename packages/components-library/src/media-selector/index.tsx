@@ -56,6 +56,10 @@ interface MediaSelectorProps {
     hidePreview?: boolean;
     tooltip?: string;
     disabled?: boolean;
+    // When false, removing only notifies the parent via onRemove and leaves
+    // deleting the underlying media to the server, so the reference is never
+    // dropped before the change is persisted.
+    deleteOnRemove?: boolean;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
@@ -86,6 +90,13 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
 
     const removeFile = async () => {
+        if (props.deleteOnRemove === false) {
+            if (props.onRemove) {
+                props.onRemove();
+            }
+            return;
+        }
+
         try {
             setUploading(true);
             const fetch = new FetchBuilder()
@@ -131,6 +142,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 )}
                 {props.mediaId && (
                     <Button2
+                        type="button"
                         onClick={removeFile}
                         disabled={uploading || disabled}
                         size="sm"

@@ -22,6 +22,7 @@ import {
 import { useContext, useState } from "react";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
+import { toMediaInput } from "@ui-lib/utils";
 import { Textarea } from "@components/ui/textarea";
 import dynamic from "next/dynamic";
 const LessonEmbedViewer = dynamic(
@@ -65,12 +66,7 @@ export function LessonContentRenderer({
                 query,
                 variables: {
                     id: lesson?.lessonId,
-                    media: media
-                        ? Object.assign({}, media, {
-                              file:
-                                  media.access === "public" ? media.file : null,
-                          })
-                        : null,
+                    media: media ? toMediaInput(media) : null,
                 },
             })
             .setIsGraphQLEndpoint(true)

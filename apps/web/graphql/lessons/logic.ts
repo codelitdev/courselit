@@ -17,7 +17,7 @@ import {
 } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { deleteMedia, sealMedia } from "../../services/medialit";
+import { deleteMedia, getMedia, sealMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
 import {
     Constants,
@@ -25,10 +25,17 @@ import {
     Progress,
     Quiz,
     ScormContent,
+    TextEditorContent,
     User,
 } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
-import { checkPermission, extractMediaIDs } from "@courselit/utils";
+import {
+    checkPermission,
+    extractMediaIDs,
+    extractMediaIDsFromNodeSources,
+    lessonTypeSupportsAttachments,
+    lessonTypeSupportsDescription,
+} from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/orm-models";
 import CertificateModel from "../../models/Certificate";
@@ -39,7 +46,7 @@ import UserModel from "../../models/User";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { canManageCourseInContext } from "../courses/permissions";
 
-const { permissions, quiz, scorm } = constants;
+const { permissions, quiz, scorm, privateMedia } = constants;
 
 async function canManageLessonCourse(lesson: Lesson, ctx: GQLContext) {
     if (!ctx.user) {
@@ -172,9 +179,90 @@ export const getLessonDetails = async (
     return lesson;
 };
 
-export type LessonWithStringContent = Omit<Lesson, "content"> & {
+export type LessonWithStringContent = Omit<
+    Lesson,
+    "content" | "description"
+> & {
     content: string;
+    description?: string;
 };
+
+function validateLessonDescriptionOrThrow(description?: string | null) {
+    if (!description) {
+        return;
+    }
+
+    let parsedDescription: unknown;
+    try {
+        parsedDescription = JSON.parse(description);
+    } catch (err) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (
+        typeof parsedDescription !== "object" ||
+        parsedDescription === null ||
+        Array.isArray(parsedDescription) ||
+        (parsedDescription as TextEditorContent).type !== "doc" ||
+        !Array.isArray((parsedDescription as TextEditorContent).content)
+    ) {
+        throw new Error(responses.invalid_input);
+    }
+}
+
+// Descriptions and attachments reference media by id, so only delete media
+// this school uploaded that no lesson still uses as its media or a resource.
+// The media service may also no longer know about some of them, and a failed
+// cleanup must not take the surrounding change down.
+async function deleteOwnedMediaQuietly(
+    mediaId: string,
+    ctx: GQLContext,
+    excludeLessonId?: string,
+) {
+    try {
+        const media = await getMedia(mediaId);
+        if (media?.group !== ctx.subdomain.name) {
+            return false;
+        }
+
+        const stillUsed = await LessonModel.exists({
+            domain: ctx.subdomain._id,
+            ...(excludeLessonId ? { lessonId: { $ne: excludeLessonId } } : {}),
+            $or: [
+                { "media.mediaId": mediaId },
+                { "attachments.mediaId": mediaId },
+            ],
+        });
+        if (stillUsed) {
+            return false;
+        }
+
+        return await deleteMedia(mediaId);
+    } catch (err: any) {
+        error(err.message, { mediaId });
+        return false;
+    }
+}
+
+// Not every lesson type offers these fields in the editor, so reject values the
+// UI would never show and the viewer would never render.
+function validateLessonFieldSupportOrThrow({
+    type,
+    description,
+    attachments,
+}: Pick<LessonWithStringContent, "type" | "description" | "attachments">) {
+    if (attachments != null && !Array.isArray(attachments)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (description && !lessonTypeSupportsDescription(type)) {
+        throw new Error(responses.lesson_description_not_supported);
+    }
+
+    if (attachments?.length && !lessonTypeSupportsAttachments(type)) {
+        throw new Error(responses.lesson_attachments_not_supported);
+    }
+}
 
 async function sealLessonMedia(media?: Partial<Media> | null) {
     if (!media?.mediaId) {
@@ -190,6 +278,97 @@ async function sealLessonMedia(media?: Partial<Media> | null) {
     return sealedMedia;
 }
 
+// Removing a resource deletes its media, so a lesson's media must not be a
+// file that any lesson already offers as a resource.
+async function assertNotUsedAsAttachmentOrThrow(
+    mediaId: string | undefined,
+    ctx: GQLContext,
+) {
+    if (!mediaId) {
+        return;
+    }
+
+    const usedAsAttachment = await LessonModel.exists({
+        domain: ctx.subdomain._id,
+        "attachments.mediaId": mediaId,
+    });
+    if (usedAsAttachment) {
+        throw new Error(responses.lesson_media_used_as_attachment);
+    }
+}
+
+// Attachments already on the lesson are kept as stored, so a file the media
+// service has since lost cannot block edits to the rest of the list.
+async function sealLessonAttachments(
+    attachments: Partial<Media>[] | null | undefined,
+    ctx: GQLContext,
+    primaryMediaId: string | undefined,
+    lesson?: Lesson,
+): Promise<Media[]> {
+    if (!attachments?.length) {
+        return [];
+    }
+
+    if (attachments.some((attachment) => !attachment?.mediaId)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const storedAttachments = new Map(
+        (lesson?.attachments || []).map((attachment) => [
+            attachment.mediaId,
+            attachment as Media,
+        ]),
+    );
+    const sealedAttachments = new Map<string, Media>();
+    for (const attachment of attachments) {
+        const mediaId = attachment.mediaId!;
+        if (sealedAttachments.has(mediaId)) {
+            continue;
+        }
+
+        if (mediaId === primaryMediaId) {
+            throw new Error(responses.lesson_attachment_not_allowed);
+        }
+
+        sealedAttachments.set(
+            mediaId,
+            storedAttachments.get(mediaId) ??
+                (await sealNewLessonAttachment(mediaId, ctx, lesson)),
+        );
+    }
+
+    return Array.from(sealedAttachments.values());
+}
+
+// Removing an attachment deletes its media, so a new attachment must be a file
+// this school uploaded that no lesson is already using.
+async function sealNewLessonAttachment(
+    mediaId: string,
+    ctx: GQLContext,
+    lesson?: Lesson,
+): Promise<Media> {
+    const usedByAnotherLesson = await LessonModel.exists({
+        domain: ctx.subdomain._id,
+        ...(lesson ? { lessonId: { $ne: lesson.lessonId } } : {}),
+        $or: [{ "media.mediaId": mediaId }, { "attachments.mediaId": mediaId }],
+    });
+    if (usedByAnotherLesson) {
+        throw new Error(responses.lesson_attachment_not_allowed);
+    }
+
+    const sealedMedia = await sealMedia(mediaId);
+    if (!sealedMedia || sealedMedia.group !== ctx.subdomain.name) {
+        throw new Error(responses.lesson_attachment_not_allowed);
+    }
+
+    // Private file URLs are signed and expire, so they are fetched on read.
+    // Public ones are permanent, and the read path does not refetch them.
+    if (sealedMedia.access === privateMedia) {
+        delete sealedMedia.file;
+    }
+    return sealedMedia;
+}
+
 export const createLesson = async (
     lessonData: LessonWithStringContent,
     ctx: GQLContext,
@@ -200,6 +379,13 @@ export const createLesson = async (
     }
 
     lessonValidator(lessonData);
+    validateLessonDescriptionOrThrow(lessonData.description);
+    validateLessonFieldSupportOrThrow({
+        type: lessonData.type,
+        description: lessonData.description,
+        attachments: lessonData.attachments,
+    });
+    await assertNotUsedAsAttachmentOrThrow(lessonData.media?.mediaId, ctx);
 
     try {
         const course: InternalCourse | null = await CourseModel.findOne({
@@ -224,6 +410,17 @@ export const createLesson = async (
                 lessonData.content || "",
             ),
             media: await sealLessonMedia(lessonData.media),
+            description: lessonData.description
+                ? await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                      lessonData.description,
+                      true,
+                  )
+                : undefined,
+            attachments: await sealLessonAttachments(
+                lessonData.attachments,
+                ctx,
+                lessonData.media?.mediaId,
+            ),
             downloadable: lessonData.downloadable,
             creatorId: ctx.user.userId,
             courseId: course.courseId,
@@ -248,6 +445,8 @@ export const updateLesson = async (
         | "title"
         | "content"
         | "media"
+        | "description"
+        | "attachments"
         | "downloadable"
         | "requiresEnrollment"
         | "published"
@@ -265,6 +464,14 @@ export const updateLesson = async (
         lessonData,
         "content",
     );
+    const descriptionUpdated = Object.prototype.hasOwnProperty.call(
+        lessonData,
+        "description",
+    );
+    const attachmentsUpdated = Object.prototype.hasOwnProperty.call(
+        lessonData,
+        "attachments",
+    );
 
     // Build the complete lesson state for validation by merging existing + update data.
     // The validator expects content as a string.
@@ -280,6 +487,10 @@ export const updateLesson = async (
             ? lessonData.content!
             : JSON.stringify(lesson.content || ""),
         media: lessonData.media ?? lesson.media,
+        description:
+            lessonData.description ??
+            (lesson.description ? JSON.stringify(lesson.description) : ""),
+        attachments: lessonData.attachments ?? lesson.attachments,
         downloadable: lessonData.downloadable ?? lesson.downloadable,
         requiresEnrollment:
             lessonData.requiresEnrollment ?? lesson.requiresEnrollment,
@@ -288,6 +499,18 @@ export const updateLesson = async (
     };
 
     lessonValidator(completeLessonData);
+    validateLessonFieldSupportOrThrow({
+        type: lesson.type,
+        description: descriptionUpdated ? lessonData.description : undefined,
+        attachments: attachmentsUpdated ? lessonData.attachments : undefined,
+    });
+
+    const nextPrimaryMediaId = lessonData.media
+        ? lessonData.media.mediaId
+        : lesson.media?.mediaId;
+    if (lessonData.media && nextPrimaryMediaId !== lesson.media?.mediaId) {
+        await assertNotUsedAsAttachmentOrThrow(nextPrimaryMediaId, ctx);
+    }
 
     // Now apply the partial updates to the lesson document
     const contentMediaIdsMarkedForDeletion: string[] = [];
@@ -301,6 +524,38 @@ export const updateLesson = async (
         );
     }
 
+    // Description and attachment media is only deleted if this school owns it.
+    const ownedMediaIdsMarkedForDeletion: string[] = [];
+    if (descriptionUpdated) {
+        validateLessonDescriptionOrThrow(lessonData.description);
+        const nextDescriptionMediaIds = extractMediaIDsFromNodeSources(
+            lessonData.description ?? "",
+        );
+        ownedMediaIdsMarkedForDeletion.push(
+            ...Array.from(
+                extractMediaIDsFromNodeSources(lesson.description),
+            ).filter((mediaId) => !nextDescriptionMediaIds.has(mediaId)),
+        );
+    }
+
+    // Attachments removed by this update would otherwise be orphaned in the
+    // media service, so mark their media for deletion alongside the rest.
+    if (attachmentsUpdated) {
+        const retainedMediaIds = new Set(
+            (lessonData.attachments || []).map(
+                (attachment) => attachment?.mediaId,
+            ),
+        );
+        for (const attachment of lesson.attachments || []) {
+            if (
+                attachment.mediaId &&
+                !retainedMediaIds.has(attachment.mediaId)
+            ) {
+                ownedMediaIdsMarkedForDeletion.push(attachment.mediaId);
+            }
+        }
+    }
+
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
             lesson.content =
@@ -311,15 +566,39 @@ export const updateLesson = async (
                     : JSON.parse(lessonData.content);
         } else if (key === "media" && lessonData.media) {
             lesson.media = await sealLessonMedia(lessonData.media);
+        } else if (key === "description") {
+            lesson.description =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    lessonData.description || "",
+                    true,
+                );
+        } else if (key === "attachments") {
+            lesson.attachments = await sealLessonAttachments(
+                lessonData.attachments,
+                ctx,
+                nextPrimaryMediaId,
+                lesson,
+            );
         } else if (key !== "lessonId" && key !== "id") {
             lesson[key] = lessonData[key];
         }
     }
+    lesson = await (lesson as any).save();
+
+    // Media cleanup runs after the lesson is persisted and never fails the
+    // update: a media id the media service no longer knows about would
+    // otherwise make the attachment or image impossible to remove.
     for (const mediaId of contentMediaIdsMarkedForDeletion) {
-        await deleteMedia(mediaId);
+        try {
+            await deleteMedia(mediaId);
+        } catch (err: any) {
+            error(err.message, { mediaId, lessonId: lesson.lessonId });
+        }
+    }
+    for (const mediaId of ownedMediaIdsMarkedForDeletion) {
+        await deleteOwnedMediaQuietly(mediaId, ctx);
     }
 
-    lesson = await (lesson as any).save();
     return lesson;
 };
 
@@ -331,6 +610,26 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
         if (lesson.media?.mediaId) {
             cleanupTasks.push(deleteMedia(lesson.media.mediaId));
+        }
+
+        for (const attachment of lesson.attachments || []) {
+            if (attachment.mediaId) {
+                cleanupTasks.push(
+                    deleteOwnedMediaQuietly(
+                        attachment.mediaId,
+                        ctx,
+                        lesson.lessonId,
+                    ),
+                );
+            }
+        }
+
+        for (const mediaId of Array.from(
+            extractMediaIDsFromNodeSources(lesson.description),
+        )) {
+            cleanupTasks.push(
+                deleteOwnedMediaQuietly(mediaId, ctx, lesson.lessonId),
+            );
         }
 
         if (lesson.type === Constants.LessonType.TEXT && lesson.content) {

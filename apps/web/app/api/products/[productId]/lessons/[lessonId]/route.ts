@@ -23,6 +23,8 @@ const updateLessonFields = new Set([
     "title",
     "content",
     "media",
+    "description",
+    "attachments",
     "downloadable",
     "requiresEnrollment",
     "published",
@@ -64,6 +66,12 @@ function toExistingUpdatePayload(
 
     if (Object.prototype.hasOwnProperty.call(body, "content")) {
         payload.content = JSON.stringify(body.content);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, "description")) {
+        // A null description clears it, rather than storing the string "null".
+        payload.description =
+            body.description === null ? "" : JSON.stringify(body.description);
     }
 
     return payload;

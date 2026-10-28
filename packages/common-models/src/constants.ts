@@ -122,6 +122,21 @@ export const LessonType = {
     QUIZ: "quiz",
     SCORM: "scorm",
 } as const;
+/** Lesson types that can carry a rich text description alongside their content. */
+export const LessonTypesWithDescription = [
+    LessonType.VIDEO,
+    LessonType.AUDIO,
+    LessonType.EMBED,
+    LessonType.PDF,
+    LessonType.FILE,
+] as const;
+/** Lesson types that can carry downloadable resources alongside their content. */
+export const LessonTypesWithAttachments = [
+    LessonType.TEXT,
+    LessonType.VIDEO,
+    LessonType.AUDIO,
+    LessonType.EMBED,
+] as const;
 export const ActivityType = {
     ENROLLED: "enrolled",
     PURCHASED: "purchased",

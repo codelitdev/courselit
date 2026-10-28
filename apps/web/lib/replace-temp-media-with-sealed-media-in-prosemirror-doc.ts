@@ -1,13 +1,23 @@
 import { sealMedia } from "@/services/medialit";
-import { extractMediaIDs } from "@courselit/utils";
+import {
+    extractMediaIDs,
+    extractMediaIDsFromNodeSources,
+} from "@courselit/utils";
 import { TextEditorContent } from "@courselit/common-models";
 
 export async function replaceTempMediaWithSealedMediaInProseMirrorDoc(
     doc: string,
+    sourcesOnly = false,
 ): Promise<TextEditorContent> {
     if (!doc) return { type: "doc", content: [] };
 
-    const mediaIds = Array.from(extractMediaIDs(doc));
+    // With `sourcesOnly`, links in the document are left alone and only media
+    // the document embeds (images and the like) is sealed.
+    const mediaIds = Array.from(
+        sourcesOnly
+            ? extractMediaIDsFromNodeSources(doc)
+            : extractMediaIDs(doc),
+    );
     for (const mediaId of mediaIds) {
         const media = await sealMedia(mediaId);
         if (media) {

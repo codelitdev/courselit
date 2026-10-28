@@ -1,0 +1,66 @@
+---
+title: Add a description and resources to a lesson
+description: Add a description and resources to a lesson
+layout: ../../../layouts/MainLayout.astro
+---
+
+Lessons can carry more than just their main content. You can add a rich-text `Description` to give your students notes, instructions or links, and attach `Resources` they can download, such as worksheets, slides or exercise files.
+
+## Which lesson types support what
+
+Not every lesson type offers both. Text lessons already hold their own rich text, so they take resources only, and PDF and File lessons already give students something to download, so they take a description only.
+
+| Lesson type | Description | Resources |
+| ----------- | ----------- | --------- |
+| Text        | —           | Yes       |
+| Video       | Yes         | Yes       |
+| Audio       | Yes         | Yes       |
+| Embed       | Yes         | Yes       |
+| PDF         | Yes         | —         |
+| File        | Yes         | —         |
+| Quiz        | —           | —         |
+| SCORM       | —           | —         |
+
+Sections you can't use simply don't appear on the lesson screen.
+
+## Add a description
+
+1. Go to the `Products` page and click on the course you want to edit. Click on `Edit content`.
+
+2. Click on an existing lesson, or click `Add lesson` and pick a type that supports a description.
+
+3. Below the lesson's main content, you'll find the `Description` section. Write your notes in the editor.
+
+    The editor supports the same rich text formatting used elsewhere in CourseLit, so you can add headings, lists and links.
+
+4. Click `Save lesson` to save the description along with the rest of the lesson.
+
+## Add resources
+
+Resources are files your students can download from the lesson page.
+
+1. Open a lesson that supports resources, as described above.
+
+2. Scroll to the `Resources` section and click `Add a resource`.
+
+    If the lesson has not been saved yet, this button is disabled and shows `Save the lesson to enable resource uploads`. Save the lesson first. A new lesson reopens once it's saved, so you can add resources straight away.
+
+3. Upload the file you want to share.
+
+4. Repeat for as many resources as you need. To remove one, use the remove option on that resource.
+
+Removing a resource deletes its file. Each resource belongs to one lesson, so a file already used by another lesson can't be added again; upload a copy instead.
+
+Unlike the description, resources are saved as soon as you add or remove one, so there is no need to click `Save lesson` afterwards.
+
+The caption you set on a file is used as its download button label. If you don't set one, the original file name is used instead, so a descriptive caption is worth adding.
+
+## What your students see
+
+On the lesson page, the description appears below the lesson's main content, and the resources appear under a `Resources` heading as download buttons.
+
+An empty description is not shown at all, so lessons you don't write a description for look exactly as they did before.
+
+## Stuck somewhere?
+
+We are always there for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.

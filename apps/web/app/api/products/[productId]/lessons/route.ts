@@ -22,6 +22,8 @@ const createLessonFields = new Set([
     "type",
     "content",
     "media",
+    "description",
+    "attachments",
     "downloadable",
     "groupId",
     "requiresEnrollment",
