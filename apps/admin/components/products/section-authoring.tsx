@@ -1,6 +1,6 @@
 "use client";
 
-import { HelpCircle, Save } from "lucide-react";
+import { HelpCircle, Mail, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
@@ -372,10 +372,24 @@ export function SectionAuthoring({
 
                     <Separator />
 
-                    <p className="text-sm text-muted-foreground">
-                      Students will see this section after its release schedule is met.
-                      Email notifications will be added later.
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Students will see this section after its release schedule is met.
+                        {sectionId
+                          ? " You can also email them when it unlocks."
+                          : " Save the section to set up an email for when it unlocks."}
+                      </p>
+                      {sectionId ? (
+                        <Button asChild type="button" variant="outline" size="sm">
+                          <Link
+                            href={`${productRoot}/content/section/${encodeURIComponent(sectionId)}/email`}
+                          >
+                            <Mail className="size-4" />
+                            Edit unlock email
+                          </Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 ) : null}
               </div>

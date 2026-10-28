@@ -1,5 +1,6 @@
 import { createObservability } from "@codelitdev/observability";
 import { runBoundedMaintenance } from "./billing.js";
+import { processDripEmails } from "./drip-emails.js";
 import { startIntegrationWorker } from "./integration-provisioning.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
 import { createPostgresRuntime } from "./runtime.js";
@@ -59,8 +60,23 @@ try {
     runtime.clock,
     observability.logger,
   );
+  let dripRunning = false;
+  const dripTimer = setInterval(async () => {
+    if (dripRunning) return;
+    dripRunning = true;
+    try {
+      await processDripEmails(runtime.db, runtime.clock, {
+        logger: observability.logger,
+      });
+    } catch (error) {
+      observability.captureException({ error, source: "worker.drip_emails" });
+    } finally {
+      dripRunning = false;
+    }
+  }, 60_000);
   await new Promise<void>((resolve) => {
     const stop = () => {
+      clearInterval(dripTimer);
       stopIntegrationWorker();
       resolve();
     };

@@ -1,21 +1,26 @@
 "use client";
 
 import {
+  ContactFilterBuilder,
   EmailPreview,
+  SequenceAnalytics,
   SequenceEmailList,
   TagEditor,
   TriggerPicker,
   defaultEmail,
   type Email,
+  type ContactFilterWithAggregator,
   type EmailActionType,
   type EmailTemplate,
   type SequenceEmail,
   type SystemTemplateSummary,
+  type TriggerOption,
+  type TriggerPickerChange,
 } from "@sendlit/email-blocks";
 import { ArrowLeft, Pause, Pencil, Play, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
@@ -37,8 +42,11 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import { isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
 import { hasSchoolPermission } from "@/lib/school-permissions";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type School = {
   id: string;
@@ -54,6 +62,9 @@ type SequenceDocument = {
   status: string;
   triggerType: string | null;
   triggerData: string | null;
+  triggerFilter: TriggerPickerChange["triggerFilter"];
+  filter: ContactFilterWithAggregator;
+  excludeFilter: ContactFilterWithAggregator;
   emailsOrder: string[];
   emails: SequenceEmail[];
 };
@@ -70,6 +81,8 @@ type ApiMailResource = {
   name?: string;
   title?: string;
   description?: string;
+  purpose?: "marketing" | "transactional";
+  requiredVariables?: string[];
   content?: unknown;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -78,12 +91,32 @@ type ApiMailResource = {
 type ApiList<T> = { items?: T[]; data?: T[]; templates?: T[] } | T[];
 
 const MAX_SEQUENCE_TITLE_LENGTH = 120;
+
+const EVERYONE_FILTER: ContactFilterWithAggregator = { aggregator: "or", filters: [] };
+
+/** Triggers stored in the mailing service as custom events that CourseLit
+ * sends; the API translates them both ways. An empty value means "any". */
+const ANY_PRODUCT = "*";
+const PRODUCT_TRIGGER = "product:purchased";
+const ENTITY_TRIGGERS = new Set([PRODUCT_TRIGGER]);
+
+function isFilter(value: unknown): value is ContactFilterWithAggregator {
+  return (
+    Boolean(value) &&
+    typeof value === "object" &&
+    Array.isArray((value as { filters?: unknown }).filters)
+  );
+}
+
+type ProductOption = { id: string; title: string };
 const MAX_SEQUENCE_TITLE_DISPLAY_LENGTH = 80;
 
 const DEFAULT_BLANK_TEMPLATE: SystemTemplateSummary = {
   templateId: "system:blank",
   title: "Blank",
   description: "Start with an empty email.",
+  purpose: "marketing",
+  requiredVariables: [],
   content: defaultEmail,
 };
 
@@ -232,7 +265,15 @@ function normalizeSequence(raw: Record<string, unknown>): SequenceDocument {
     type: typeof raw.type === "string" ? raw.type : "sequence",
     status: typeof raw.status === "string" ? raw.status : "draft",
     triggerType: typeof raw.triggerType === "string" ? raw.triggerType : null,
-    triggerData: typeof raw.triggerData === "string" ? raw.triggerData : null,
+    triggerData:
+      typeof raw.triggerData === "string"
+        ? raw.triggerData
+        : raw.triggerType === PRODUCT_TRIGGER
+          ? ANY_PRODUCT
+          : null,
+    triggerFilter: (raw.triggerFilter ?? null) as SequenceDocument["triggerFilter"],
+    filter: isFilter(raw.filter) ? raw.filter : EVERYONE_FILTER,
+    excludeFilter: isFilter(raw.excludeFilter) ? raw.excludeFilter : EVERYONE_FILTER,
     emailsOrder,
     emails,
   };
@@ -259,6 +300,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mailingAddressDialogOpen, setMailingAddressDialogOpen] = useState(false);
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [stats, setStats] = useState<MailStats | null>(null);
   const [sequenceStatusError, setSequenceStatusError] = useState<{
     title: string;
     description: string;
@@ -275,6 +318,67 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   const selectedEmail = sequence?.emails.find(
     (email) => email.emailId === selectedEmailId,
   );
+
+  const triggers = useMemo<TriggerOption[]>(() => {
+    const options: TriggerOption[] = [
+      { value: "subscriber:added", label: "A new contact subscribes", needsData: false },
+      {
+        value: "tag:added",
+        label: "A tag is added to a contact",
+        needsData: true,
+        dataLabel: "Tag",
+        valueInput: { type: "text", placeholder: "Tag name" },
+      },
+      {
+        value: "tag:removed",
+        label: "A tag is removed from a contact",
+        needsData: true,
+        dataLabel: "Tag",
+        valueInput: { type: "text", placeholder: "Tag name" },
+      },
+      {
+        value: PRODUCT_TRIGGER,
+        label: "A learner gets access to a product",
+        needsData: true,
+        dataLabel: "Product",
+        valueInput: {
+          type: "select",
+          placeholder: "Select a product",
+          options: [
+            { value: ANY_PRODUCT, label: "Any product" },
+            ...products.map((product) => ({ value: product.id, label: product.title })),
+          ],
+        },
+      },
+      { value: "community:joined", label: "A learner joins the community", needsData: false },
+      { value: "community:left", label: "A learner leaves the community", needsData: false },
+    ];
+    // Keep triggers set up outside CourseLit, such as other custom events,
+    // visible and editable.
+    if (
+      sequence?.triggerType === "event:custom" ||
+      sequence?.triggerType === "contact:property_changed"
+    ) {
+      options.push(
+        sequence.triggerType === "event:custom"
+          ? {
+              value: "event:custom",
+              label: "A custom event is received",
+              needsData: true,
+              dataLabel: "Event",
+              valueInput: { type: "combobox", placeholder: "Event name" },
+            }
+          : {
+              value: "contact:property_changed",
+              label: "A contact's custom field changes",
+              needsData: true,
+              dataLabel: "Custom field",
+              valueInput: { type: "combobox", placeholder: "Field key" },
+            },
+      );
+    }
+    return options;
+  }, [products, sequence?.triggerType]);
 
   useSetBreadcrumb([
     { label: "Mails", href: "/mails/broadcasts" },
@@ -351,10 +455,21 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
         };
         if (snapshot.triggerType !== null) {
           metadata.triggerType = snapshot.triggerType;
+          if (!snapshot.triggerType.startsWith("event:") && !snapshot.triggerType.startsWith("contact:")) {
+            metadata.triggerFilter = null;
+          }
         }
         if (snapshot.triggerData !== null) {
-          metadata.triggerData = snapshot.triggerData;
+          metadata.triggerData =
+            ENTITY_TRIGGERS.has(snapshot.triggerType ?? "") && snapshot.triggerData === ANY_PRODUCT
+              ? ""
+              : snapshot.triggerData;
         }
+        if (snapshot.triggerFilter !== undefined && metadata.triggerFilter === undefined) {
+          metadata.triggerFilter = snapshot.triggerFilter;
+        }
+        metadata.filter = snapshot.filter;
+        metadata.excludeFilter = snapshot.excludeFilter.filters.length > 0 ? snapshot.excludeFilter : null;
         updates.push(
           apiRequest(
             school.id,
@@ -449,12 +564,27 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           selectedSchool.id,
           "/api/v1/school/mails/system-templates",
         ).catch(() => null);
-        const [rawSequence, rawTemplates, rawSystemTemplates] = await Promise.all([
-          sequencePromise,
-          templatesPromise,
-          systemTemplatesPromise,
-        ]);
+        const productsPromise = apiRequest<{ items?: Array<{ id: string; title: string }> }>(
+          selectedSchool.id,
+          "/api/v1/products?limit=50",
+        ).catch(() => null);
+        const statsPromise = apiRequest<MailStats>(
+          selectedSchool.id,
+          `/api/v1/school/mails/sequences/${encodeURIComponent(sequenceId)}/stats`,
+        ).catch(() => null);
+        const [rawSequence, rawTemplates, rawSystemTemplates, rawProducts, rawStats] =
+          await Promise.all([
+            sequencePromise,
+            templatesPromise,
+            systemTemplatesPromise,
+            productsPromise,
+            statsPromise,
+          ]);
         if (!active) return;
+        setProducts(
+          (rawProducts?.items ?? []).map((item) => ({ id: item.id, title: item.title })),
+        );
+        setStats(rawStats && typeof rawStats.sent === "number" ? rawStats : null);
 
         const nextSequence = normalizeSequence(rawSequence);
         sequenceRef.current = nextSequence;
@@ -467,6 +597,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
             templateId: item.templateId || item.id || "",
             title: item.title || item.name || "Untitled template",
             description: item.description || "",
+            purpose: item.purpose ?? "marketing",
+            requiredVariables: item.requiredVariables ?? [],
             content: parseEmailContent(item.content),
           }))
           .filter((item) => item.templateId);
@@ -486,6 +618,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 teamId: "",
                 templateId: id,
                 title: item.title || item.name || "Untitled template",
+                purpose: item.purpose ?? "marketing",
+                requiredVariables: item.requiredVariables ?? [],
                 content: parseEmailContent(item.content),
                 createdAt: item.createdAt || "",
                 updatedAt: item.updatedAt || "",
@@ -738,17 +872,57 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 <TriggerPicker
                   triggerType={sequence.triggerType}
                   triggerData={sequence.triggerData}
+                  triggerFilter={sequence.triggerFilter ?? null}
+                  triggers={triggers}
+                  valueOptions={
+                    sequence.triggerType === "event:custom" ||
+                    sequence.triggerType === "contact:property_changed"
+                      ? { [sequence.triggerType]: sequence.triggerData ? [sequence.triggerData] : [] }
+                      : undefined
+                  }
                   onChange={(value) =>
                     updateMetadata({
                       triggerType: value.triggerType || null,
                       triggerData: value.triggerData || null,
+                      triggerFilter: value.triggerFilter ?? null,
                     })
                   }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Audience</Label>
+                <p className="text-xs text-muted-foreground">
+                  Only subscribed contacts who match these filters enter the sequence.
+                </p>
+                <ContactFilterBuilder
+                  value={sequence.filter}
+                  onChange={(filter) => updateMetadata({ filter })}
+                  disabled={!canWrite}
+                  defaultSegmentLabel="Everyone"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Exclude</Label>
+                <p className="text-xs text-muted-foreground">
+                  Contacts who match these filters never enter, even if they match the audience.
+                </p>
+                <ContactFilterBuilder
+                  value={sequence.excludeFilter}
+                  onChange={(excludeFilter) => updateMetadata({ excludeFilter })}
+                  disabled={!canWrite}
+                  defaultSegmentLabel="Nobody"
                 />
               </div>
             </div>
 
           </section>
+
+          {stats && sequence.status !== "draft" ? (
+            <SequenceAnalytics
+              title="Performance"
+              metrics={mailStatsMetrics(stats, "Subscribers")}
+            />
+          ) : null}
 
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
             <section className="min-w-0 space-y-2">
@@ -804,15 +978,26 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 <>
                   <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
                     <h2 className="text-base font-semibold">Edit email</h2>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => void saveChanges()}
-                      disabled={!canWrite || saving}
-                    >
-                      <Save className="size-4" />
-                      Save
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {school && canWrite ? (
+                        <SendTestEmailButton
+                          schoolId={school.id}
+                          sequenceId={sequenceId}
+                          emailId={selectedEmail.emailId}
+                          disabled={saving}
+                          beforeSend={saveChanges}
+                        />
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => void saveChanges()}
+                        disabled={!canWrite || saving}
+                      >
+                        <Save className="size-4" />
+                        Save
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-5 p-4 sm:p-5">
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -921,6 +1106,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                         </Button>
                       </div>
                       <EmailPreview
+                        blocks={MARKETING_EMAIL_BLOCKS}
+                        renderContext={MARKETING_PREVIEW_CONTEXT}
                         content={selectedEmail.content}
                         className="w-full"
                         minHeight="420px"

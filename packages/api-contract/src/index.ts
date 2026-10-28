@@ -1342,6 +1342,28 @@ export const updateSectionBodySchema = z.object({
   dripAt: z.string().datetime().nullable().optional(),
 });
 
+export const sectionDripEmailSchema = z.object({
+  sectionId: z.string(),
+  enabled: z.boolean(),
+  subject: z.string(),
+  /** The editable email document; `null` until the creator writes one. */
+  content: z.record(z.unknown()).nullable(),
+  updatedAt: z.string().nullable(),
+});
+export type SectionDripEmail = z.infer<typeof sectionDripEmailSchema>;
+
+export const updateSectionDripEmailBodySchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    subject: z.string().max(250).optional(),
+    content: z.record(z.unknown()).nullable().optional(),
+    /** HTML rendered from `content`, sent to learners as is. */
+    html: z.string().max(1_000_000).nullable().optional(),
+  })
+  .refine((body) => (body.content === undefined) === (body.html === undefined), {
+    message: "content and html must be sent together",
+  });
+
 export const reorderSectionsBodySchema = z.object({
   sectionIds: z.array(z.string().min(1)),
 });
@@ -1501,6 +1523,11 @@ export const newsletterSubscribeBodySchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 export type NewsletterSubscribeBody = z.infer<typeof newsletterSubscribeBodySchema>;
+export const leadMagnetSignUpBodySchema = z.object({
+  productId: z.string().min(1),
+  email: z.string().trim().email(),
+});
+export type LeadMagnetSignUpBody = z.infer<typeof leadMagnetSignUpBodySchema>;
 export const updateLearnerProfileBodySchema = z.object({
   name: z.string().trim().min(1).max(200),
   avatarMediaId: z.string().nullable().optional(),

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import { Input } from "@/components/ui/codelit/input";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type MailTemplate = {
   id: string;
@@ -269,7 +270,12 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
         </div>
       ) : null}
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/10">
-        <EmailEditor email={email} onChange={changeEmail} />
+        <EmailEditor
+          email={email}
+          onChange={changeEmail}
+          blocks={MARKETING_EMAIL_BLOCKS}
+          renderContext={MARKETING_PREVIEW_CONTEXT}
+        />
       </main>
     </div>
   );

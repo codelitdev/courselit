@@ -34,6 +34,8 @@ export const integrationJobTypes = [
   "provision_sendlit",
   "sync_sendlit_contact",
   "erase_sendlit_contact",
+  "track_sendlit_event",
+  "send_school_email",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
 

@@ -22,6 +22,11 @@ import {
   mediaIdsForRichTextContent,
   reconcileMediaReferencesInTransaction,
 } from "./media.js";
+import {
+  createLearnerNotification,
+  createSchoolAdminNotifications,
+} from "./notifications.js";
+import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { accessibleSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
@@ -830,10 +835,57 @@ export async function createLearnerSpacePost(
       return references;
     }
   }
+  await notifySpacePost(db, viewer, space, row.publicId, clock);
   return {
     ok: true,
     value: { id: row.publicId, spaceId: space.publicId, title, content: input.content },
   };
+}
+
+/** Tells staff and the space's followers about a new post. */
+async function notifySpacePost(
+  db: AppDb,
+  viewer: CommunityLearnerViewer,
+  space: { id: string; publicId: string; name: string },
+  postPublicId: string,
+  clock: Clock,
+) {
+  const href = `/dashboard/s/${encodeURIComponent(space.publicId)}/${encodeURIComponent(postPublicId)}`;
+  // The admin app has no post view, so staff go to the post on the school site.
+  const siteUrl = await schoolSiteUrl(db, viewer.schoolId);
+  await createSchoolAdminNotifications(
+    db,
+    viewer.schoolId,
+    {
+      excludeSchoolAccountId: viewer.learnerId,
+      type: "community_post_created",
+      title: "New space post",
+      body: `A learner posted in “${space.name}”.`,
+      href: siteUrl ? `${siteUrl}${href}` : null,
+    },
+    clock,
+  );
+  const followers = await db
+    .select({ schoolAccountId: schema.spaceFollowers.schoolAccountId })
+    .from(schema.spaceFollowers)
+    .where(eq(schema.spaceFollowers.spaceId, space.id));
+  for (const { schoolAccountId } of followers) {
+    if (schoolAccountId === viewer.learnerId) continue;
+    // Following outlives access; only notify people who can still read it.
+    const accessible = await accessibleSpaceIds(db, viewer.schoolId, schoolAccountId);
+    if (!accessible.has(space.id)) continue;
+    await createLearnerNotification(
+      db,
+      { schoolId: viewer.schoolId, schoolAccountId },
+      {
+        type: "community_post_created",
+        title: "New space post",
+        body: `Someone posted in “${space.name}”.`,
+        href,
+      },
+      clock,
+    );
+  }
 }
 
 async function feedCursorCondition(

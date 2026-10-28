@@ -56,6 +56,7 @@ export default function BannerWidget({
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const resolvedTheme = sectionTheme(theme.theme, settings);
 
   if (!data) {
@@ -113,6 +114,25 @@ export default function BannerWidget({
   ) : null;
   const hasMedia = Boolean(resource.featuredImage);
 
+  async function claimLeadMagnet(planId: string) {
+    setBusyPlan(planId);
+    setError(null);
+    try {
+      const response = await fetch("/api/v1/storefront/lead-magnets", {
+        method: "POST",
+        credentials: "include",
+        headers: learnerHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({ productId: resource?.id, email: email.trim() }),
+      });
+      if (!response.ok) throw new Error("Unable to sign you up. Check your email and try again.");
+      setSentTo(email.trim());
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to continue.");
+    } finally {
+      setBusyPlan(null);
+    }
+  }
+
   async function startCheckout(planId: string, kind: "product" | "community") {
     setBusyPlan(planId);
     setError(null);
@@ -169,7 +189,11 @@ export default function BannerWidget({
             >
               <Header4 theme={resolvedTheme}>{plan.name}</Header4>
               <Text2 theme={resolvedTheme}>{planPrice(plan)}</Text2>
-              {leadMagnet && plan.type === "free" ? (
+              {leadMagnet && plan.type === "free" && sentTo ? (
+                <Text2 theme={resolvedTheme} role="status">
+                  Check your inbox: we sent it to {sentTo}.
+                </Text2>
+              ) : leadMagnet && plan.type === "free" ? (
                 <form
                   className="flex w-full max-w-sm flex-col gap-2"
                   onSubmit={(event) => {
@@ -179,7 +203,7 @@ export default function BannerWidget({
                       setError("Enter your email to continue.");
                       return;
                     }
-                    void startCheckout(plan.id, "product");
+                    void claimLeadMagnet(plan.id);
                   }}
                 >
                   <Label

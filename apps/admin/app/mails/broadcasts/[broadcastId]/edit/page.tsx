@@ -4,7 +4,7 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Check, Clock3, Pencil, Pause, Send } from "lucide-react";
-import { ContactFilterBuilder, EmailPreview, type ContactFilterWithAggregator, type Email } from "@sendlit/email-blocks";
+import { ContactFilterBuilder, EmailPreview, SequenceAnalytics, type ContactFilterWithAggregator, type Email } from "@sendlit/email-blocks";
 import { Badge } from "@codelitdev/design-system";
 import { AuthGate } from "@/components/auth-gate";
 import { PageHeader } from "@/components/layout/page-header";
@@ -31,8 +31,11 @@ import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import { isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
 import { hasSchoolPermission } from "@/lib/school-permissions";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type School = {
   id: string;
@@ -122,6 +125,7 @@ export default function BroadcastDetailsPage({
   const [activeDialog, setActiveDialog] = useState<BroadcastDialog>(null);
   const [scheduleDateTime, setScheduleDateTime] = useState("");
   const [scheduleMinimum, setScheduleMinimum] = useState("");
+  const [stats, setStats] = useState<MailStats | null>(null);
 
   const editable = broadcast?.status === "draft" || broadcast?.status === "paused";
   const canWrite = hasSchoolPermission(school, "contacts:write");
@@ -173,6 +177,20 @@ export default function BroadcastDetailsPage({
         setBroadcast(data);
         setTitle(data.title || "Untitled broadcast");
         setFilter(data.filter ?? EVERYONE_FILTER);
+        if (data.status === "active" || data.status === "completed" || data.status === "paused") {
+          const statsResponse = await fetch(
+            `/api/v1/school/mails/sequences/${encodeURIComponent(broadcastId)}/stats`,
+            {
+              credentials: "include",
+              cache: "no-store",
+              headers: { "x-school-id": selectedSchool.id },
+            },
+          ).catch(() => null);
+          if (statsResponse?.ok && !cancelled) {
+            const body = (await statsResponse.json()) as MailStats;
+            if (typeof body.sent === "number") setStats(body);
+          }
+        }
       } catch (caught) {
         if (!cancelled) {
           setError(caught instanceof Error ? caught.message : "Unable to load broadcast.");
@@ -478,6 +496,10 @@ export default function BroadcastDetailsPage({
               </div>
             ) : null}
 
+            {stats ? (
+              <SequenceAnalytics title="Performance" metrics={mailStatsMetrics(stats)} />
+            ) : null}
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <CardTitle className="text-base">Details &amp; audience</CardTitle>
@@ -534,21 +556,33 @@ export default function BroadcastDetailsPage({
                     </Badge>
                   ) : null}
                 </div>
-                {email && editable && canWrite ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void openEmailEditor()}
-                    disabled={saving || working}
-                  >
-                    <Pencil className="mr-1.5 size-4" />Edit content
-                  </Button>
-                ) : null}
+                <div className="flex items-center gap-2">
+                  {email && school && canWrite ? (
+                    <SendTestEmailButton
+                      schoolId={school.id}
+                      sequenceId={broadcastId}
+                      emailId={email.emailId}
+                      disabled={saving || working}
+                    />
+                  ) : null}
+                  {email && editable && canWrite ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void openEmailEditor()}
+                      disabled={saving || working}
+                    >
+                      <Pencil className="mr-1.5 size-4" />Edit content
+                    </Button>
+                  ) : null}
+                </div>
               </CardHeader>
               <CardContent>
                 {emailContent ? (
                   <EmailPreview
+                    blocks={MARKETING_EMAIL_BLOCKS}
+                    renderContext={MARKETING_PREVIEW_CONTEXT}
                     content={emailContent}
                     minHeight="420px"
                     iframeTitle={`${title || "Broadcast"} email preview`}

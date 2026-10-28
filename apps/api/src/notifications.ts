@@ -9,6 +9,7 @@ import {
 import { and, count, desc, eq, isNull, lt, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { publishNotification } from "./notification-stream.js";
+import { queueNotificationEmail } from "./school-emails.js";
 import type { AppDb } from "./types.js";
 
 export const LEARNER_NOTIFICATION_TYPES = [
@@ -21,6 +22,22 @@ export const LEARNER_NOTIFICATION_TYPES = [
   "community_membership_granted",
 ] as const;
 export type LearnerNotificationType = (typeof LEARNER_NOTIFICATION_TYPES)[number];
+
+/** What staff are notified about. */
+export const STAFF_NOTIFICATION_TYPES = [
+  "community_post_created",
+  "community_comment",
+  "community_reply",
+  "community_membership_requested",
+  "community_joined",
+] as const;
+export type StaffNotificationType = (typeof STAFF_NOTIFICATION_TYPES)[number];
+
+export type StaffNotificationPreferenceDto = {
+  type: StaffNotificationType;
+  appEnabled: boolean;
+  emailEnabled: boolean;
+};
 
 export type NotificationDto = {
   id: string;
@@ -127,6 +144,25 @@ export async function createAdminNotification(
   clock: Clock,
 ) {
   const accountId = await resolveAdminAccountId(db, target);
+  const [preference] = await db
+    .select({
+      appEnabled: schema.staffNotificationPreferences.appEnabled,
+      emailEnabled: schema.staffNotificationPreferences.emailEnabled,
+    })
+    .from(schema.staffNotificationPreferences)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.id, schema.staffNotificationPreferences.membershipId),
+    )
+    .where(
+      and(
+        eq(schema.staffNotificationPreferences.schoolId, target.schoolId),
+        eq(schema.memberships.schoolAccountId, accountId),
+        eq(schema.staffNotificationPreferences.type, input.type),
+      ),
+    )
+    .limit(1);
+
   const now = clock.now();
   const row = {
     id: uuidv7(clock),
@@ -140,6 +176,23 @@ export async function createAdminNotification(
     readAt: null,
     createdAt: now,
   };
+  if (preference?.emailEnabled ?? true) {
+    await queueNotificationEmail(
+      db,
+      {
+        schoolId: target.schoolId,
+        schoolAccountId: accountId,
+        audience: "admin",
+        notificationId: row.publicId,
+        title: row.title,
+        body: row.body,
+        href: row.href,
+      },
+      clock,
+    );
+  }
+  if (preference && !preference.appEnabled) return null;
+
   await db.insert(schema.notifications).values(row);
   const notification = toDto(row);
   publishNotification({
@@ -197,7 +250,10 @@ export async function createLearnerNotification(
   clock: Clock,
 ) {
   const preference = await db
-    .select({ appEnabled: schema.learnerNotificationPreferences.appEnabled })
+    .select({
+      appEnabled: schema.learnerNotificationPreferences.appEnabled,
+      emailEnabled: schema.learnerNotificationPreferences.emailEnabled,
+    })
     .from(schema.learnerNotificationPreferences)
     .where(
       and(
@@ -210,8 +266,6 @@ export async function createLearnerNotification(
       ),
     )
     .limit(1);
-  if (preference[0] && !preference[0].appEnabled) return null;
-
   const now = clock.now();
   const row = {
     id: uuidv7(clock),
@@ -225,6 +279,23 @@ export async function createLearnerNotification(
     readAt: null,
     createdAt: now,
   };
+  if (preference[0]?.emailEnabled ?? true) {
+    await queueNotificationEmail(
+      db,
+      {
+        schoolId: target.schoolId,
+        schoolAccountId: row.schoolAccountId,
+        audience: "learner",
+        notificationId: row.publicId,
+        title: row.title,
+        body: row.body,
+        href: row.href,
+      },
+      clock,
+    );
+  }
+  if (preference[0] && !preference[0].appEnabled) return null;
+
   await db.insert(schema.notifications).values(row);
   const notification = toDto(row);
   publishNotification({
@@ -310,6 +381,97 @@ export async function updateLearnerNotificationPreference(
       appEnabled,
       emailEnabled,
     },
+  };
+}
+
+async function staffMembershipId(
+  db: AppDb,
+  target: AdminNotificationTarget,
+): Promise<string | null> {
+  const accountId = await resolveAdminAccountId(db, target).catch(() => null);
+  if (!accountId) return null;
+  const [membership] = await db
+    .select({ id: schema.memberships.id })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, target.schoolId),
+        eq(schema.memberships.schoolAccountId, accountId),
+      ),
+    )
+    .limit(1);
+  return membership?.id ?? null;
+}
+
+export async function listStaffNotificationPreferences(
+  db: AppDb,
+  target: AdminNotificationTarget,
+): Promise<Result<{ items: StaffNotificationPreferenceDto[] }>> {
+  const membershipId = await staffMembershipId(db, target);
+  if (!membershipId) return { ok: false, error: createPlatformError("forbidden") };
+  const rows = await db
+    .select({
+      type: schema.staffNotificationPreferences.type,
+      appEnabled: schema.staffNotificationPreferences.appEnabled,
+      emailEnabled: schema.staffNotificationPreferences.emailEnabled,
+    })
+    .from(schema.staffNotificationPreferences)
+    .where(
+      and(
+        eq(schema.staffNotificationPreferences.schoolId, target.schoolId),
+        eq(schema.staffNotificationPreferences.membershipId, membershipId),
+      ),
+    );
+  const preferences = new Map(rows.map((row) => [row.type, row]));
+  return {
+    ok: true,
+    value: {
+      items: STAFF_NOTIFICATION_TYPES.map((type) => ({
+        type,
+        appEnabled: preferences.get(type)?.appEnabled ?? true,
+        emailEnabled: preferences.get(type)?.emailEnabled ?? true,
+      })),
+    },
+  };
+}
+
+export async function updateStaffNotificationPreference(
+  db: AppDb,
+  target: AdminNotificationTarget,
+  type: string,
+  appEnabled: boolean,
+  emailEnabled: boolean,
+  clock: Clock,
+): Promise<Result<StaffNotificationPreferenceDto>> {
+  if (!(STAFF_NOTIFICATION_TYPES as readonly string[]).includes(type)) {
+    return { ok: false, error: createPlatformError("validation_failed") };
+  }
+  const membershipId = await staffMembershipId(db, target);
+  if (!membershipId) return { ok: false, error: createPlatformError("forbidden") };
+  const now = clock.now();
+  await db
+    .insert(schema.staffNotificationPreferences)
+    .values({
+      id: uuidv7(clock),
+      schoolId: target.schoolId,
+      membershipId,
+      type,
+      appEnabled,
+      emailEnabled,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        schema.staffNotificationPreferences.schoolId,
+        schema.staffNotificationPreferences.membershipId,
+        schema.staffNotificationPreferences.type,
+      ],
+      set: { appEnabled, emailEnabled, updatedAt: now },
+    });
+  return {
+    ok: true,
+    value: { type: type as StaffNotificationType, appEnabled, emailEnabled },
   };
 }
 

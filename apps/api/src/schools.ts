@@ -44,7 +44,7 @@ export type SchoolDto = {
 
 type SchoolWebsiteDto = NonNullable<SchoolDto["website"]>;
 
-function defaultStorefrontHost(subdomain: string): string | null {
+export function defaultStorefrontHost(subdomain: string): string | null {
   const configuredDomain = process.env.PLATFORM_SITE_DOMAIN?.trim()
     .toLowerCase()
     .replace(/^https?:\/\//, "")

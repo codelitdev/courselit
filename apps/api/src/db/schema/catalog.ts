@@ -12,6 +12,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
+import { learnerMemberships } from "./learner-memberships.js";
 import { products } from "./products.js";
 import { schoolAccounts, schools } from "./schools.js";
 
@@ -340,3 +341,49 @@ export const previewGrants = pgTable("preview_grants", {
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
+
+/** The email sent to a learner when a dripped section unlocks for them. The
+ * admin keeps the editable `content` and the `html` rendered from it, which
+ * is what learners receive. */
+export const sectionDripEmails = pgTable("section_drip_emails", {
+  sectionId: uuid("section_id")
+    .primaryKey()
+    .references(() => productSections.id, { onDelete: "cascade" }),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull().default(false),
+  subject: text("subject").notNull().default(""),
+  content: jsonb("content").$type<Record<string, unknown> | null>(),
+  html: text("html"),
+  /** Only unlocks at or after this time are emailed, so turning the email on
+   * doesn't send it to everyone who unlocked the section earlier. */
+  enabledAt: timestamp("enabled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+/** One row per learner membership and section whose drip email was sent. */
+export const sectionDripEmailDeliveries = pgTable(
+  "section_drip_email_deliveries",
+  {
+    id: uuid("id").primaryKey(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    sectionId: uuid("section_id")
+      .notNull()
+      .references(() => productSections.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id")
+      .notNull()
+      .references(() => learnerMemberships.id, { onDelete: "cascade" }),
+    unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    sectionMembership: uniqueIndex("section_drip_email_deliveries_uidx").on(
+      table.sectionId,
+      table.membershipId,
+    ),
+  }),
+);

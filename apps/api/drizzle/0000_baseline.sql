@@ -1553,4 +1553,31 @@ CREATE UNIQUE INDEX "billing_reconciliation_jobs_live_customer_uidx" ON "billing
 CREATE UNIQUE INDEX "billing_subscriptions_provider_subscription_uidx" ON "billing_subscriptions" USING btree ("provider","provider_subscription_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_subscriptions_entity_source_uidx" ON "billing_subscriptions" USING btree ("billable_entity_id") WHERE "billing_subscriptions"."is_entitlement_source" = true;--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_webhook_events_provider_event_uidx" ON "billing_webhook_events" USING btree ("provider","provider_event_id");--> statement-breakpoint
-CREATE INDEX "billing_webhook_events_queue_idx" ON "billing_webhook_events" USING btree ("status","available_at");
+CREATE INDEX "billing_webhook_events_queue_idx" ON "billing_webhook_events" USING btree ("status","available_at");--> statement-breakpoint
+CREATE TABLE "section_drip_email_deliveries" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"section_id" uuid NOT NULL,
+	"membership_id" uuid NOT NULL,
+	"unlocked_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "section_drip_emails" (
+	"section_id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"enabled" boolean DEFAULT false NOT NULL,
+	"subject" text DEFAULT '' NOT NULL,
+	"content" jsonb,
+	"html" text,
+	"enabled_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_membership_id_learner_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."learner_memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "section_drip_email_deliveries_uidx" ON "section_drip_email_deliveries" USING btree ("section_id","membership_id");

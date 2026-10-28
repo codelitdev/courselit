@@ -55,6 +55,7 @@ import {
   listContactsQuerySchema,
   listProductsQuerySchema,
   mediaCategorySchema,
+  leadMagnetSignUpBodySchema,
   newsletterSubscribeBodySchema,
   notificationListQuerySchema,
   notificationPreferenceTypeSchema,
@@ -90,6 +91,7 @@ import {
   updateSchoolWebsitePageBodySchema,
   updateSchoolWebsiteThemeBodySchema,
   updateSectionBodySchema,
+  updateSectionDripEmailBodySchema,
   updateSpaceBodySchema,
   updateStorefrontPlanBodySchema,
   upsertProductCertificateTemplateBodySchema,
@@ -219,6 +221,7 @@ import {
   updateWebsitePage,
   updateWebsiteTheme,
 } from "./website.js";
+import { getSectionDripEmail, updateSectionDripEmail } from "./drip-emails.js";
 import { processNextIntegrationJob } from "./integration-provisioning.js";
 import {
   acceptInvitation,
@@ -241,6 +244,7 @@ import {
   ensureLearnerProductMembershipForPublicSignup,
   getLearnerLessonMedia,
   grantLearnerMembership,
+  signUpForLeadMagnet,
   learnerMe,
   learnerSessionCookieHeader,
   listLearnerProducts,
@@ -270,6 +274,8 @@ import {
 import {
   listAdminNotifications,
   listLearnerNotificationPreferences,
+  listStaffNotificationPreferences,
+  updateStaffNotificationPreference,
   listLearnerNotifications,
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
@@ -349,6 +355,7 @@ import {
   listTemplates,
   pauseSequence,
   removeTagFromContact,
+  sendSequenceEmailTest,
   startSequence,
   updateMailingSettings,
   updateSegment,
@@ -1106,6 +1113,29 @@ export async function dispatch(
       );
       return result.ok
         ? { status: 200, body: { items: result.value } }
+        : errorResponse(result.error);
+    }
+
+    if (request.method === "POST" && path === "/v1/storefront/lead-magnets") {
+      const parsed = leadMagnetSignUpBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const school = await resolvePublicSchool();
+      if (!school.ok) return errorResponse(school.error);
+      const result = await signUpForLeadMagnet(
+        deps.db,
+        {
+          schoolId: school.value.schoolId,
+          publicSchoolId: school.value.publicId,
+          productPublicId: parsed.data.productId,
+          email: parsed.data.email,
+          requestId: requestIdFrom(request, deps),
+        },
+        deps.clock,
+      );
+      return result.ok
+        ? { status: 200, body: { status: "sent" as const, email: result.value.email } }
         : errorResponse(result.error);
     }
 
@@ -2630,6 +2660,34 @@ export async function dispatch(
       principalId: auth.principalId,
     });
 
+    if (request.method === "GET" && path === "/v1/notification-preferences") {
+      const result = await listStaffNotificationPreferences(deps.db, {
+        schoolId: context.tenantId!,
+        adminUserId: context.principalId,
+      });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+    const staffNotificationPreferenceMatch =
+      /^\/v1\/notification-preferences\/([^/]+)$/.exec(path);
+    if (request.method === "PATCH" && staffNotificationPreferenceMatch) {
+      const parsed = updateNotificationPreferenceBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await updateStaffNotificationPreference(
+        deps.db,
+        { schoolId: context.tenantId!, adminUserId: context.principalId },
+        decodeURIComponent(staffNotificationPreferenceMatch[1]!),
+        parsed.data.appEnabled,
+        parsed.data.emailEnabled,
+        deps.clock,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (request.method === "GET" && path === "/v1/notifications") {
       const parsed = notificationListQuerySchema.safeParse({
         cursor: query.get("cursor") ?? undefined,
@@ -3423,6 +3481,56 @@ export async function dispatch(
         context.tenantId!,
         deps.clock,
         sequenceId,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const sequenceEmailTestMatch =
+      /^\/v1\/school\/mails\/sequences\/([^/]+)\/emails\/([^/]+)\/test$/.exec(path);
+    if (request.method === "POST" && sequenceEmailTestMatch) {
+      if (!context.permissions.has("contacts:write")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const body = (request.body ?? {}) as { to?: unknown };
+      let to: string[] = [];
+      if (body.to !== undefined) {
+        if (
+          !Array.isArray(body.to) ||
+          body.to.length === 0 ||
+          body.to.length > 5 ||
+          !body.to.every((item) => typeof item === "string" && item.includes("@"))
+        ) {
+          return errorResponse(
+            createPlatformError("validation_failed", {
+              safeDetails: { reason: "Provide between 1 and 5 email addresses." },
+            }),
+          );
+        }
+        to = (body.to as string[]).map((item) => item.trim());
+      } else {
+        const [user] = await deps.db
+          .select({ email: schema.user.email })
+          .from(schema.user)
+          .where(eq(schema.user.id, context.principalId))
+          .limit(1);
+        if (!user?.email) {
+          return errorResponse(
+            createPlatformError("validation_failed", {
+              safeDetails: { reason: "Provide the addresses to send the test to." },
+            }),
+          );
+        }
+        to = [user.email];
+      }
+      const result = await sendSequenceEmailTest(
+        deps.db,
+        context.tenantId!,
+        deps.clock,
+        decodeURIComponent(sequenceEmailTestMatch[1]!),
+        decodeURIComponent(sequenceEmailTestMatch[2]!),
+        { to },
       );
       return result.ok
         ? { status: 200, body: result.value }
@@ -4705,6 +4813,34 @@ export async function dispatch(
         ? { status: 200, body: { items: result.value } }
         : errorResponse(result.error);
     }
+    const sectionDripEmailMatch = /^\/v1\/sections\/([^/]+)\/drip-email$/.exec(path);
+    if (sectionDripEmailMatch && request.method === "GET") {
+      const result = await getSectionDripEmail(
+        deps.db,
+        context,
+        decodeURIComponent(sectionDripEmailMatch[1]!),
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+    if (sectionDripEmailMatch && (request.method === "PUT" || request.method === "PATCH")) {
+      const parsed = updateSectionDripEmailBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await updateSectionDripEmail(
+        deps.db,
+        context,
+        decodeURIComponent(sectionDripEmailMatch[1]!),
+        parsed.data,
+        deps.clock,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
     const sectionMatch = /^\/v1\/sections\/([^/]+)$/.exec(path);
     if (request.method === "DELETE" && sectionMatch) {
       const result = await deleteSection(

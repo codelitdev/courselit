@@ -11,6 +11,8 @@ import {
   listSendLitTemplates,
   provisionSendLitTeam,
   sendLitConfig,
+  sendSendLitSequenceEmailTest,
+  trackSendLitEvent,
   updateSendLitGeneralSettings,
 } from "./sendlit-client.js";
 
@@ -253,5 +255,40 @@ describe("sendlit-client", () => {
       { config: { server: "http://127.0.0.1:4101", provisioningApiKey: null }, fetcher },
     );
     expect(templates.items[0].title).toBe("Default Template");
+  });
+
+  it("sends sequence email tests and custom events with the team key", async () => {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fetcher: FetchLike = async (input, init) => {
+      calls.push({ url: String(input), init });
+      const body = String(input).endsWith("/events")
+        ? { eventId: "evt_1", contactId: "cnt_1", duplicate: false, contactCreated: false }
+        : { sent: ["me@example.com"], lastTestSentAt: "2026-03-01T00:00:00.000Z" };
+      return new Response(JSON.stringify(body), { status: 200 });
+    };
+    const config = { server: "http://sendlit.test", provisioningApiKey: null };
+
+    const test = await sendSendLitSequenceEmailTest(
+      "sl_team",
+      "seq 1",
+      "eml_1",
+      { to: ["me@example.com"] },
+      { config, fetcher },
+    );
+    expect(test.sent).toEqual(["me@example.com"]);
+    expect(calls[0]!.url).toBe("http://sendlit.test/sequences/seq%201/emails/eml_1/test");
+    expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({ to: ["me@example.com"] });
+    expect((calls[0]!.init?.headers as Record<string, string>)["x-sendlit-apikey"]).toBe(
+      "sl_team",
+    );
+
+    const tracked = await trackSendLitEvent(
+      "sl_team",
+      { contactId: "cnt_1", eventName: "product purchased", idempotencyKey: "job_1" },
+      { config, fetcher },
+    );
+    expect(tracked.eventId).toBe("evt_1");
+    expect(calls[1]!.url).toBe("http://sendlit.test/events");
+    expect(calls[1]!.init?.method).toBe("POST");
   });
 });

@@ -14,6 +14,8 @@ export class SendLitApiError extends Error {
     message: string,
     public readonly status?: number,
     public readonly retryable = true,
+    /** The service's own error text, safe to show to creators. */
+    public readonly detail?: string,
   ) {
     super(message);
     this.name = "SendLitApiError";
@@ -157,6 +159,7 @@ export type SendLitSequence = {
   emails?: SendLitSequenceEmail[];
   triggerType?: string | null;
   triggerData?: string | null;
+  triggerFilter?: unknown;
   filter?: unknown;
   excludeFilter?: unknown;
   emailsOrder?: string[];
@@ -230,14 +233,36 @@ export type SendLitGeneralSettings = {
 };
 
 export type SendLitSequenceStats = {
-  sequenceId: string;
-  sent?: number;
-  delivered?: number;
-  opened?: number;
-  clicked?: number;
-  bounced?: number;
-  complained?: number;
-  unsubscribed?: number;
+  sent: number;
+  openRate: number;
+  clickThroughRate: number;
+  subscribersCount: number;
+  bounceRate?: number;
+  complaintRate?: number;
+};
+
+export type SendLitEmailTestResult = {
+  sent: string[];
+  skipped?: unknown;
+  lastTestSentAt: string | null;
+};
+
+export type SendLitTrackEventInput = {
+  email?: string;
+  contactId?: string;
+  eventName: string;
+  properties?: Record<string, unknown>;
+  occurredAt?: string;
+  idempotencyKey?: string;
+  createContact?: boolean;
+  contact?: { name?: string; customFields?: Record<string, unknown> };
+};
+
+export type SendLitTrackEventResult = {
+  eventId: string;
+  contactId: string;
+  duplicate: boolean;
+  contactCreated: boolean;
 };
 
 export type SendLitOverview = {
@@ -251,6 +276,16 @@ export type SendLitOverview = {
 function errorMessage(status: number, body: string): string {
   const detail = body.replace(/\s+/g, " ").trim().slice(0, 300);
   return detail ? `SendLit API error ${status}: ${detail}` : `SendLit API error ${status}`;
+}
+
+function errorDetail(body: string): string | undefined {
+  try {
+    const parsed = JSON.parse(body) as { error?: unknown; message?: unknown };
+    const detail = typeof parsed.error === "string" ? parsed.error : parsed.message;
+    return typeof detail === "string" && detail.trim() ? detail.trim().slice(0, 300) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function requestJson<T>(
@@ -305,7 +340,12 @@ async function requestJson<T>(
     if (!response.ok) {
       const text = await response.text();
       const retryable = response.status >= 500 || response.status === 429;
-      throw new SendLitApiError(errorMessage(response.status, text), response.status, retryable);
+      throw new SendLitApiError(
+        errorMessage(response.status, text),
+        response.status,
+        retryable,
+        errorDetail(text),
+      );
     }
 
     return (await response.json()) as T;
@@ -889,6 +929,7 @@ export async function updateSendLitSequence(
     title?: string;
     triggerType?: string | null;
     triggerData?: string | null;
+    triggerFilter?: unknown;
     filter?: unknown;
     excludeFilter?: unknown;
     emailsOrder?: string[];
@@ -1047,6 +1088,40 @@ export async function getSendLitSequenceStats(
   );
 }
 
+export async function sendSendLitSequenceEmailTest(
+  teamApiKey: string,
+  sequenceId: string,
+  emailId: string,
+  input: { to: string[] },
+  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+): Promise<SendLitEmailTestResult> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<SendLitEmailTestResult>(
+    config,
+    `/sequences/${encodeURIComponent(sequenceId)}/emails/${encodeURIComponent(emailId)}/test`,
+    { method: "POST", teamApiKey, body: input },
+    options.fetcher,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Custom events (Team API key scoped)
+// ---------------------------------------------------------------------------
+
+export async function trackSendLitEvent(
+  teamApiKey: string,
+  input: SendLitTrackEventInput,
+  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+): Promise<SendLitTrackEventResult> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<SendLitTrackEventResult>(
+    config,
+    "/events",
+    { method: "POST", teamApiKey, body: input },
+    options.fetcher,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Overview / Metrics (Team API key scoped)
 // ---------------------------------------------------------------------------
@@ -1079,6 +1154,7 @@ export async function sendSendLitTransactionalEmail(
     templateId?: string;
     html?: string;
     variables?: Record<string, unknown>;
+    text?: string;
     replyTo?: string;
     subject?: string;
     headers?: Record<string, string>;

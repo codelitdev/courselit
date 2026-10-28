@@ -219,11 +219,13 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (
     clean === "/settings/payment" ||
     clean === "/settings/team" ||
+    clean === "/settings/notifications" ||
     clean === "/settings/api-keys"
   ) {
     const tabLabels: Record<string, string> = {
       payment: "Payments",
       team: "Team",
+      notifications: "Notifications",
       "api-keys": "API keys",
     };
     const tab = clean.split("/")[2];

@@ -1,6 +1,7 @@
 import { type Clock, createPublicId, uuidv7 } from "@codelitdev/platform";
 import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { queueMembershipEvents } from "./membership-events.js";
 import { getPaymentProvider, type PaymentProvider } from "./payments.js";
 import type { AppDb } from "./types.js";
 
@@ -109,7 +110,14 @@ export async function upsertLearnerMembership(
       .update(schema.learnerMemberships)
       .set(values)
       .where(eq(schema.learnerMemberships.id, existing.id));
-    return { ...existing, ...values };
+    const updated = { ...existing, ...values };
+    await queueMembershipEvents(db, {
+      membership: updated,
+      previousStatus: existing.status,
+      nextStatus: updated.status,
+      clock,
+    });
+    return updated;
   }
   const accountId = input.schoolAccountId ?? input.learnerId!;
   const row = {
@@ -123,6 +131,12 @@ export async function upsertLearnerMembership(
     createdAt: now,
   } satisfies typeof schema.learnerMemberships.$inferInsert;
   await db.insert(schema.learnerMemberships).values(row);
+  await queueMembershipEvents(db, {
+    membership: row,
+    previousStatus: null,
+    nextStatus: row.status,
+    clock,
+  });
   return row;
 }
 
@@ -195,6 +209,11 @@ export async function revokeLearnerMembership(
     await paymentProvider.cancelSubscription(membership.subscriptionId);
   }
 
+  const children = await db
+    .select()
+    .from(schema.learnerMemberships)
+    .where(eq(schema.learnerMemberships.parentMembershipId, membershipId));
+
   const now = clock.now();
   await db
     .update(schema.learnerMemberships)
@@ -204,4 +223,12 @@ export async function revokeLearnerMembership(
     .update(schema.learnerMemberships)
     .set({ status, updatedAt: now })
     .where(eq(schema.learnerMemberships.parentMembershipId, membershipId));
+  for (const row of [membership, ...children]) {
+    await queueMembershipEvents(db, {
+      membership: row,
+      previousStatus: row.status,
+      nextStatus: status,
+      clock,
+    });
+  }
 }

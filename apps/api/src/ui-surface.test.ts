@@ -168,7 +168,8 @@ describe("admin and learner surfaces", () => {
     expect(brandingSettings).toContain('"/api/v1/school/website/branding"');
     expect(codeInjectionSettings).toContain('"/api/v1/school/code-injection"');
     expect(settings).toContain('"branding",');
-    expect(settings).toContain('"payment", "team", "api-keys"] as const');
+    expect(settings).toContain('"payment", "team", "notifications", "api-keys"] as const');
+    expect(settings).toContain('value="notifications"');
     expect(settings).toContain('"api-keys"] as const');
     expect(settings).toContain('value="team"');
     expect(settings).toContain('value="api-keys"');

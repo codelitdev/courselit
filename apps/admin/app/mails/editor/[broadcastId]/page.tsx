@@ -1,5 +1,6 @@
 "use client";
 
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,6 +23,7 @@ import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type BroadcastEmail = {
   emailId: string;
@@ -576,6 +578,14 @@ export default function EmailBroadcastEditorPage({
             ) : null}
           </div>
 
+          {emailId ? (
+            <SendTestEmailButton
+              sequenceId={broadcastId}
+              emailId={emailId}
+              disabled={saving || sending || scheduling}
+              beforeSend={() => (isScheduledBroadcast ? Promise.resolve(true) : save(true))}
+            />
+          ) : null}
           {!isSequenceEmailEditor ? (
             isScheduledBroadcast ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
@@ -688,7 +698,12 @@ export default function EmailBroadcastEditorPage({
               aria-disabled={isScheduledBroadcast}
               inert={isScheduledBroadcast}
             >
-              <EmailEditor email={emailBody} onChange={handleBodyChange} />
+              <EmailEditor
+                email={emailBody}
+                onChange={handleBodyChange}
+                blocks={MARKETING_EMAIL_BLOCKS}
+                renderContext={MARKETING_PREVIEW_CONTEXT}
+              />
             </div>
           ) : null}
         </main>

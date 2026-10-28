@@ -39,6 +39,7 @@ import {
   removeSendLitContactTag,
   rotateSendLitTeamKey,
   sendLitConfig,
+  sendSendLitSequenceEmailTest,
   startSendLitSequence,
   updateSendLitContact,
   updateSendLitGeneralSettings,
@@ -48,6 +49,7 @@ import {
   updateSendLitTemplate,
   type SendLitConfig,
   type SendLitContact,
+  type SendLitEmailTestResult,
   type SendLitGeneralSettings,
   type SendLitOverview,
   type SendLitSegment,
@@ -59,6 +61,7 @@ import {
   type SendLitTemplate,
   type SendLitTemplateContent,
 } from "./sendlit-client.js";
+import { fromSendLitTrigger, toSendLitTrigger } from "./mail-triggers.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -72,33 +75,26 @@ export type SendLitTeamAuth = {
 };
 
 
+const CODE_BY_STATUS: Record<number, Parameters<typeof createPlatformError>[0]> = {
+  400: "validation_failed",
+  401: "forbidden",
+  403: "forbidden",
+  404: "not_found",
+  409: "conflict",
+  429: "rate_limited",
+};
+
+// Creators see the service's own explanation for request errors, and a
+// neutral message otherwise; the raw error stays in `cause` for logs.
 function mapSendLitError(error: unknown): PlatformError {
-  if (error instanceof SendLitApiError) {
-    if (error.status === 400)
-      return createPlatformError("validation_failed", {
-        safeDetails: { reason: error.message },
-        cause: error,
-      });
-    if (error.status === 404)
-      return createPlatformError("not_found", {
-        safeDetails: { reason: error.message },
-        cause: error,
-      });
-    if (error.status === 409)
-      return createPlatformError("conflict", {
-        safeDetails: { reason: error.message },
-        cause: error,
-      });
-    if (error.status === 403 || error.status === 401)
-      return createPlatformError("forbidden", {
-        safeDetails: { reason: error.message },
-        cause: error,
-      });
+  if (error instanceof SendLitApiError && error.status && CODE_BY_STATUS[error.status]) {
+    return createPlatformError(CODE_BY_STATUS[error.status]!, {
+      safeDetails: { reason: error.detail ?? "The mailing service rejected the request." },
+      cause: error,
+    });
   }
   return createPlatformError("internal_error", {
-    safeDetails: {
-      reason: error instanceof Error ? error.message : "Mailing service error",
-    },
+    safeDetails: { reason: "The mailing service is unavailable. Try again shortly." },
     cause: error,
   });
 }
@@ -283,7 +279,10 @@ export async function getSendLitAuthForSchool(
       ok: false,
       error: createPlatformError(
         "conflict",
-        { safeDetails: { reason: error instanceof Error ? error.message : "Failed to connect to mailing service" } },
+        {
+          safeDetails: { reason: "The mailing service is unavailable. Try again shortly." },
+          cause: error,
+        },
       ),
     };
   }
@@ -629,7 +628,10 @@ export async function listSequences(
           item.title?.toLowerCase().includes(searchLower),
         );
       }
-      return { items, total: items.length < res.total ? items.length : res.total };
+      return {
+        items: items.map(fromSendLitTrigger),
+        total: items.length < res.total ? items.length : res.total,
+      };
     },
     config,
   );
@@ -690,7 +692,7 @@ export async function createSequence(
           // Non-fatal if SendLit handles emails separately
         }
       }
-      return created;
+      return fromSendLitTrigger(created);
     },
     config,
   );
@@ -707,7 +709,10 @@ export async function getSequence(
     db,
     schoolId,
     clock,
-    (auth, cfg) => getSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+    async (auth, cfg) =>
+      fromSendLitTrigger(
+        await getSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+      ),
     config,
   );
 }
@@ -721,6 +726,7 @@ export async function updateSequence(
     title?: string;
     triggerType?: string | null;
     triggerData?: string | null;
+    triggerFilter?: unknown;
     filter?: unknown;
     excludeFilter?: unknown;
     emailsOrder?: string[];
@@ -731,7 +737,12 @@ export async function updateSequence(
     db,
     schoolId,
     clock,
-    (auth, cfg) => updateSendLitSequence(auth.teamApiKey, sequenceId, input, { config: cfg }),
+    async (auth, cfg) =>
+      fromSendLitTrigger(
+        await updateSendLitSequence(auth.teamApiKey, sequenceId, toSendLitTrigger(input), {
+          config: cfg,
+        }),
+      ),
     config,
   );
 }
@@ -812,6 +823,27 @@ export async function deleteSequenceEmail(
   );
 }
 
+export async function sendSequenceEmailTest(
+  db: AppDb,
+  schoolId: string,
+  clock: Clock,
+  sequenceId: string,
+  emailId: string,
+  input: { to: string[] },
+  config?: SendLitConfig,
+): Promise<Result<SendLitEmailTestResult, PlatformError>> {
+  return withSendLitAuth(
+    db,
+    schoolId,
+    clock,
+    (auth, cfg) =>
+      sendSendLitSequenceEmailTest(auth.teamApiKey, sequenceId, emailId, input, {
+        config: cfg,
+      }),
+    config,
+  );
+}
+
 export async function startSequence(
   db: AppDb,
   schoolId: string,
@@ -823,7 +855,8 @@ export async function startSequence(
     db,
     schoolId,
     clock,
-    (auth, cfg) => startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+    async (auth, cfg) =>
+      fromSendLitTrigger(await startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg })),
     config,
   );
 }
@@ -839,7 +872,8 @@ export async function pauseSequence(
     db,
     schoolId,
     clock,
-    (auth, cfg) => pauseSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+    async (auth, cfg) =>
+      fromSendLitTrigger(await pauseSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg })),
     config,
   );
 }

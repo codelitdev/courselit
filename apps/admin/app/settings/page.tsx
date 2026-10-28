@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bell,
   Check,
   Code,
   Copy,
@@ -21,6 +22,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandingSettings } from "@/components/settings/branding-settings";
+import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
 import { DomainSettings } from "@/components/website/domain-settings";
@@ -52,7 +54,7 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "api-keys"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "api-keys"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
 const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
@@ -122,7 +124,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             }
           : {
               title: "Settings",
-              description: "Manage team access, API access, and payment settings for this school.",
+              description: "Manage payments, team access, notifications, and API access for this school.",
             };
 
   function selectWebsiteTab(tab: string) {
@@ -413,6 +415,11 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 : [
                     { value: "payment", label: "Payments", icon: <CreditCard className="size-4" /> },
                     { value: "team", label: "Team", icon: <Users className="size-4" /> },
+                    {
+                      value: "notifications",
+                      label: "Notifications",
+                      icon: <Bell className="size-4" />,
+                    },
                     { value: "api-keys", label: "API keys", icon: <Key className="size-4" /> },
                   ]
             }
@@ -757,6 +764,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 )}
               </CardContent>
             </Card>
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="notifications" className="w-full">
+          {mode === "general" && selectedTab === "notifications" ? (
+            <div className="w-full pt-4">
+              <NotificationSettings />
             </div>
           ) : null}
           </PlatformTabsContent>

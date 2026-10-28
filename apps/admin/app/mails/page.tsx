@@ -55,6 +55,7 @@ import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type School = {
   id: string;
@@ -104,6 +105,7 @@ type TemplateItem = {
   subject?: string;
   updatedAt?: string;
   content?: Email | null;
+  purpose?: "marketing" | "transactional";
 };
 
 const MAILS_TABS = ["broadcasts", "sequences", "templates"] as const;
@@ -320,7 +322,13 @@ export default function MailsPage() {
         }
         if (sysTmplRes && sysTmplRes.ok) {
           const sysData = (await sysTmplRes.json()) as {
-            items?: Array<{ templateId: string; title: string; content: unknown }>;
+            items?: Array<{
+              templateId: string;
+              title: string;
+              purpose?: "marketing" | "transactional";
+              requiredVariables?: string[];
+              content: unknown;
+            }>;
           };
           if (sysData.items && sysData.items.length > 0) {
             setSystemTemplates(
@@ -328,6 +336,8 @@ export default function MailsPage() {
                 templateId: item.templateId,
                 title: item.title,
                 description: "",
+                purpose: item.purpose ?? "marketing",
+                requiredVariables: item.requiredVariables ?? [],
                 content: (item.content as unknown as Email) || defaultTemplateEmail,
               })),
             );
@@ -416,7 +426,13 @@ export default function MailsPage() {
         }
         if (sysTmplRes && sysTmplRes.ok) {
           const sysData = (await sysTmplRes.json()) as {
-            items?: Array<{ templateId: string; title: string; content: unknown }>;
+            items?: Array<{
+              templateId: string;
+              title: string;
+              purpose?: "marketing" | "transactional";
+              requiredVariables?: string[];
+              content: unknown;
+            }>;
           };
           if (sysData.items && sysData.items.length > 0) {
             setSystemTemplates(
@@ -424,6 +440,8 @@ export default function MailsPage() {
                 templateId: item.templateId,
                 title: item.title,
                 description: "",
+                purpose: item.purpose ?? "marketing",
+                requiredVariables: item.requiredVariables ?? [],
                 content: (item.content as unknown as Email) || defaultTemplateEmail,
               })),
             );
@@ -460,6 +478,8 @@ export default function MailsPage() {
       teamId: "",
       templateId: t.id,
       title: t.name || "Untitled template",
+      purpose: t.purpose === "transactional" ? "transactional" : "marketing",
+      requiredVariables: [],
       content: t.content ?? defaultTemplateEmail,
       createdAt: t.updatedAt ?? "",
       updatedAt: t.updatedAt ?? "",
@@ -1189,6 +1209,8 @@ export default function MailsPage() {
                             {selectedTab === "templates" ? (
                               tmpl.content ? (
                                 <EmailPreview
+                                  blocks={MARKETING_EMAIL_BLOCKS}
+                                  renderContext={MARKETING_PREVIEW_CONTEXT}
                                   key={`${tmpl.id}-${tmpl.updatedAt ?? ""}`}
                                   content={tmpl.content}
                                   className="w-full"
@@ -1264,6 +1286,9 @@ export default function MailsPage() {
 
                 <div className="rounded-lg border bg-muted/20 p-4">
                   <TemplateChooser
+                    purpose="marketing"
+                    previewBlocks={MARKETING_EMAIL_BLOCKS}
+                    previewRenderContext={MARKETING_PREVIEW_CONTEXT}
                     systemTemplates={systemTemplates}
                     templates={customChooserTemplates}
                     onSelect={(choice) => {
@@ -1385,6 +1410,9 @@ export default function MailsPage() {
 
                 <div className="rounded-lg border bg-muted/20 p-4">
                   <TemplateChooser
+                    purpose="marketing"
+                    previewBlocks={MARKETING_EMAIL_BLOCKS}
+                    previewRenderContext={MARKETING_PREVIEW_CONTEXT}
                     systemTemplates={systemTemplates}
                     templates={customChooserTemplates}
                     onSelect={(choice) => {

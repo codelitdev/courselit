@@ -23,6 +23,7 @@ import {
 } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
 import { revokeCommunityMembershipAccess } from "./community-commerce.js";
+import { queueMembershipEvents, schoolSiteUrl } from "./membership-events.js";
 import * as schema from "./db/schema/index.js";
 import {
   findLearnerMembership,
@@ -2814,6 +2815,12 @@ export async function updateMembership(
     .update(schema.learnerMemberships)
     .set(next)
     .where(eq(schema.learnerMemberships.id, existing.id));
+  await queueMembershipEvents(db, {
+    membership: existing,
+    previousStatus: existing.status,
+    nextStatus: next.status,
+    clock,
+  });
   if (
     next.status === "active" &&
     existing.status !== "active" &&
@@ -2916,6 +2923,19 @@ async function learnerPostHref(
   const spacePublicId = rows[0]?.spacePublicId;
   if (!spacePublicId) return "/dashboard";
   return `/dashboard/s/${encodeURIComponent(spacePublicId)}/${encodeURIComponent(postPublicId)}${fragment ?? ""}`;
+}
+
+/** The admin app has no post view, so staff go to the post on the school
+ * site. */
+async function staffPostHref(
+  db: AppDb,
+  schoolId: string,
+  postPublicId: string,
+  fragment?: string,
+) {
+  const siteUrl = await schoolSiteUrl(db, schoolId);
+  if (!siteUrl) return null;
+  return `${siteUrl}${await learnerPostHref(db, schoolId, postPublicId, fragment)}`;
 }
 
 async function loadComment(db: AppDb, schoolId: string, publicId: string) {
@@ -3306,10 +3326,11 @@ export async function createPost(
     db,
     school.schoolId,
     {
+      excludeSchoolAccountId: viewer.learnerId,
       type: "community_post_created",
       title: "New space post",
       body: `A learner posted in “${community.name}”.`,
-      href: `/community/${encodeURIComponent(community.publicId)}/${encodeURIComponent(row.publicId)}`,
+      href: await staffPostHref(db, school.schoolId, row.publicId),
     },
     clock,
   );
@@ -3741,12 +3762,18 @@ export async function createComment(
     db,
     school.schoolId,
     {
+      excludeSchoolAccountId: viewer.learnerId,
       type: parentCommentId ? "community_reply" : "community_comment",
       title: parentCommentId ? "New space reply" : "New space comment",
       body: parentCommentId
         ? `A learner replied to “${post.title}”.`
         : `A learner commented on “${post.title}”.`,
-      href: `/community/${encodeURIComponent(communityPublicId)}/${encodeURIComponent(post.publicId)}#${encodeURIComponent(row.publicId)}`,
+      href: await staffPostHref(
+        db,
+        school.schoolId,
+        post.publicId,
+        `#${encodeURIComponent(row.publicId)}`,
+      ),
     },
     clock,
   );

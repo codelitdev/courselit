@@ -13,13 +13,14 @@ import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import { issueCertificateIfComplete } from "./certificates.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
-import { upsertLearnerMembership } from "./learner-memberships.js";
+import { activeProductMembership, upsertLearnerMembership } from "./learner-memberships.js";
+import { queueAccessGrantedEmail, queueLeadMagnetEmail } from "./school-emails.js";
 import { type LearnerProfileFields } from "./learner-profile.js";
 import type { MediaLitClient } from "./media.js";
 import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import { type MediaRef } from "@courselit/api-contract";
-import { queueSendLitContactSync } from "./contacts.js";
+import { queueSendLitContactSync, subscribeNewsletter } from "./contacts.js";
 import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import type { AppDb } from "./types.js";
 
@@ -1221,6 +1222,84 @@ export async function ensureLearnerProductMembershipForPublicSignup(
   });
 }
 
+/**
+ * Gives a visitor a free lead-magnet product in exchange for their email:
+ * they become a subscribed contact, get access, and are emailed a link to
+ * it. Only products marked as lead magnets whose sole plan is free qualify.
+ */
+export async function signUpForLeadMagnet(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    publicSchoolId: string;
+    productPublicId: string;
+    email: string;
+    requestId: string;
+  },
+  clock: Clock,
+): Promise<{ ok: true; value: { email: string } } | { ok: false; error: PlatformError }> {
+  const product = await loadPublishedProductInSchool(
+    db,
+    input.schoolId,
+    input.productPublicId,
+  );
+  if (product?.status !== "published" || !product.leadMagnet) {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
+  const plans = await db
+    .select({ kind: schema.storefrontPlans.kind })
+    .from(schema.storefrontPlans)
+    .where(
+      and(
+        eq(schema.storefrontPlans.schoolId, input.schoolId),
+        eq(schema.storefrontPlans.entityType, "product"),
+        eq(schema.storefrontPlans.entityId, product.publicId),
+        eq(schema.storefrontPlans.status, "active"),
+      ),
+    );
+  if (plans.length !== 1 || plans[0]!.kind !== "free") {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
+
+  const subscribed = await subscribeNewsletter(db, {
+    schoolId: input.schoolId,
+    email: input.email,
+    clock,
+  });
+  if (!subscribed.ok) return subscribed;
+  const [account] = await db
+    .select({ id: schema.schoolAccounts.id, publicId: schema.schoolAccounts.publicId })
+    .from(schema.schoolAccounts)
+    .where(
+      and(
+        eq(schema.schoolAccounts.schoolId, input.schoolId),
+        eq(schema.schoolAccounts.email, subscribed.value.email),
+      ),
+    )
+    .limit(1);
+  if (!account) return { ok: false, error: createPlatformError("internal_error") };
+
+  const granted = await ensureLearnerProductMembershipForPublicSignup(
+    db,
+    {
+      schoolId: input.schoolId,
+      publicSchoolId: input.publicSchoolId,
+      schoolAccountId: account.id,
+      actorId: account.publicId,
+      productPublicId: product.publicId,
+      requestId: input.requestId,
+    },
+    clock,
+  );
+  if (!granted.ok) return granted;
+  await queueLeadMagnetEmail(
+    db,
+    { schoolId: input.schoolId, schoolAccountId: account.id, productPublicId: product.publicId },
+    clock,
+  );
+  return { ok: true, value: { email: subscribed.value.email } };
+}
+
 export async function grantLearnerMembership(
   db: AppDb,
   input: {
@@ -1260,8 +1339,15 @@ export async function grantLearnerMembership(
     displayName: input.name,
     clock,
   });
+  const hadAccess = Boolean(
+    await activeProductMembership(db, {
+      schoolId: input.schoolId,
+      schoolAccountId: schoolAccount.id,
+      productPublicId: input.productPublicId,
+    }),
+  );
 
-  return ensureLearnerProductMembershipForPublicSignup(
+  const result = await ensureLearnerProductMembershipForPublicSignup(
     db,
     {
       schoolId: input.schoolId,
@@ -1273,6 +1359,18 @@ export async function grantLearnerMembership(
     },
     clock,
   );
+  if (result.ok && !hadAccess) {
+    await queueAccessGrantedEmail(
+      db,
+      {
+        schoolId: input.schoolId,
+        schoolAccountId: schoolAccount.id,
+        productPublicId: input.productPublicId,
+      },
+      clock,
+    );
+  }
+  return result;
 }
 
 export async function completeLesson(

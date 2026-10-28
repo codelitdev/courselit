@@ -20,8 +20,12 @@ import {
   type SendLitConfig,
   type SendLitContact,
   sendLitConfig,
+  sendSendLitTransactionalEmail,
+  trackSendLitEvent,
   updateSendLitContact,
 } from "./sendlit-client.js";
+import type { TrackSendLitEventPayload } from "./membership-events.js";
+import type { SendSchoolEmailPayload } from "./school-emails.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -39,6 +43,8 @@ export type SendLitOperations = {
   deleteContact?: typeof deleteSendLitContact;
   listContacts?: typeof listSendLitContacts;
   addContactTag?: typeof addSendLitContactTag;
+  trackEvent?: typeof trackSendLitEvent;
+  sendEmail?: typeof sendSendLitTransactionalEmail;
 };
 
 const defaultSendLitOperations: SendLitOperations = {
@@ -399,6 +405,101 @@ async function syncSendLitContactJob(
   }
 }
 
+async function sendSchoolEmailJob(
+  db: AppDb,
+  job: IntegrationJob,
+  operations: SendLitOperations,
+  config: SendLitConfig,
+): Promise<void> {
+  const payload = job.payload as Partial<SendSchoolEmailPayload>;
+  if (!payload.to || !payload.subject || !payload.html) {
+    throw new IntegrationActionRequiredError("Invalid email payload");
+  }
+  const integration = await getIntegration(db, job.schoolId, "sendlit");
+  if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
+    throw new SendLitApiError("SendLit is not provisioned or ready yet", undefined, true);
+  }
+  const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
+  const send = operations.sendEmail ?? sendSendLitTransactionalEmail;
+  await send(
+    teamApiKey,
+    {
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
+      text: payload.text,
+      idempotencyKey: payload.idempotencyKey ?? job.id,
+    },
+    { config: { ...config, server: integration.server || config.server } },
+  );
+}
+
+/** How long an event waits for its learner to become a contact. Past this,
+ * a sequence email would arrive too late to make sense. */
+const EVENT_CONTACT_WAIT_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Reports a CourseLit activity event for a learner who is already a contact.
+ * Events never create contacts: that would subscribe learners who never opted
+ * in. A learner whose contact hasn't synced yet is retried until it has, for
+ * up to a week. */
+async function trackSendLitEventJob(
+  db: AppDb,
+  job: IntegrationJob,
+  operations: SendLitOperations,
+  config: SendLitConfig,
+  now: Date,
+): Promise<void> {
+  const payload = job.payload as Partial<TrackSendLitEventPayload>;
+  if (!payload.schoolAccountId || !payload.eventName) {
+    throw new IntegrationActionRequiredError("Invalid event payload");
+  }
+
+  const [schoolAccount] = await db
+    .select({
+      status: schema.schoolAccounts.status,
+      sendlitContactId: schema.schoolAccounts.sendlitContactId,
+    })
+    .from(schema.schoolAccounts)
+    .where(
+      and(
+        eq(schema.schoolAccounts.id, payload.schoolAccountId),
+        eq(schema.schoolAccounts.schoolId, job.schoolId),
+      ),
+    )
+    .limit(1);
+  if (!schoolAccount || schoolAccount.status === "deletion_pending") return;
+  if (!schoolAccount.sendlitContactId) {
+    if (now.getTime() - job.createdAt.getTime() > EVENT_CONTACT_WAIT_MS) return;
+    throw new SendLitApiError("Contact has not synced yet", undefined, true);
+  }
+
+  const integration = await getIntegration(db, job.schoolId, "sendlit");
+  if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
+    throw new SendLitApiError("SendLit is not provisioned or ready yet", undefined, true);
+  }
+  const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
+  const doTrackEvent = operations.trackEvent ?? trackSendLitEvent;
+  try {
+    await doTrackEvent(
+      teamApiKey,
+      {
+        contactId: schoolAccount.sendlitContactId,
+        eventName: payload.eventName,
+        properties: payload.properties ?? {},
+        occurredAt: payload.occurredAt,
+        idempotencyKey: job.id,
+      },
+      { config },
+    );
+  } catch (error) {
+    if (error instanceof SendLitApiError && error.status === 404) {
+      // The contact was removed in SendLit; the next contact sync recreates it.
+      throw new SendLitApiError(error.message, 404, true);
+    }
+    throw error;
+  }
+}
+
 async function eraseSendLitContactJob(
   db: AppDb,
   job: IntegrationJob,
@@ -592,6 +693,10 @@ export async function processNextIntegrationJob(
         await syncSendLitContactJob(db, job, clock, sendLitOperations, sendLitCfg);
       } else if (job.type === "erase_sendlit_contact") {
         await eraseSendLitContactJob(db, job, clock, sendLitOperations, sendLitCfg);
+      } else if (job.type === "track_sendlit_event") {
+        await trackSendLitEventJob(db, job, sendLitOperations, sendLitCfg, clock.now());
+      } else if (job.type === "send_school_email") {
+        await sendSchoolEmailJob(db, job, sendLitOperations, sendLitCfg);
       } else {
         throw new IntegrationActionRequiredError(
           `Unknown SendLit job type: ${job.type}`,
