@@ -1,4 +1,4 @@
-import { Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import "./globals.css";
@@ -6,12 +6,16 @@ import { BrowserObservabilityProvider } from "../components/browser-observabilit
 import { AdminShell } from "../components/layout/admin-shell";
 import { getBrowserObservabilityConfig } from "../lib/observability-config";
 
-const hankenGrotesk = Hanken_Grotesk({
-  subsets: ["latin"],
+// Bundled (Google Fonts, Latin subset) so builds never fetch fonts over the
+// network.
+const hankenGrotesk = localFont({
+  src: "./fonts/hanken-grotesk-latin.woff2",
+  weight: "100 900",
   variable: "--font-sans",
 });
-const splineSansMono = Spline_Sans_Mono({
-  subsets: ["latin"],
+const splineSansMono = localFont({
+  src: "./fonts/spline-sans-mono-latin.woff2",
+  weight: "300 700",
   variable: "--font-mono",
 });
 
