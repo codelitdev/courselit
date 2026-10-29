@@ -208,6 +208,7 @@ async function loadCommunityCheckoutPlan(
         eq(schema.storefrontPlans.status, "active"),
         eq(schema.communities.schoolId, schoolId),
         isNull(schema.communities.deletedAt),
+        eq(schema.communities.enabled, true),
       ),
     )
     .limit(1);

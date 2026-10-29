@@ -115,16 +115,16 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       { label: "Members" },
     ];
   }
-  if (clean === "/community/plans" || clean === "/community/manage/plans") {
+  if (clean === "/community/setup") {
     return [
       { label: "Community", href: "/community" },
-      { label: "Payment plans" },
+      { label: "Set up" },
     ];
   }
   if (clean === "/community/reports" || clean === "/community/manage/reports") {
     return [
       { label: "Community", href: "/community" },
-      { label: "Moderation" },
+      { label: "Reports" },
     ];
   }
 

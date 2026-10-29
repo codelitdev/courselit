@@ -8,6 +8,7 @@ const communityParityExemptions = [
   ["deleteCommunityCategory", "communities.categories.delete"],
   ["deleteCommunity", "communities.delete"],
   ["listCommunityMembers", "communities.members.list"],
+  ["inviteCommunityMember", "communities.members.invite"],
   ["updateCommunityMembership", "communities.members.update"],
   ["listCommunityPosts", "communities.posts.list"],
   ["createCommunityPost", "communities.posts.create"],

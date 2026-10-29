@@ -270,3 +270,40 @@ export async function queueLeadMagnetEmail(
     clock,
   );
 }
+
+/** Tells a learner a creator invited them into the school's community. */
+export async function queueCommunityInviteEmail(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    schoolAccountId: string;
+    communityName: string;
+    membershipPublicId: string;
+  },
+  clock: Clock,
+): Promise<void> {
+  const recipient = await loadRecipient(db, input.schoolId, input.schoolAccountId);
+  const schoolName = await loadSchoolName(db, input.schoolId);
+  const origin = await schoolSiteUrl(db, input.schoolId);
+  if (!recipient || !schoolName || !origin) return;
+
+  const rendered = renderSchoolEmail({
+    schoolName,
+    paragraphs: [
+      `You have been invited to join ${input.communityName}.`,
+      "Sign in with this email address to meet the other members.",
+    ],
+    button: { label: "Go to the community", url: `${origin}/dashboard` },
+  });
+  await queueSchoolEmail(
+    db,
+    input.schoolId,
+    {
+      to: recipient.email,
+      subject: `You're invited to ${input.communityName}`,
+      ...rendered,
+      idempotencyKey: `community-invite:${input.membershipPublicId}:${clock.now().getTime()}`,
+    },
+    clock,
+  );
+}

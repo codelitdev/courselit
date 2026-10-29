@@ -9,6 +9,10 @@ const monorepoRoot = path.join(
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Extra hostnames allowed to load dev assets, e.g. a tailnet name.
+  allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   outputFileTracingRoot: monorepoRoot,
   transpilePackages: [
     "@codelitdev/design-system",

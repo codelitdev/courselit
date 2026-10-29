@@ -366,6 +366,7 @@ CREATE TABLE "communities" (
 	"categories" text DEFAULT '["General"]' NOT NULL,
 	"auto_accept_members" boolean DEFAULT true NOT NULL,
 	"joining_reason_text" text DEFAULT '' NOT NULL,
+	"enabled" boolean DEFAULT false NOT NULL,
 	"deleted_at" timestamp with time zone,
 	"created_by" text NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,

@@ -173,56 +173,54 @@ export function PaymentPlanList({
           {activePlans.map((plan) => (
             <div
               key={plan.id}
-              className="rounded-md border bg-card p-3 transition-colors hover:border-primary/50"
+              className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 transition-colors hover:border-primary/50"
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <button
                   type="button"
-                  className="min-w-0 text-left text-sm font-medium hover:underline"
+                  className="block min-w-0 truncate text-left text-sm font-medium hover:underline"
                   onClick={() => openEdit(plan)}
                 >
                   {plan.name}
                 </button>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2"
-                    title={plan.isDefault ? "Recommended plan" : "Make recommended"}
-                    onClick={() => void makeDefault(plan)}
-                    disabled={busy || plan.isDefault}
-                  >
-                    <Star
-                      className={plan.isDefault ? "fill-current text-primary" : ""}
-                    />
-                    <span className="sr-only">Make recommended</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2"
-                    title="Archive plan"
-                    onClick={() => setArchivePlan(plan)}
-                    disabled={busy}
-                  >
-                    <Archive />
-                    <span className="sr-only">Archive plan</span>
-                  </Button>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{formatPlan(plan, currency)}</span>
+                  <span className="rounded-full border px-1.5 leading-[14px]">
+                    {planTypeLabel(plan)}
+                  </span>
+                  {plan.includedProducts.length > 0 ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border px-1.5 leading-[14px]">
+                      <Package className="size-3" /> +{plan.includedProducts.length}{" "}
+                      products
+                    </span>
+                  ) : null}
                 </div>
               </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{formatPlan(plan, currency)}</span>
-                <span className="rounded-full border px-1.5 py-0.5">
-                  {planTypeLabel(plan)}
-                </span>
-                {plan.includedProducts.length > 0 ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5">
-                    <Package className="size-3" /> +{plan.includedProducts.length}{" "}
-                    products
-                  </span>
-                ) : null}
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2"
+                  title={plan.isDefault ? "Recommended plan" : "Make recommended"}
+                  onClick={() => void makeDefault(plan)}
+                  disabled={busy || plan.isDefault}
+                >
+                  <Star className={plan.isDefault ? "fill-current text-primary" : ""} />
+                  <span className="sr-only">Make recommended</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2"
+                  title="Archive plan"
+                  onClick={() => setArchivePlan(plan)}
+                  disabled={busy}
+                >
+                  <Archive />
+                  <span className="sr-only">Archive plan</span>
+                </Button>
               </div>
             </div>
           ))}

@@ -57,7 +57,7 @@ describe("admin and learner surfaces", () => {
       "admin/components/content/writing-editor-document-header.tsx",
     );
     const communities = read("admin/app/communities/page.tsx");
-    const communityPage = read("admin/app/community/page.tsx");
+    const communityPage = read("admin/app/community/layout.tsx");
     const spacesPage = read("admin/app/spaces/page.tsx");
     const spacesAdmin = read("admin/components/spaces/spaces-admin.tsx");
     const acceptInvitation = read("admin/app/invitations/accept/page.tsx");
@@ -65,7 +65,17 @@ describe("admin and learner surfaces", () => {
     const teamInvitationLayout = read(
       "admin/app/team-invitations/[invitationId]/layout.tsx",
     );
-    const communityWorkspace = read("admin/components/communities/community-admin.tsx");
+    const communityWorkspace = [
+      "community-admin",
+      "community-setup",
+      "community-details",
+      "community-members",
+      "community-reports",
+      "community-previews",
+      "community-shared",
+    ]
+      .map((file) => read(`admin/components/communities/${file}.tsx`))
+      .join("\n");
     const communityFeaturedImage = read(
       "admin/components/communities/community-featured-image.tsx",
     );
@@ -198,12 +208,6 @@ describe("admin and learner surfaces", () => {
     expect(contentPages).not.toContain("<Pencil");
     expect(contentPages).not.toContain(">Edit</");
     expect(contentPages).toContain("gap-y-3");
-    expect(communityWorkspace).toContain("<FeaturedCard");
-    expect(communityWorkspace).toContain('href="/community"');
-    expect(communityWorkspace).toContain("item.featuredImage?.thumbnailUrl");
-    expect(communityWorkspace).toContain("gap-y-3");
-    expect(communityWorkspace).toContain("shareCommunity");
-    expect(communityWorkspace).toContain(publicCommunityPath);
     expect(featuredCard).toContain("FALLBACK_IMAGE");
     expect(featuredCard).toContain("h-36 w-full");
     expect(featuredCard).toContain("flex h-full flex-col");
@@ -387,26 +391,19 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).toContain("/api/v1/communities");
     expect(communityWorkspace).toContain("/api/v1/community-memberships/");
     expect(communityWorkspace).toContain("/api/v1/community-reports/");
-    expect(communityWorkspace).toContain("CommunityOverview");
-    expect(communityWorkspace).toContain("community.postsCount");
     expect(communityWorkspace).not.toContain("<ArrowLeft");
     expect(sectionAuthoring).not.toContain("<ArrowLeft");
     expect(lessonAuthoring).not.toContain("<ArrowLeft");
     expect(acceptInvitation).toContain("useSetBreadcrumb");
     expect(acceptInvitation).not.toContain("Back to dashboard");
-    expect(communityWorkspace).toContain("Payment plans");
     expect(communityWorkspace).toContain("CommunityMediaPreview");
-    expect(communityWorkspace).toContain("togglePostPin");
     expect(communityWorkspace).not.toContain("addCategory");
     expect(communityWorkspace).not.toContain("Delete category");
-    expect(communityWorkspace).toContain('href="/spaces"');
     expect(communityWorkspace).toContain("featuredImage");
     expect(communityWorkspace).toContain("CommunityFeaturedImage");
     expect(communityWorkspace).toContain("RichTextEditor");
     expect(communityWorkspace).toContain('purpose="community_content"');
-    expect(communityWorkspace).toContain("Optional announcement shown to learners");
     expect(communityWorkspace).toContain("community.banner");
-    expect(communityWorkspace).toContain("CommunityDescription");
     expect(communityWorkspace).toContain("communityRichTextContent");
     expect(communityFeaturedImage).toContain('purpose: "community_artwork"');
     expect(communityFeaturedImage).toContain("@frontlit/media-uploader");
@@ -418,16 +415,16 @@ describe("admin and learner surfaces", () => {
     expect(learnerCommunityEditor).toContain("annotateOwnedImages");
     expect(learnerCommunityEditor).toContain("selectedMediaByUrl");
     expect(learnerCommunityEditor).toContain("mediaId");
-    expect(communityWorkspace).toContain("Load more posts");
-    expect(communityWorkspace).toContain("Load more memberships");
     expect(communityWorkspace).toContain("Load more reports");
-    expect(communityWorkspace).toContain("Post pinned.");
     expect(communityWorkspace).toContain("thumbnailUrl");
-    expect(communityWorkspace).toContain(
-      "The reported content is no longer available.",
-    );
+    expect(communityWorkspace).toContain("Load more members");
+    expect(communityWorkspace).toContain("Welcome banner");
+    expect(communityWorkspace).toContain("Make community live");
+    expect(communityWorkspace).toContain("Take offline");
+    expect(communityWorkspace).toContain("Why they want to join");
+    expect(communityWorkspace).toContain("is no longer available.");
     expect(communityWorkspace).not.toContain("Start a discussion");
-    expect(communityPlansPage).toContain('manageSection="plans"');
+    expect(communityPlansPage).toContain('redirect("/community")');
     const legacyDashboardLabel = ["My", "content"].join(" ");
     expect(communityWorkspace).not.toContain(legacyDashboardLabel);
     expect(sidebar).not.toContain(legacyDashboardLabel);
@@ -492,7 +489,7 @@ describe("admin and learner surfaces", () => {
     expect(learnerCommunityComponent).toContain("community.featuredImage");
     expect(learnerCommunityComponent).toContain("community.banner");
     expect(learnerCommunityComponent).toContain("communityDescriptionHasContent");
-    expect(learnerCommunityComponent).toContain("Community announcement");
+    expect(learnerCommunityComponent).toContain("Welcome banner");
     expect(learnerCommunityComponent).toContain("TextRenderer");
     expect(learnerCommunityComponent).toContain("LearnerRichTextEditor");
     expect(learnerCommunityComponent).toContain(

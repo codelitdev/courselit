@@ -54,55 +54,87 @@ export function CommunityFeaturedImage({
     onChange(toMediaRef(selected));
   }
 
+  const details = [
+    value?.byteSize ? formatBytes(value.byteSize) : null,
+    value?.mimeType?.replace(/^image\//, "").toUpperCase(),
+  ].filter(Boolean);
+
   return (
-    <section className="card stack">
-      <div>
-        <h2 className="font-semibold">Featured image</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The image shown when learners discover this community.
-        </p>
+    <div className="field">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-medium">Featured image</span>
+        <span className="text-xs text-muted-foreground">1200 × 630 works best</span>
       </div>
-      {value ? (
-        <div className="flex flex-wrap items-start gap-4">
+      <div className="flex flex-wrap items-center gap-4">
+        {value ? (
           <Image
             src={value.thumbnailUrl ?? value.url}
             alt={value.alt || "Community featured image"}
-            width={176}
-            height={112}
+            width={168}
+            height={88}
             unoptimized
-            className="h-28 w-44 rounded-md border object-cover"
+            className="h-[88px] w-[168px] rounded-md border object-cover"
           />
-          <div className="space-y-2 text-sm">
-            <p className="font-medium">{value.alt || value.url}</p>
+        ) : (
+          <div className="flex h-[88px] w-[168px] items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
+            No image
+          </div>
+        )}
+        <div className="min-w-0 flex-1 text-sm">
+          {value ? (
+            <>
+              <p className="truncate font-mono">
+                {value.fileName || value.alt || "Featured image"}
+              </p>
+              {details.length > 0 ? (
+                <p className="font-mono text-xs text-muted-foreground">
+                  {details.join(" · ")}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-muted-foreground">
+              Shown on your sales page and when learners discover the community.
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <ImageUploadDialog<CourseLitMedia>
+            {...filteredAdapters}
+            title="Select community image"
+            acceptedTypes={COMMUNITY_IMAGE_ACCEPTED_TYPES}
+            allowUnsplash
+            metadataMode="alt"
+            onSelect={selectImage}
+          >
+            <Button type="button" variant="ghost" size="sm" disabled={disabled}>
+              {value ? "Replace" : "Add image"}
+            </Button>
+          </ImageUploadDialog>
+          {value ? (
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={disabled}
               onClick={() => onChange(null)}
             >
-              Remove image
+              Remove
             </Button>
-          </div>
+          ) : null}
         </div>
-      ) : null}
-      <ImageUploadDialog<CourseLitMedia>
-        {...filteredAdapters}
-        title="Select community image"
-        acceptedTypes={COMMUNITY_IMAGE_ACCEPTED_TYPES}
-        allowUnsplash
-        metadataMode="alt"
-        onSelect={selectImage}
-      >
-        <Button type="button" variant="outline" size="sm" disabled={disabled}>
-          {value ? "Change image" : "Select an image"}
-        </Button>
-      </ImageUploadDialog>
+      </div>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       ) : null}
-    </section>
+    </div>
   );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

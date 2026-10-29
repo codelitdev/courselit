@@ -18,7 +18,7 @@ import {
   FileText,
   Film,
   Flag,
-  Info,
+  Megaphone,
   MessageCircle,
   Paperclip,
   Pencil,
@@ -1961,9 +1961,13 @@ export function LearnerCommunity({
               {!postId &&
               community?.banner &&
               communityDescriptionHasContent(community.banner) ? (
-                <PageCard aria-label="Community announcement">
-                  <PageCardContent className="flex items-center gap-3 py-4">
-                    <Info className="size-5 shrink-0 text-muted-foreground" />
+                <PageCard
+                  role="note"
+                  aria-label="Welcome banner"
+                  className="border-primary/30 bg-primary/5"
+                >
+                  <PageCardContent className="flex items-start gap-3 py-4">
+                    <Megaphone className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
                     <CommunityDescription value={community.banner} />
                   </PageCardContent>
                 </PageCard>

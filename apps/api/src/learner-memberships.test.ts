@@ -201,6 +201,10 @@ describe.serial("learner memberships", () => {
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
     const communityId = communityRow!.publicId;
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, communityRow!.id));
     const communityPlan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/communities/${communityId}/plans`,
@@ -312,6 +316,10 @@ describe.serial("learner memberships", () => {
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
     const communityId = communityRow!.publicId;
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, communityRow!.id));
     await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/communities/${communityId}`,
@@ -405,6 +413,10 @@ describe.serial("learner memberships", () => {
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
     const communityId = communityRow!.publicId;
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, communityRow!.id));
     await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/communities/${communityId}`,

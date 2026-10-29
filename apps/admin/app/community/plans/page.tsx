@@ -1,5 +1,6 @@
-import { CommunityAdmin } from "@/components/communities/community-admin";
+import { redirect } from "next/navigation";
 
+/** Community plans are managed on the Details tab. */
 export default function CommunityPlansPage() {
-  return <CommunityAdmin view="manage" manageSection="plans" />;
+  redirect("/community");
 }

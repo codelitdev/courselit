@@ -188,6 +188,10 @@ describe.serial("school spaces and included products", () => {
       .from(schema.schoolAccounts)
       .where(eq(schema.schoolAccounts.email, "space-learner@example.com"));
     const community = communities[0]!;
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, community.id));
     const joined = await dispatch(runtime, {
       method: "POST",
       path: `/v1/learner/communities/${community.publicId}/checkout`,

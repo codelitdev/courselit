@@ -22,8 +22,33 @@ import {
 type LearnerProduct = z.infer<typeof learnerProductSchema>;
 type Certificate = z.infer<typeof certificateSchema>;
 
+// Product descriptions are stored as rich-text documents; the card shows a
+// short plain-text excerpt.
+function descriptionText(value: string | null | undefined): string {
+  if (!value) return "";
+  let document: unknown;
+  try {
+    document = JSON.parse(value);
+  } catch {
+    return value;
+  }
+  const parts: string[] = [];
+  const walk = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    const { text, content } = node as { text?: unknown; content?: unknown };
+    if (typeof text === "string") parts.push(text);
+    if (Array.isArray(content)) {
+      for (const child of content) walk(child);
+      parts.push(" ");
+    }
+  };
+  walk(document);
+  return parts.join("").replace(/\s+/g, " ").trim();
+}
+
 function LearnerProductCard({ product }: { product: LearnerProduct }) {
   const TypeIcon = product.kind === "course" ? BookOpen : Download;
+  const description = descriptionText(product.description);
   const progressPercent =
     product.totalLessons > 0
       ? Math.round((product.completedLessonsCount / product.totalLessons) * 100)
@@ -66,9 +91,9 @@ function LearnerProductCard({ product }: { product: LearnerProduct }) {
             </LearnerText2>
           ) : null}
         </div>
-        {product.description ? (
+        {description ? (
           <LearnerText2 className="line-clamp-2 text-muted-foreground">
-            {product.description}
+            {description}
           </LearnerText2>
         ) : null}
         {product.kind === "course" && product.totalLessons > 0 ? (

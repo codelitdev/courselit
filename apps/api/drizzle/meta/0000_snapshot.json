@@ -3320,6 +3320,13 @@
           "notNull": true,
           "default": "''"
         },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp with time zone",

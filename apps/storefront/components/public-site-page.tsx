@@ -99,7 +99,8 @@ export async function PublicSitePage({
     typeof settings?.logo?.url === "string" && settings.logo.url.trim()
       ? settings.logo.url.trim()
       : "/icon.svg";
-  const siteLogoAlt = settings?.logo?.alt ?? "CourseLit";
+  const siteLogoAlt =
+    settings?.logo?.alt || settings?.title?.trim() || "CourseLit";
 
   const salesProduct =
     salesResource?.resourceType === "product"

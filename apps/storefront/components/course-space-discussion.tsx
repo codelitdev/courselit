@@ -1,6 +1,7 @@
 "use client";
 
 import { LearnerCard, LearnerCardContent, LearnerText2 } from "./themed-page-builder";
+import { LearnerSessionProvider } from "./auth/learner-session";
 import { LearnerFeed } from "./dashboard/learner-feed";
 
 /**
@@ -32,12 +33,16 @@ export function CourseSpaceDiscussion({
     );
   }
 
+  // The course viewer sits outside the logged-in dashboard layout, so the
+  // feed needs its own learner session.
   return (
-    <LearnerFeed
-      spaceId={spaceId}
-      embeddedPostDetails
-      embeddedPostId={embeddedPostId}
-      onEmbeddedPostIdChange={onEmbeddedPostIdChange}
-    />
+    <LearnerSessionProvider>
+      <LearnerFeed
+        spaceId={spaceId}
+        embeddedPostDetails
+        embeddedPostId={embeddedPostId}
+        onEmbeddedPostIdChange={onEmbeddedPostIdChange}
+      />
+    </LearnerSessionProvider>
   );
 }

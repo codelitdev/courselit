@@ -200,6 +200,7 @@ export const OPERATION_POLICIES = {
   updateCommunity: schoolOp(["communities:write"]),
   deleteCommunity: schoolOp(["communities:write"]),
   listCommunityMembers: schoolOp(["communities:read"]),
+  inviteCommunityMember: schoolOp(["communities:write"]),
   updateCommunityMembership: schoolOp(["communities:write"]),
   addCommunityCategory: schoolOp(["communities:write"]),
   deleteCommunityCategory: schoolOp(["communities:write"]),

@@ -799,7 +799,7 @@ export function SpacesAdmin() {
                           <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
                             No active community plans are available. Create one under{" "}
                             <Link
-                              href="/community/plans"
+                              href="/community"
                               className="font-medium text-foreground underline underline-offset-4"
                             >
                               Community payment plans

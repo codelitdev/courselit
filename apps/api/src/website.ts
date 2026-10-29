@@ -505,11 +505,18 @@ async function loadSettings(
     .where(eq(schema.websiteSettings.schoolId, schoolId))
     .limit(1);
   if (existing) return existing;
+  // Like main, the site title starts out as the school's name.
+  const [school] = await db
+    .select({ name: schema.schools.name })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
   const now = clock.now();
   await db
     .insert(schema.websiteSettings)
     .values({
       schoolId,
+      title: school?.name ?? null,
       sharedWidgets: DEFAULT_SHARED_WIDGETS,
       draftSharedWidgets: DEFAULT_SHARED_WIDGETS,
       createdAt: now,

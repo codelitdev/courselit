@@ -2,7 +2,7 @@
 
 import type { SelectedMedia } from "@frontlit/media-uploader";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
-import { FileText, Info, MessagesSquare, Pin, Reply, SmilePlus } from "lucide-react";
+import { FileText, Megaphone, MessagesSquare, Pin, Reply, SmilePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -407,10 +407,14 @@ function FeedAnnouncement({ banner }: { banner: string }) {
   if (!contentHasText(banner)) return null;
 
   return (
-    <LearnerCard>
+    <LearnerCard
+      role="note"
+      aria-label="Welcome banner"
+      className="border-primary/30 bg-primary/5"
+    >
       <LearnerCardContent className="flex items-start gap-3">
-        <Info className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <div className="min-w-0 flex-1 text-muted-foreground">
+        <Megaphone className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
           <PostContent
             value={banner}
             className="[&>h1:first-child]:!mt-0 [&>h2:first-child]:!mt-0 [&>h3:first-child]:!mt-0 [&>p:first-child]:!mt-0"

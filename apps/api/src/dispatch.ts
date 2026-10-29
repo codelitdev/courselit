@@ -71,6 +71,7 @@ import {
   updateCertificateTemplateBodySchema,
   updateCommunityBodySchema,
   updateCommunityCommentBodySchema,
+  inviteCommunityMemberBodySchema,
   updateCommunityMembershipBodySchema,
   updateCommunityPaymentPlanBodySchema,
   updateCommunityPostBodySchema,
@@ -148,6 +149,7 @@ import {
   getCommunity,
   getPost,
   getPublicCommunity,
+  inviteCommunityMember,
   leaveCommunity,
   listAvailableLearnerCommunities,
   listComments,
@@ -2273,7 +2275,13 @@ export async function dispatch(
       const productPublicId = decodeURIComponent(productGet[1]!);
       const requestedSchool = resolveLearnerSchoolKey(request);
       if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(learnerAuth.value, requestedSchool);
+        let schoolCheck = assertLearnerSchool(learnerAuth.value, requestedSchool);
+        if (!schoolCheck.ok && requestedSchool) {
+          // A custom-domain host is the lookup key here; it belongs to the
+          // learner's school when it resolves to the same school.
+          const hostSchool = await loadSchoolByPublicId(deps.db, requestedSchool);
+          if (hostSchool?.id === learnerAuth.value.school.id) schoolCheck = { ok: true };
+        }
         if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
         const requestId = requestIdFrom(request, deps);
         emitSchoolTelemetry(deps, request, {
@@ -3959,6 +3967,22 @@ export async function dispatch(
         : errorResponse(result.error);
     }
     const communityMembersMatch = /^\/v1\/communities\/([^/]+)\/members$/.exec(path);
+    if (request.method === "POST" && communityMembersMatch) {
+      const parsed = inviteCommunityMemberBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success)
+        return errorResponse(createPlatformError("validation_failed"));
+      const result = await inviteCommunityMember(
+        deps.db,
+        context,
+        school.value.publicId,
+        decodeURIComponent(communityMembersMatch[1]!),
+        parsed.data,
+        deps.clock,
+      );
+      return result.ok
+        ? { status: 201, body: result.value }
+        : errorResponse(result.error);
+    }
     if (request.method === "GET" && communityMembersMatch) {
       const parsed = communityMembershipListQuerySchema.safeParse({
         cursor: query.get("cursor") ?? undefined,

@@ -1300,19 +1300,12 @@ export async function signUpForLeadMagnet(
   return { ok: true, value: { email: subscribed.value.email } };
 }
 
-export async function grantLearnerMembership(
+/** Finds or creates the person behind an email and their account in the school. */
+export async function ensureLearnerAccountByEmail(
   db: AppDb,
-  input: {
-    schoolId: string;
-    publicSchoolId: string;
-    actorId: string;
-    productPublicId: string;
-    email: string;
-    name: string;
-    requestId: string;
-  },
+  input: { schoolId: string; email: string; name: string },
   clock: Clock,
-): Promise<{ ok: true; value: LearnerMembershipDto } | { ok: false; error: PlatformError }> {
+) {
   const email = normalizeEmail(input.email);
   const now = clock.now();
   let user = (
@@ -1332,13 +1325,33 @@ export async function grantLearnerMembership(
       .returning();
     user = created[0];
   }
-  const schoolAccount = await ensureSchoolAccount(db, {
+  return ensureSchoolAccount(db, {
     schoolId: input.schoolId,
-    userId: user.id,
+    userId: user!.id,
     email,
     displayName: input.name,
     clock,
   });
+}
+
+export async function grantLearnerMembership(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    publicSchoolId: string;
+    actorId: string;
+    productPublicId: string;
+    email: string;
+    name: string;
+    requestId: string;
+  },
+  clock: Clock,
+): Promise<{ ok: true; value: LearnerMembershipDto } | { ok: false; error: PlatformError }> {
+  const schoolAccount = await ensureLearnerAccountByEmail(
+    db,
+    { schoolId: input.schoolId, email: input.email, name: input.name },
+    clock,
+  );
   const hadAccess = Boolean(
     await activeProductMembership(db, {
       schoolId: input.schoolId,

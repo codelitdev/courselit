@@ -29,6 +29,8 @@ export const communities = pgTable(
     categories: text("categories").notNull().default('["General"]'),
     autoAcceptMembers: boolean("auto_accept_members").notNull().default(true),
     joiningReasonText: text("joining_reason_text").notNull().default(""),
+    // Like main, a community stays hidden from learners until it is enabled.
+    enabled: boolean("enabled").notNull().default(false),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdBy: text("created_by")
       .notNull()

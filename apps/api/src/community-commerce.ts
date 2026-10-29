@@ -153,6 +153,7 @@ async function loadCommunityPlan(
         eq(schema.storefrontPlans.status, "active"),
         eq(schema.communities.publicId, communityPublicId),
         isNull(schema.communities.deletedAt),
+        eq(schema.communities.enabled, true),
       ),
     )
     .limit(1);
@@ -189,6 +190,7 @@ async function loadCommunityPlans(
         eq(schema.storefrontPlans.entityId, communityPublicId),
         eq(schema.communities.publicId, communityPublicId),
         isNull(schema.communities.deletedAt),
+        eq(schema.communities.enabled, true),
       ),
     );
   return rows;
@@ -209,6 +211,7 @@ export async function listLearnerCommunityPlans(
           eq(schema.communities.schoolId, context.schoolId),
           eq(schema.communities.publicId, communityPublicId),
           isNull(schema.communities.deletedAt),
+          eq(schema.communities.enabled, true),
         ),
       )
       .limit(1);
@@ -274,13 +277,14 @@ async function includedProducts(db: AppDb, schoolId: string, publicIds: string[]
     );
 }
 
-async function activateCommunityPlan(
+export async function activateCommunityPlan(
   tx: AppDb,
   context: CommunityCheckoutContext,
   community: typeof schema.communities.$inferSelect,
   plan: typeof schema.storefrontPlans.$inferSelect,
   clock: Clock,
   joiningReason = "",
+  options: { invited?: boolean } = {},
 ) {
   const existing = await findLearnerMembership(tx, {
     schoolId: context.schoolId,
@@ -288,8 +292,11 @@ async function activateCommunityPlan(
     entityType: "community",
     entityId: community.publicId,
   });
+  // An admin invite is the approval, so invited members skip the request queue.
   const status =
-    plan.kind === "free" && !community.autoAcceptMembers ? "pending" : "active";
+    !options.invited && plan.kind === "free" && !community.autoAcceptMembers
+      ? "pending"
+      : "active";
   const learnerMembership = await upsertLearnerMembership(
     tx,
     {
@@ -301,6 +308,7 @@ async function activateCommunityPlan(
       status,
       role: status === "active" ? "post" : "comment",
       joiningReason: joiningReason || existing?.joiningReason || "",
+      ...(options.invited ? { rejectionReason: null } : {}),
     },
     clock,
   );
@@ -321,7 +329,8 @@ async function activateCommunityPlan(
       },
       clock,
     );
-    await createSchoolAdminNotifications(
+    // The inviting admin already knows; don't notify the team about it.
+    if (!options.invited) await createSchoolAdminNotifications(
       tx as unknown as AppDb,
       context.schoolId,
       {

@@ -22,7 +22,12 @@ import {
   sql,
 } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
-import { revokeCommunityMembershipAccess } from "./community-commerce.js";
+import {
+  activateCommunityPlan,
+  revokeCommunityMembershipAccess,
+} from "./community-commerce.js";
+import { ensureLearnerAccountByEmail } from "./learners.js";
+import { queueCommunityInviteEmail } from "./school-emails.js";
 import { queueMembershipEvents, schoolSiteUrl } from "./membership-events.js";
 import * as schema from "./db/schema/index.js";
 import {
@@ -84,6 +89,7 @@ export type CommunityDto = {
   categories: string[];
   autoAcceptMembers: boolean;
   joiningReasonText: string;
+  enabled: boolean;
   featuredImage: MediaRef | null;
   membersCount: number;
   postsCount: number;
@@ -116,6 +122,7 @@ export type CommunityMembershipDto = {
   role: "member" | "moderator" | "owner";
   joiningReason: string;
   rejectionReason: string | null;
+  paymentPlanId: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -452,6 +459,7 @@ function communityToDto(
     categories: parseCategories(row.categories),
     autoAcceptMembers: row.autoAcceptMembers,
     joiningReasonText: row.joiningReasonText,
+    enabled: row.enabled,
     featuredImage,
     membersCount,
     postsCount,
@@ -484,6 +492,7 @@ function membershipToDto(
     role: isOwner ? "owner" : row.role === "moderate" ? "moderator" : "member",
     joiningReason: row.joiningReason,
     rejectionReason: row.rejectionReason,
+    paymentPlanId: row.paymentPlanId,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
   };
@@ -1379,6 +1388,7 @@ export async function listLearnerCommunities(
     eq(schema.learnerMemberships.entityType, "community"),
     eq(schema.learnerMemberships.isIncludedInPlan, false),
     isNull(schema.communities.deletedAt),
+    eq(schema.communities.enabled, true),
   ];
   if (cursor) {
     conditions.push(
@@ -1462,6 +1472,7 @@ export async function listLearnerFeed(
     isNull(schema.communityPosts.deletedAt),
     eq(schema.communities.schoolId, viewer.schoolId),
     isNull(schema.communities.deletedAt),
+    eq(schema.communities.enabled, true),
     eq(schema.learnerMemberships.schoolId, viewer.schoolId),
     eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
     eq(schema.learnerMemberships.entityType, "community"),
@@ -1611,6 +1622,7 @@ export async function listPublicCommunities(
   const conditions = [
     eq(schema.communities.schoolId, school.schoolId),
     isNull(schema.communities.deletedAt),
+    eq(schema.communities.enabled, true),
   ];
   if (cursor) {
     conditions.push(
@@ -1704,7 +1716,7 @@ export async function getPublicCommunity(
   communityPublicId: string,
 ): Promise<Result<CommunityDto>> {
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
-  if (!community || community.deletedAt) return notFound();
+  if (!community || community.deletedAt || !community.enabled) return notFound();
 
   const [featuredImage, membersCount, postsCount] = await Promise.all([
     communityFeaturedImageFor(db, school.schoolId, community.id),
@@ -1737,6 +1749,7 @@ export async function listAvailableLearnerCommunities(
   const conditions = [
     eq(schema.communities.schoolId, viewer.schoolId),
     isNull(schema.communities.deletedAt),
+    eq(schema.communities.enabled, true),
   ];
   if (cursor) {
     conditions.push(
@@ -1864,6 +1877,7 @@ export async function createCommunity(
         categories: JSON.stringify(categories),
         autoAcceptMembers: input.autoAcceptMembers,
         joiningReasonText: input.joiningReasonText,
+        enabled: false,
         deletedAt: null,
         createdBy: context.principalId,
         createdAt: now,
@@ -1977,6 +1991,7 @@ export async function getCommunity(
 ): Promise<Result<CommunityDto>> {
   const row = await loadCommunity(db, school.schoolId, publicId);
   if (!row) return notFound();
+  if (viewer.kind === "learner" && !row.enabled) return notFound();
   if (viewer.kind === "admin" && !adminCan(viewer.context, "communities:read")) {
     return forbidden();
   }
@@ -2023,6 +2038,7 @@ export async function updateCommunity(
     categories?: string[];
     autoAcceptMembers?: boolean;
     joiningReasonText?: string;
+    enabled?: boolean;
     featuredImage?: MediaRef | null;
   },
   clock: Clock,
@@ -2038,6 +2054,31 @@ export async function updateCommunity(
   if (categories && categories.length === 0) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
+  // Like main, learners need a default plan to join through before the
+  // community can go live.
+  if (input.enabled === true && !existing.enabled) {
+    const defaultPlan = await db
+      .select({ id: schema.storefrontPlans.id })
+      .from(schema.storefrontPlans)
+      .where(
+        and(
+          eq(schema.storefrontPlans.schoolId, school.schoolId),
+          eq(schema.storefrontPlans.entityType, "community"),
+          eq(schema.storefrontPlans.entityId, existing.publicId),
+          eq(schema.storefrontPlans.status, "active"),
+          eq(schema.storefrontPlans.isDefault, true),
+        ),
+      )
+      .limit(1);
+    if (!defaultPlan[0]) {
+      return {
+        ok: false,
+        error: createPlatformError("validation_failed", {
+          safeDetails: { reason: "community_requires_default_payment_plan" },
+        }),
+      };
+    }
+  }
   const now = clock.now();
   try {
     return await db.transaction(async (tx) => {
@@ -2050,6 +2091,7 @@ export async function updateCommunity(
         categories: categories ? JSON.stringify(categories) : existing.categories,
         autoAcceptMembers: input.autoAcceptMembers ?? existing.autoAcceptMembers,
         joiningReasonText: input.joiningReasonText ?? existing.joiningReasonText,
+        enabled: input.enabled ?? existing.enabled,
         updatedAt: now,
       };
       if (
@@ -2688,6 +2730,103 @@ export async function listMemberships(
           ? encodeCursor(page.at(-1)!.membership.createdAt, page.at(-1)!.membership.id)
           : null,
     },
+  };
+}
+
+/**
+ * Invites someone by email onto one of the community's plans. The invite is
+ * the approval, so the membership is active right away, on that plan, with the
+ * plan's included products. No payment is taken.
+ */
+export async function inviteCommunityMember(
+  db: AppDb,
+  context: AdminContext,
+  publicSchoolId: string,
+  communityPublicId: string,
+  input: { email: string; name: string; planId: string },
+  clock: Clock,
+): Promise<Result<CommunityMembershipDto>> {
+  const school = communityContext(context);
+  if (!school || !adminCan(context, "communities:write")) return forbidden();
+  const community = await loadCommunity(db, school.schoolId, communityPublicId);
+  if (!community) return notFound();
+  if (!community.enabled) {
+    return {
+      ok: false,
+      error: createPlatformError("validation_failed", {
+        safeDetails: { reason: "community_offline" },
+      }),
+    };
+  }
+  const plan = (
+    await db
+      .select()
+      .from(schema.storefrontPlans)
+      .where(
+        and(
+          eq(schema.storefrontPlans.schoolId, school.schoolId),
+          eq(schema.storefrontPlans.entityType, "community"),
+          eq(schema.storefrontPlans.entityId, community.publicId),
+          eq(schema.storefrontPlans.publicId, input.planId),
+          eq(schema.storefrontPlans.status, "active"),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!plan) return notFound();
+
+  const account = await ensureLearnerAccountByEmail(
+    db,
+    { schoolId: school.schoolId, email: input.email, name: input.name },
+    clock,
+  );
+  const existing = await findLearnerMembership(db, {
+    schoolId: school.schoolId,
+    schoolAccountId: account.id,
+    entityType: "community",
+    entityId: community.publicId,
+  });
+  const membership = await db.transaction((tx) =>
+    activateCommunityPlan(
+      tx as unknown as AppDb,
+      {
+        schoolId: school.schoolId,
+        publicSchoolId,
+        learnerId: account.id,
+        schoolAccountId: account.id,
+        learnerPublicId: account.publicId,
+        learnerEmail: account.email,
+        learnerName: input.name,
+        requestId: context.requestId,
+      },
+      community,
+      plan,
+      clock,
+      "",
+      { invited: true },
+    ),
+  );
+  if (existing?.status !== "active") {
+    await queueCommunityInviteEmail(
+      db,
+      {
+        schoolId: school.schoolId,
+        schoolAccountId: account.id,
+        communityName: community.name,
+        membershipPublicId: membership.publicId,
+      },
+      clock,
+    );
+  }
+  const actors = await communityActorMap(db, [account.id]);
+  return {
+    ok: true,
+    value: membershipToDto(
+      membership,
+      account.publicId,
+      community.publicId,
+      actors.get(account.id) ?? null,
+    ),
   };
 }
 

@@ -972,6 +972,7 @@ export const communityMembershipSchema = z.object({
   role: z.enum(["member", "moderator", "owner"]),
   joiningReason: z.string(),
   rejectionReason: z.string().nullable(),
+  paymentPlanId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -986,6 +987,7 @@ export const communitySchema = z.object({
   categories: z.array(z.string()),
   autoAcceptMembers: z.boolean(),
   joiningReasonText: z.string(),
+  enabled: z.boolean(),
   featuredImage: mediaRefSchema.nullable(),
   membersCount: z.number().int().nonnegative(),
   postsCount: z.number().int().nonnegative(),
@@ -1030,6 +1032,7 @@ export const updateCommunityBodySchema = z.object({
   categories: z.array(z.string().trim().min(1).max(100)).min(1).optional(),
   autoAcceptMembers: z.boolean().optional(),
   joiningReasonText: z.string().max(500).optional(),
+  enabled: z.boolean().optional(),
   featuredImage: mediaRefSchema.nullable().optional(),
 });
 
@@ -1275,6 +1278,12 @@ export const createCommunityReportBodySchema = z.object({
 export const updateCommunityReportBodySchema = z.object({
   status: z.enum(["pending", "accepted", "rejected"]),
   rejectionReason: z.string().max(2_000).nullable().optional(),
+});
+
+export const inviteCommunityMemberBodySchema = z.object({
+  email: z.string().trim().email().max(320),
+  name: z.string().trim().max(200).default(""),
+  planId: z.string().min(1),
 });
 
 export const updateCommunityMembershipBodySchema = z.object({
@@ -1794,6 +1803,19 @@ export const contract = c.router({
         items: z.array(communityMembershipSchema),
         nextCursor: z.string().nullable(),
       }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  inviteCommunityMember: {
+    method: "POST",
+    path: "/v1/communities/:communityId/members",
+    pathParams: z.object({ communityId: z.string() }),
+    body: inviteCommunityMemberBodySchema,
+    responses: {
+      201: communityMembershipSchema,
+      400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,

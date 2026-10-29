@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, Info, Save } from "lucide-react";
+import { DollarSign, Info, Package, Save, X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { CourseLitLoadingIcon } from "@/components/loading";
@@ -42,12 +42,21 @@ type PaymentPlanDialogProps = {
   onOpenChange: (open: boolean) => void;
   onSaved: (plan: StorefrontPlan) => Promise<void> | void;
   entityLabel?: "product" | "community";
+  /** Plan type preselected when creating a new plan. */
+  initialKind?: StorefrontPlan["kind"];
 };
 
 type PlanKind = StorefrontPlan["kind"];
 type PaymentProvider = "stripe" | "lemonsqueezy" | "razorpay";
 
-type PaymentSettings = {
+type IncludableProduct = {
+  id: string;
+  title: string;
+  kind: string;
+  status: string;
+};
+
+export type PaymentSettings = {
   provider?: PaymentProvider | null;
   stripe?: {
     publishableKey?: string;
@@ -66,7 +75,7 @@ type PaymentSettings = {
   };
 };
 
-function hasConfiguredPaymentProvider(settings: PaymentSettings): boolean {
+export function hasConfiguredPaymentProvider(settings: PaymentSettings): boolean {
   if (settings.provider === "stripe") {
     return Boolean(
       settings.stripe?.publishableKey && settings.stripe?.secretConfigured,
@@ -165,6 +174,7 @@ export function PaymentPlanDialog({
   onOpenChange,
   onSaved,
   entityLabel = "product",
+  initialKind = "free",
 }: PaymentPlanDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -176,17 +186,22 @@ export function PaymentPlanDialog({
   const [paymentProviderConfigured, setPaymentProviderConfigured] = useState(false);
   const [paymentSettingsLoading, setPaymentSettingsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [includedProducts, setIncludedProducts] = useState<string[]>([]);
+  const [products, setProducts] = useState<IncludableProduct[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const showIncludedProducts = entityLabel === "community";
 
   useEffect(() => {
     if (!open) return;
     setName(plan?.name ?? "");
+    setIncludedProducts(plan?.includedProducts ?? []);
     setDescription(plan?.description ?? "");
-    setKind(plan?.kind ?? "free");
+    setKind(plan?.kind ?? initialKind);
     setAmount(initialAmount(plan));
     setInterval(plan?.billingInterval ?? "month");
     setInstallments(String(plan?.installmentCount ?? 3));
     setError(null);
-  }, [open, plan]);
+  }, [open, plan, initialKind]);
 
   useEffect(() => {
     if (!open) return;
@@ -208,6 +223,41 @@ export function PaymentPlanDialog({
       active = false;
     };
   }, [open, request]);
+
+  useEffect(() => {
+    if (!open || !showIncludedProducts) return;
+    let active = true;
+    setProductsLoading(true);
+    void (async () => {
+      const items: IncludableProduct[] = [];
+      let cursor: string | null = null;
+      do {
+        const query = new URLSearchParams({ limit: "50" });
+        if (cursor) query.set("cursor", cursor);
+        const page = await request<{
+          items?: IncludableProduct[];
+          nextCursor?: string | null;
+        }>(`/api/v1/products?${query}`);
+        items.push(...(page.items ?? []));
+        cursor = page.nextCursor ?? null;
+      } while (cursor);
+      return items.filter(
+        (product) => product.kind === "course" || product.kind === "download",
+      );
+    })()
+      .then((items) => {
+        if (active) setProducts(items);
+      })
+      .catch(() => {
+        if (active) setProducts([]);
+      })
+      .finally(() => {
+        if (active) setProductsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, request, showIncludedProducts]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -260,6 +310,7 @@ export function PaymentPlanDialog({
         // adapter default internally, while subscriptions expose frequency.
         kind === "subscription" ? interval : null,
       installmentCount: kind === "installment" ? parsedInstallments : null,
+      ...(showIncludedProducts ? { includedProducts } : {}),
     };
 
     try {
@@ -285,6 +336,9 @@ export function PaymentPlanDialog({
 
   const currency = school.currency || "USD";
   const symbol = getCurrencySymbol(currency);
+  const addableProducts = products.filter(
+    (product) => product.status === "published" && !includedProducts.includes(product.id),
+  );
   const paidPlanTypesDisabled = paymentSettingsLoading || !paymentProviderConfigured;
 
   return (
@@ -462,6 +516,105 @@ export function PaymentPlanDialog({
               </div>
             ) : null}
           </section>
+
+          {showIncludedProducts ? (
+            <section className="space-y-4 border-t pt-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 font-medium">
+                  <Package className="size-4 text-primary" /> Included Products
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Specify which products are included with this payment plan
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="payment-plan-product">Add Product</Label>
+                <Select
+                  value=""
+                  onValueChange={(value) =>
+                    setIncludedProducts((current) =>
+                      current.includes(value) ? current : [...current, value],
+                    )
+                  }
+                >
+                  <SelectTrigger id="payment-plan-product">
+                    <SelectValue placeholder="Select a product to add" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productsLoading ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        Loading products...
+                      </div>
+                    ) : addableProducts.length === 0 ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        {products.length === 0
+                          ? "No products available"
+                          : "All products already added"}
+                      </div>
+                    ) : (
+                      addableProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          <span>{product.title}</span>
+                          <span className="ml-2 text-sm capitalize text-muted-foreground">
+                            {product.kind}
+                          </span>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {includedProducts.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Label>Selected Products</Label>
+                    <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                      {includedProducts.length} selected
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {includedProducts.map((productId) => {
+                      const product = products.find((item) => item.id === productId);
+                      return (
+                        <div
+                          key={productId}
+                          className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2"
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="line-clamp-1 text-sm font-medium">
+                              {product?.title ?? productId}
+                            </span>
+                            <span className="flex items-center gap-2 text-xs capitalize text-muted-foreground">
+                              {product?.kind ?? "Product"}
+                              {product && product.status !== "published" ? (
+                                <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 normal-case text-destructive">
+                                  Unpublished
+                                </span>
+                              ) : null}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Remove ${product?.title ?? "product"}`}
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() =>
+                              setIncludedProducts((current) =>
+                                current.filter((id) => id !== productId),
+                              )
+                            }
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {error ? (
             <p className="text-sm text-destructive" role="alert">

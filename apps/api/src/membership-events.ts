@@ -34,7 +34,10 @@ export async function schoolSiteUrl(
     )
     .orderBy(desc(schema.schoolHosts.isPrimary))
     .limit(1);
-  if (customHost) return `https://${customHost.hostname}`;
+  // Local setups serve the storefront on a non-standard port.
+  const port = process.env.STOREFRONT_PORT?.trim();
+  const suffix = port ? `:${port}` : "";
+  if (customHost) return `https://${customHost.hostname}${suffix}`;
   const [school] = await db
     .select({ subdomain: schema.schools.subdomain })
     .from(schema.schools)
@@ -42,7 +45,7 @@ export async function schoolSiteUrl(
     .limit(1);
   if (!school) return null;
   const host = defaultStorefrontHost(school.subdomain) ?? `${school.subdomain}.courselit.app`;
-  return `${/(^|\.)localhost$/.test(host) ? "http" : "https"}://${host}`;
+  return `${/(^|\.)localhost$/.test(host) ? "http" : "https"}://${host}${suffix}`;
 }
 
 async function queueSendLitEvent(
