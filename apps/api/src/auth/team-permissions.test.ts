@@ -13,8 +13,8 @@ import {
 } from "@courselit/api-contract";
 
 describe("team permissions catalog and algebra", () => {
-  it("contains exactly 35 stable permissions and no school:admin", () => {
-    expect(COURSELIT_PERMISSIONS).toHaveLength(35);
+  it("contains exactly 33 stable permissions and no school:admin", () => {
+    expect(COURSELIT_PERMISSIONS).toHaveLength(33);
     expect((COURSELIT_PERMISSIONS as readonly string[]).includes("school:admin")).toBe(false);
     expect(OWNER_PERMISSIONS).toEqual([...COURSELIT_PERMISSIONS]);
   });

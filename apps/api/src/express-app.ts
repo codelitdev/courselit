@@ -10,6 +10,7 @@ import { createExpressEndpoints, initServer } from "@ts-rest/express";
 import { toNodeHandler } from "better-auth/node";
 import express, { type Express, type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
+import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
 import swaggerUi from "swagger-ui-express";
 import {
   AUTH_BASE_PATH,
@@ -54,6 +55,9 @@ export function createExpressApp(deps: DispatchDeps): Express {
           : undefined;
     const clientIp = forwardedIp || req.ip || req.socket.remoteAddress || "unknown";
     const key = clientIp;
+    // Overwrite any client-supplied value: downstream API-key failure
+    // throttling keys on the address resolved here.
+    req.headers[CLIENT_IP_HEADER] = clientIp;
     const isLoopback =
       clientIp === "127.0.0.1" ||
       clientIp === "::1" ||

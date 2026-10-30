@@ -257,14 +257,16 @@ export const apiKeys = pgTable("api_keys", {
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
+  // Creator attribution only. Keys belong to the school, so removing the
+  // creator (membership, school account, or user) must not delete the key.
   membershipId: uuid("membership_id").references(() => memberships.id, {
-    onDelete: "cascade",
+    onDelete: "set null",
   }),
   createdBySchoolAccountId: uuid("created_by_school_account_id").references(
     () => schoolAccounts.id,
     { onDelete: "set null" },
   ),
-  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   name: text("name").notNull().default("Default"),
   digest: text("digest").notNull(),
   permissions: text("permissions").array().notNull().default([]),

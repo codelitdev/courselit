@@ -115,13 +115,14 @@ describe.serial("reference API adapters", () => {
         "x-school-id": world.schoolA.publicId,
       },
       body: {
+        name: "Reporting",
         permissions: ["products:read"],
         expiresAt: "2026-04-01T00:00:00.000Z",
       },
     });
     expect(created.status).toBe(201);
-    const key = created.body as { publicId: string; raw: string };
-    expect(key.raw).toContain(`${key.publicId}.`);
+    const key = created.body as { id: string; key: string };
+    expect(key.key.startsWith(`cl_live_${key.id}.`)).toBe(true);
     const listed = await dispatch(runtime, {
       method: "GET",
       path: "/v1/api-keys",
@@ -130,10 +131,10 @@ describe.serial("reference API adapters", () => {
         "x-school-id": world.schoolA.publicId,
       },
     });
-    expect(JSON.stringify(listed.body)).not.toContain(key.raw);
+    expect(JSON.stringify(listed.body)).not.toContain(key.key);
     const wrongTenant = await dispatch(runtime, {
       method: "DELETE",
-      path: `/v1/api-keys/${key.publicId}`,
+      path: `/v1/api-keys/${key.id}`,
       headers: {
         cookie: world.owner.sessionCookie,
         "x-school-id": world.schoolB.publicId,
@@ -142,7 +143,7 @@ describe.serial("reference API adapters", () => {
     expect(wrongTenant.status).toBe(404);
     const revoked = await dispatch(runtime, {
       method: "DELETE",
-      path: `/v1/api-keys/${key.publicId}`,
+      path: `/v1/api-keys/${key.id}`,
       headers: {
         cookie: world.owner.sessionCookie,
         "x-school-id": world.schoolA.publicId,
@@ -152,7 +153,7 @@ describe.serial("reference API adapters", () => {
     const unusable = await dispatch(runtime, {
       method: "GET",
       path: "/v1/products",
-      headers: { "x-api-key": key.raw },
+      headers: { "x-api-key": key.key },
     });
     expect(unusable.status).toBe(401);
     await runtime.close();

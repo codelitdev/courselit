@@ -1,6 +1,8 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
+import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
+
 export * from "./team-permissions.js";
 
 const c = initContract();
@@ -443,6 +445,7 @@ export const schoolSchema = z.object({
   locale: z.string(),
   currency: z.string(),
   permissions: z.array(z.string()).optional(),
+  isOwner: z.boolean().optional(),
   selected: z.boolean().optional(),
   website: z
     .object({
@@ -820,14 +823,35 @@ export const createSchoolHostResponseSchema = z.object({
     value: z.string(),
   }),
 });
+/** API key metadata. Never includes the secret or its digest. */
 export const apiKeySchema = z.object({
   id: z.string(),
-  publicId: z.string(),
-  raw: z.string().optional(),
-  expiresAt: z.string().nullable().optional(),
-  revokedAt: z.string().nullable().optional(),
-  lastUsedAt: z.string().nullable().optional(),
-  createdAt: z.string().optional(),
+  name: z.string(),
+  /** `cl_live_<publicId>`; the secret part is never returned after creation. */
+  prefix: z.string(),
+  permissions: z.array(z.enum(COURSELIT_PERMISSIONS)),
+  createdBy: z
+    .object({ name: z.string(), email: z.string() })
+    .nullable(),
+  createdAt: z.string(),
+  lastUsedAt: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  expired: z.boolean(),
+});
+export const createApiKeyBodySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  permissions: z
+    .array(z.enum(COURSELIT_PERMISSIONS))
+    .min(1)
+    .max(COURSELIT_PERMISSIONS.length),
+  expiresAt: z.string().datetime({ offset: true }).optional(),
+});
+export const createApiKeyResponseSchema = apiKeySchema.extend({
+  /** The full key. Returned exactly once, at creation. */
+  key: z.string(),
+});
+export const listApiKeysResponseSchema = z.object({
+  items: z.array(apiKeySchema),
 });
 export const invitationSchema = z.object({
   ok: z.literal(true),
@@ -4220,8 +4244,9 @@ export const contract = c.router({
   listApiKeys: {
     method: "GET",
     path: "/v1/api-keys",
+    summary: "List the school's active API keys (school owner, session only)",
     responses: {
-      200: z.object({ items: z.array(apiKeySchema.omit({ raw: true })) }),
+      200: listApiKeysResponseSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
     },
@@ -4229,20 +4254,21 @@ export const contract = c.router({
   createApiKey: {
     method: "POST",
     path: "/v1/api-keys",
-    body: z.object({
-      permissions: z.array(z.string()).default([]),
-      expiresAt: z.string().datetime().optional(),
-    }),
+    summary:
+      "Create an API key; the full key is returned only in this response (school owner, session only)",
+    body: createApiKeyBodySchema,
     responses: {
-      201: apiKeySchema.required({ raw: true }),
+      201: createApiKeyResponseSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+      409: platformErrorSchema,
     },
   },
   revokeApiKey: {
     method: "DELETE",
     path: "/v1/api-keys/:publicId",
+    summary: "Revoke an API key immediately (school owner, session only)",
     pathParams: z.object({ publicId: z.string() }),
     responses: {
       204: z.undefined(),

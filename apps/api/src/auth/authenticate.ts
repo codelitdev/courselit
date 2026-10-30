@@ -9,11 +9,17 @@ import {
   selectHttpCredential,
   selectMcpCredential,
 } from "@codelitdev/platform";
+import type { Observability } from "@codelitdev/observability";
 import { fromNodeHeaders } from "better-auth/node";
-import { and, eq, isNull } from "drizzle-orm";
-import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
-import { apiKeyDigestMatches, parseApiKey } from "./api-keys.js";
+import {
+  apiKeyDigestMatches,
+  isApiKeyExpired,
+  loadActiveApiKey,
+  parseApiKey,
+  touchApiKeyLastUsed,
+} from "./api-keys.js";
+import { apiKeyFailureLimiterFor, clientKeyFromHeaders } from "./api-key-throttle.js";
 import type { AdminAuth } from "./better-auth.js";
 import { ADMIN_SESSION_COOKIE_NAME } from "./options.js";
 
@@ -22,6 +28,7 @@ export type AuthRuntime = {
   apiKeyPepper: string;
   auth: AdminAuth;
   clock: Clock;
+  observability?: Pick<Observability, "logger">;
 };
 
 function toNodeHeaderMap(
@@ -100,63 +107,7 @@ export async function authenticateHttpRequest(
       },
     };
   }
-  const parsed = parseApiKey(presented.secret);
-  if (!parsed) {
-    return {
-      kind: "rejected",
-      error: createPlatformError("unauthenticated"),
-    };
-  }
-  const keys = await deps.db
-    .select({
-      key: schema.apiKeys,
-      accountUserId: schema.schoolAccounts.userId,
-    })
-    .from(schema.apiKeys)
-    .leftJoin(
-      schema.memberships,
-      eq(schema.memberships.id, schema.apiKeys.membershipId),
-    )
-    .leftJoin(
-      schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
-    )
-    .where(
-      and(
-        eq(schema.apiKeys.publicId, parsed.publicId),
-        isNull(schema.apiKeys.revokedAt),
-      ),
-    )
-    .limit(1);
-  const row = keys[0];
-  if (
-    !row ||
-    (row.key.expiresAt && row.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
-    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, row.key.digest)
-  ) {
-    return {
-      kind: "rejected",
-      error: createPlatformError("unauthenticated"),
-    };
-  }
-  const principalId = row.key.userId ?? row.accountUserId ?? "";
-  if (!principalId) {
-    return {
-      kind: "rejected",
-      error: createPlatformError("unauthenticated"),
-    };
-  }
-  void deps.db
-    .update(schema.apiKeys)
-    .set({ lastUsedAt: deps.clock.now() })
-    .where(eq(schema.apiKeys.id, row.key.id))
-    .then(() => undefined)
-    .catch(() => undefined);
-  return {
-    kind: "authenticated",
-    principalId,
-    credential: { kind: "api_key", credentialId: row.key.id },
-  };
+  return verifyApiKey(presented.secret, headers, deps);
 }
 
 export async function authenticateMcpRequest(
@@ -204,55 +155,65 @@ export async function authenticateMcpRequest(
       },
     };
   }
-  const parsed = parseApiKey(presented.secret);
-  if (!parsed) {
+  return verifyApiKey(presented.secret, headers, deps);
+}
+
+/**
+ * Shared HTTP/MCP API-key verification. Malformed, unknown, revoked, expired
+ * and wrong-secret keys, and keys of deleted schools, all produce the same
+ * `unauthenticated` error. A key does not depend on its creator's membership. Failed attempts are rate limited
+ * per client; raw keys and digests never leave this function.
+ */
+async function verifyApiKey(
+  presented: string,
+  headers: HeaderMap,
+  deps: AuthRuntime,
+): Promise<AuthenticationResult<string>> {
+  const limiter = apiKeyFailureLimiterFor(deps, deps.clock);
+  const clientKey = clientKeyFromHeaders(
+    headers as Record<string, string | string[] | undefined>,
+  );
+  const retryAfter = limiter.retryAfterSeconds(clientKey);
+  if (retryAfter !== null) {
     return {
       kind: "rejected",
-      error: createPlatformError("unauthenticated"),
+      error: createPlatformError("rate_limited", {
+        safeDetails: { retryAfterSeconds: retryAfter },
+      }),
     };
   }
-  const keys = await deps.db
-    .select({
-      key: schema.apiKeys,
-      userId: schema.schoolAccounts.userId,
-    })
-    .from(schema.apiKeys)
-    .innerJoin(
-      schema.memberships,
-      eq(schema.memberships.id, schema.apiKeys.membershipId),
-    )
-    .innerJoin(
-      schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
-    )
-    .where(
-      and(
-        eq(schema.apiKeys.publicId, parsed.publicId),
-        isNull(schema.apiKeys.revokedAt),
-      ),
-    )
-    .limit(1);
-  const matched = keys[0];
+  const rejected = (): AuthenticationResult<string> => {
+    limiter.recordFailure(clientKey);
+    return { kind: "rejected", error: createPlatformError("unauthenticated") };
+  };
+  const parsed = parseApiKey(presented);
+  if (!parsed) return rejected();
+  const loaded = await loadActiveApiKey(deps.db, { publicId: parsed.publicId });
+  const now = deps.clock.now();
   if (
-    !matched ||
-    (matched.key.expiresAt &&
-      matched.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
-    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, matched.key.digest)
+    !loaded ||
+    isApiKeyExpired(loaded.key.expiresAt, now) ||
+    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, loaded.key.digest)
   ) {
-    return {
-      kind: "rejected",
-      error: createPlatformError("unauthenticated"),
-    };
+    return rejected();
   }
-  void deps.db
-    .update(schema.apiKeys)
-    .set({ lastUsedAt: deps.clock.now() })
-    .where(eq(schema.apiKeys.id, matched.key.id))
-    .then(() => undefined)
-    .catch(() => undefined);
+  touchApiKeyLastUsed({
+    db: deps.db,
+    keyId: loaded.key.id,
+    lastUsedAt: loaded.key.lastUsedAt,
+    now,
+    onError: () =>
+      deps.observability?.logger.warn(
+        { event: "api_key.last_used_update_failed" },
+        "Failed to record API key usage",
+      ),
+  });
   return {
     kind: "authenticated",
-    principalId: matched.userId,
-    credential: { kind: "api_key", credentialId: matched.key.id },
+    // The key acts for its school; the school owner's user id is the
+    // principal so user-referencing columns stay valid. Owner-only and
+    // account operations remain unreachable via the operation policy.
+    principalId: loaded.ownerAccount.userId,
+    credential: { kind: "api_key", credentialId: loaded.key.id },
   };
 }

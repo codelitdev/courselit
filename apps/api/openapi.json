@@ -38,7 +38,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/ready": {
@@ -107,7 +108,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/communities": {
@@ -521,7 +523,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -1049,7 +1059,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}": {
@@ -1475,7 +1493,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -2113,7 +2139,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -2316,7 +2350,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/sales-pages/{resourceType}/{resourceId}": {
@@ -2550,7 +2592,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/categories": {
@@ -3108,7 +3158,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/categories/{category}": {
@@ -3616,7 +3674,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/members": {
@@ -3981,7 +4047,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -4363,7 +4437,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-memberships/{membershipId}": {
@@ -4750,7 +4832,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/posts": {
@@ -5232,7 +5322,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -5701,7 +5799,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-posts/{postId}": {
@@ -6171,7 +6277,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -6374,7 +6488,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-posts/{postId}/comments": {
@@ -6844,7 +6966,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -7294,7 +7424,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-comments/{commentId}": {
@@ -7741,7 +7879,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -7944,7 +8090,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/reactions": {
@@ -8253,7 +8407,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-posts/{postId}/subscription": {
@@ -8476,7 +8638,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/reports": {
@@ -9023,7 +9193,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -9542,7 +9720,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-reports/{reportId}": {
@@ -10027,7 +10213,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/communities": {
@@ -10441,7 +10635,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/spaces": {
@@ -10722,7 +10917,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -11166,7 +11369,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/spaces/{spaceId}": {
@@ -11501,7 +11712,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -12007,7 +12226,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -12282,7 +12509,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/spaces/order": {
@@ -12642,7 +12877,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/spaces": {
@@ -12867,7 +13110,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/spaces/{spaceId}/follow": {
@@ -13019,7 +13263,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "delete": {
         "tags": [
@@ -13169,7 +13414,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/spaces/{spaceId}/posts": {
@@ -13476,7 +13722,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/spaces/{spaceId}/posts/{postId}": {
@@ -13958,7 +14205,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/feed": {
@@ -14424,7 +14672,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/available": {
@@ -14838,7 +15087,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}": {
@@ -15264,7 +15514,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/posts": {
@@ -15746,7 +15997,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "post": {
         "tags": [
@@ -16215,7 +16467,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-posts/{postId}": {
@@ -16589,7 +16842,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-posts/{postId}/comments": {
@@ -17059,7 +17313,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "post": {
         "tags": [
@@ -17509,7 +17764,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-comments/{commentId}": {
@@ -17956,7 +18212,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "delete": {
         "tags": [
@@ -18159,7 +18416,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-media/upload-authorizations": {
@@ -18435,7 +18693,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-media": {
@@ -18766,7 +19025,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "get": {
         "tags": [
@@ -19044,7 +19304,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/profile-media/upload-authorizations": {
@@ -19312,7 +19573,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/profile-media": {
@@ -19635,7 +19897,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/reactions": {
@@ -19944,7 +20207,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-posts/{postId}/subscription": {
@@ -20167,7 +20431,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/reports": {
@@ -20714,7 +20979,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/notifications": {
@@ -20915,7 +21181,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/notifications": {
@@ -21116,7 +21383,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/notification-preferences": {
@@ -21228,7 +21496,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/notification-preferences/{type}": {
@@ -21425,7 +21694,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/notifications/{notificationId}/read": {
@@ -21612,7 +21882,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/notifications/read-all": {
@@ -21708,7 +21979,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/notifications/{notificationId}/read": {
@@ -21895,7 +22167,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/notifications/read-all": {
@@ -21991,7 +22264,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/products": {
@@ -22288,7 +22562,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/leave": {
@@ -22505,7 +22780,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/plans": {
@@ -22838,7 +23114,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/communities/{communityId}/checkout": {
@@ -23272,7 +23549,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/community-checkouts/{checkoutId}": {
@@ -23566,7 +23844,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/products": {
@@ -23948,7 +24227,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -24307,7 +24594,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/public/{schoolId}/products": {
@@ -24639,7 +24934,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/resolve-host": {
@@ -24743,7 +25039,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/checkout-sessions": {
@@ -25094,7 +25391,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/checkout-sessions/{sessionId}": {
@@ -25370,7 +25668,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/communities": {
@@ -25804,7 +26103,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/communities/{communityId}": {
@@ -26184,7 +26484,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/communities/{communityId}/plans": {
@@ -26471,7 +26772,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/site/settings": {
@@ -26707,7 +27009,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/site/pages": {
@@ -27046,7 +27349,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/site/blogs": {
@@ -27326,7 +27630,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/site/blogs/{slug}": {
@@ -27657,7 +27962,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/contacts": {
@@ -28085,7 +28391,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contacts/{contactId}": {
@@ -28465,7 +28779,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -28979,7 +29301,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -29309,7 +29639,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contacts/{contactId}/marketing": {
@@ -29654,7 +29992,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contacts/filter-preview": {
@@ -30436,7 +30782,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contact-segments": {
@@ -30847,7 +31201,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -31501,7 +31863,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contact-segments/{segmentId}": {
@@ -32017,7 +32387,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -32788,7 +33166,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -33062,7 +33448,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/contact-segments/{segmentId}/members": {
@@ -33744,7 +34138,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/public/{schoolId}/newsletter/subscribe": {
@@ -33932,7 +34334,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/products/{productId}": {
@@ -34424,7 +34827,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -34683,7 +35094,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -35212,7 +35631,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/certificate-template": {
@@ -35453,7 +35880,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "put": {
         "tags": [
@@ -35798,7 +36233,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/plans": {
@@ -36131,7 +36574,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -36664,7 +37115,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/public/{schoolId}/products/{productId}/plans": {
@@ -36951,7 +37410,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/plans/{planId}": {
@@ -37481,7 +37941,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/plans/{planId}/default": {
@@ -37871,7 +38339,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/plans/{planId}/archive": {
@@ -38205,7 +38681,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/communities/{communityId}/plans": {
@@ -38538,7 +39022,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -39071,7 +39563,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-plans/{planId}": {
@@ -39601,7 +40101,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-plans/{planId}/default": {
@@ -39991,7 +40499,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/community-plans/{planId}/archive": {
@@ -40381,7 +40897,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/public/{schoolId}/products/{productId}": {
@@ -40755,7 +41279,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/login-methods": {
@@ -40865,7 +41390,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/public/{schoolId}/lead-magnets": {
@@ -41215,7 +41741,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/products/{productId}/analytics": {
@@ -41592,7 +42119,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/customers": {
@@ -42037,7 +42572,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/customers/{customerId}/progress": {
@@ -42404,7 +42947,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/overview": {
@@ -42769,7 +43320,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/preview": {
@@ -43060,7 +43619,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/preview/products/{productId}": {
@@ -43488,7 +44055,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/public/{schoolId}/products/{productId}/lessons/{lessonId}/media": {
@@ -43736,7 +44311,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/preview/products/{productId}/lessons/{lessonId}/media": {
@@ -43983,7 +44559,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/products/{productId}/lessons/{lessonId}/scorm/runtime": {
@@ -44191,7 +44775,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "post": {
         "tags": [
@@ -44497,7 +45082,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/lessons/{lessonId}/scorm/process": {
@@ -44816,7 +45402,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/products/{productId}/lessons/{lessonId}/evaluation": {
@@ -45125,7 +45719,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/products/{productId}/lessons": {
@@ -45537,7 +46132,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/sections": {
@@ -45841,7 +46444,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -46174,7 +46785,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/sections/reorder": {
@@ -46500,7 +47119,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/products/{productId}/lessons/reorder": {
@@ -46892,7 +47519,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/lessons/{lessonId}": {
@@ -47287,7 +47922,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -47546,7 +48189,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/sections/{sectionId}": {
@@ -47878,7 +48529,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -48137,7 +48796,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/media/upload-authorizations": {
@@ -48431,7 +49098,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/media": {
@@ -48818,7 +49493,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -49164,7 +49847,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/media/unsplash": {
@@ -49400,7 +50091,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/media/{mediaId}": {
@@ -49702,7 +50401,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -50085,7 +50792,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -50334,7 +51049,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/media/{mediaId}/references": {
@@ -50576,7 +51299,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "put": {
         "tags": [
@@ -50928,7 +51659,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/memberships": {
@@ -51276,7 +52015,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/auth/sign-up": {
@@ -51601,7 +52348,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/auth/sign-in": {
@@ -51869,7 +52617,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/auth/sign-out": {
@@ -51955,7 +52704,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/me": {
@@ -52127,7 +52877,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "patch": {
         "tags": [
@@ -52389,7 +53140,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/memberships": {
@@ -52726,7 +53478,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/learner/products/{productId}/download": {
@@ -53006,7 +53766,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/checkout": {
@@ -53533,7 +54294,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/checkout-sessions/{sessionId}/checkout": {
@@ -54274,7 +55036,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/checkouts/{checkoutId}": {
@@ -54568,7 +55331,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/lessons/{lessonId}/complete": {
@@ -54862,7 +55626,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/storefront/webhooks/stripe": {
@@ -55080,7 +55845,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/storefront/webhooks/lemonsqueezy": {
@@ -55298,7 +56064,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/storefront/webhooks/razorpay": {
@@ -55516,7 +56283,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/progress": {
@@ -55802,7 +56570,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/learner/certificates": {
@@ -55986,7 +56755,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/certificates/{verificationId}": {
@@ -56145,7 +56915,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/certificate-templates": {
@@ -56319,7 +57090,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -56619,7 +57398,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/certificate-templates/{templateId}": {
@@ -56982,7 +57769,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/billing/catalog": {
@@ -57175,7 +57970,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/billing/entitlement": {
@@ -57385,7 +58185,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/schools": {
@@ -57441,6 +58246,9 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "isOwner": {
+                            "type": "boolean"
                           },
                           "selected": {
                             "type": "boolean"
@@ -57638,7 +58446,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -57746,6 +58559,9 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "isOwner": {
+                      "type": "boolean"
                     },
                     "selected": {
                       "type": "boolean"
@@ -57996,7 +58812,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team": {
@@ -58293,7 +59110,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/members/{userId}": {
@@ -58545,7 +59363,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "patch": {
         "tags": [
@@ -58939,7 +59758,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/leave": {
@@ -59125,7 +59945,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/transfer-ownership": {
@@ -59455,7 +60276,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/invitations": {
@@ -59691,7 +60513,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/invitations/{invitationId}/resend": {
@@ -59904,7 +60727,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/team/invitations/{invitationId}": {
@@ -60100,7 +60924,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/school/payment-settings": {
@@ -60374,7 +61199,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -60775,7 +61605,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/code-injection": {
@@ -60975,7 +61810,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -61250,7 +62093,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/pages": {
@@ -61598,7 +62446,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -62010,7 +62866,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/pages/{pageId}": {
@@ -62559,7 +63423,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -63237,7 +64109,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/branding": {
@@ -63553,7 +64433,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -64002,7 +64890,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/branding/themes": {
@@ -64286,7 +65182,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -64640,7 +65544,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/branding/themes/{themeId}": {
@@ -65058,7 +65970,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/pages/{pageId}/publish": {
@@ -65461,7 +66381,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/pages/{pageId}/discard-draft": {
@@ -66010,7 +66938,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/blogs/{blogId}/publish": {
@@ -66413,7 +67349,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/blogs": {
@@ -66761,7 +67705,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -67173,7 +68125,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/blogs/{blogId}": {
@@ -67680,7 +68640,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -68330,7 +69298,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/blogs/{blogId}/discard-draft": {
@@ -68837,7 +69813,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/schools/{schoolId}": {
@@ -68920,6 +69904,9 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "isOwner": {
+                      "type": "boolean"
                     },
                     "selected": {
                       "type": "boolean"
@@ -69223,7 +70210,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/hosts": {
@@ -69441,7 +70436,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -69805,7 +70808,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/hosts/{hostname}/verify": {
@@ -70198,7 +71209,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/hosts/{hostname}": {
@@ -70450,7 +71469,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/api/school/select": {
@@ -70655,11 +71682,13 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/api-keys": {
       "get": {
+        "summary": "List the school's active API keys (school owner, session only)",
         "tags": [
           "School & Team"
         ],
@@ -70680,28 +71709,94 @@
                           "id": {
                             "type": "string"
                           },
-                          "publicId": {
+                          "name": {
                             "type": "string"
                           },
-                          "expiresAt": {
-                            "type": "string",
+                          "prefix": {
+                            "type": "string"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "members:read",
+                                "members:invite",
+                                "members:manage",
+                                "school:read",
+                                "school:write",
+                                "products:read",
+                                "products:write",
+                                "products:publish",
+                                "products:delete",
+                                "communities:read",
+                                "communities:write",
+                                "communities:moderate",
+                                "storefront:read",
+                                "storefront:write",
+                                "storefront:publish",
+                                "commerce:read",
+                                "commerce:manage",
+                                "commerce:refund",
+                                "contacts:read",
+                                "contacts:write",
+                                "contacts:delete",
+                                "mails:read",
+                                "mails:write",
+                                "mails:send",
+                                "media:read",
+                                "media:write",
+                                "media:delete",
+                                "certificates:read",
+                                "certificates:write",
+                                "analytics:read",
+                                "billing:read",
+                                "integrations:read",
+                                "integrations:manage"
+                              ]
+                            }
+                          },
+                          "createdBy": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "email"
+                            ],
                             "nullable": true
                           },
-                          "revokedAt": {
-                            "type": "string",
-                            "nullable": true
+                          "createdAt": {
+                            "type": "string"
                           },
                           "lastUsedAt": {
                             "type": "string",
                             "nullable": true
                           },
-                          "createdAt": {
-                            "type": "string"
+                          "expiresAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "expired": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "id",
-                          "publicId"
+                          "name",
+                          "prefix",
+                          "permissions",
+                          "createdBy",
+                          "createdAt",
+                          "lastUsedAt",
+                          "expiresAt",
+                          "expired"
                         ]
                       }
                     }
@@ -70825,9 +71920,11 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "post": {
+        "summary": "Create an API key; the full key is returned only in this response (school owner, session only)",
         "tags": [
           "School & Team"
         ],
@@ -70839,18 +71936,63 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
                   "permissions": {
-                    "default": [],
                     "type": "array",
                     "items": {
-                      "type": "string"
-                    }
+                      "type": "string",
+                      "enum": [
+                        "members:read",
+                        "members:invite",
+                        "members:manage",
+                        "school:read",
+                        "school:write",
+                        "products:read",
+                        "products:write",
+                        "products:publish",
+                        "products:delete",
+                        "communities:read",
+                        "communities:write",
+                        "communities:moderate",
+                        "storefront:read",
+                        "storefront:write",
+                        "storefront:publish",
+                        "commerce:read",
+                        "commerce:manage",
+                        "commerce:refund",
+                        "contacts:read",
+                        "contacts:write",
+                        "contacts:delete",
+                        "mails:read",
+                        "mails:write",
+                        "mails:send",
+                        "media:read",
+                        "media:write",
+                        "media:delete",
+                        "certificates:read",
+                        "certificates:write",
+                        "analytics:read",
+                        "billing:read",
+                        "integrations:read",
+                        "integrations:manage"
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 33
                   },
                   "expiresAt": {
                     "type": "string",
                     "format": "date-time"
                   }
-                }
+                },
+                "required": [
+                  "name",
+                  "permissions"
+                ]
               }
             }
           }
@@ -70866,32 +72008,98 @@
                     "id": {
                       "type": "string"
                     },
-                    "publicId": {
+                    "name": {
                       "type": "string"
                     },
-                    "raw": {
+                    "prefix": {
                       "type": "string"
                     },
-                    "expiresAt": {
-                      "type": "string",
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "members:read",
+                          "members:invite",
+                          "members:manage",
+                          "school:read",
+                          "school:write",
+                          "products:read",
+                          "products:write",
+                          "products:publish",
+                          "products:delete",
+                          "communities:read",
+                          "communities:write",
+                          "communities:moderate",
+                          "storefront:read",
+                          "storefront:write",
+                          "storefront:publish",
+                          "commerce:read",
+                          "commerce:manage",
+                          "commerce:refund",
+                          "contacts:read",
+                          "contacts:write",
+                          "contacts:delete",
+                          "mails:read",
+                          "mails:write",
+                          "mails:send",
+                          "media:read",
+                          "media:write",
+                          "media:delete",
+                          "certificates:read",
+                          "certificates:write",
+                          "analytics:read",
+                          "billing:read",
+                          "integrations:read",
+                          "integrations:manage"
+                        ]
+                      }
+                    },
+                    "createdBy": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "email"
+                      ],
                       "nullable": true
                     },
-                    "revokedAt": {
-                      "type": "string",
-                      "nullable": true
+                    "createdAt": {
+                      "type": "string"
                     },
                     "lastUsedAt": {
                       "type": "string",
                       "nullable": true
                     },
-                    "createdAt": {
+                    "expiresAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "expired": {
+                      "type": "boolean"
+                    },
+                    "key": {
                       "type": "string"
                     }
                   },
                   "required": [
                     "id",
-                    "publicId",
-                    "raw"
+                    "name",
+                    "prefix",
+                    "permissions",
+                    "createdBy",
+                    "createdAt",
+                    "lastUsedAt",
+                    "expiresAt",
+                    "expired",
+                    "key"
                   ]
                 }
               }
@@ -71064,12 +72272,70 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/api-keys/{publicId}": {
       "delete": {
+        "summary": "Revoke an API key immediately (school owner, session only)",
         "tags": [
           "School & Team"
         ],
@@ -71260,7 +72526,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/invitations": {
@@ -71492,7 +72759,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/team-invitations/preview": {
@@ -71792,7 +73060,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/team-invitations/accept": {
@@ -72075,7 +73344,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/team-invitations/reject": {
@@ -72341,7 +73611,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/invitations/accept": {
@@ -72624,7 +73895,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/v1/invitations/{invitationId}": {
@@ -72819,7 +74091,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     }
   },
@@ -72898,5 +74171,20 @@
       "name": "Notifications",
       "description": "School administrator notification reads and status updates."
     }
-  ]
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "School API key (`cl_live_...`). Created in Settings > API keys. Pinned to one school; X-School-ID is ignored."
+      },
+      "oauth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OAuth 2.1 access token. Send X-School-ID to select a school."
+      }
+    }
+  }
 }

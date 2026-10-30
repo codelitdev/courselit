@@ -1,4 +1,9 @@
-import { createMcpServerKit, type McpServerKit } from "@codelitdev/mcp-server-kit";
+import {
+  type CreateMcpServerKitOptions,
+  createMcpServerKit,
+  type McpServerKit,
+  type McpToolDefinition,
+} from "@codelitdev/mcp-server-kit";
 import {
   createPlatformError,
   type PlatformRequestContext,
@@ -7,12 +12,18 @@ import {
 import {
   contactFilterSetSchema,
   createProductBodySchema,
+  mcpParityManifest,
   mediaRefSchema,
   reconcileMediaReferencesBodySchema,
   updateProductBodySchema,
 } from "@courselit/api-contract";
 import { z } from "zod";
 import { authenticateMcpRequest } from "./auth/authenticate.js";
+import {
+  authorizeOperationCredential,
+  getOperationPolicy,
+  type CredentialKind,
+} from "./auth/operation-policy.js";
 import { getProduct } from "./catalog.js";
 import {
   deleteContact,
@@ -41,12 +52,66 @@ import {
 } from "./products.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
 
-type Ctx = PlatformRequestContext<string, string, CourseLitPermission> & {
+export type Ctx = PlatformRequestContext<string, string, CourseLitPermission> & {
   publicSchoolId: string;
+  isOwner: boolean;
 };
 
+/** MCP tool name -> REST contract operation, from the parity manifest. */
+export const MCP_TOOL_OPERATIONS: ReadonlyMap<string, string> = new Map(
+  (
+    mcpParityManifest as ReadonlyArray<{
+      rest?: { operationId?: string };
+      mcp?: { tool?: string };
+    }>
+  )
+    .filter((entry) => entry.mcp?.tool && entry.rest?.operationId)
+    .map((entry) => [entry.mcp!.tool!, entry.rest!.operationId!]),
+);
+
+/**
+ * Applies the same fail-closed operation policy as the REST dispatcher to an
+ * MCP tool: a tool with no mapped operation, or whose operation does not
+ * allow the caller's credential kind, is refused before its handler runs.
+ */
+export function guardMcpTool(tool: McpToolDefinition<Ctx>): McpToolDefinition<Ctx> {
+  const operationId = MCP_TOOL_OPERATIONS.get(tool.name) ?? null;
+  return {
+    ...tool,
+    async handler(input) {
+      const denied = operationId
+        ? authorizeOperationCredential(
+            operationId,
+            input.context.credential.kind as CredentialKind,
+          )
+        : createPlatformError("forbidden", {
+            safeDetails: { reason: "credential_not_allowed" },
+          });
+      if (denied) return { error: denied };
+      // MCP tools call domain functions directly, so the operation's required
+      // permissions are enforced here rather than in a REST handler.
+      const policy = operationId ? getOperationPolicy(operationId) : null;
+      if (policy?.audience === "school") {
+        const missing = (policy.requiredPermissions ?? []).some(
+          (permission) => !input.context.permissions.has(permission),
+        );
+        if (missing || (policy.ownerOnly && !input.context.isOwner)) {
+          return { error: createPlatformError("forbidden") };
+        }
+      }
+      return tool.handler(input);
+    },
+  };
+}
+
+function withGuardedTools(
+  options: CreateMcpServerKitOptions<Ctx>,
+): CreateMcpServerKitOptions<Ctx> {
+  return { ...options, tools: options.tools.map(guardMcpTool) };
+}
+
 export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
-  return createMcpServerKit<Ctx>({
+  return createMcpServerKit<Ctx>(withGuardedTools({
     name: "courselit",
     version: "0.0.0",
     onError: ({ error, source }) =>
@@ -55,6 +120,7 @@ export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
     async resolveContext({ principalId, credential, headers }) {
       const school = await resolveSchoolContext({
         db: deps.db,
+        clock: deps.clock,
         principalId,
         credential: credential.credential,
         requestedPublicSchoolId: headerSchoolId(
@@ -76,6 +142,7 @@ export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
           credential: credential.credential,
           permissions: school.value.permissions,
           publicSchoolId: school.value.publicId,
+          isOwner: school.value.isOwner,
         },
       };
     },
@@ -441,5 +508,5 @@ export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
         },
       },
     ],
-  });
+  }));
 }

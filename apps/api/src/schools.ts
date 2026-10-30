@@ -37,6 +37,8 @@ export type SchoolDto = {
   locale: string;
   currency: string;
   permissions?: CourseLitPermission[];
+  /** Whether the caller owns this school (owner-only settings such as API keys). */
+  isOwner?: boolean;
   selected?: boolean;
   website?: {
     logo: MediaRef | null;
@@ -291,8 +293,8 @@ export async function listSchoolsForUser(
   const customHostBySchoolId = new Map(
     verifiedCustomHosts.map((host) => [host.schoolId, host.hostname]),
   );
-  return rows.map((row) =>
-    toSchoolDto(
+  return rows.map((row) => ({
+    ...toSchoolDto(
       row.school,
       row.school.publicId === selectedTenantPublicId,
       row.membership.isOwner
@@ -301,7 +303,8 @@ export async function listSchoolsForUser(
       { logo: row.websiteLogo ?? null },
       customHostBySchoolId.get(row.school.id) ?? defaultStorefrontHost(row.school.subdomain),
     ),
-  );
+    isOwner: row.membership.isOwner,
+  }));
 }
 
 /** Load an active school by its public id (`sch_...`) only. Subdomains and

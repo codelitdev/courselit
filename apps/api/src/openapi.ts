@@ -1,5 +1,27 @@
 import { contract } from "@courselit/api-contract";
 import { generateOpenApi } from "@ts-rest/open-api";
+import { getOperationPolicy } from "./auth/operation-policy.js";
+
+const operationIdByRoute = new Map<unknown, string>(
+  Object.entries(contract).map(([operationId, route]) => [route, operationId]),
+);
+
+/**
+ * Documents which credentials each operation accepts, straight from the
+ * runtime operation policy. Browser sessions are not an API-client mechanism
+ * and are not listed.
+ */
+function securityFor(route: unknown): Array<Record<string, string[]>> | undefined {
+  const operationId = operationIdByRoute.get(route);
+  const policy = operationId ? getOperationPolicy(operationId) : null;
+  if (!policy) return undefined;
+  if (policy.audience !== "school" && policy.audience !== "account") return [];
+  const allowed: readonly string[] = policy.allowedCredentials;
+  const security: Array<Record<string, string[]>> = [];
+  if (allowed.includes("api_key")) security.push({ apiKey: [] });
+  if (allowed.includes("oauth")) security.push({ oauth: [] });
+  return security;
+}
 
 const openApiTags = [
   { name: "System", description: "API health and readiness checks." },
@@ -164,12 +186,32 @@ export function createOpenApiDocument(publicApiUrl: string) {
       },
       servers: [configurableServer(publicApiUrl)],
       tags: openApiTags.map((tag) => ({ ...tag })),
+      components: {
+        securitySchemes: {
+          apiKey: {
+            type: "apiKey",
+            in: "header",
+            name: "x-api-key",
+            description:
+              "School API key (`cl_live_...`). Created in Settings > API keys. Pinned to one school; X-School-ID is ignored.",
+          },
+          oauth: {
+            type: "http",
+            scheme: "bearer",
+            description: "OAuth 2.1 access token. Send X-School-ID to select a school.",
+          },
+        },
+      },
     },
     {
-      operationMapper: (operation, route) => ({
-        ...operation,
-        tags: [tagForPath((route as { path?: string }).path)],
-      }),
+      operationMapper: (operation, route) => {
+        const security = securityFor(route);
+        return {
+          ...operation,
+          tags: [tagForPath((route as { path?: string }).path)],
+          ...(security ? { security } : {}),
+        };
+      },
     },
   );
 }

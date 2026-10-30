@@ -46,9 +46,6 @@ export const COURSELIT_PERMISSIONS = [
   "analytics:read",
   // Billing
   "billing:read",
-  // API access
-  "api_keys:read",
-  "api_keys:manage",
   // Integrations
   "integrations:read",
   "integrations:manage",
@@ -98,7 +95,6 @@ export const COURSELIT_PERMISSION_IMPLICATIONS: Readonly<
   "media:write": ["media:read"],
   "media:delete": ["media:write", "media:read"],
   "certificates:write": ["certificates:read"],
-  "api_keys:manage": ["api_keys:read"],
   "integrations:manage": ["integrations:read"],
 };
 
@@ -300,11 +296,6 @@ export const COURSELIT_PERMISSION_GROUPS: ReadonlyArray<{
     id: "billing",
     label: "Billing",
     permissions: ["billing:read"],
-  },
-  {
-    id: "api_keys",
-    label: "API Access",
-    permissions: ["api_keys:read", "api_keys:manage"],
   },
   {
     id: "integrations",

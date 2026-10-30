@@ -6697,7 +6697,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "api_keys_created_by_school_account_id_school_accounts_id_fk": {
@@ -6723,7 +6723,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

@@ -1,9 +1,10 @@
 import {
+  type Clock,
   createPlatformError,
   type PlatformCredential,
   type PlatformError,
 } from "@codelitdev/platform";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   type CourseLitPermission,
@@ -11,6 +12,7 @@ import {
   OWNER_PERMISSIONS,
   parsePermissions,
 } from "./permissions.js";
+import { isApiKeyExpired, loadActiveApiKey } from "./auth/api-keys.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import type { AppDb } from "./types.js";
 
@@ -32,6 +34,7 @@ type SchoolContextInput = {
   principalId: string;
   credential: PlatformCredential;
   requestedPublicSchoolId: string | null;
+  clock: Clock;
 };
 
 export async function resolveSchoolContext(
@@ -58,78 +61,28 @@ async function resolveSchool(
     if (!input.credential.credentialId) {
       return { ok: false, error: createPlatformError("unauthenticated") };
     }
-    const keys = await input.db
-      .select({
-        apiKey: schema.apiKeys,
-        school: schema.schools,
-        membership: schema.memberships,
-        schoolAccount: schema.schoolAccounts,
-      })
-      .from(schema.apiKeys)
-      .innerJoin(schema.schools, eq(schema.schools.id, schema.apiKeys.schoolId))
-      .leftJoin(
-        schema.memberships,
-        eq(schema.memberships.id, schema.apiKeys.membershipId),
-      )
-      .leftJoin(
-        schema.schoolAccounts,
-        eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
-      )
-      .where(
-        and(
-          eq(schema.apiKeys.id, input.credential.credentialId),
-          isNull(schema.apiKeys.revokedAt),
-        ),
-      )
-      .limit(1);
-    const row = keys[0];
-    if (!row) {
+    const row = await loadActiveApiKey(input.db, { id: input.credential.credentialId });
+    // A key is pinned to its school (X-School-ID is ignored) and carries
+    // exactly its own stored permissions. It belongs to the school, so it
+    // does not depend on the creator's membership; it acts through the
+    // school owner's account but is never treated as the owner.
+    if (!row || isApiKeyExpired(row.key.expiresAt, input.clock.now())) {
       return { ok: false, error: createPlatformError("unauthenticated") };
     }
-    if (row.apiKey.expiresAt && row.apiKey.expiresAt.valueOf() <= Date.now()) {
-      return { ok: false, error: createPlatformError("unauthenticated") };
-    }
-    if (row.membership && row.schoolAccount) {
-      if (row.schoolAccount.status !== "active") {
-        return { ok: false, error: createPlatformError("tenant_forbidden") };
-      }
-      const memberEffective = row.membership.isOwner
-        ? new Set(OWNER_PERMISSIONS)
-        : parsePermissions(row.membership.permissions);
-      const keyEffective = parsePermissions(row.apiKey.permissions);
-      const intersected = new Set<CourseLitPermission>();
-      for (const p of keyEffective) {
-        if (memberEffective.has(p)) intersected.add(p);
-      }
-      return {
-        ok: true,
-        value: {
-          schoolId: row.school.id,
-          publicId: row.school.publicId,
-          schoolAccountId: row.schoolAccount.id,
-          schoolAccountPublicId: row.schoolAccount.publicId,
-          staffMembershipId: row.membership.id,
-          staffMembershipPublicId: row.membership.publicId,
-          isOwner: false,
-          membershipVersion: row.membership.version,
-          directPermissions: row.apiKey.permissions as CourseLitPermission[],
-          permissions: intersected,
-        },
-      };
-    }
+    const permissions = parsePermissions(row.key.permissions);
     return {
       ok: true,
       value: {
         schoolId: row.school.id,
         publicId: row.school.publicId,
-        schoolAccountId: row.apiKey.createdBySchoolAccountId ?? "",
-        schoolAccountPublicId: "",
-        staffMembershipId: row.apiKey.membershipId ?? "",
-        staffMembershipPublicId: "",
+        schoolAccountId: row.ownerAccount.id,
+        schoolAccountPublicId: row.ownerAccount.publicId,
+        staffMembershipId: row.ownerMembership.id,
+        staffMembershipPublicId: row.ownerMembership.publicId,
         isOwner: false,
-        membershipVersion: 1,
-        directPermissions: row.apiKey.permissions as CourseLitPermission[],
-        permissions: parsePermissions(row.apiKey.permissions),
+        membershipVersion: row.ownerMembership.version,
+        directPermissions: [...permissions],
+        permissions,
       },
     };
   }

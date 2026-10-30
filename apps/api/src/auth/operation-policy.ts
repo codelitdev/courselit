@@ -1,4 +1,5 @@
-import type { CourseLitPermission } from "@courselit/api-contract";
+import { type CourseLitPermission, contract } from "@courselit/api-contract";
+import { createPlatformError, type PlatformError } from "@codelitdev/platform";
 
 export type Audience = "school" | "account" | "system" | "public" | "learner";
 
@@ -139,9 +140,12 @@ export const OPERATION_POLICIES = {
   getSchoolOverview: schoolOp(["school:read"]),
   updateSchool: schoolOp(["school:write"]),
   getSchoolCodeInjection: schoolOp(["school:read"]),
-  updateSchoolCodeInjection: schoolOp(["school:write"]),
-  getSchoolPaymentSettings: schoolOp(["commerce:manage"]),
-  updateSchoolPaymentSettings: schoolOp(["commerce:manage"]),
+  updateSchoolCodeInjection: schoolOp(["school:write"], ["session", "oauth"]),
+  // Payment gateway credentials and storefront script injection are never
+  // reachable with a long-lived API key: a leaked key must not be able to
+  // redirect payments or inject scripts into the learner-facing site.
+  getSchoolPaymentSettings: schoolOp(["commerce:manage"], ["session", "oauth"]),
+  updateSchoolPaymentSettings: schoolOp(["commerce:manage"], ["session", "oauth"]),
   listSchoolHosts: schoolOp(["school:read"]),
   createSchoolHost: schoolOp(["school:write"]),
   deleteSchoolHost: schoolOp(["school:write"]),
@@ -265,10 +269,11 @@ export const OPERATION_POLICIES = {
   getProductCertificateTemplate: schoolOp(["certificates:read"]),
   upsertProductCertificateTemplate: schoolOp(["certificates:write"]),
 
-  // API access management (browser session only)
-  listApiKeys: schoolSessionOp(["api_keys:read"]),
-  createApiKey: schoolSessionOp(["api_keys:manage"]),
-  revokeApiKey: schoolSessionOp(["api_keys:manage"]),
+  // API key management: school owner, browser session only. A key can never
+  // list, mint, or revoke keys.
+  listApiKeys: schoolOwnerOp(["session"]),
+  createApiKey: schoolOwnerOp(["session"]),
+  revokeApiKey: schoolOwnerOp(["session"]),
 
   // Admin notifications
   listAdminNotifications: schoolSessionOp(["members:read"]),
@@ -351,4 +356,90 @@ export type OperationId = keyof typeof OPERATION_POLICIES;
 
 export function getOperationPolicy(operationId: string): OperationPolicy | null {
   return (OPERATION_POLICIES as Record<string, OperationPolicy>)[operationId] ?? null;
+}
+
+/** Whether a credential kind may call an operation under its policy. */
+export function credentialAllowedByPolicy(
+  policy: OperationPolicy,
+  credentialKind: CredentialKind,
+): boolean {
+  switch (policy.audience) {
+    case "school":
+      return policy.allowedCredentials.includes(credentialKind);
+    case "account":
+      return (policy.allowedCredentials as readonly CredentialKind[]).includes(
+        credentialKind,
+      );
+    // Public, learner, and system operations are served by their own
+    // authentication paths. A school API key never acts on them.
+    default:
+      return credentialKind !== "api_key";
+  }
+}
+
+function credentialNotAllowed(): PlatformError {
+  return createPlatformError("forbidden", {
+    safeDetails: { reason: "credential_not_allowed" },
+  });
+}
+
+/**
+ * Runtime, fail-closed credential gate (FrontLit model). Runs before any
+ * staff-authenticated handler:
+ * - a contract operation without a registered policy is denied for everyone;
+ * - a credential kind outside the policy's allowed list is denied;
+ * - a route that is not a contract operation is denied to API keys (only
+ *   explicitly registered operations are API-key reachable).
+ * Permission checks still happen in the handlers.
+ */
+export function authorizeOperationCredential(
+  operationId: string | null,
+  credentialKind: CredentialKind,
+): PlatformError | null {
+  if (operationId === null) {
+    return credentialKind === "api_key" ? credentialNotAllowed() : null;
+  }
+  const policy = getOperationPolicy(operationId);
+  if (!policy) return credentialNotAllowed();
+  return credentialAllowedByPolicy(policy, credentialKind)
+    ? null
+    : credentialNotAllowed();
+}
+
+type CompiledRoute = {
+  operationId: string;
+  method: string;
+  segments: readonly string[];
+  literalCount: number;
+};
+
+const compiledRoutes: readonly CompiledRoute[] = Object.entries(
+  contract as unknown as Record<string, { method: string; path: string }>,
+).map(([operationId, route]) => {
+  const segments = route.path.split("/").filter(Boolean);
+  return {
+    operationId,
+    method: route.method.toUpperCase(),
+    segments,
+    literalCount: segments.filter((segment) => !segment.startsWith(":")).length,
+  };
+});
+
+/**
+ * Maps an HTTP request to its contract operation id. Literal segments win
+ * over parameters (`/v1/media/unsplash` before `/v1/media/:mediaId`).
+ */
+export function resolveOperationId(method: string, path: string): string | null {
+  const pathname = path.split("?", 1)[0] ?? path;
+  const segments = pathname.split("/").filter(Boolean);
+  const upper = method.toUpperCase();
+  let best: CompiledRoute | null = null;
+  for (const route of compiledRoutes) {
+    if (route.method !== upper || route.segments.length !== segments.length) continue;
+    const matches = route.segments.every(
+      (segment, index) => segment.startsWith(":") || segment === segments[index],
+    );
+    if (matches && (!best || route.literalCount > best.literalCount)) best = route;
+  }
+  return best?.operationId ?? null;
 }

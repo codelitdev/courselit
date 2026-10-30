@@ -14,13 +14,13 @@ import {
   Palette,
   RotateCcw,
   Save,
-  Trash2,
   Users,
 } from "lucide-react";
 import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { ApiKeySettings } from "@/components/settings/api-key-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
@@ -79,16 +79,11 @@ function isSettingsTab(value: string | null, mode: SettingsMode): value is Setti
   return tabs.includes(value as never);
 }
 
-type ApiKeyItem = {
-  id?: string;
-  publicId: string;
-  createdAt?: string;
-};
-
 type SchoolItem = {
   id: string;
   name: string;
   currency: string;
+  isOwner?: boolean;
   selected?: boolean;
 };
 
@@ -124,7 +119,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             }
           : {
               title: "Settings",
-              description: "Manage payments, team access, notifications, and API access for this school.",
+              description: "Manage payments, team access, notifications, and API keys for this school.",
             };
 
   function selectWebsiteTab(tab: string) {
@@ -170,7 +165,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const [mailingAddressError, setMailingAddressError] = useState<string | null>(null);
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
 
   const webhookUrl = useMemo(() => {
     if (typeof window === "undefined") return "/v1/storefront/webhooks/{provider}";
@@ -185,6 +180,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
         const selected = items.find((item) => item.selected) ?? items[0];
         if (!selected) return;
         setSchoolId(selected.id);
+        setIsOwner(selected.isOwner === true);
         setCurrency(selected.currency || "USD");
         void fetch("/api/v1/school/payment-settings", {
           credentials: "include",
@@ -262,18 +258,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
       setMailingAddressSaving(false);
     }
   }
-
-  useEffect(() => {
-    if (!schoolId || mode !== "general") return;
-    void fetch("/api/v1/api-keys", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { "x-school-id": schoolId },
-    })
-      .then((response) => (response.ok ? response.json() : { items: [] }))
-      .then((body: { items?: ApiKeyItem[] }) => setApiKeys(body.items ?? []))
-      .catch(() => setApiKeys([]));
-  }, [mode, schoolId]);
 
   async function copyWebhook() {
     try {
@@ -361,17 +345,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     setResetOpen(false);
   }
 
-  async function revokeKey(publicId: string) {
-    if (!schoolId) return;
-    const response = await fetch(`/api/v1/api-keys/${publicId}`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: { "x-school-id": schoolId },
-    });
-    if (response.ok) {
-      setApiKeys((items) => items.filter((item) => item.publicId !== publicId));
-    }
-  }
 
   return (
     <AuthGate>
@@ -420,7 +393,10 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       label: "Notifications",
                       icon: <Bell className="size-4" />,
                     },
-                    { value: "api-keys", label: "API keys", icon: <Key className="size-4" /> },
+                    // API keys belong to the school; only its owner manages them.
+                    ...(isOwner
+                      ? [{ value: "api-keys", label: "API keys", icon: <Key className="size-4" /> }]
+                      : []),
                   ]
             }
           >
@@ -713,57 +689,9 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           </PlatformTabsContent>
 
           <PlatformTabsContent value="api-keys" className="w-full">
-          {mode === "general" && selectedTab === "api-keys" ? (
-            <div className="space-y-4 pt-4">
-            <Card>
-              <CardHeader>
-                <CardDescription>
-                  Keys for the public product and learner APIs.{" "}
-                  <a
-                    href="https://docs.courselit.app/developers/introduction"
-                    className="underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Learn more about API keys
-                  </a>
-                  .
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {apiKeys.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                    <Key className="mb-2 size-8 opacity-50" />
-                    <p>No API keys found</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y">
-                    {apiKeys.map((key) => (
-                      <li
-                        key={key.publicId}
-                        className="flex items-center justify-between gap-3 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{key.publicId}</p>
-                          {key.createdAt ? (
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(key.createdAt).toLocaleString()}
-                            </p>
-                          ) : null}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => void revokeKey(key.publicId)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+          {mode === "general" && selectedTab === "api-keys" && isOwner ? (
+            <div className="w-full pt-4">
+              <ApiKeySettings schoolId={schoolId} />
             </div>
           ) : null}
           </PlatformTabsContent>

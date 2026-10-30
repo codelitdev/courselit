@@ -70,7 +70,7 @@ The current team implementation is useful but incomplete:
 - authorization is distributed across route handlers as repeated permission
   checks instead of being described by one operation policy;
 - permission changes have no optimistic concurrency protection;
-- personal API keys can outlive the staff membership that authorized them;
+- API keys were tied to a user rather than clearly to the school;
 - OAuth authority is not explicitly intersected with current school
   membership authority;
 - invitation resend is implemented as UI behavior rather than a first-class,
@@ -100,8 +100,8 @@ inconsistent permission checks.
   policy.
 - Prevent a member from inviting or granting authority the member does not
   currently possess.
-- Make browser sessions, OAuth grants, and personal API keys obey the same live
-  school-membership ceiling.
+- Make browser sessions and OAuth grants obey the same live school-membership
+  ceiling. School API keys are school-owned and bounded by their own grant.
 - Revoke membership-bound credentials when a staff membership ends.
 - Use `school_account` as the school-local actor and display identity.
 - Keep staff membership and learner membership independent.
@@ -124,8 +124,8 @@ inconsistent permission checks.
 - V1 will not support multiple owners or owner percentages.
 - V1 will not support domain-wide automatic staff provisioning, SCIM, SAML,
   or enterprise identity groups.
-- V1 will not add school-owned service principals. Existing personal API keys
-  remain membership-bound; a separate service-account design can follow.
+- School API keys are school-owned credentials managed only by the owner (see
+  "School API keys"); they are not bound to a staff membership.
 - V1 will not allow team lifecycle operations through OAuth or API keys.
 - The externally documented CourseLit REST API and MCP server will not expose
   learner, public storefront, checkout, consumption, progress, or
@@ -208,7 +208,7 @@ not consulted during authorization.
 ### Credential ceiling
 
 The maximum authority available to a request after intersecting the current
-staff membership with an OAuth grant or personal API key grant.
+staff membership with an OAuth grant.
 
 ## Product principles
 
@@ -312,17 +312,18 @@ ownership and cannot perform owner-only operations.
 
 ### Authentication mechanism attenuates authority
 
-Browser sessions use current staff permissions. OAuth and personal API keys
-can only narrow that authority:
+Browser sessions use current staff permissions. OAuth can only narrow that
+authority. School API keys are not tied to a member and carry exactly their
+own stored permissions:
 
 ```text
 browser effective = current staff membership
 OAuth effective  = current staff membership ∩ approved OAuth permissions
-API key effective = current staff membership ∩ key permissions
+API key effective = key permissions (school-owned, owner-managed)
 ```
 
-No credential can retain a permission after the underlying membership loses
-it.
+No member-bound credential can retain a permission after the underlying
+membership loses it.
 
 ### School-local identity is used in school UI
 
@@ -347,7 +348,7 @@ The implementation should be evolved rather than discarded.
 | Leave and ownership transfer | Missing | Add browser-session-only operations and UI. |
 | Authorization | Repeated route-level checks | Introduce a typed, complete operation-policy registry. |
 | OAuth | Authenticates a global user | Bind grants to a membership generation and intersect with live permissions. |
-| Personal API keys | Store school and user grants | Bind keys to a staff membership and intersect with live permissions. |
+| School API keys | Store school and user grants | School-owned keys, owner-managed, bounded by their own permissions. |
 | Learner integration | No canonical staff capability contract | Project safe staff capabilities from the learner session and define explicit exceptions. |
 | Audit | Basic audit rows exist | Add before/after grants, target identity, credential kind, outcome, and request metadata. |
 
@@ -424,8 +425,6 @@ The initial complete catalog is:
 | Certificates | `certificates:write` | Create, edit, issue, or revoke certificates where supported. |
 | Analytics | `analytics:read` | View school, product, learner, commerce, and community reports. |
 | Billing | `billing:read` | View the school's CourseLit subscription and invoices. |
-| API access | `api_keys:read` | List personal school API keys and their metadata. |
-| API access | `api_keys:manage` | Create and revoke personal keys within the actor's delegable set. |
 | Integrations | `integrations:read` | View configured integrations without revealing stored secrets. |
 | Integrations | `integrations:manage` | Configure or disconnect supported integrations. |
 
@@ -468,7 +467,6 @@ mails:send           -> mails:write -> mails:read
 media:write          -> media:read
 media:delete         -> media:write -> media:read
 certificates:write   -> certificates:read
-api_keys:manage      -> api_keys:read
 integrations:manage  -> integrations:read
 ```
 
@@ -631,21 +629,41 @@ membership takes effect immediately even if an access token has not expired.
 Team membership administration, invitations, ownership transfer, and school
 deletion are unavailable through OAuth in V1.
 
-### Personal API keys
+### School API keys
 
-Each personal API key belongs to a staff membership, not merely to a global
-user and school. Key creation requires `api_keys:manage`, and a non-owner can
-select only permissions in the actor's current effective set.
+API keys belong to the school, not to a member. Only the school owner can
+list, create, and revoke them, and only from a browser session; there are no
+`api_keys:*` team permissions to delegate. A key carries exactly the
+permissions chosen at creation (at least one catalog permission), an optional
+expiry (at most two years ahead), and a name. A school holds at most 50 active
+keys. The creator is kept only as attribution and is set to null if the
+creator's membership, school account, or user is removed; the key keeps
+working.
+
+Format: `cl_live_<publicId>.<secret>` (256-bit base64url secret). Only an
+HMAC-SHA-256 digest (with `API_KEY_PEPPER`) is stored; the full key is shown
+once in the create response. Keys are accepted only in the `X-API-Key` header.
 
 At request time:
 
-1. the key must be active and unexpired;
-2. its bound membership and school account must still be active;
-3. the request school must equal the key school; and
-4. key permissions are intersected with current membership permissions.
+1. the key must be well formed, not revoked, unexpired (injected clock), and
+   its school not deleted; every failure is the same `401 unauthenticated`;
+2. failed key attempts are limited to 30 per client IP per 5 minutes (`429`
+   with `Retry-After`);
+3. the key is pinned to its school and `X-School-ID` is ignored;
+4. the request acts through the school owner's account (so user-referencing
+   records remain valid) with only the key's permissions, never as owner; and
+5. the fail-closed operation policy decides whether API keys may call the
+   operation at all. Keys cannot manage keys, team members or invitations,
+   create/select/list schools, read billing, read or change payment-gateway
+   settings, change code injection, use admin notifications, or call routes
+   outside the API contract.
 
-Deleting a membership cascades or atomically revokes its keys. A new
-membership for the same person receives a new ID, so old keys cannot revive.
+`lastUsedAt` is updated at most every five minutes and never blocks
+authentication. Rotation is create-new, then revoke-old; revocation applies
+to the next request. Create and revoke write `api_key.created` /
+`api_key.revoked` audit events in the same transaction. Deleting the school
+removes its keys.
 
 ### Admin REST and MCP
 
@@ -653,7 +671,7 @@ CourseLit REST and MCP are administrative interfaces. Resolving an ordinary
 school-scoped request on either surface always requires:
 
 1. a valid administrative credential: browser session for REST, or OAuth token
-   or personal API key for REST and MCP;
+   or school API key for REST and MCP;
 2. one active school account;
 3. one active staff membership for the credential-bound school; and
 4. the administrative permission required by the tool's operation policy.
@@ -768,12 +786,12 @@ Only one pending invitation may exist per normalized `(school_id, email)`.
 Resending rotates the secret and expiry on that logical invitation or revokes
 and replaces it atomically. Old links stop working immediately.
 
-### Personal API keys
+### School API keys
 
-Replace the key's direct `user_id` ownership with `membership_id` and retain
-`school_id` as a denormalized, constrained lookup field. Store only a digest
-of the key secret. Add `created_by_school_account_id`, `name`, `permissions`,
-`expires_at`, `revoked_at`, `last_used_at`, and timestamps.
+`api_keys` is owned by `school_id` (cascade on school delete). `membership_id`,
+`created_by_school_account_id`, and `user_id` are attribution only and use
+`ON DELETE SET NULL`. Store only a digest of the key secret, plus `name`,
+`permissions`, `expires_at`, `revoked_at`, `last_used_at`, and timestamps.
 
 ### OAuth authorization grants
 
@@ -1275,7 +1293,7 @@ names, raw IDs, or token material as metric labels.
 3. Add public IDs, permission arrays, preset metadata, version, timestamps,
    and ownership constraints.
 4. Harden invitations and bind inviter/acceptor to school accounts.
-5. Bind personal API keys and OAuth grants to a membership generation.
+5. Bind OAuth grants to a membership generation; make API keys school-owned.
 6. Add membership-scoped staff notification preferences.
 7. Update school provisioning to create exactly one owner membership.
 8. Reset the development database and reapply migrations.
@@ -1284,7 +1302,7 @@ names, raw IDs, or token material as metric labels.
 
 1. Implement the operation-policy registry and policy evaluator.
 2. Build the server-authoritative school authorization context.
-3. Apply credential intersections for OAuth and personal API keys.
+3. Apply credential intersections for OAuth; bound API keys by their own grant.
 4. Migrate resource handlers from ad hoc `permissions.has(...)` checks.
 5. Remove `school:admin` from contracts, presets, fixtures, and handlers.
 6. Add owner-only and recent-auth enforcement.
@@ -1486,8 +1504,8 @@ names, raw IDs, or token material as metric labels.
   authorize through `learner_memberships`.
 - Learner, public storefront, checkout, and consumption endpoints are separate
   application APIs even when hosted in the same backend service.
-- Personal API keys and OAuth grants are membership-bound and attenuated by
-  current permission.
+- OAuth grants are membership-bound and attenuated by current permission.
+  School API keys are owner-managed and bounded by their own permissions.
 - Ordinary learner access remains exclusively based on
   `learner_memberships`.
 - Explicit staff preview, `communities:moderate`, and staff posting under a

@@ -11,6 +11,8 @@ import {
 } from "@codelitdev/platform";
 import {
   activityRangeSchema,
+  contract,
+  normalizeCourseLitPermissions,
   addCommunityCategoryBodySchema,
   authorizeMediaUploadBodySchema,
   communityListQuerySchema,
@@ -101,11 +103,19 @@ import {
 import { and, eq, ne, or } from "drizzle-orm";
 import { ActivityType, getSchoolOverview, recordActivity } from "./activities.js";
 import {
+  apiKeyDisplayPrefix,
   createApiKeyRecord,
+  isApiKeyExpired,
   listApiKeyRecords,
+  MAX_API_KEY_LIFETIME_MS,
   revokeApiKey,
 } from "./auth/api-keys.js";
 import { authenticateHttpRequest } from "./auth/authenticate.js";
+import {
+  authorizeOperationCredential,
+  type CredentialKind,
+  resolveOperationId,
+} from "./auth/operation-policy.js";
 import { ADMIN_SESSION_COOKIE_NAME } from "./auth/options.js";
 import {
   createLesson,
@@ -1968,13 +1978,23 @@ export async function dispatch(
     if (auth.kind !== "authenticated") {
       const error =
         auth.kind === "rejected" ? auth.error : createPlatformError("unauthenticated");
-      return errorResponse(error);
+      const retryAfter = error.safeDetails?.retryAfterSeconds;
+      const response = errorResponse(
+        error.code === "rate_limited" ? createPlatformError("rate_limited") : error,
+      );
+      return typeof retryAfter === "number"
+        ? { ...response, headers: { "Retry-After": String(retryAfter) } }
+        : response;
     }
+    // Fail-closed operation policy: the credential kind must be allowed for
+    // the contract operation this request maps to before any handler runs.
+    const credentialDenied = authorizeOperationCredential(
+      resolveOperationId(request.method, path),
+      auth.credential.kind as CredentialKind,
+    );
+    if (credentialDenied) return errorResponse(credentialDenied);
 
     if (request.method === "POST" && path === "/api/school/select") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const schoolId =
         request.body &&
         typeof request.body === "object" &&
@@ -1984,6 +2004,7 @@ export async function dispatch(
       if (!schoolId) return errorResponse(createPlatformError("validation_failed"));
       const resolved = await resolveSchoolContext({
         db: deps.db,
+        clock: deps.clock,
         principalId: auth.principalId,
         credential: auth.credential,
         requestedPublicSchoolId: schoolId,
@@ -2017,16 +2038,10 @@ export async function dispatch(
       return { status: 204, body: undefined };
     }
     if (request.method === "GET" && path === "/v1/schools") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const items = await listSchoolsForUser(deps.db, auth.principalId);
       return { status: 200, body: { items } };
     }
     if (request.method === "GET" && path === "/v1/billing/catalog") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       if (deps.billingMode === "cloud") {
         await deps.billing.billing.recordRequestedCatalog();
         await deps.billing.billing.verifyRequestedCatalog();
@@ -2035,9 +2050,6 @@ export async function dispatch(
       return { status: 200, body: catalog };
     }
     if (request.method === "POST" && path === "/v1/schools") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const parsed = createSchoolBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
@@ -2128,9 +2140,6 @@ export async function dispatch(
       };
     }
     if (request.method === "POST" && path === "/v1/invitations/accept") {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const input = request.body as { token?: unknown; email?: unknown } | undefined;
       if (typeof input?.token !== "string" || typeof input.email !== "string") {
         return errorResponse(createPlatformError("validation_failed"));
@@ -2161,9 +2170,6 @@ export async function dispatch(
         path === "/v1/team-invitations/accept" ||
         path === "/v1/team-invitations/reject")
     ) {
-      if (auth.credential.kind === "api_key") {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const input = request.body as
         | { invitationId?: unknown; token?: unknown }
         | undefined;
@@ -2214,6 +2220,7 @@ export async function dispatch(
 
     const school = await resolveSchoolContext({
       db: deps.db,
+      clock: deps.clock,
       principalId: auth.principalId,
       credential: auth.credential,
       requestedPublicSchoolId: headerSchoolId(request.headers),
@@ -4682,68 +4689,98 @@ export async function dispatch(
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
 
+    // API keys belong to the school and are managed by its owner only.
     if (request.method === "POST" && path === "/v1/api-keys") {
-      if (!context.permissions.has("api_keys:manage")) {
+      if (!school.value.isOwner) {
         return errorResponse(createPlatformError("forbidden"));
       }
-      const input = request.body as
-        | {
-            permissions?: unknown;
-            expiresAt?: unknown;
-          }
-        | undefined;
-      const permissions = Array.isArray(input?.permissions) ? input.permissions : [];
-      const expiresAt =
-        typeof input?.expiresAt === "string" ? new Date(input.expiresAt) : undefined;
+      const parsed = contract.createApiKey.body.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const now = deps.clock.now();
+      const expiresAt = parsed.data.expiresAt
+        ? new Date(parsed.data.expiresAt)
+        : undefined;
       if (
         expiresAt &&
-        (Number.isNaN(expiresAt.getTime()) || expiresAt <= deps.clock.now())
+        (expiresAt.getTime() <= now.getTime() ||
+          expiresAt.getTime() > now.getTime() + MAX_API_KEY_LIFETIME_MS)
       ) {
-        return errorResponse(createPlatformError("validation_failed"));
+        return errorResponse(
+          createPlatformError("validation_failed", {
+            safeDetails: { reason: "api_key_expiry_out_of_range" },
+          }),
+        );
       }
-      if (
-        !permissions.every(
-          (value): value is string =>
-            typeof value === "string" &&
-            (COURSELIT_PERMISSIONS as readonly string[]).includes(value),
-        )
-      ) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const key = await createApiKeyRecord({
+      const requested = normalizeCourseLitPermissions(parsed.data.permissions);
+      const created = await createApiKeyRecord({
         db: deps.db,
         schoolId: context.tenantId!,
         userId: context.principalId,
-        permissions,
+        membershipId: school.value.staffMembershipId,
+        schoolAccountId: school.value.schoolAccountId,
+        name: parsed.data.name,
+        permissions: requested,
         pepper: deps.apiKeyPepper,
         clock: deps.clock,
         expiresAt,
-        audit: { requestId: context.requestId },
+        requestId: context.requestId,
       });
-      return { status: 201, body: key };
+      if (!created.ok) return errorResponse(created.error);
+      const creator = await deps.db
+        .select({
+          name: schema.schoolAccounts.displayName,
+          email: schema.schoolAccounts.email,
+        })
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.id, school.value.schoolAccountId))
+        .limit(1);
+      return {
+        status: 201,
+        body: {
+          id: created.value.publicId,
+          name: parsed.data.name,
+          prefix: apiKeyDisplayPrefix(created.value.publicId),
+          permissions: requested,
+          createdBy: creator[0] ?? null,
+          createdAt: created.value.createdAt.toISOString(),
+          lastUsedAt: null,
+          expiresAt: expiresAt?.toISOString() ?? null,
+          expired: false,
+          key: created.value.raw,
+        },
+      };
     }
     if (request.method === "GET" && path === "/v1/api-keys") {
-      if (!context.permissions.has("api_keys:read")) {
+      if (!school.value.isOwner) {
         return errorResponse(createPlatformError("forbidden"));
       }
       const keys = await listApiKeyRecords(deps.db, context.tenantId!);
+      const now = deps.clock.now();
       return {
         status: 200,
         body: {
           items: keys.map((key) => ({
-            id: key.id,
-            publicId: key.publicId,
-            expiresAt: key.expiresAt?.toISOString() ?? null,
-            revokedAt: key.revokedAt?.toISOString() ?? null,
-            lastUsedAt: key.lastUsedAt?.toISOString() ?? null,
+            id: key.publicId,
+            name: key.name,
+            prefix: apiKeyDisplayPrefix(key.publicId),
+            permissions: normalizeCourseLitPermissions(key.permissions),
+            createdBy:
+              key.createdByEmail !== null
+                ? { name: key.createdByName ?? "", email: key.createdByEmail }
+                : null,
             createdAt: key.createdAt.toISOString(),
+            lastUsedAt: key.lastUsedAt?.toISOString() ?? null,
+            expiresAt: key.expiresAt?.toISOString() ?? null,
+            expired: isApiKeyExpired(key.expiresAt, now),
           })),
         },
       };
     }
     const revokeMatch = /^\/v1\/api-keys\/([^/]+)$/.exec(path);
     if (request.method === "DELETE" && revokeMatch) {
-      if (!context.permissions.has("api_keys:manage")) {
+      if (!school.value.isOwner) {
         return errorResponse(createPlatformError("forbidden"));
       }
       const revoked = await revokeApiKey(
@@ -4754,7 +4791,7 @@ export async function dispatch(
         { actorId: context.principalId, requestId: context.requestId },
       );
       return revoked
-        ? { status: 204, body: null }
+        ? { status: 204, body: undefined }
         : errorResponse(createPlatformError("not_found"));
     }
     if (request.method === "GET" && path === "/v1/school/team") {
@@ -4849,7 +4886,7 @@ export async function dispatch(
         decodeURIComponent(teamInvitationMatch[1]!),
         deps.clock,
       );
-      return result.ok ? { status: 204, body: null } : errorResponse(result.error);
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
     if (
       request.method === "POST" &&
@@ -4922,7 +4959,7 @@ export async function dispatch(
         decodeURIComponent(invitationMatch[1]!),
         deps.clock,
       );
-      return result.ok ? { status: 204, body: null } : errorResponse(result.error);
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
 
     const salesPageMatch = /^\/v1\/sales-pages\/(product|community)\/([^/]+)$/.exec(
