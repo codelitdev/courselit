@@ -185,7 +185,7 @@ flowchart LR
 - Bun and TypeScript runtime.
 - Express with `ts-rest` routes.
 - Zod request and response schemas from `@courselit/api-contract`.
-- OpenAPI generated from the runtime contract and served at `/docs` with the raw document at `/openapi.json`.
+- OpenAPI generated from the runtime contract and served at `/docs` with the raw document at `/openapi.json`. A copy is committed at `apps/api/openapi.json` (`bun run generate:openapi`); `check:drift` fails CI when it falls out of date.
 - Better Auth and `@codelitdev/oauth-server-kit` for the admin authorization server.
 - A distinct school-scoped learner auth configuration and persistence boundary.
 - `@codelitdev/mcp-server-kit` mounted at `/mcp` with OAuth discovery, CIMD, and DCR compatibility.

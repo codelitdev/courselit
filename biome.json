@@ -13,7 +13,8 @@
       "!**/dist",
       "!**/migrations",
       "!**/node_modules",
-      "!**/*.generated.ts"
+      "!**/*.generated.ts",
+      "!apps/api/openapi.json"
     ]
   },
   "css": {
