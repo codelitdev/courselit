@@ -9,6 +9,14 @@ import { createExpressApp } from "./express-app.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
+/** The platform code of an MCP tool result reported with `isError`. */
+function toolErrorCode(body: unknown): string | undefined {
+  const result = (
+    body as { result?: { isError?: boolean; structuredContent?: { code?: string } } }
+  ).result;
+  return result?.isError ? result.structuredContent?.code : undefined;
+}
+
 describe.serial("reference API adapters", () => {
   it("does not run DDL when oauth-server-kit options and schema modules are imported", async () => {
     const { PGlite } = await import("@electric-sql/pglite");
@@ -350,9 +358,9 @@ describe.serial("reference API adapters", () => {
     const restItems = (restList.body as { items: Array<{ id: string }> }).items;
     const mcpJson = (
       mcpList.body as {
-        result: { content: Array<{ json: { items: Array<{ id: string }> } }> };
+        result: { structuredContent: { items: Array<{ id: string }> } };
       }
-    ).result.content[0]?.json;
+    ).result.structuredContent;
     expect(mcpJson?.items.map((item) => item.id)).toEqual(
       restItems.map((item) => item.id),
     );
@@ -370,16 +378,15 @@ describe.serial("reference API adapters", () => {
         id: 10,
         method: "initialize",
         params: {
-          protocolVersion: "2025-03-26",
+          protocolVersion: "2025-11-25",
           capabilities: {},
           clientInfo: { name: "reference-test", version: "0" },
         },
       },
     });
-    expect(initialized.headers?.["Mcp-Session-Id"]).toEqual(expect.any(String));
-    expect(initialized.headers?.["Access-Control-Expose-Headers"]).toBe(
-      "Mcp-Session-Id",
-    );
+    // MCP is stateless: 2025-era clients still initialize, but no session is minted.
+    expect(initialized.status).toBe(200);
+    expect(initialized.headers?.["Mcp-Session-Id"]).toBeUndefined();
 
     const cross = await dispatch(runtime, {
       method: "POST",
@@ -398,7 +405,7 @@ describe.serial("reference API adapters", () => {
         },
       },
     });
-    expect((cross.body as { error: { code: string } }).error.code).toBe("not_found");
+    expect(toolErrorCode(cross.body)).toBe("not_found");
 
     const denied = await dispatch(runtime, {
       method: "POST",
@@ -417,7 +424,7 @@ describe.serial("reference API adapters", () => {
         },
       },
     });
-    expect((denied.body as { error: { code: string } }).error.code).toBe("forbidden");
+    expect(toolErrorCode(denied.body)).toBe("forbidden");
 
     const deleted = await dispatch(runtime, {
       method: "POST",
@@ -579,7 +586,11 @@ describe.serial("reference API adapters", () => {
     });
     expect(schoolB).toEqual({
       status: 200,
-      body: { schoolId: world.schoolB.publicId, subdomain: "school-b", name: "School B" },
+      body: {
+        schoolId: world.schoolB.publicId,
+        subdomain: "school-b",
+        name: "School B",
+      },
     });
 
     for (const host of [

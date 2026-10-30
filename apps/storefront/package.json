@@ -11,8 +11,8 @@
     "start": "next start --port 3001"
   },
   "dependencies": {
-    "@codelitdev/design-system": "0.4.2",
-    "@codelitdev/observability": "0.4.2",
+    "@codelitdev/design-system": "0.5.0",
+    "@codelitdev/observability": "0.5.0",
     "@courselit/api-contract": "workspace:*",
     "@courselit/page-blocks": "workspace:*",
     "@frontlit/media-uploader": "0.1.0-alpha.1",

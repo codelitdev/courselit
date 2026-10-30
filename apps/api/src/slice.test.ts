@@ -907,9 +907,9 @@ describe.serial("first vertical slice", () => {
     expect(mcpRead.status).toBe(200);
     const mcpJson = (
       mcpRead.body as {
-        result: { content: Array<{ json: unknown }> };
+        result: { structuredContent: unknown };
       }
-    ).result.content[0]?.json;
+    ).result.structuredContent;
     expect(mcpJson).toEqual(rest.body);
     await runtime.close();
   });

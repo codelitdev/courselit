@@ -10,8 +10,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@codelitdev/design-system": "0.4.2",
-    "@codelitdev/observability": "0.4.2",
+    "@codelitdev/design-system": "0.5.0",
+    "@codelitdev/observability": "0.5.0",
     "@courselit/api-contract": "workspace:*",
     "@courselit/components-library": "workspace:*",
     "@courselit/page-blocks": "workspace:*",

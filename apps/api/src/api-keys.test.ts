@@ -125,6 +125,14 @@ async function settle() {
   await new Promise((resolve) => setTimeout(resolve, 25));
 }
 
+/** The platform code of an MCP tool result reported with `isError`. */
+function toolErrorCode(body: unknown): string | undefined {
+  const result = (
+    body as { result?: { isError?: boolean; structuredContent?: { code?: string } } }
+  ).result;
+  return result?.isError ? result.structuredContent?.code : undefined;
+}
+
 describe.serial("school API keys", () => {
   it("formats keys with a recognisable prefix and parses only that format", () => {
     const publicId = `key_${"a".repeat(32)}`;
@@ -850,9 +858,9 @@ describe.serial("API keys over MCP", () => {
     expect(listed.status).toBe(200);
     const items = (
       listed.body as {
-        result: { content: Array<{ json: { items: Array<{ schoolId: string }> } }> };
+        result: { structuredContent: { items: Array<{ schoolId: string }> } };
       }
-    ).result.content[0]?.json.items;
+    ).result.structuredContent.items;
     expect(items?.length).toBeGreaterThan(0);
     expect(items?.every((item) => item.schoolId === world.schoolA.publicId)).toBe(true);
 
@@ -871,15 +879,17 @@ describe.serial("API keys over MCP", () => {
         confirm: true,
       },
     );
-    expect((denied.body as { error: { code: string } }).error.code).toBe("forbidden");
+    expect(toolErrorCode(denied.body)).toBe("forbidden");
 
     // Tools without their own permission check are still gated by the
     // operation's required permissions.
     for (const tool of ["contacts.list", "media.list"]) {
-      const withoutPermission = await call(runtime, { "x-api-key": readOnly.key }, tool);
-      expect(
-        (withoutPermission.body as { error?: { code: string } }).error?.code,
-      ).toBe("forbidden");
+      const withoutPermission = await call(
+        runtime,
+        { "x-api-key": readOnly.key },
+        tool,
+      );
+      expect(toolErrorCode(withoutPermission.body)).toBe("forbidden");
     }
 
     const bad = await call(
