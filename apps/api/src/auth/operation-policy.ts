@@ -193,7 +193,6 @@ export const OPERATION_POLICIES = {
   deleteContactSegment: schoolOp(["contacts:write"]),
   getContactSegmentMembers: schoolOp(["contacts:read"]),
   grantLearnerMembership: schoolOp(["contacts:write"]),
-  createLearnerMembership: schoolOp(["contacts:write"]),
 
   // Community admin
   listCommunities: schoolOp(["communities:read"]),
@@ -302,6 +301,7 @@ export const OPERATION_POLICIES = {
 
   // Storefront application endpoints
   learnerSignUp: learnerOp(),
+  createLearnerMembership: learnerOp(),
   learnerSignIn: learnerOp(),
   learnerSignOut: learnerOp(),
   learnerMe: learnerOp(),

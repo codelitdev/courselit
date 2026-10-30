@@ -1,4 +1,5 @@
 import {
+  type AuthenticationResult,
   captureAndMapException,
   createPlatformError,
   healthReport,
@@ -471,9 +472,20 @@ function errorResponse(
   return { status: mapped.status, body: mapped.body };
 }
 
+/**
+ * Internal dispatch options, never derived from an HTTP request. MCP's generic
+ * `api.*` tools pass the identity they already authenticated so the call runs
+ * through the same credential policy, school pinning, and handler checks as
+ * REST.
+ */
+export type DispatchOptions = {
+  authenticated?: AuthenticationResult<string> & { kind: "authenticated" };
+};
+
 export async function dispatch(
   deps: DispatchDeps,
   request: IncomingRequest,
+  options: DispatchOptions = {},
 ): Promise<DispatchResponse> {
   try {
     const [pathPart, queryString] = request.path.split("?", 2);
@@ -1974,7 +1986,9 @@ export async function dispatch(
       return errorResponse(createPlatformError("not_found"));
     }
 
-    const auth = await authenticateHttpRequest(requestHeaders(request), deps);
+    const auth =
+      options.authenticated ??
+      (await authenticateHttpRequest(requestHeaders(request), deps));
     if (auth.kind !== "authenticated") {
       const error =
         auth.kind === "rejected" ? auth.error : createPlatformError("unauthenticated");

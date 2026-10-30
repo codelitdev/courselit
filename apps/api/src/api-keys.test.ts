@@ -905,8 +905,13 @@ describe.serial("API keys over MCP", () => {
     const { runtime } = await setup();
     const tools = mcpFor(runtime).listTools();
     expect(tools.length).toBeGreaterThan(0);
-    // Every exposed tool maps to a registered contract operation.
-    expect(tools.filter((tool) => !MCP_TOOL_OPERATIONS.has(tool.name))).toEqual([]);
+    // Every dedicated tool maps to registered contract operations; the
+    // generic api.* tools run operations through the REST dispatcher.
+    expect(
+      tools.filter(
+        (tool) => !MCP_TOOL_OPERATIONS.has(tool.name) && !tool.name.startsWith("api."),
+      ),
+    ).toEqual([]);
     const context = {
       requestId: "r",
       principalId: "p",

@@ -2,6 +2,7 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
+import { buildMcpParityManifest } from "./mcp-parity.js";
 
 export * from "./team-permissions.js";
 
@@ -4353,4 +4354,11 @@ export const contract = c.router({
 });
 
 export type Contract = typeof contract;
-export { mcpParityManifest } from "./mcp-parity.js";
+export {
+  buildMcpParityManifest,
+  MCP_API_TOOLS,
+  type McpParityManifestEntry,
+  mcpApiRisk,
+} from "./mcp-parity.js";
+
+export const mcpParityManifest = buildMcpParityManifest(contract);

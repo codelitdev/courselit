@@ -53479,14 +53479,7 @@
             }
           }
         },
-        "security": [
-          {
-            "apiKey": []
-          },
-          {
-            "oauth": []
-          }
-        ]
+        "security": []
       }
     },
     "/v1/learner/products/{productId}/download": {

@@ -1,102 +1,80 @@
 import {
-  type CreateMcpServerKitOptions,
   createMcpServerKit,
   type McpServerKit,
-  type McpToolDefinition,
 } from "@codelitdev/mcp-server-kit";
-import {
-  createPlatformError,
-  type PlatformRequestContext,
-  readOrCreateRequestId,
-} from "@codelitdev/platform";
-import {
-  contactFilterSetSchema,
-  createProductBodySchema,
-  mcpParityManifest,
-  mediaRefSchema,
-  reconcileMediaReferencesBodySchema,
-  updateProductBodySchema,
-} from "@courselit/api-contract";
-import { z } from "zod";
+import { createPlatformError, readOrCreateRequestId } from "@codelitdev/platform";
+import { MCP_API_TOOLS, mcpParityManifest } from "@courselit/api-contract";
 import { authenticateMcpRequest } from "./auth/authenticate.js";
 import {
   authorizeOperationCredential,
-  getOperationPolicy,
   type CredentialKind,
+  getOperationPolicy,
 } from "./auth/operation-policy.js";
-import { getProduct } from "./catalog.js";
-import {
-  deleteContact,
-  getContact,
-  listContacts,
-  listContactSegments,
-  updateContact,
-  updateContactMarketing,
-} from "./contacts.js";
 import type { DispatchDeps } from "./deps.js";
-import type { MediaResourceType } from "./media.js";
-import {
-  deleteMedia,
-  getMedia,
-  listMedia,
-  listMediaReferences,
-  reconcileMediaReferences,
-  updateMedia,
-} from "./media.js";
-import type { CourseLitPermission } from "./permissions.js";
-import {
-  createProduct,
-  deleteProduct,
-  listProducts,
-  updateProduct,
-} from "./products.js";
+import { apiTools } from "./mcp-tools/api.js";
+import { contactTools } from "./mcp-tools/contacts.js";
+import type { CourseLitMcpTool, Ctx } from "./mcp-tools/context.js";
+import { courseTools } from "./mcp-tools/courses.js";
+import { mediaTools } from "./mcp-tools/media.js";
+import { productTools } from "./mcp-tools/products.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
 
-export type Ctx = PlatformRequestContext<string, string, CourseLitPermission> & {
-  publicSchoolId: string;
-  isOwner: boolean;
-};
+export type { Ctx } from "./mcp-tools/context.js";
 
-/** MCP tool name -> REST contract operation, from the parity manifest. */
-export const MCP_TOOL_OPERATIONS: ReadonlyMap<string, string> = new Map(
-  (
-    mcpParityManifest as ReadonlyArray<{
-      rest?: { operationId?: string };
-      mcp?: { tool?: string };
-    }>
-  )
-    .filter((entry) => entry.mcp?.tool && entry.rest?.operationId)
-    .map((entry) => [entry.mcp!.tool!, entry.rest!.operationId!]),
-);
+const API_TOOL_NAMES: ReadonlySet<string> = new Set(Object.values(MCP_API_TOOLS));
 
 /**
- * Applies the same fail-closed operation policy as the REST dispatcher to an
- * MCP tool: a tool with no mapped operation, or whose operation does not
- * allow the caller's credential kind, is refused before its handler runs.
+ * Dedicated MCP tool -> the REST contract operations it performs. Single
+ * operations come from the parity manifest; a workflow tool lists every
+ * operation it composes. The generic `api.*` tools are not here: they run
+ * operations through the REST dispatcher, which applies the policy itself.
  */
-export function guardMcpTool(tool: McpToolDefinition<Ctx>): McpToolDefinition<Ctx> {
-  const operationId = MCP_TOOL_OPERATIONS.get(tool.name) ?? null;
+export const MCP_TOOL_OPERATIONS: ReadonlyMap<string, readonly string[]> = new Map<
+  string,
+  readonly string[]
+>([
+  ...mcpParityManifest.flatMap((entry) =>
+    entry.parity === "required" && !API_TOOL_NAMES.has(entry.mcp.tool)
+      ? [[entry.mcp.tool, [entry.rest.operationId]] as const]
+      : [],
+  ),
+  ["courses.outline.apply", ["listSections", "createSection", "createLesson"]],
+]);
+
+/**
+ * Applies the same fail-closed operation policy as the REST dispatcher to a
+ * dedicated MCP tool: a tool with no mapped operation, or any of whose
+ * operations does not allow the caller's credential kind or permissions, is
+ * refused before its handler runs.
+ */
+export function guardMcpTool(tool: CourseLitMcpTool): CourseLitMcpTool {
+  const operationIds = MCP_TOOL_OPERATIONS.get(tool.name) ?? [];
   return {
     ...tool,
     async handler(input) {
-      const denied = operationId
-        ? authorizeOperationCredential(
-            operationId,
-            input.context.credential.kind as CredentialKind,
-          )
-        : createPlatformError("forbidden", {
+      if (operationIds.length === 0) {
+        return {
+          error: createPlatformError("forbidden", {
             safeDetails: { reason: "credential_not_allowed" },
-          });
-      if (denied) return { error: denied };
-      // MCP tools call domain functions directly, so the operation's required
-      // permissions are enforced here rather than in a REST handler.
-      const policy = operationId ? getOperationPolicy(operationId) : null;
-      if (policy?.audience === "school") {
-        const missing = (policy.requiredPermissions ?? []).some(
-          (permission) => !input.context.permissions.has(permission),
+          }),
+        };
+      }
+      for (const operationId of operationIds) {
+        const denied = authorizeOperationCredential(
+          operationId,
+          input.context.credential.kind as CredentialKind,
         );
-        if (missing || (policy.ownerOnly && !input.context.isOwner)) {
-          return { error: createPlatformError("forbidden") };
+        if (denied) return { error: denied };
+        // Dedicated tools call domain functions directly, so the operation's
+        // required permissions are enforced here rather than in a REST handler.
+        const policy = getOperationPolicy(operationId);
+        if (policy?.audience === "school") {
+          const missing = (policy.requiredPermissions ?? []).some(
+            (permission) => !input.context.permissions.has(permission),
+          );
+          if (missing || (policy.ownerOnly && !input.context.isOwner)) {
+            return { error: createPlatformError("forbidden") };
+          }
         }
       }
       return tool.handler(input);
@@ -104,16 +82,14 @@ export function guardMcpTool(tool: McpToolDefinition<Ctx>): McpToolDefinition<Ct
   };
 }
 
-function withGuardedTools(
-  options: CreateMcpServerKitOptions<Ctx>,
-): CreateMcpServerKitOptions<Ctx> {
-  return { ...options, tools: options.tools.map(guardMcpTool) };
-}
-
 export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
-  return createMcpServerKit<Ctx>(withGuardedTools({
+  return createMcpServerKit<Ctx>({
     name: "courselit",
     version: "0.0.0",
+    description:
+      "CourseLit MCP server: build and run an online school. Create courses and digital downloads with their sections and lessons, and manage pricing plans, communities, the school website, media, contacts, certificates and school settings.",
+    instructions:
+      "Every call acts on the connected school. Use the dedicated tools for products, media and contacts, and courses.outline.apply to add sections and text lessons to a course. Everything else the CourseLit REST API offers is reachable through api.list_operations (find an operation), api.describe_operation (its parameters and body) and then api.read, api.write or api.delete. Read before you write, and confirm deletions with the user before passing confirm: true.",
     onError: ({ error, source }) =>
       deps.observability?.captureException({ error, source }),
     authenticate: (headers) => authenticateMcpRequest(headers, deps),
@@ -147,366 +123,13 @@ export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
       };
     },
     tools: [
-      {
-        name: "products.list",
-        description: "List products for the selected school",
-        risk: "read",
-        inputSchema: z.object({}),
-        async handler({ context }) {
-          const result = await listProducts(deps.db, context, context.publicSchoolId);
-          if (!result.ok) return { error: result.error };
-          return { items: result.value };
-        },
-      },
-      {
-        name: "products.get",
-        description: "Read a product and the lesson content the caller may see",
-        risk: "read",
-        inputSchema: z.object({ productId: z.string() }),
-        async handler({ context, args }) {
-          if (!context.permissions.has("products:read")) {
-            return { error: createPlatformError("forbidden") };
-          }
-          const parsed = args as { productId: string };
-          const result = await getProduct(
-            deps.db,
-            { schoolId: context.tenantId!, publicId: context.publicSchoolId },
-            parsed.productId,
-            { kind: "admin" },
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "products.create",
-        description: "Create a product",
-        risk: "write",
-        inputSchema: createProductBodySchema,
-        async handler({ context, args }) {
-          const parsed = args as {
-            kind: "course" | "download";
-            title: string;
-            slug?: string;
-            description: string;
-          };
-          const result = await createProduct(
-            deps.db,
-            context,
-            context.publicSchoolId,
-            parsed,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "products.update",
-        description: "Update a product",
-        risk: "write",
-        inputSchema: updateProductBodySchema.extend({
-          productId: z.string(),
-        }),
-        async handler({ context, args }) {
-          const parsed = args as {
-            productId: string;
-            status?: "draft" | "published";
-            slug?: string;
-            title?: string;
-            description?: string;
-          };
-          const result = await updateProduct(
-            deps.db,
-            context,
-            context.publicSchoolId,
-            parsed.productId,
-            parsed,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "products.delete",
-        description: "Delete a product",
-        risk: "destructive",
-        inputSchema: z.object({
-          productId: z.string(),
-          confirm: z.boolean().optional(),
-        }),
-        async handler({ context, args }) {
-          const parsed = args as { productId: string };
-          const result = await deleteProduct(
-            deps.db,
-            context,
-            parsed.productId,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "media.list",
-        description: "List media-library assets for the selected school",
-        risk: "read",
-        inputSchema: z.object({
-          search: z.string().max(200).optional(),
-          cursor: z.string().max(500).optional(),
-          limit: z.number().int().min(1).max(50).default(25),
-        }),
-        async handler({ context, args }) {
-          const parsed = args as {
-            search?: string;
-            cursor?: string;
-            limit: number;
-          };
-          const result = await listMedia(
-            deps.db,
-            context,
-            context.publicSchoolId,
-            parsed,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "media.get",
-        description: "Read media-library metadata",
-        risk: "read",
-        inputSchema: z.object({ mediaId: z.string() }),
-        async handler({ context, args }) {
-          const result = await getMedia(
-            deps.db,
-            context,
-            context.publicSchoolId,
-            (args as { mediaId: string }).mediaId,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "media.update",
-        description: "Update media-library metadata",
-        risk: "write",
-        inputSchema: z.object({
-          mediaId: z.string(),
-          altText: z.string().max(1_000).optional(),
-          caption: z.string().max(2_000).optional(),
-          accessPolicy: z.enum(["public", "private"]).optional(),
-        }),
-        async handler({ context, args }) {
-          const parsed = args as {
-            mediaId: string;
-            altText?: string;
-            caption?: string;
-            accessPolicy?: "public" | "private";
-          };
-          const result = await updateMedia(
-            deps.db,
-            context,
-            context.publicSchoolId,
-            parsed.mediaId,
-            parsed,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "media.references.list",
-        description: "List the resources using a media-library asset",
-        risk: "read",
-        inputSchema: z.object({ mediaId: z.string() }),
-        async handler({ context, args }) {
-          const result = await listMediaReferences(
-            deps.db,
-            context,
-            (args as { mediaId: string }).mediaId,
-          );
-          if (!result.ok) return { error: result.error };
-          return { items: result.value };
-        },
-      },
-      {
-        name: "media.references.reconcile",
-        description: "Replace the complete reference set for a media asset",
-        risk: "write",
-        inputSchema: z.object({
-          mediaId: z.string(),
-          ...reconcileMediaReferencesBodySchema.shape,
-        }),
-        async handler({ context, args }) {
-          const parsed = args as {
-            mediaId: string;
-            references: Array<{
-              resourceType: MediaResourceType;
-              resourceId: string;
-              parentResourceId?: string | null;
-            }>;
-          };
-          const result = await reconcileMediaReferences(
-            deps.db,
-            context,
-            parsed.mediaId,
-            parsed.references,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return { items: result.value };
-        },
-      },
-      {
-        name: "media.delete",
-        description: "Delete an unused media-library asset",
-        risk: "destructive",
-        inputSchema: z.object({ mediaId: z.string(), confirm: z.boolean().optional() }),
-        async handler({ context, args }) {
-          const result = await deleteMedia(
-            deps.db,
-            context,
-            deps.mediaLit,
-            (args as { mediaId: string }).mediaId,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return { deleted: true };
-        },
-      },
-      {
-        name: "contacts.list",
-        description: "List contacts for the school",
-        risk: "read",
-        inputSchema: z.object({
-          q: z.string().optional(),
-          segmentId: z.string().optional(),
-          filter: z.string().optional(),
-          page: z.coerce.number().int().min(1).default(1),
-          rowsPerPage: z.coerce.number().int().min(1).max(100).default(20),
-        }),
-        async handler({ context, args }) {
-          const parsed = args as {
-            q?: string;
-            segmentId?: string;
-            filter?: string;
-            page: number;
-            rowsPerPage: number;
-          };
-          return listContacts(deps.db, context, parsed, deps.clock, {
-            config: deps.sendLit,
-          });
-        },
-      },
-      {
-        name: "contacts.get",
-        description: "Read details of a single contact",
-        risk: "read",
-        inputSchema: z.object({ contactId: z.string() }),
-        async handler({ context, args }) {
-          const result = await getContact(
-            deps.db,
-            context,
-            (args as { contactId: string }).contactId,
-            { config: deps.sendLit },
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "contacts.update",
-        description: "Update contact details (name, bio, avatar, status)",
-        risk: "write",
-        inputSchema: z.object({
-          contactId: z.string(),
-          name: z.string().trim().min(1).max(200).optional(),
-          bio: z.string().max(2000).optional(),
-          avatar: mediaRefSchema.nullable().optional(),
-          status: z.enum(["active", "deactivated"]).optional(),
-        }),
-        async handler({ context, args }) {
-          const { contactId, ...body } = args as {
-            contactId: string;
-            name?: string;
-            bio?: string;
-            avatar?: any;
-            status?: "active" | "deactivated";
-          };
-          const result = await updateContact(
-            deps.db,
-            context,
-            contactId,
-            body,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "contacts.marketing.update",
-        description: "Update contact marketing state (subscribed, tags)",
-        risk: "write",
-        inputSchema: z.object({
-          contactId: z.string(),
-          subscribed: z.boolean().optional(),
-          tags: z.array(z.string()).optional(),
-        }),
-        async handler({ context, args }) {
-          const { contactId, ...body } = args as {
-            contactId: string;
-            subscribed?: boolean;
-            tags?: string[];
-          };
-          const result = await updateContactMarketing(
-            deps.db,
-            context,
-            contactId,
-            body,
-            deps.clock,
-            { config: deps.sendLit },
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "contacts.delete",
-        description: "Delete a contact from the school",
-        risk: "destructive",
-        inputSchema: z.object({
-          contactId: z.string(),
-          confirm: z.boolean().optional(),
-        }),
-        async handler({ context, args }) {
-          const result = await deleteContact(
-            deps.db,
-            context,
-            (args as { contactId: string }).contactId,
-            deps.clock,
-          );
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
-      {
-        name: "contacts.segments.list",
-        description: "List contact segments for the school",
-        risk: "read",
-        inputSchema: z.object({}),
-        async handler({ context }) {
-          const result = await listContactSegments(deps.db, context, {
-            config: deps.sendLit,
-          });
-          if (!result.ok) return { error: result.error };
-          return result.value;
-        },
-      },
+      ...[
+        ...productTools(deps),
+        ...courseTools(deps),
+        ...mediaTools(deps),
+        ...contactTools(deps),
+      ].map(guardMcpTool),
+      ...apiTools(deps),
     ],
-  }));
+  });
 }

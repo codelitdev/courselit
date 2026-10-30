@@ -64,6 +64,7 @@
         "@codelitdev/platform": "0.5.0",
         "@codelitdev/platform-conformance": "0.5.0",
         "@courselit/api-contract": "workspace:*",
+        "@frontlit/text-editor": "0.1.0-alpha.3",
         "@ts-rest/express": "3.52.1",
         "@ts-rest/open-api": "3.52.1",
         "@types/nodemailer": "^8.0.1",

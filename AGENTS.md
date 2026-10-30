@@ -2,6 +2,7 @@
 
 > IMPORTANT: Before writing a feature from scratch, check if its implementation is already there in the production branch i.e. `main`. If it is there, copy over the logic and components from there instead of re-inventing the logic and design (unless it is totally off).
 - FrontLit, SendLit, MediaLit branding should not show up in anything user facing like API endpoints, routes, UI etc. These systems are parts of the infrastructure.
+- REST and MCP have parity. Every contract operation that OAuth or API-key credentials can call over REST is reachable over MCP, through a dedicated tool or the generic `api.read` / `api.write` / `api.delete` tools, by default and without extra code. Keeping an operation off MCP needs an exemption with a reason in `packages/api-contract/src/mcp-parity.ts` and an entry in `REACHABLE_BUT_EXEMPT` in `apps/api/src/mcp-api.test.ts`. Add a dedicated or workflow MCP tool only for a real agent task, and route it through `guardMcpTool` with the operations it performs.
 
 > This rewrite has no production deployment yet. We are building the very first version of the platform so don't waste time in maintaining backwards compatibililty. When you need to change something, go ahead and write its version 1 implementation. For database, instead of writing table altering migrations, rewrite the original migration to include the alteration, then reset the database and re-apply migrations.
 

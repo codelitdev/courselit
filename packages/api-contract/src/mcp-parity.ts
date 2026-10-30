@@ -1,28 +1,4 @@
 const communityParityExemptions = [
-  ["listCommunities", "communities.list"],
-  ["createCommunity", "communities.create"],
-  ["getCommunity", "communities.get"],
-  ["getSalesPage", "school.website.salesPages.get"],
-  ["updateCommunity", "communities.update"],
-  ["addCommunityCategory", "communities.categories.add"],
-  ["deleteCommunityCategory", "communities.categories.delete"],
-  ["deleteCommunity", "communities.delete"],
-  ["listCommunityMembers", "communities.members.list"],
-  ["inviteCommunityMember", "communities.members.invite"],
-  ["updateCommunityMembership", "communities.members.update"],
-  ["listCommunityPosts", "communities.posts.list"],
-  ["createCommunityPost", "communities.posts.create"],
-  ["updateCommunityPost", "communities.posts.update"],
-  ["deleteCommunityPost", "communities.posts.delete"],
-  ["listCommunityComments", "communities.comments.list"],
-  ["createCommunityComment", "communities.comments.create"],
-  ["updateCommunityComment", "communities.comments.update"],
-  ["deleteCommunityComment", "communities.comments.delete"],
-  ["toggleCommunityReaction", "communities.reactions.toggle"],
-  ["toggleCommunityPostSubscription", "communities.subscriptions.toggle"],
-  ["createCommunityReport", "communities.reports.create"],
-  ["listCommunityReports", "communities.reports.list"],
-  ["updateCommunityReport", "communities.reports.update"],
   ["listLearnerCommunities", "learner.communities.list"],
   ["listLearnerFeed", "learner.communities.feed.list"],
   ["listAvailableLearnerCommunities", "learner.communities.available.list"],
@@ -48,11 +24,6 @@ const communityParityExemptions = [
   ["listAdminNotifications", "admin.notifications.list"],
   ["markAdminNotificationRead", "admin.notifications.read"],
   ["markAllAdminNotificationsRead", "admin.notifications.readAll"],
-  ["listCommunityPlans", "communities.plans.list"],
-  ["createCommunityPlan", "communities.plans.create"],
-  ["updateCommunityPlan", "communities.plans.update"],
-  ["setDefaultCommunityPlan", "communities.plans.default"],
-  ["archiveCommunityPlan", "communities.plans.archive"],
   ["listLearnerProducts", "learner.products.list"],
   ["leaveLearnerCommunity", "learner.communities.leave"],
   ["listLearnerCommunityPlans", "learner.communities.plans.list"],
@@ -62,12 +33,6 @@ const communityParityExemptions = [
   ["getPublicSitePage", "public.site.pages.get"],
   ["listPublicSiteBlogs", "public.site.blogs.list"],
   ["getPublicSiteBlog", "public.site.blogs.get"],
-  ["listSpaces", "spaces.list"],
-  ["createSpace", "spaces.create"],
-  ["getSpace", "spaces.get"],
-  ["updateSpace", "spaces.update"],
-  ["orderSpaces", "spaces.order"],
-  ["deleteSpace", "spaces.delete"],
   ["listLearnerSpaces", "learner.spaces.list"],
   ["followLearnerSpace", "learner.spaces.follow"],
   ["unfollowLearnerSpace", "learner.spaces.unfollow"],
@@ -77,7 +42,12 @@ const communityParityExemptions = [
   ["finalizeLearnerAvatarMediaUpload", "learner.avatars.finalize"],
 ] as const;
 
-export const mcpParityManifest = [
+/**
+ * Operations with a dedicated MCP tool, and operations kept off MCP with the
+ * reason why. Every other contract operation is served by the generic
+ * `api.*` tools (see `buildMcpParityManifest`).
+ */
+const mcpParityOverrides = [
   ...communityParityExemptions.map(([operationId, capability]) => ({
     capability,
     rest: { operationId },
@@ -222,17 +192,6 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "public.media.unsplash.search",
-    rest: { operationId: "searchUnsplash" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Unsplash search is a media-picker/provider transport and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "public.newsletter.subscribe",
     rest: { operationId: "subscribeNewsletter" },
     parity: "exempt",
@@ -324,226 +283,6 @@ export const mcpParityManifest = [
     parity: "required",
   },
   {
-    capability: "products.analytics",
-    rest: { operationId: "getProductAnalytics" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Product analytics is an admin dashboard read model and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "products.customers.list",
-    rest: { operationId: "listProductCustomers" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Product customer progress is an admin dashboard read model and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "products.customers.progress",
-    rest: { operationId: "getProductCustomerProgress" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Product customer lesson progress is an admin dashboard read model and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.list",
-    rest: { operationId: "listSchoolWebsitePages" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.create",
-    rest: { operationId: "createSchoolWebsitePage" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.get",
-    rest: { operationId: "getSchoolWebsitePage" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.update",
-    rest: { operationId: "updateSchoolWebsitePage" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.publish",
-    rest: { operationId: "publishSchoolWebsitePage" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.pages.discard",
-    rest: { operationId: "discardSchoolWebsitePage" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website page draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.branding.get",
-    rest: { operationId: "getSchoolWebsiteBranding" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website branding settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.branding.update",
-    rest: { operationId: "updateSchoolWebsiteBranding" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website branding settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.branding.themes.list",
-    rest: { operationId: "listSchoolWebsiteBrandingThemes" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.branding.themes.create",
-    rest: { operationId: "createSchoolWebsiteBrandingTheme" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.branding.themes.update",
-    rest: { operationId: "updateSchoolWebsiteBrandingTheme" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.list",
-    rest: { operationId: "listSchoolWebsiteBlogs" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.create",
-    rest: { operationId: "createSchoolWebsiteBlog" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.get",
-    rest: { operationId: "getSchoolWebsiteBlog" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.update",
-    rest: { operationId: "updateSchoolWebsiteBlog" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.publish",
-    rest: { operationId: "publishSchoolWebsiteBlog" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.website.blogs.discard",
-    rest: { operationId: "discardSchoolWebsiteBlog" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Website blog draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "products.create",
     risk: "write",
     rest: { operationId: "createProduct" },
@@ -629,61 +368,6 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "certificate.templates.list",
-    rest: { operationId: "listCertificateTemplates" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Certificate template administration is a browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "certificate.templates.create",
-    rest: { operationId: "createCertificateTemplate" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Certificate template administration is a browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "certificate.templates.update",
-    rest: { operationId: "updateCertificateTemplate" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Certificate template administration is a browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "certificate.productTemplate.get",
-    rest: { operationId: "getProductCertificateTemplate" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Product certificate template administration is a browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "certificate.productTemplate.upsert",
-    rest: { operationId: "upsertProductCertificateTemplate" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Product certificate template administration is a browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "certificate.learner.list",
     rest: { operationId: "listLearnerCertificates" },
     parity: "exempt",
@@ -748,127 +432,6 @@ export const mcpParityManifest = [
     parity: "required",
   },
   {
-    capability: "contacts.filterPreview",
-    rest: { operationId: "filterPreviewContacts" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Filter preview is a browser UI building interaction and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "contacts.segments.create",
-    rest: { operationId: "createContactSegment" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Segment creation is an admin browser workflow and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "contacts.segments.get",
-    rest: { operationId: "getContactSegment" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Segment retrieval is an admin browser workflow and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "contacts.segments.update",
-    rest: { operationId: "updateContactSegment" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Segment editing is an admin browser workflow and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "contacts.segments.delete",
-    rest: { operationId: "deleteContactSegment" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Segment deletion is an admin browser workflow and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "contacts.segments.members",
-    rest: { operationId: "getContactSegmentMembers" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Segment member browsing is an admin browser workflow and is not exposed as an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "storefront.plans.list",
-    rest: { operationId: "listPlans" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Storefront plan administration is a browser workflow and is not an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "storefront.plans.create",
-    rest: { operationId: "createPlan" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Storefront plan administration is a browser workflow and is not an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "storefront.plans.update",
-    rest: { operationId: "updatePlan" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Storefront plan administration is a browser workflow and is not an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "storefront.plans.default",
-    rest: { operationId: "setDefaultPlan" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Storefront plan administration is a browser workflow and is not an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "storefront.plans.archive",
-    rest: { operationId: "archivePlan" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Storefront plan administration is a browser workflow and is not an MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "certificate.verify",
     rest: { operationId: "verifyCertificate" },
     parity: "exempt",
@@ -904,7 +467,8 @@ export const mcpParityManifest = [
     rest: { operationId: "getBillingCatalog" },
     parity: "exempt",
     exemption: {
-      reason: "Billing catalog is a browser checkout workflow, not an MCP capability.",
+      reason:
+        "MCP calls are bound to one school; the platform plan catalog is an account checkout surface.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -914,7 +478,8 @@ export const mcpParityManifest = [
     rest: { operationId: "getEntitlement" },
     parity: "exempt",
     exemption: {
-      reason: "Billing entitlement remains REST-only in the reference vertical.",
+      reason:
+        "MCP calls are bound to one school; account billing entitlement stays REST.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -925,7 +490,7 @@ export const mcpParityManifest = [
     parity: "exempt",
     exemption: {
       reason:
-        "School administration is account-scoped and REST-only in the reference vertical.",
+        "MCP calls are bound to one school; listing the account's schools stays REST.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -942,17 +507,6 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "school.update",
-    rest: { operationId: "updateSchool" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School settings administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "school.select",
     rest: { operationId: "selectSchool" },
     parity: "exempt",
@@ -964,133 +518,12 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "school.hosts.list",
-    rest: { operationId: "listSchoolHosts" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Custom-host administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.hosts.create",
-    rest: { operationId: "createSchoolHost" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Custom-host administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.hosts.verify",
-    rest: { operationId: "verifySchoolHost" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "DNS-backed custom-host verification is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.hosts.delete",
-    rest: { operationId: "deleteSchoolHost" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Custom-host administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "preview.create",
-    rest: { operationId: "createPreviewGrant" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Preview grant issuance is an ephemeral browser authoring workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "preview.read",
     rest: { operationId: "readPreviewProduct" },
     parity: "exempt",
     exemption: {
       reason:
         "Preview reads use a short-lived browser grant and are not exposed as an MCP capability.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "sections.list",
-    rest: { operationId: "listSections" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Section authoring is included in REST product authoring and is not exposed as a separate MCP tool.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "sections.create",
-    rest: { operationId: "createSection" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Section authoring is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "sections.reorder",
-    rest: { operationId: "reorderSections" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Section ordering is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "lessons.reorder",
-    rest: { operationId: "reorderLessons" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Lesson ordering is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "sections.update",
-    rest: { operationId: "updateSection" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Section authoring is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "sections.delete",
-    rest: { operationId: "deleteSection" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Section deletion is an owner browser workflow and is not exposed over MCP.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -1276,46 +709,6 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "lessons.create",
-    rest: { operationId: "createLesson" },
-    parity: "exempt",
-    exemption: {
-      reason: "Lesson authoring is REST-only in the first vertical slice.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "lessons.update",
-    rest: { operationId: "updateLesson" },
-    parity: "exempt",
-    exemption: {
-      reason: "Lesson authoring is REST-only in the first vertical slice.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "lessons.delete",
-    rest: { operationId: "deleteLesson" },
-    parity: "exempt",
-    exemption: {
-      reason: "Lesson authoring is REST-only in the first vertical slice.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "membership.grant",
-    rest: { operationId: "grantLearnerMembership" },
-    parity: "exempt",
-    exemption: {
-      reason: "Admin membership grants are a browser workflow, not an MCP capability.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
     capability: "learner.signUp",
     rest: { operationId: "learnerSignUp" },
     parity: "exempt",
@@ -1360,7 +753,8 @@ export const mcpParityManifest = [
     rest: { operationId: "createLearnerMembership" },
     parity: "exempt",
     exemption: {
-      reason: "Learner browser session operations are not MCP tools.",
+      reason:
+        "Learner self-enrollment runs under a learner session, which MCP never carries.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -1483,59 +877,64 @@ export const mcpParityManifest = [
       reviewBy: "2027-09-01",
     },
   },
-  {
-    capability: "school.overview",
-    rest: { operationId: "getSchoolOverview" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School dashboard overview is an admin read model, not an MCP capability.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.paymentSettings.get",
-    rest: { operationId: "getSchoolPaymentSettings" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School payment provider settings administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.paymentSettings.update",
-    rest: { operationId: "updateSchoolPaymentSettings" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School payment provider settings administration is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.codeInjection.get",
-    rest: { operationId: "getSchoolCodeInjection" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School code injection is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "school.codeInjection.update",
-    rest: { operationId: "updateSchoolCodeInjection" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "School code injection is an owner browser workflow and is not exposed over MCP.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
 ] as const;
+
+type ParityRisk = "read" | "write" | "destructive";
+
+/** The generic MCP tool that serves each risk class of contract operation. */
+export const MCP_API_TOOLS = {
+  read: "api.read",
+  write: "api.write",
+  destructive: "api.delete",
+} as const satisfies Record<ParityRisk, string>;
+
+/** GET reads, DELETE destroys, everything else writes. */
+export function mcpApiRisk(method: string): ParityRisk {
+  const upper = method.toUpperCase();
+  if (upper === "GET") return "read";
+  if (upper === "DELETE") return "destructive";
+  return "write";
+}
+
+export type McpParityManifestEntry =
+  | {
+      capability: string;
+      risk: ParityRisk;
+      rest: { operationId: string };
+      mcp: { tool: string };
+      parity: "required";
+    }
+  | {
+      capability: string;
+      rest?: { operationId: string };
+      mcp?: { tool: string };
+      parity: "exempt";
+      exemption: { reason: string; owner: string; reviewBy: string };
+    };
+
+/**
+ * REST and MCP have parity by default: a contract operation without an
+ * override is required over MCP through the `api.*` tool for its risk. Keeping
+ * an operation off MCP takes an explicit exemption with a reason.
+ */
+export function buildMcpParityManifest(
+  routes: Record<string, { method: string }>,
+): readonly McpParityManifestEntry[] {
+  const overrides = mcpParityOverrides as readonly McpParityManifestEntry[];
+  const documented = new Set(
+    overrides.flatMap((entry) => (entry.rest ? [entry.rest.operationId] : [])),
+  );
+  const generic = Object.entries(routes)
+    .filter(([operationId]) => !documented.has(operationId))
+    .map(([operationId, route]): McpParityManifestEntry => {
+      const risk = mcpApiRisk(route.method);
+      return {
+        capability: operationId,
+        risk,
+        rest: { operationId },
+        mcp: { tool: MCP_API_TOOLS[risk] },
+        parity: "required",
+      };
+    });
+  return [...overrides, ...generic];
+}
