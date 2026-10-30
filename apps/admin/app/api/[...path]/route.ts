@@ -16,6 +16,9 @@ async function proxy(
     const target = `${API_URL}${upstreamPath}${request.nextUrl.search}`;
     const headers = new Headers(request.headers);
     headers.delete("host");
+    // The API never picks a school from the host. Only Better Auth (`/api/auth`)
+    // reads the forwarded host, for CSRF origin checks.
+    if (path[0] !== "auth") headers.delete("x-forwarded-host");
     const clientIp =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip");

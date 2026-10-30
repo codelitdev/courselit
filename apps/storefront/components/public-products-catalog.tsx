@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import { Header1, Subheader1, Text2 } from "@frontlit/page-builder/primitives";
 import { useEffect, useState } from "react";
@@ -20,12 +21,13 @@ type PublicProduct = {
 
 export function PublicProductsCatalog() {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    void fetch("/api/v1/public/products?limit=50", {
+    void fetch(publicApiPath(schoolId, "/products?limit=50"), {
       credentials: "include",
       cache: "no-store",
     })
@@ -41,7 +43,7 @@ export function PublicProductsCatalog() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [schoolId]);
 
   return (
     <div className="flex flex-col gap-10">

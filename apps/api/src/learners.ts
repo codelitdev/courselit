@@ -531,10 +531,7 @@ export function assertLearnerSchool(
   requestedPublicSchoolId: string | null,
 ): { ok: true } | { ok: false; error: PlatformError } {
   if (!requestedPublicSchoolId) return { ok: true };
-  if (
-    requestedPublicSchoolId !== session.school.publicId &&
-    requestedPublicSchoolId !== session.school.subdomain
-  ) {
+  if (requestedPublicSchoolId !== session.school.publicId) {
     return { ok: false, error: createPlatformError("tenant_forbidden") };
   }
   return { ok: true };

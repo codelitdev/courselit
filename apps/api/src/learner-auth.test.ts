@@ -35,8 +35,8 @@ describe.serial("learner authentication", () => {
     // Public endpoint returns computed login methods from env vars
     const pubRes = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/public/school/login-methods",
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/login-methods`,
+      headers: { host: "courselit-api:4000" },
     });
     expect(pubRes.status).toBe(200);
     expect(pubRes.body).toMatchObject({
@@ -45,19 +45,20 @@ describe.serial("learner authentication", () => {
       hasGoogle: false,
     });
 
+    // A school host does not stand in for the school id in the path.
     const hostRes = await dispatch(runtime, {
       method: "GET",
       path: "/v1/public/school/login-methods",
       headers: { "x-forwarded-host": "school-a.localhost:3001" },
     });
-    expect(hostRes.status).toBe(200);
+    expect(hostRes.status).toBe(404);
 
-    const unknownHostRes = await dispatch(runtime, {
+    const unknownSchoolRes = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/public/school/login-methods",
-      headers: { "x-forwarded-host": "unknown.localhost:3001" },
+      path: "/v1/public/sch_unknown/login-methods",
+      headers: {},
     });
-    expect(unknownHostRes.status).toBe(404);
+    expect(unknownSchoolRes.status).toBe(404);
 
     // Admin login-methods endpoint no longer exists
     const adminRes = await dispatch(runtime, {
@@ -199,7 +200,7 @@ describe.serial("learner authentication", () => {
     await runtime.close();
   });
 
-  it("authenticates a learner via host header resolution for /v1/learner/me", async () => {
+  it("bridges an admin session only into the school named by x-school-id", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
@@ -223,12 +224,26 @@ describe.serial("learner authentication", () => {
     const sessionCookie = signedIn.headers.get("set-cookie")?.split(";", 1)[0];
     expect(sessionCookie).toBeTruthy();
 
-    // 1. Initial request via host header with Better Auth cookie (bridges session)
-    const whoami = await dispatch(runtime, {
+    // The request host never selects a school, even a school's own host.
+    const hostOnly = await dispatch(runtime, {
       method: "GET",
       path: "/v1/learner/me",
       headers: {
         host: "school-a.localhost:3001",
+        "x-forwarded-host": "school-a.localhost:3001",
+        cookie: sessionCookie!,
+      },
+    });
+    expect(hostOnly.status).not.toBe(200);
+    expect(hostOnly.body).toMatchObject({ code: "tenant_required" });
+
+    // 1. The storefront server names the school; the admin session bridges.
+    const whoami = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        host: "courselit-api:4000",
+        "x-school-id": world.schoolA.publicId,
         cookie: sessionCookie!,
       },
     });
@@ -247,12 +262,12 @@ describe.serial("learner authentication", () => {
     expect(match).toBeTruthy();
     const learnerCookieValue = match![1];
 
-    // 2. Subsequent request with courselit.learner.session cookie
+    // 2. The learner session pins its school; no header is needed.
     const whoamiWithSession = await dispatch(runtime, {
       method: "GET",
       path: "/v1/learner/me",
       headers: {
-        host: "school-a.localhost:3001",
+        host: "courselit-api:4000",
         cookie: `courselit.learner.session=${learnerCookieValue}`,
       },
     });
@@ -262,7 +277,71 @@ describe.serial("learner authentication", () => {
       name: "Host Learner",
     });
 
+    // 3. A conflicting school header is rejected rather than switching tenants.
+    const otherSchool = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        "x-school-id": world.schoolB.publicId,
+        cookie: `courselit.learner.session=${learnerCookieValue}`,
+      },
+    });
+    expect(otherSchool.status).toBe(403);
+    expect(otherSchool.body).toMatchObject({ code: "tenant_forbidden" });
+
+    await runtime.close();
+  });
+
+  it("requires an explicit school id to sign learners up and in", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const credentials = {
+      email: "explicit-school@example.com",
+      password: "correct horse battery",
+    };
+
+    for (const path of ["/v1/learner/auth/sign-up", "/v1/learner/auth/sign-in"]) {
+      // A school host (or a school id header) does not substitute for the body.
+      const missing = await dispatch(runtime, {
+        method: "POST",
+        path,
+        headers: {
+          host: "school-a.localhost:3001",
+          "x-school-id": world.schoolA.publicId,
+        },
+        body: { ...credentials, name: "Explicit School" },
+      });
+      expect(missing.status).toBe(400);
+      expect(missing.body).toMatchObject({ code: "validation_failed" });
+    }
+
+    const signUp = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-up",
+      headers: { host: "school-b.localhost:3001" },
+      body: { ...credentials, name: "Explicit School", schoolId: world.schoolA.publicId },
+    });
+    expect(signUp.status).toBe(201);
+    expect(signUp.body).toMatchObject({ schoolId: world.schoolA.publicId });
+
+    const signIn = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-in",
+      headers: {},
+      body: { ...credentials, schoolId: world.schoolA.publicId },
+    });
+    expect(signIn.status).toBe(200);
+
+    // Subdomains are not school ids.
+    const bySubdomain = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-in",
+      headers: {},
+      body: { ...credentials, schoolId: "school-a" },
+    });
+    expect(bySubdomain.status).toBe(401);
+
     await runtime.close();
   });
 });
-

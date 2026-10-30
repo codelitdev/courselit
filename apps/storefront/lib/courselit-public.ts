@@ -42,48 +42,20 @@ export interface PublicArticle {
   updatedAt: string | null;
 }
 
-export interface ResolvedSchool {
-  schoolId: string;
-  subdomain: string;
-  name: string;
-}
-
-export async function resolveSchoolIdentity(
-  host?: string,
-  school?: string,
-): Promise<ResolvedSchool | null> {
-  try {
-    const url = new URL(`${API_URL}/v1/public/school/resolve`);
-    if (host) url.searchParams.set("host", host);
-    if (school) url.searchParams.set("school", school);
-    const response = await fetch(url.toString(), {
-      headers: { accept: "application/json" },
-      next: { revalidate: 60 },
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as ResolvedSchool;
-  } catch {
-    return null;
-  }
+function publicPath(schoolId: string, suffix: string): string {
+  return `/v1/public/${encodeURIComponent(schoolId)}${suffix}`;
 }
 
 async function getFromApi<T>(
-  path: string,
-  schoolIdOrHost: string,
+  schoolId: string,
+  suffix: string,
   options: { noStore?: boolean; tags?: string[] } = {},
 ): Promise<T | null> {
-  if (!schoolIdOrHost) return null;
+  if (!schoolId) return null;
   try {
-    const headers: Record<string, string> = {
-      accept: "application/json",
-      "x-school-id": schoolIdOrHost,
-    };
-    if (schoolIdOrHost.includes(".")) {
-      headers["x-forwarded-host"] = schoolIdOrHost;
-    }
-    const tags = options.tags ?? [`school-${schoolIdOrHost}`];
-    const response = await fetch(`${API_URL}${path}`, {
-      headers,
+    const tags = options.tags ?? [`school-${schoolId}`];
+    const response = await fetch(`${API_URL}${publicPath(schoolId, suffix)}`, {
+      headers: { accept: "application/json" },
       ...(options.noStore || process.env.NODE_ENV === "development"
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60, tags } }),
@@ -96,41 +68,34 @@ async function getFromApi<T>(
 }
 
 export function getSettings(
-  schoolIdOrHost: string,
+  schoolId: string,
   options: { noStore?: boolean } = {},
 ): Promise<PublicSettings | null> {
-  return getFromApi<PublicSettings>(
-    "/v1/public/site/settings",
-    schoolIdOrHost,
-    options,
-  );
+  return getFromApi<PublicSettings>(schoolId, "/site/settings", options);
 }
 
 /** Pass an empty slug to resolve the homepage. */
-export function getPageBySlug(host: string, slug = ""): Promise<PublicPage | null> {
+export function getPageBySlug(schoolId: string, slug = ""): Promise<PublicPage | null> {
   const query = new URLSearchParams({ slug });
-  return getFromApi<PublicPage>(`/v1/public/site/pages?${query.toString()}`, host);
+  return getFromApi<PublicPage>(schoolId, `/site/pages?${query.toString()}`);
 }
 
 export async function listPublicArticles(
-  host: string,
+  schoolId: string,
 ): Promise<{ items: PublicArticle[]; total: number }> {
   const result = await getFromApi<{ items: PublicArticle[]; total: number }>(
-    "/v1/public/site/blogs",
-    host,
+    schoolId,
+    "/site/blogs",
   );
   return result ?? { items: [], total: 0 };
 }
 
 export function getPublicArticleBySlug(
-  host: string,
+  schoolId: string,
   slug: string,
 ): Promise<PublicArticle | null> {
   if (!slug) return Promise.resolve(null);
-  return getFromApi<PublicArticle>(
-    `/v1/public/site/blogs/${encodeURIComponent(slug)}`,
-    host,
-  );
+  return getFromApi<PublicArticle>(schoolId, `/site/blogs/${encodeURIComponent(slug)}`);
 }
 
 export interface PublicProductSummary {
@@ -199,58 +164,58 @@ export interface PublicCommunityPlan {
 }
 
 export function getPublicProduct(
-  host: string,
+  schoolId: string,
   idOrSlug: string,
 ): Promise<PublicProductSummary | null> {
   if (!idOrSlug) return Promise.resolve(null);
   return getFromApi<PublicProductSummary>(
-    `/v1/products/${encodeURIComponent(idOrSlug)}`,
-    host,
+    schoolId,
+    `/products/${encodeURIComponent(idOrSlug)}`,
   );
 }
 
 export function getPublicProductDetail(
-  host: string,
+  schoolId: string,
   idOrSlug: string,
 ): Promise<PublicProductDetail | null> {
   if (!idOrSlug) return Promise.resolve(null);
   return getFromApi<PublicProductDetail>(
-    `/v1/products/${encodeURIComponent(idOrSlug)}`,
-    host,
+    schoolId,
+    `/products/${encodeURIComponent(idOrSlug)}`,
   );
 }
 
 export async function getPublicProductPlans(
-  host: string,
+  schoolId: string,
   idOrSlug: string,
 ): Promise<PublicProductPlan[]> {
   if (!idOrSlug) return [];
   const result = await getFromApi<{ items?: PublicProductPlan[] }>(
-    `/v1/storefront/products/${encodeURIComponent(idOrSlug)}/plans`,
-    host,
+    schoolId,
+    `/products/${encodeURIComponent(idOrSlug)}/plans`,
   );
   return result?.items ?? [];
 }
 
 export function getPublicCommunity(
-  host: string,
+  schoolId: string,
   idOrSlug: string,
 ): Promise<PublicCommunityDetail | null> {
   if (!idOrSlug) return Promise.resolve(null);
   return getFromApi<PublicCommunityDetail>(
-    `/v1/public/communities/${encodeURIComponent(idOrSlug)}`,
-    host,
+    schoolId,
+    `/communities/${encodeURIComponent(idOrSlug)}`,
   );
 }
 
 export async function getPublicCommunityPlans(
-  host: string,
+  schoolId: string,
   idOrSlug: string,
 ): Promise<PublicCommunityPlan[]> {
   if (!idOrSlug) return [];
   const result = await getFromApi<{ items?: PublicCommunityPlan[] }>(
-    `/v1/public/communities/${encodeURIComponent(idOrSlug)}/plans`,
-    host,
+    schoolId,
+    `/communities/${encodeURIComponent(idOrSlug)}/plans`,
   );
   return result?.items ?? [];
 }

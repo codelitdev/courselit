@@ -305,11 +305,6 @@ import { evaluateQuizLesson } from "./quiz.js";
 import { readPublicBillingCatalog, startSchoolCheckout } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
 import {
-  hostnameFromHeaders,
-  normalizeCustomHostname,
-  schoolLookupKeyFromHost,
-} from "./school-host.js";
-import {
   createSchoolCustomHost,
   deleteSchoolCustomHost,
   listSchoolHosts,
@@ -321,6 +316,7 @@ import {
   getSchoolPaymentSettings,
   listSchoolsForUser,
   loadSchoolByPublicId,
+  resolveSchoolByHost,
   updateSchoolCodeInjection,
   updateSchoolCurrency,
   updateSchoolPaymentSettings,
@@ -421,23 +417,6 @@ function requestHeaders(request: IncomingRequest) {
   return request.headers;
 }
 
-function resolveLearnerSchoolKey(
-  request: IncomingRequest,
-  explicitSchoolId?: string,
-): string | null {
-  const host = hostnameFromHeaders(request.headers);
-  const fromHost = host ? schoolLookupKeyFromHost(host) : null;
-  // A verified school host is authoritative. The header/query fallback is
-  // retained only for the generic local/API origin used by the development
-  // app and tests; it must never let a request switch tenants on a school
-  // host.
-  if (fromHost) return fromHost;
-  if (explicitSchoolId && explicitSchoolId.trim().length > 0) {
-    return explicitSchoolId.trim();
-  }
-  return headerSchoolId(request.headers);
-}
-
 function decryptStoredProviderSecret(value: string | undefined, secret: string) {
   if (!value) return "";
   if (!value.startsWith("v1.")) return value;
@@ -509,72 +488,21 @@ export async function dispatch(
         body: createOpenApiDocument(deps.auth.publicApiUrl),
       };
     }
+    // The only host -> school mapping. Every other route names its school
+    // explicitly (path, learner session, or admin x-school-id); the request
+    // Host / X-Forwarded-Host never selects a tenant.
     if (request.method === "GET" && path === "/v1/public/resolve-host") {
-      const hostname = normalizeCustomHostname(query.get("host") ?? "");
-      if (!hostname) return errorResponse(createPlatformError("not_found"));
-      const [resolved] = await deps.db
-        .select({ id: schema.schoolHosts.id })
-        .from(schema.schoolHosts)
-        .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolHosts.schoolId))
-        .where(
-          and(
-            eq(schema.schoolHosts.hostname, hostname),
-            eq(schema.schoolHosts.kind, "custom"),
-            eq(schema.schoolHosts.verificationStatus, "verified"),
-            ne(schema.schools.status, "deleted"),
-          ),
-        )
-        .limit(1);
-      return resolved
-        ? { status: 200, body: { resolved: true } }
+      const school = await resolveSchoolByHost(deps.db, query.get("host") ?? "");
+      return school
+        ? {
+            status: 200,
+            body: {
+              schoolId: school.publicId,
+              subdomain: school.subdomain,
+              name: school.name,
+            },
+          }
         : errorResponse(createPlatformError("not_found"));
-    }
-
-    if (request.method === "GET" && path === "/v1/public/school/resolve") {
-      const explicitSchool =
-        query.get("school")?.trim() || (headerSchoolId(request.headers) ?? "");
-      const hostParam =
-        query.get("host")?.trim() || (hostnameFromHeaders(request.headers) ?? "");
-
-      let loadedSchool = null;
-
-      if (explicitSchool) {
-        loadedSchool = await loadSchoolByPublicId(deps.db, explicitSchool);
-      }
-
-      if (!loadedSchool && hostParam) {
-        const lookupKey = schoolLookupKeyFromHost(hostParam);
-        if (lookupKey) {
-          loadedSchool = await loadSchoolByPublicId(deps.db, lookupKey);
-        }
-      }
-
-      if (
-        !loadedSchool &&
-        (!hostParam || hostParam === "localhost" || hostParam === "127.0.0.1")
-      ) {
-        const allSchools = await deps.db
-          .select()
-          .from(schema.schools)
-          .where(ne(schema.schools.status, "deleted"))
-          .limit(2);
-        if (allSchools.length === 1 && allSchools[0]) {
-          loadedSchool = allSchools[0];
-        }
-      }
-
-      if (!loadedSchool || loadedSchool.status === "deleted") {
-        return errorResponse(createPlatformError("not_found"));
-      }
-
-      return {
-        status: 200,
-        body: {
-          schoolId: loadedSchool.publicId,
-          subdomain: loadedSchool.subdomain,
-          name: loadedSchool.name,
-        },
-      };
     }
 
     const paymentWebhookMatch =
@@ -718,55 +646,14 @@ export async function dispatch(
           deps,
         );
         if (globalIdentity.kind === "authenticated") {
-          let schoolPublicId = resolveLearnerSchoolKey(request);
+          // The storefront server names the school (resolved from the
+          // website host) in x-school-id; the API never guesses one.
+          const schoolPublicId = headerSchoolId(request.headers);
           if (!schoolPublicId) {
-            // 1. Try selectedSchools for this user
-            const [selected] = await deps.db
-              .select({ publicId: schema.schools.publicId })
-              .from(schema.selectedSchools)
-              .innerJoin(
-                schema.schools,
-                eq(schema.schools.id, schema.selectedSchools.schoolId),
-              )
-              .where(
-                and(
-                  eq(schema.selectedSchools.userId, globalIdentity.principalId),
-                  ne(schema.schools.status, "deleted"),
-                ),
-              )
-              .limit(1);
-            if (selected) {
-              schoolPublicId = selected.publicId;
-            } else {
-              // 2. Try any active schoolAccount for this user
-              const [account] = await deps.db
-                .select({ publicId: schema.schools.publicId })
-                .from(schema.schoolAccounts)
-                .innerJoin(
-                  schema.schools,
-                  eq(schema.schools.id, schema.schoolAccounts.schoolId),
-                )
-                .where(
-                  and(
-                    eq(schema.schoolAccounts.userId, globalIdentity.principalId),
-                    ne(schema.schools.status, "deleted"),
-                  ),
-                )
-                .limit(1);
-              if (account) {
-                schoolPublicId = account.publicId;
-              } else {
-                // 3. Fallback to single active school in development / single-tenant setup
-                const allSchools = await deps.db
-                  .select({ publicId: schema.schools.publicId })
-                  .from(schema.schools)
-                  .where(ne(schema.schools.status, "deleted"))
-                  .limit(2);
-                if (allSchools.length === 1 && allSchools[0]) {
-                  schoolPublicId = allSchools[0].publicId;
-                }
-              }
-            }
+            learnerAuth = {
+              kind: "rejected",
+              error: createPlatformError("tenant_required"),
+            };
           }
           if (schoolPublicId) {
             const users = await deps.db
@@ -809,76 +696,6 @@ export async function dispatch(
         }
       }
     }
-    const resolvePublicSchool = async (): Promise<
-      | { ok: true; value: { schoolId: string; publicId: string } }
-      | { ok: false; error: ReturnType<typeof createPlatformError> }
-    > => {
-      // Public website and checkout routes are tenant-selected by the
-      // verified host. An authenticated learner session may be stale or
-      // belong to another school; it must not override the public host and
-      // make an otherwise anonymous sales page unusable.
-      let schoolKey = resolveLearnerSchoolKey(request);
-      if (!schoolKey) {
-        if (learnerAuth.kind === "authenticated") {
-          return {
-            ok: true,
-            value: {
-              schoolId: learnerAuth.value.school.id,
-              publicId: learnerAuth.value.school.publicId,
-            },
-          };
-        }
-        const allSchools = await deps.db
-          .select({ id: schema.schools.id, publicId: schema.schools.publicId })
-          .from(schema.schools)
-          .where(ne(schema.schools.status, "deleted"))
-          .limit(2);
-        if (allSchools.length === 1 && allSchools[0]) {
-          return {
-            ok: true,
-            value: { schoolId: allSchools[0].id, publicId: allSchools[0].publicId },
-          };
-        }
-        return { ok: false, error: createPlatformError("tenant_required") };
-      }
-      const loaded = await loadSchoolByPublicId(deps.db, schoolKey);
-      if (!loaded) {
-        return { ok: false, error: createPlatformError("tenant_forbidden") };
-      }
-      return {
-        ok: true,
-        value: { schoolId: loaded.id, publicId: loaded.publicId },
-      };
-    };
-
-    if (request.method === "GET" && path === "/v1/public/school/login-methods") {
-      let schoolKey = resolveLearnerSchoolKey(request);
-      let school = schoolKey ? await loadSchoolByPublicId(deps.db, schoolKey) : null;
-      if (!school) {
-        const allSchools = await deps.db
-          .select()
-          .from(schema.schools)
-          .where(ne(schema.schools.status, "deleted"))
-          .limit(2);
-        if (allSchools.length === 1 && allSchools[0]) {
-          school = allSchools[0];
-        }
-      }
-      if (!school) return errorResponse(createPlatformError("not_found"));
-      const hasGoogle = Boolean(
-        process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-      );
-      const loginMethods = hasGoogle ? ["email", "google"] : ["email"];
-      return {
-        status: 200,
-        body: {
-          schoolId: school.publicId,
-          loginMethods,
-          hasGoogle,
-        },
-      };
-    }
-
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
       const body = (request.body ?? {}) as { ticket?: string };
       if (!body.ticket || typeof body.ticket !== "string") {
@@ -900,379 +717,257 @@ export async function dispatch(
       };
     }
 
-    // Website / Branding
-    if (request.method === "GET" && path === "/v1/public/site/settings") {
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const settings = await getPublicWebsiteSettings(
+    // Public school routes: `/v1/public/:schoolId/...`. The school is named in
+    // the path by its public id; the request host is never consulted. A
+    // learner session only enriches responses (enrolled view, membership,
+    // own checkout) when it belongs to the same school as the path.
+    const publicSchoolMatch = /^\/v1\/public\/([^/]+)(\/.+)$/.exec(path);
+    if (publicSchoolMatch) {
+      const school = await loadSchoolByPublicId(
         deps.db,
-        school.value.schoolId,
-        deps.clock,
+        decodeURIComponent(publicSchoolMatch[1]!),
       );
-      const injection = await getSchoolCodeInjection(deps.db, school.value.schoolId);
-      const [verifiedCustomHost] = await deps.db
-        .select({ hostname: schema.schoolHosts.hostname })
-        .from(schema.schoolHosts)
-        .where(
-          and(
-            eq(schema.schoolHosts.schoolId, school.value.schoolId),
-            eq(schema.schoolHosts.kind, "custom"),
-            eq(schema.schoolHosts.verificationStatus, "verified"),
-          ),
-        )
-        .limit(1);
-      return {
-        status: 200,
-        body: {
-          ...settings,
-          codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
-          codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
-          canonicalHost: verifiedCustomHost?.hostname ?? null,
-        },
+      if (!school) return errorResponse(createPlatformError("not_found"));
+      const route = publicSchoolMatch[2]!;
+      const publicSchool = {
+        schoolId: school.id,
+        publicId: school.publicId,
+        currency: school.currency,
       };
-    }
+      const learner =
+        learnerAuth.kind === "authenticated" &&
+        learnerAuth.value.school.id === school.id
+          ? learnerAuth.value
+          : null;
+      const ok = (body: unknown, status = 200): DispatchResponse => ({ status, body });
+      const respond = <T>(
+        result: { ok: true; value: T } | { ok: false; error: ReturnType<typeof createPlatformError> },
+        map: (value: T) => unknown = (value) => value,
+        status = 200,
+      ): DispatchResponse =>
+        result.ok ? ok(map(result.value), status) : errorResponse(result.error);
+      const segment = (index: number) => decodeURIComponent(routeMatch![index]!);
+      let routeMatch: RegExpExecArray | null = null;
 
-    // Website / Pages
-    if (request.method === "GET" && path === "/v1/public/site/pages") {
-      const slug = query.get("slug") ?? "";
-      if (slug.length > 200) {
-        return errorResponse(createPlatformError("validation_failed"));
+      if (request.method === "GET") {
+        if (route === "/site/settings") {
+          const settings = await getPublicWebsiteSettings(
+            deps.db,
+            school.id,
+            deps.clock,
+          );
+          const injection = await getSchoolCodeInjection(deps.db, school.id);
+          const [verifiedCustomHost] = await deps.db
+            .select({ hostname: schema.schoolHosts.hostname })
+            .from(schema.schoolHosts)
+            .where(
+              and(
+                eq(schema.schoolHosts.schoolId, school.id),
+                eq(schema.schoolHosts.kind, "custom"),
+                eq(schema.schoolHosts.verificationStatus, "verified"),
+              ),
+            )
+            .limit(1);
+          return ok({
+            ...settings,
+            codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
+            codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
+            canonicalHost: verifiedCustomHost?.hostname ?? null,
+          });
+        }
+        if (route === "/site/pages") {
+          const slug = query.get("slug") ?? "";
+          if (slug.length > 200) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const page = await getPublishedWebsitePage(deps.db, school.id, slug, deps.clock);
+          return page ? ok(page) : errorResponse(createPlatformError("not_found"));
+        }
+        if (route === "/site/blogs") {
+          return ok(await listPublishedBlogPosts(deps.db, school.id));
+        }
+        if ((routeMatch = /^\/site\/blogs\/([^/]+)$/.exec(route))) {
+          const slug = segment(1);
+          if (slug.length === 0 || slug.length > 200) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const post = await getPublishedBlogPost(deps.db, school.id, slug);
+          return post ? ok(post) : errorResponse(createPlatformError("not_found"));
+        }
+        if (route === "/products") {
+          const parsed = listProductsQuerySchema.safeParse({
+            cursor: query.get("cursor") ?? undefined,
+            limit: query.get("limit") ?? undefined,
+            kind: query.get("kind") ?? undefined,
+          });
+          if (!parsed.success) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const result = await listPublicProducts(deps.db, publicSchool, parsed.data);
+          if (!result.ok) return errorResponse(result.error);
+          return ok({ items: result.value, nextCursor: result.nextCursor });
+        }
+        if ((routeMatch = /^\/products\/([^/]+)$/.exec(route))) {
+          const result = await getProduct(
+            deps.db,
+            { schoolId: school.id, publicId: school.publicId },
+            segment(1),
+            learner
+              ? {
+                  kind: "learner",
+                  schoolAccountId: learner.schoolAccount.id,
+                  learnerId: learner.schoolAccount.id,
+                }
+              : { kind: "public" },
+            deps.clock.now(),
+          );
+          return respond(result);
+        }
+        if ((routeMatch = /^\/products\/([^/]+)\/plans$/.exec(route))) {
+          return respond(
+            await listPublicPlans(deps.db, publicSchool, segment(1)),
+            (items) => ({ items }),
+          );
+        }
+        if ((routeMatch = /^\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(route))) {
+          const result = await getLearnerLessonMedia(
+            deps.db,
+            deps.mediaLit,
+            {
+              schoolId: school.id,
+              productPublicId: segment(1),
+              lessonPublicId: segment(2),
+              viewer: learner
+                ? {
+                    kind: "learner",
+                    schoolAccountId: learner.schoolAccount.id,
+                    learnerId: learner.schoolAccount.id,
+                  }
+                : { kind: "public" },
+            },
+            deps.clock.now(),
+          );
+          return respond(result);
+        }
+        if (route === "/communities") {
+          // The public community catalog is not offered; communities are
+          // reached through their own pages.
+          return errorResponse(createPlatformError("not_found"));
+        }
+        if ((routeMatch = /^\/communities\/([^/]+)$/.exec(route))) {
+          const result = learner
+            ? await getCommunity(deps.db, publicSchool, segment(1), {
+                kind: "learner",
+                schoolId: learner.school.id,
+                schoolPublicId: learner.school.publicId,
+                learnerId: learner.learner.id,
+                learnerPublicId: learner.learner.publicId,
+              })
+            : await getPublicCommunity(deps.db, publicSchool, segment(1));
+          return respond(result);
+        }
+        if ((routeMatch = /^\/communities\/([^/]+)\/plans$/.exec(route))) {
+          return respond(
+            await listPublicCommunityPlans(deps.db, publicSchool, segment(1)),
+            (items) => ({ items }),
+          );
+        }
+        if (route === "/login-methods") {
+          const hasGoogle = Boolean(
+            process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+          );
+          return ok({
+            schoolId: school.publicId,
+            loginMethods: hasGoogle ? ["email", "google"] : ["email"],
+            hasGoogle,
+          });
+        }
+        if ((routeMatch = /^\/checkout-sessions\/([^/]+)$/.exec(route))) {
+          const result = await getCheckoutSession(
+            deps.db,
+            {
+              schoolId: school.id,
+              sessionPublicId: segment(1),
+              learnerId: learner?.learner.id,
+            },
+            deps.clock,
+          );
+          return respond(result);
+        }
       }
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const page = await getPublishedWebsitePage(
-        deps.db,
-        school.value.schoolId,
-        slug,
-        deps.clock,
-      );
-      return page
-        ? { status: 200, body: page }
-        : errorResponse(createPlatformError("not_found"));
-    }
 
-    // Website / Blogs
-    if (request.method === "GET" && path === "/v1/public/site/blogs") {
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      return {
-        status: 200,
-        body: await listPublishedBlogPosts(deps.db, school.value.schoolId),
-      };
-    }
-
-    const publicSiteBlogMatch = /^\/v1\/public\/site\/blogs\/([^/]+)$/.exec(path);
-    if (request.method === "GET" && publicSiteBlogMatch) {
-      const slug = decodeURIComponent(publicSiteBlogMatch[1]!);
-      if (slug.length === 0 || slug.length > 200) {
-        return errorResponse(createPlatformError("validation_failed"));
+      if (request.method === "POST") {
+        if (route === "/lead-magnets") {
+          const parsed = leadMagnetSignUpBodySchema.safeParse(request.body ?? {});
+          if (!parsed.success) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const result = await signUpForLeadMagnet(
+            deps.db,
+            {
+              schoolId: school.id,
+              publicSchoolId: school.publicId,
+              productPublicId: parsed.data.productId,
+              email: parsed.data.email,
+              requestId: requestIdFrom(request, deps),
+            },
+            deps.clock,
+          );
+          return respond(result, (value) => ({
+            status: "sent" as const,
+            email: value.email,
+          }));
+        }
+        if (route === "/newsletter/subscribe") {
+          const parsed = newsletterSubscribeBodySchema.safeParse(request.body ?? {});
+          if (!parsed.success) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const result = await subscribeNewsletter(deps.db, {
+            schoolId: school.id,
+            email: parsed.data.email,
+            name: parsed.data.name,
+            clock: deps.clock,
+          });
+          return respond(result, (value) => ({
+            status: "subscribed" as const,
+            email: value.email,
+          }));
+        }
+        if (route === "/checkout-sessions") {
+          const parsed = createCheckoutSessionBodySchema.safeParse(request.body ?? {});
+          if (!parsed.success) {
+            return errorResponse(createPlatformError("validation_failed"));
+          }
+          const result = await createCheckoutSession(
+            deps.db,
+            { schoolId: school.id, publicId: school.publicId },
+            parsed.data.productId
+              ? {
+                  resourceType: "product",
+                  resourcePublicId: parsed.data.productId,
+                  planPublicId: parsed.data.planId,
+                }
+              : {
+                  resourceType: "community",
+                  resourcePublicId: parsed.data.communityId!,
+                  planPublicId: parsed.data.planId,
+                },
+            deps.clock,
+          );
+          return respond(result, (value) => value, 201);
+        }
       }
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const post = await getPublishedBlogPost(deps.db, school.value.schoolId, slug);
-      return post
-        ? { status: 200, body: post }
-        : errorResponse(createPlatformError("not_found"));
-    }
-    if (request.method === "GET" && path === "/v1/public/products") {
-      let school: { schoolId: string; publicId: string; currency: string } | null =
-        null;
-      if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(
-          learnerAuth.value,
-          headerSchoolId(request.headers),
-        );
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        school = {
-          schoolId: learnerAuth.value.school.id,
-          publicId: learnerAuth.value.school.publicId,
-          currency: learnerAuth.value.school.currency,
-        };
-      } else {
-        const schoolKey = resolveLearnerSchoolKey(request);
-        if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-        const loaded = await loadSchoolByPublicId(deps.db, schoolKey);
-        if (!loaded) return errorResponse(createPlatformError("tenant_forbidden"));
-        school = {
-          schoolId: loaded.id,
-          publicId: loaded.publicId,
-          currency: loaded.currency,
-        };
-      }
-      const parsed = listProductsQuerySchema.safeParse({
-        cursor: query.get("cursor") ?? undefined,
-        limit: query.get("limit") ?? undefined,
-        kind: query.get("kind") ?? undefined,
-      });
-      if (!parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const result = await listPublicProducts(deps.db, school, parsed.data);
-      if (!result.ok) return errorResponse(result.error);
-      return {
-        status: 200,
-        body: { items: result.value, nextCursor: result.nextCursor },
-      };
-    }
-    if (request.method === "GET" && path === "/v1/public/communities") {
       return errorResponse(createPlatformError("not_found"));
     }
-    const publicCommunityMatch = /^\/v1\/public\/communities\/([^/]+)$/.exec(path);
-    if (request.method === "GET" && publicCommunityMatch) {
-      let school: { schoolId: string; publicId: string } | null = null;
-      if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(
-          learnerAuth.value,
-          headerSchoolId(request.headers),
-        );
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        school = {
-          schoolId: learnerAuth.value.school.id,
-          publicId: learnerAuth.value.school.publicId,
-        };
-      } else {
-        const schoolKey = resolveLearnerSchoolKey(request);
-        if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-        const loaded = await loadSchoolByPublicId(deps.db, schoolKey);
-        if (!loaded) return errorResponse(createPlatformError("tenant_forbidden"));
-        school = { schoolId: loaded.id, publicId: loaded.publicId };
-      }
-      const communityId = decodeURIComponent(publicCommunityMatch[1]!);
-      const result =
-        learnerAuth.kind === "authenticated"
-          ? await getCommunity(deps.db, school, communityId, {
-              kind: "learner",
-              schoolId: learnerAuth.value.school.id,
-              schoolPublicId: learnerAuth.value.school.publicId,
-              learnerId: learnerAuth.value.learner.id,
-              learnerPublicId: learnerAuth.value.learner.publicId,
-            })
-          : await getPublicCommunity(deps.db, school, communityId);
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-    const publicCommunityPlansMatch =
-      /^\/v1\/public\/communities\/([^/]+)\/plans$/.exec(path);
-    if (request.method === "GET" && publicCommunityPlansMatch) {
-      let school: { schoolId: string; publicId: string } | null = null;
-      if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(
-          learnerAuth.value,
-          headerSchoolId(request.headers),
-        );
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        school = {
-          schoolId: learnerAuth.value.school.id,
-          publicId: learnerAuth.value.school.publicId,
-        };
-      } else {
-        const schoolKey = resolveLearnerSchoolKey(request);
-        if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-        const loaded = await loadSchoolByPublicId(deps.db, schoolKey);
-        if (!loaded) return errorResponse(createPlatformError("tenant_forbidden"));
-        school = { schoolId: loaded.id, publicId: loaded.publicId };
-      }
-      const result = await listPublicCommunityPlans(
-        deps.db,
-        school,
-        decodeURIComponent(publicCommunityPlansMatch[1]!),
-      );
-      return result.ok
-        ? { status: 200, body: { items: result.value } }
-        : errorResponse(result.error);
-    }
-    const publicPlansMatch = /^\/v1\/storefront\/products\/([^/]+)\/plans$/.exec(path);
-    if (request.method === "GET" && publicPlansMatch) {
-      let school: { schoolId: string; publicId: string; currency: string } | null =
-        null;
-      if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(
-          learnerAuth.value,
-          headerSchoolId(request.headers),
-        );
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        school = {
-          schoolId: learnerAuth.value.school.id,
-          publicId: learnerAuth.value.school.publicId,
-          currency: learnerAuth.value.school.currency,
-        };
-      } else {
-        const schoolKey = resolveLearnerSchoolKey(request);
-        if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-        const loaded = await loadSchoolByPublicId(deps.db, schoolKey);
-        if (!loaded) return errorResponse(createPlatformError("tenant_forbidden"));
-        school = {
-          schoolId: loaded.id,
-          publicId: loaded.publicId,
-          currency: loaded.currency,
-        };
-      }
-      const result = await listPublicPlans(
-        deps.db,
-        school,
-        decodeURIComponent(publicPlansMatch[1]!),
-      );
-      return result.ok
-        ? { status: 200, body: { items: result.value } }
-        : errorResponse(result.error);
-    }
 
-    if (request.method === "POST" && path === "/v1/storefront/lead-magnets") {
-      const parsed = leadMagnetSignUpBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const result = await signUpForLeadMagnet(
-        deps.db,
-        {
-          schoolId: school.value.schoolId,
-          publicSchoolId: school.value.publicId,
-          productPublicId: parsed.data.productId,
-          email: parsed.data.email,
-          requestId: requestIdFrom(request, deps),
-        },
-        deps.clock,
-      );
-      return result.ok
-        ? { status: 200, body: { status: "sent" as const, email: result.value.email } }
-        : errorResponse(result.error);
-    }
-
-    if (request.method === "POST" && path === "/v1/newsletter/subscribe") {
-      const parsed = newsletterSubscribeBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const result = await subscribeNewsletter(deps.db, {
-        schoolId: school.value.schoolId,
-        email: parsed.data.email,
-        name: parsed.data.name,
-        clock: deps.clock,
-      });
-      return result.ok
-        ? {
-            status: 200,
-            body: { status: "subscribed" as const, email: result.value.email },
-          }
-        : errorResponse(result.error);
-    }
-
-    if (request.method === "POST" && path === "/v1/storefront/checkout-sessions") {
-      const parsed = createCheckoutSessionBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const result = await createCheckoutSession(
-        deps.db,
-        school.value,
-        parsed.data.productId
-          ? {
-              resourceType: "product",
-              resourcePublicId: parsed.data.productId,
-              planPublicId: parsed.data.planId,
-            }
-          : {
-              resourceType: "community",
-              resourcePublicId: parsed.data.communityId!,
-              planPublicId: parsed.data.planId,
-            },
-        deps.clock,
-      );
-      return result.ok
-        ? { status: 201, body: result.value }
-        : errorResponse(result.error);
-    }
-    const publicCheckoutSessionMatch =
-      /^\/v1\/storefront\/checkout-sessions\/([^/]+)$/.exec(path);
-    if (request.method === "GET" && publicCheckoutSessionMatch) {
-      const school = await resolvePublicSchool();
-      if (!school.ok) return errorResponse(school.error);
-      const result = await getCheckoutSession(
-        deps.db,
-        {
-          schoolId: school.value.schoolId,
-          sessionPublicId: decodeURIComponent(publicCheckoutSessionMatch[1]!),
-          learnerId:
-            learnerAuth.kind === "authenticated"
-              ? learnerAuth.value.learner.id
-              : undefined,
-        },
-        deps.clock,
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-    const lessonMediaMatch = /^\/v1\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(
-      path,
-    );
-    if (request.method === "GET" && lessonMediaMatch) {
-      const productPublicId = decodeURIComponent(lessonMediaMatch[1]!);
-      const lessonPublicId = decodeURIComponent(lessonMediaMatch[2]!);
-      if (learnerAuth.kind === "authenticated") {
-        const schoolCheck = assertLearnerSchool(
-          learnerAuth.value,
-          headerSchoolId(request.headers),
-        );
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        const result = await getLearnerLessonMedia(
-          deps.db,
-          deps.mediaLit,
-          {
-            schoolId: learnerAuth.value.school.id,
-            productPublicId,
-            lessonPublicId,
-            viewer: {
-              kind: "learner",
-              schoolAccountId: learnerAuth.value.schoolAccount.id,
-              learnerId: learnerAuth.value.schoolAccount.id,
-            },
-          },
-          deps.clock.now(),
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (learnerAuth.kind === "rejected") {
-        return errorResponse(learnerAuth.error);
-      }
-      const schoolKey = resolveLearnerSchoolKey(request);
-      if (!schoolKey) return errorResponse(createPlatformError("tenant_required"));
-      const school = await loadSchoolByPublicId(deps.db, schoolKey);
-      if (!school) return errorResponse(createPlatformError("tenant_forbidden"));
-      const result = await getLearnerLessonMedia(
-        deps.db,
-        deps.mediaLit,
-        {
-          schoolId: school.id,
-          productPublicId,
-          lessonPublicId,
-          viewer: { kind: "public" },
-        },
-        deps.clock.now(),
-      );
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-    const productGet = /^\/v1\/products\/([^/]+)$/.exec(path);
     if (request.method === "POST" && path === "/v1/learner/auth/sign-up") {
       const parsed = learnerAuthBodySchema.safeParse(request.body ?? {});
       if (!parsed.success || typeof parsed.data.name !== "string") {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const schoolPublicId = resolveLearnerSchoolKey(request, parsed.data.schoolId);
-      if (!schoolPublicId) {
-        return errorResponse(createPlatformError("tenant_required"));
-      }
+      // The school is named explicitly in the body; never inferred from the host.
+      const schoolPublicId = parsed.data.schoolId;
       const requestId = requestIdFrom(request, deps);
       const result = await signUpLearner(
         deps.db,
@@ -1302,10 +997,8 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const schoolPublicId = resolveLearnerSchoolKey(request, parsed.data.schoolId);
-      if (!schoolPublicId) {
-        return errorResponse(createPlatformError("tenant_required"));
-      }
+      // The school is named explicitly in the body; never inferred from the host.
+      const schoolPublicId = parsed.data.schoolId;
       const requestId = requestIdFrom(request, deps);
       const result = await signInLearner(
         deps.db,
@@ -2269,134 +1962,6 @@ export async function dispatch(
         return { status: 200, body: result.value };
       }
       return errorResponse(createPlatformError("not_found"));
-    }
-
-    if (request.method === "GET" && productGet) {
-      const productPublicId = decodeURIComponent(productGet[1]!);
-      const requestedSchool = resolveLearnerSchoolKey(request);
-      if (learnerAuth.kind === "authenticated") {
-        let schoolCheck = assertLearnerSchool(learnerAuth.value, requestedSchool);
-        if (!schoolCheck.ok && requestedSchool) {
-          // A custom-domain host is the lookup key here; it belongs to the
-          // learner's school when it resolves to the same school.
-          const hostSchool = await loadSchoolByPublicId(deps.db, requestedSchool);
-          if (hostSchool?.id === learnerAuth.value.school.id) schoolCheck = { ok: true };
-        }
-        if (!schoolCheck.ok) return errorResponse(schoolCheck.error);
-        const requestId = requestIdFrom(request, deps);
-        emitSchoolTelemetry(deps, request, {
-          requestId,
-          schoolId: learnerAuth.value.school.publicId,
-          principalId: learnerAuth.value.learner.publicId,
-        });
-        const result = await getProduct(
-          deps.db,
-          {
-            schoolId: learnerAuth.value.school.id,
-            publicId: learnerAuth.value.school.publicId,
-          },
-          productPublicId,
-          {
-            kind: "learner",
-            schoolAccountId: learnerAuth.value.schoolAccount.id,
-            learnerId: learnerAuth.value.schoolAccount.id,
-          },
-          deps.clock.now(),
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (learnerAuth.kind === "rejected") {
-        return errorResponse(learnerAuth.error);
-      }
-      const presented = selectHttpCredential(requestHeaders(request), {
-        sessionCookieName: ADMIN_SESSION_COOKIE_NAME,
-      });
-      if (presented.kind === "absent") {
-        if (!requestedSchool) {
-          return errorResponse(createPlatformError("tenant_required"));
-        }
-        const school = await loadSchoolByPublicId(deps.db, requestedSchool);
-        if (!school) return errorResponse(createPlatformError("tenant_forbidden"));
-        const requestId = requestIdFrom(request, deps);
-        emitSchoolTelemetry(deps, request, {
-          requestId,
-          schoolId: school.publicId,
-        });
-        const result = await getProduct(
-          deps.db,
-          { schoolId: school.id, publicId: school.publicId },
-          productPublicId,
-          { kind: "public" },
-          deps.clock.now(),
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      const adminAuth = await authenticateHttpRequest(requestHeaders(request), deps);
-      if (adminAuth.kind === "authenticated") {
-        const school = await resolveSchoolContext({
-          db: deps.db,
-          principalId: adminAuth.principalId,
-          credential: adminAuth.credential,
-          requestedPublicSchoolId: requestedSchool,
-        });
-        if (!school.ok) {
-          // A public course page must not be blocked by an unrelated admin
-          // session (for example, a team member without product permissions).
-          // Fall back only to published public data; drafts still remain
-          // protected by the normal admin authorization response.
-          if (requestedSchool) {
-            const publicSchool = await loadSchoolByPublicId(deps.db, requestedSchool);
-            if (publicSchool) {
-              const publicResult = await getProduct(
-                deps.db,
-                { schoolId: publicSchool.id, publicId: publicSchool.publicId },
-                productPublicId,
-                { kind: "public" },
-                deps.clock.now(),
-              );
-              if (publicResult.ok) return { status: 200, body: publicResult.value };
-            }
-          }
-          return errorResponse(school.error);
-        }
-        if (!school.value.permissions.has("products:read")) {
-          const publicResult = await getProduct(
-            deps.db,
-            { schoolId: school.value.schoolId, publicId: school.value.publicId },
-            productPublicId,
-            { kind: "public" },
-            deps.clock.now(),
-          );
-          return publicResult.ok
-            ? { status: 200, body: publicResult.value }
-            : errorResponse(createPlatformError("forbidden"));
-        }
-        const requestId = requestIdFrom(request, deps);
-        emitSchoolTelemetry(deps, request, {
-          requestId,
-          schoolId: school.value.publicId,
-          principalId: adminAuth.principalId,
-        });
-        const result = await getProduct(
-          deps.db,
-          { schoolId: school.value.schoolId, publicId: school.value.publicId },
-          productPublicId,
-          { kind: "admin" },
-          deps.clock.now(),
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      return errorResponse(
-        adminAuth.kind === "rejected"
-          ? adminAuth.error
-          : createPlatformError("unauthenticated"),
-      );
     }
 
     const auth = await authenticateHttpRequest(requestHeaders(request), deps);
@@ -5472,6 +5037,23 @@ export async function dispatch(
     }
 
     const noteMatch = /^\/v1\/products\/([^/]+)$/.exec(path);
+    if (request.method === "GET" && noteMatch) {
+      // Admin product read. Storefront visitors and learners use
+      // `/v1/public/:schoolId/products/:productId`.
+      if (!context.permissions.has("products:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const result = await getProduct(
+        deps.db,
+        { schoolId: school.value.schoolId, publicId: school.value.publicId },
+        decodeURIComponent(noteMatch[1]!),
+        { kind: "admin" },
+        deps.clock.now(),
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (request.method === "PATCH" && noteMatch) {
       const parsed = updateProductBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {

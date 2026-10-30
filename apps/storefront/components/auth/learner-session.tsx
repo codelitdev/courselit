@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { z } from "zod";
 import { requestJson } from "@/lib/request-json";
-import { clearLearnerIdentityLink, writeSchoolId } from "@/lib/school";
+import { clearLearnerIdentityLink } from "@/lib/school";
 
 export type LearnerSession = z.infer<typeof learnerSchema>;
 
@@ -53,7 +53,6 @@ export function LearnerSessionProvider({ children }: { children: React.ReactNode
     void requestJson<LearnerSession>("/api/v1/learner/me")
       .then((body) => {
         if (!active) return;
-        writeSchoolId(body.schoolId);
         clearLearnerIdentityLink();
         setLearner(body);
       })

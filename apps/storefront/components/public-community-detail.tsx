@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type {
   communityPaymentPlanSchema,
   communitySchema,
@@ -58,6 +59,7 @@ function richText(value: string): TextEditorContent | null {
 
 export function PublicCommunityDetail({ communityId }: { communityId: string }) {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [community, setCommunity] = useState<PublicCommunity | null>(null);
   const [plans, setPlans] = useState<CommunityPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,11 +70,11 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
   useEffect(() => {
     let active = true;
     void Promise.all([
-      fetch(`/api/v1/public/communities/${encodeURIComponent(communityId)}`, {
+      fetch(publicApiPath(schoolId, `/communities/${encodeURIComponent(communityId)}`), {
         credentials: "include",
         cache: "no-store",
       }),
-      fetch(`/api/v1/public/communities/${encodeURIComponent(communityId)}/plans`, {
+      fetch(publicApiPath(schoolId, `/communities/${encodeURIComponent(communityId)}/plans`), {
         credentials: "include",
         cache: "no-store",
       }),
@@ -93,7 +95,7 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
     return () => {
       active = false;
     };
-  }, [communityId]);
+  }, [communityId, schoolId]);
 
   if (loading) return <CourseLitLoading label="Loading community" />;
   if (!community) return <Text2 theme={theme}>That community is not available.</Text2>;
@@ -123,7 +125,7 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
     setCheckoutBusy(true);
     setCheckoutError(null);
     try {
-      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+      const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
         method: "POST",
         credentials: "include",
         headers: learnerHeaders({ "content-type": "application/json" }),

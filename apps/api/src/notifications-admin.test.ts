@@ -83,6 +83,7 @@ describe("admin notifications", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "notification-learner@example.com",
         password: "learner-password-1",
         name: "Notification Learner",

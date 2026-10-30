@@ -16,10 +16,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { schoolId, slug } = await params;
-  const host = schoolId;
-  const settings = await getSettings(host);
-  const product = await getPublicProduct(host, slug);
-  const community = product ? null : await getPublicCommunity(host, slug);
+  const settings = await getSettings(schoolId);
+  const product = await getPublicProduct(schoolId, slug);
+  const community = product ? null : await getPublicCommunity(schoolId, slug);
   const resource = product ?? community;
   if (!resource) return { title: "Page not found" };
 
@@ -32,8 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicSalesPage({ params }: Props) {
   const { schoolId, slug } = await params;
-  const host = schoolId;
-  const product = await getPublicProduct(host, slug);
+  const product = await getPublicProduct(schoolId, slug);
   if (product) {
     return (
       <PublicSitePage
@@ -49,7 +47,7 @@ export default async function PublicSalesPage({ params }: Props) {
     );
   }
 
-  const community = await getPublicCommunity(host, slug);
+  const community = await getPublicCommunity(schoolId, slug);
   if (community) {
     return (
       <PublicSitePage

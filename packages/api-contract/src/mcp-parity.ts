@@ -90,8 +90,8 @@ export const mcpParityManifest = [
     },
   })),
   {
-    capability: "learner.lessonMedia.get",
-    rest: { operationId: "getLearnerLessonMedia" },
+    capability: "public.lessonMedia.get",
+    rest: { operationId: "getPublicLessonMedia" },
     parity: "exempt",
     exemption: {
       reason:
@@ -150,18 +150,40 @@ export const mcpParityManifest = [
     parity: "exempt",
     exemption: {
       reason:
-        "Custom-host ownership is an infrastructure edge-routing check, not an application capability exposed over MCP.",
+        "Website host resolution is an infrastructure edge/storefront routing check, not an application capability exposed over MCP.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "public.school.resolve",
-    rest: { operationId: "resolveStorefrontSchool" },
+    capability: "public.products.get",
+    rest: { operationId: "getPublicProduct" },
     parity: "exempt",
     exemption: {
       reason:
-        "Storefront school resolution is an internal proxy-routing check, not an application capability exposed over MCP.",
+        "The public product page is a learner-site/browser surface and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "public.loginMethods.get",
+    rest: { operationId: "getPublicLoginMethods" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Learner login-method discovery is a learner-site/browser surface and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "public.leadMagnets.signUp",
+    rest: { operationId: "signUpForLeadMagnet" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Lead-magnet signup is a storefront visitor form and is not exposed as an administrative MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },

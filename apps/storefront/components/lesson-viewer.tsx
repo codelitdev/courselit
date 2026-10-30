@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import { useEffect, useState } from "react";
 import { EmbedViewer } from "@/components/embed-viewer";
@@ -69,6 +70,7 @@ export function LessonMediaContent({
   lesson: LearnerLesson;
   previewToken: string | null;
 }) {
+  const schoolId = useSchoolId();
   const [media, setMedia] = useState<{
     url: string;
     thumbnailUrl: string | null;
@@ -89,7 +91,10 @@ export function LessonMediaContent({
     let active = true;
     const base = previewToken
       ? `/api/v1/preview/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lesson.id)}/media`
-      : `/api/v1/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lesson.id)}/media`;
+      : publicApiPath(
+          schoolId,
+          `/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lesson.id)}/media`,
+        );
     void fetch(base, {
       credentials: "include",
       cache: "no-store",
@@ -122,7 +127,7 @@ export function LessonMediaContent({
     return () => {
       active = false;
     };
-  }, [lesson.id, lesson.mediaId, previewToken, productId]);
+  }, [lesson.id, lesson.mediaId, previewToken, productId, schoolId]);
 
   if (loading) return <CourseLitLoading label="Loading lesson media…" />;
   if (failed || !media)

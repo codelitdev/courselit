@@ -29,7 +29,6 @@ import {
   type LearnerAvatarMedia,
   useLearnerProfileMediaUploader,
 } from "@/lib/profile-media-uploader";
-import { clearSchoolId } from "@/lib/school";
 
 type LearnerProfile = {
   name: string;
@@ -176,7 +175,6 @@ export default function AccountPage() {
         credentials: "include",
       }),
     ]);
-    clearSchoolId();
     window.location.href = "/";
   }
 

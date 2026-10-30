@@ -132,7 +132,7 @@ describe.serial("lesson drip access", () => {
 
     const locked = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
+      path: `/v1/public/${world.schoolA.publicId}/products/${productId}`,
       headers: learnerHeaders,
     });
     expect(locked.status).toBe(200);

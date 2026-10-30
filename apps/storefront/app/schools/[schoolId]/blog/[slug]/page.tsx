@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { PublicBlogArticle } from "@/components/public-blog-article";
-import { loadPublicPage, PublicSitePage } from "@/components/public-site-page";
+import { PublicSitePage } from "@/components/public-site-page";
 import { getPublicArticleBySlug, listPublicArticles } from "@/lib/courselit-public";
 
 interface Props {
   params: Promise<{ schoolId: string; slug: string }>;
 }
 
-async function loadBlogArticle(slug: string, schoolId?: string) {
-  const { host } = await loadPublicPage("", schoolId);
-  const bySlug = await getPublicArticleBySlug(host, slug);
+async function loadBlogArticle(slug: string, schoolId: string) {
+  const bySlug = await getPublicArticleBySlug(schoolId, slug);
   if (bySlug) return bySlug;
-  const articles = await listPublicArticles(host);
+  const articles = await listPublicArticles(schoolId);
   return articles.items.find((article) => article.blogId === slug) ?? null;
 }
 

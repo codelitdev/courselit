@@ -42,8 +42,8 @@ describe("Unified Contacts & Segments", () => {
     // 1. Public newsletter subscribe
     const subscribeRes = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/newsletter/subscribe",
-      headers: { "x-school-id": school.id, "content-type": "application/json" },
+      path: `/v1/public/${school.id}/newsletter/subscribe`,
+      headers: { "content-type": "application/json" },
       body: { email: "newsletter.fan@example.com", name: "Fan Fan" },
     });
 

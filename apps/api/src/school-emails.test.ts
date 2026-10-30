@@ -98,8 +98,8 @@ describe("school emails", () => {
     const { runtime, adminHeaders, productId, world, clock } = await setUp();
     const publicRequest = {
       method: "POST" as const,
-      path: "/v1/storefront/lead-magnets",
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/lead-magnets`,
+      headers: {},
       body: { productId, email: "Visitor@Example.com" },
     };
 

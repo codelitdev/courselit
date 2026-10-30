@@ -57,19 +57,20 @@ export function planPrice(plan: CourseLitPlan | undefined) {
   return amount;
 }
 
-export function learnerHeaders(extra?: HeadersInit): Headers {
-  const headers = new Headers(extra);
-  if (typeof window === "undefined") return headers;
-  const params = new URLSearchParams(window.location.search);
-  const fromQuery = params.get("school") ?? params.get("schoolId");
-  const schoolId =
-    fromQuery?.trim() || window.sessionStorage.getItem("courselit.learner.schoolId");
-  const hostname = window.location.hostname.toLowerCase();
-  if (
-    schoolId &&
-    (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1")
-  ) {
-    headers.set("x-school-id", schoolId.trim());
-  }
-  return headers;
+/** School public id the storefront put on `pageData`; absent in the admin
+ * page editor, where public storefront APIs are not available. */
+export function pageSchoolId(pageData: PageData): string | null {
+  const value = pageData.schoolId;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+/**
+ * Browser path of a school's public API route, e.g.
+ * `publicApiPath(pageData, "/checkout-sessions")` ->
+ * `/api/v1/public/<schoolId>/checkout-sessions`. Returns null when the page
+ * is not rendered by the storefront (no `pageData.schoolId`).
+ */
+export function publicApiPath(pageData: PageData, suffix: string): string | null {
+  const schoolId = pageSchoolId(pageData);
+  return schoolId ? `/api/v1/public/${encodeURIComponent(schoolId)}${suffix}` : null;
 }

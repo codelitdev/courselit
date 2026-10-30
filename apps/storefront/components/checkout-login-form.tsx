@@ -10,7 +10,7 @@ import {
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { authClient } from "@/lib/auth-client";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { learnerHeaders } from "@/lib/school";
 type Learner = {
   id: string;
   email: string;
@@ -46,9 +46,7 @@ export function CheckoutLoginForm({
       cache: "no-store",
     });
     if (!response.ok) throw new Error("Unable to establish your learner session.");
-    const learner = (await response.json()) as Learner;
-    if (learner.schoolId) writeSchoolId(learner.schoolId);
-    onComplete(learner);
+    onComplete((await response.json()) as Learner);
   }
 
   async function requestOtp(event: FormEvent<HTMLFormElement>) {

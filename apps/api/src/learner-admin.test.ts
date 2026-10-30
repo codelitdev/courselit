@@ -149,6 +149,7 @@ describe.serial("admin learner management", () => {
       path: "/v1/learner/auth/sign-in",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "roster-learner@example.com",
         password: "learner-password-1",
       },

@@ -14,7 +14,6 @@ import {
   getSettings,
   listPublicArticles,
 } from "@/lib/courselit-public";
-import { requestHost } from "@/lib/request-host";
 
 export type PublicSystemRoute =
   | "blog"
@@ -55,10 +54,9 @@ function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
   ];
 }
 
-export async function loadPublicPage(pageSlug: string, schoolId?: string) {
-  const host = schoolId ?? (await requestHost());
-  const page = await getPageBySlug(host, pageSlug);
-  return { host, pageSlug, page };
+export async function loadPublicPage(pageSlug: string, schoolId: string) {
+  const page = await getPageBySlug(schoolId, pageSlug);
+  return { schoolId, pageSlug, page };
 }
 
 export async function PublicSitePage({
@@ -82,16 +80,16 @@ export async function PublicSitePage({
   salesResource?:
     | { resourceType: "product"; resourceId: string }
     | { resourceType: "community"; resourceId: string };
-  schoolId?: string;
+  schoolId: string;
 }) {
   const isSalesPage = Boolean(salesPageSlug);
-  const { host, page } = await loadPublicPage(
+  const { page } = await loadPublicPage(
     salesPageSlug ?? (systemRoute ? "" : pageSlug),
     schoolId,
   );
-  const settings = await getSettings(host);
+  const settings = await getSettings(schoolId);
   const fallbackPage =
-    !page && fallbackToHomepage ? await getPageBySlug(host, "") : null;
+    !page && fallbackToHomepage ? await getPageBySlug(schoolId, "") : null;
   const resolvedPage = page ?? fallbackPage;
   if (!resolvedPage && !allowEmpty) notFound();
 
@@ -104,35 +102,36 @@ export async function PublicSitePage({
 
   const salesProduct =
     salesResource?.resourceType === "product"
-      ? await getPublicProductDetail(host, salesResource.resourceId)
+      ? await getPublicProductDetail(schoolId, salesResource.resourceId)
       : null;
   const salesCommunity =
     salesResource?.resourceType === "community"
-      ? await getPublicCommunity(host, salesResource.resourceId)
+      ? await getPublicCommunity(schoolId, salesResource.resourceId)
       : null;
   const salesPlans =
     salesProduct && salesResource?.resourceType === "product"
-      ? await getPublicProductPlans(host, salesResource.resourceId)
+      ? await getPublicProductPlans(schoolId, salesResource.resourceId)
       : salesCommunity && salesResource?.resourceType === "community"
-        ? await getPublicCommunityPlans(host, salesResource.resourceId)
+        ? await getPublicCommunityPlans(schoolId, salesResource.resourceId)
         : [];
   const siteCommunity =
     salesCommunity ??
     (salesProduct?.includedWithCommunity ||
     systemRoute === "join" ||
     pageSlug === "join"
-      ? await getPublicCommunity(host, "community")
+      ? await getPublicCommunity(schoolId, "community")
       : pageSlug && systemRoute !== "products" && systemRoute !== "blog"
-        ? await getPublicCommunity(host, "community")
+        ? await getPublicCommunity(schoolId, "community")
         : null);
   if (systemRoute === "join" && !siteCommunity) notFound();
   const siteCommunityPlans = siteCommunity
-    ? await getPublicCommunityPlans(host, siteCommunity.id)
+    ? await getPublicCommunityPlans(schoolId, siteCommunity.id)
     : [];
 
   const pageData: PageData = {
     pageType: "site",
     pageSlug,
+    schoolId,
     siteTitle: settings?.title ?? null,
     siteSubtitle: settings?.subtitle ?? null,
     siteLogoUrl,
@@ -219,7 +218,7 @@ export async function PublicSitePage({
   });
   let systemContent = providedSystemContent ?? null;
   if (providedSystemContent === undefined && systemRoute === "blog") {
-    const articles = await listPublicArticles(host);
+    const articles = await listPublicArticles(schoolId);
     systemContent = (
       <PublicBlogFeed
         items={articles.items}
@@ -242,7 +241,7 @@ export async function PublicSitePage({
           {
             "frontlit.content-feed": async ({ instance }) => {
               if (instance.settings?.source !== "articles") return null;
-              const articles = await listPublicArticles(host);
+              const articles = await listPublicArticles(schoolId);
               return (
                 <PublicBlogFeed
                   items={articles.items}

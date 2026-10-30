@@ -78,6 +78,7 @@ describe.serial("learner memberships", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "membership-course@example.com",
         password: "learner-password-1",
         name: "Membership Learner",
@@ -223,6 +224,7 @@ describe.serial("learner memberships", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "included-membership@example.com",
         password: "learner-password-1",
         name: "Included Membership Learner",
@@ -336,8 +338,8 @@ describe.serial("learner memberships", () => {
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "approval-membership@example.com", password: "learner-password-1", name: "Approval" },
+      headers: {},
+      body: { schoolId: world.schoolA.publicId, email: "approval-membership@example.com", password: "learner-password-1", name: "Approval" },
     });
     const headers = { cookie: learnerCookie(learner), "x-school-id": world.schoolA.publicId };
     const missingReason = await dispatch(runtime, {
@@ -442,7 +444,7 @@ describe.serial("learner memberships", () => {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "subscription-community@example.com", password: "learner-password-1", name: "Subscription" },
+      body: { schoolId: world.schoolA.publicId, email: "subscription-community@example.com", password: "learner-password-1", name: "Subscription" },
     });
     const headers = { cookie: learnerCookie(learner), "x-school-id": world.schoolA.publicId };
     const checkout = await dispatch(runtime, {

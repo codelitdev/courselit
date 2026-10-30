@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { requestJson } from "@/lib/request-json";
-import { clearSchoolId } from "@/lib/school";
 import { useSchoolBrand, useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
 
@@ -215,7 +214,6 @@ export function LearnerSidebar({
                         credentials: "include",
                       }),
                     ]);
-                    clearSchoolId();
                     window.location.href = "/";
                   }}
                 >

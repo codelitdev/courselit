@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
@@ -15,7 +16,6 @@ import {
   clearLearnerIdentityLink,
   learnerHeaders,
   writeLearnerIdentityLink,
-  writeSchoolId,
 } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
@@ -33,6 +33,7 @@ function destinationAfterLogin() {
  */
 export function PublicLoginBlock() {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [otpStep, setOtpStep] = useState<OtpStep>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -47,27 +48,15 @@ export function PublicLoginBlock() {
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
 
   useEffect(() => {
-    void fetch("/api/v1/public/school/login-methods", {
-      headers: learnerHeaders(),
-    })
+    void fetch(publicApiPath(schoolId, "/login-methods"))
       .then((res) => (res.ok ? res.json() : null))
-      .then(
-        (
-          data: {
-            loginMethods?: string[];
-            schoolId?: string;
-          } | null,
-        ) => {
-          if (data?.schoolId) {
-            writeSchoolId(data.schoolId);
-          }
-          if (data?.loginMethods && Array.isArray(data.loginMethods)) {
-            setLoginMethods(data.loginMethods);
-          }
-        },
-      )
+      .then((data: { loginMethods?: string[] } | null) => {
+        if (data?.loginMethods && Array.isArray(data.loginMethods)) {
+          setLoginMethods(data.loginMethods);
+        }
+      })
       .catch(() => {});
-  }, []);
+  }, [schoolId]);
 
   async function requestOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,13 +86,10 @@ export function PublicLoginBlock() {
     try {
       const res = await authClient.signIn.emailOtp({ email, otp });
       if (res.error) throw new Error(res.error.message || "Invalid or expired code.");
+      const meHeaders = learnerHeaders();
+      if (identityLinkToken) meHeaders.set("x-learner-identity-link", identityLinkToken);
       const meRes = await fetch("/api/v1/learner/me", {
-        headers: {
-          ...learnerHeaders(),
-          ...(identityLinkToken
-            ? { "x-learner-identity-link": identityLinkToken }
-            : {}),
-        },
+        headers: meHeaders,
         credentials: "include",
       });
       if (!meRes.ok) {
@@ -116,8 +102,6 @@ export function PublicLoginBlock() {
           errorBody?.message || "Unable to establish your learner session.",
         );
       }
-      const meBody = (await meRes.json()) as { schoolId?: string };
-      if (meBody.schoolId) writeSchoolId(meBody.schoolId);
       clearLearnerIdentityLink();
       window.location.assign(destinationAfterLogin());
     } catch (caught) {

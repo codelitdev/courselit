@@ -19,8 +19,8 @@ import { useState } from "react";
 import type { BannerResource } from "../shared/types";
 import {
   descriptionContent,
-  learnerHeaders,
   planPrice,
+  publicApiPath,
   salesData,
   sectionTheme,
 } from "../shared/utils";
@@ -118,10 +118,12 @@ export default function BannerWidget({
     setBusyPlan(planId);
     setError(null);
     try {
-      const response = await fetch("/api/v1/storefront/lead-magnets", {
+      const endpoint = publicApiPath(pageData, "/lead-magnets");
+      if (!endpoint) throw new Error("Sign-up is not available here.");
+      const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ productId: resource?.id, email: email.trim() }),
       });
       if (!response.ok) throw new Error("Unable to sign you up. Check your email and try again.");
@@ -137,10 +139,12 @@ export default function BannerWidget({
     setBusyPlan(planId);
     setError(null);
     try {
-      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+      const endpoint = publicApiPath(pageData, "/checkout-sessions");
+      if (!endpoint) throw new Error("Checkout is not available here.");
+      const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
+        headers: { "content-type": "application/json" },
         body: JSON.stringify(
           kind === "product"
             ? { productId: resource?.id, planId }

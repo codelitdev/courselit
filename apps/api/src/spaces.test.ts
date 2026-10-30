@@ -164,6 +164,7 @@ describe.serial("school spaces and included products", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "space-learner@example.com",
         password: "learner-password-1",
         name: "Space Learner",
@@ -229,7 +230,7 @@ describe.serial("school spaces and included products", () => {
 
     const learnerProduct = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
+      path: `/v1/public/${world.schoolA.publicId}/products/${productId}`,
       headers: learnerHeaders,
     });
     expect(learnerProduct.status).toBe(200);
@@ -382,6 +383,7 @@ describe.serial("school spaces and included products", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "space-product-only@example.com",
         password: "learner-password-2",
         name: "Product Only Learner",
@@ -454,8 +456,8 @@ describe.serial("school spaces and included products", () => {
 
     const publicList = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/public/communities",
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/communities`,
+      headers: {},
     });
     expect(publicList.status).toBe(404);
     const available = await dispatch(runtime, {

@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import { CodeInjector } from "../../../components/code-injector";
+import { SchoolProvider } from "../../../components/school-context";
 import { SchoolThemeProvider } from "../../../components/school-theme-provider";
 import { LearnerTooltipProvider } from "../../../components/themed-page-builder";
 import { getSettings } from "../../../lib/courselit-public";
@@ -112,8 +113,10 @@ export default async function SchoolLayout({
   const { schoolId } = await params;
 
   return (
-    <Suspense fallback={<StorefrontProviders>{children}</StorefrontProviders>}>
-      <ConfiguredStorefront schoolId={schoolId}>{children}</ConfiguredStorefront>
-    </Suspense>
+    <SchoolProvider schoolId={schoolId}>
+      <Suspense fallback={<StorefrontProviders>{children}</StorefrontProviders>}>
+        <ConfiguredStorefront schoolId={schoolId}>{children}</ConfiguredStorefront>
+      </Suspense>
+    </SchoolProvider>
   );
 }

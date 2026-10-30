@@ -235,8 +235,8 @@ describe.serial("product listing", () => {
 
     const publicCatalog = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/public/products?limit=50",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/products?limit=50`,
+      headers: { host: "courselit-api:4000" },
     });
     expect(publicCatalog.status).toBe(200);
     expect(publicCatalog.body).toMatchObject({
@@ -255,8 +255,8 @@ describe.serial("product listing", () => {
 
     const publicDetail = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}`,
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/products/${world.noteA.publicId}`,
+      headers: {},
     });
     expect(publicDetail.status).toBe(200);
     expect(publicDetail.body).toMatchObject({
@@ -268,8 +268,8 @@ describe.serial("product listing", () => {
 
     const publicDetailBySlug = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/products/seed-product",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/products/seed-product`,
+      headers: {},
     });
     expect(publicDetailBySlug.status).toBe(200);
     expect(publicDetailBySlug.body).toMatchObject({
@@ -296,19 +296,41 @@ describe.serial("product listing", () => {
           eq(schema.memberships.schoolAccountId, memberAccount!.id),
         ),
       );
+    // An admin session never changes the public product view, and the admin
+    // product route still requires products:read.
     const publicWithAdminSession = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}`,
-      headers: {
-        cookie: world.member.sessionCookie,
-        "x-forwarded-host": "school-a.localhost:3001",
-      },
+      path: `/v1/public/${world.schoolA.publicId}/products/${world.noteA.publicId}`,
+      headers: { cookie: world.member.sessionCookie },
     });
     expect(publicWithAdminSession.status).toBe(200);
     expect(publicWithAdminSession.body).toMatchObject({
       id: world.noteA.publicId,
       enrolled: false,
     });
+    const adminReadWithoutPermission = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${world.noteA.publicId}`,
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(adminReadWithoutPermission.status).toBe(403);
+    const adminReadWithoutSession = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${world.noteA.publicId}`,
+      headers: { "x-school-id": world.schoolA.publicId },
+    });
+    expect(adminReadWithoutSession.status).toBe(401);
+
+    // Another school's path does not expose this school's product.
+    const otherSchool = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/public/${world.schoolB.publicId}/products/${world.noteA.publicId}`,
+      headers: {},
+    });
+    expect(otherSchool.status).toBe(404);
 
     await runtime.close();
   });

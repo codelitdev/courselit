@@ -79,6 +79,7 @@ describe.serial("quiz evaluation", () => {
       path: "/v1/learner/auth/sign-up",
       headers: { "x-school-id": world.schoolA.publicId },
       body: {
+        schoolId: world.schoolA.publicId,
         email: "quiz-learner@example.com",
         password: "learner-password-1",
         name: "Quiz Learner",
@@ -110,7 +111,7 @@ describe.serial("quiz evaluation", () => {
 
     const productDetail = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
+      path: `/v1/public/${world.schoolA.publicId}/products/${productId}`,
       headers: learnerHeaders,
     });
     expect(productDetail.status).toBe(200);

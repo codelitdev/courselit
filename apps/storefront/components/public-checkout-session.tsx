@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import {
   Button,
@@ -23,7 +24,7 @@ import {
   LearnerTextarea,
 } from "@/components/themed-page-builder";
 import { openRazorpayCheckout, type RazorpayCheckoutData } from "@/lib/razorpay";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type CheckoutSession = {
@@ -132,7 +133,7 @@ function fallbackPlan(session: CheckoutSession): Plan {
   };
 }
 
-async function openResource(session: CheckoutSession) {
+async function openResource(session: CheckoutSession, schoolId: string) {
   if (session.resourceType === "community") {
     window.location.assign("/dashboard");
     return;
@@ -140,7 +141,7 @@ async function openResource(session: CheckoutSession) {
   let slug = session.productId ?? session.resourceId;
   try {
     const response = await fetch(
-      `/api/v1/products/${encodeURIComponent(session.resourceId)}`,
+      publicApiPath(schoolId, `/products/${encodeURIComponent(session.resourceId)}`),
       {
         credentials: "include",
         cache: "no-store",
@@ -171,6 +172,7 @@ function CheckoutStatusView({
   onRefresh: () => Promise<void>;
 }) {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const status = session.checkoutStatus ?? "pending";
   const isPaid = status === "paid";
   const isPending = status === "pending";
@@ -219,7 +221,7 @@ function CheckoutStatusView({
         </Button>
       ) : null}
       {isPaid ? (
-        <Button theme={theme} type="button" onClick={() => void openResource(session)}>
+        <Button theme={theme} type="button" onClick={() => void openResource(session, schoolId)}>
           Continue
         </Button>
       ) : null}
@@ -229,6 +231,7 @@ function CheckoutStatusView({
 
 export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [session, setSession] = useState<CheckoutSession | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -246,7 +249,10 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
 
   const loadSession = useCallback(async (checkoutSessionId: string) => {
     const response = await fetch(
-      `/api/v1/storefront/checkout-sessions/${encodeURIComponent(checkoutSessionId)}`,
+      publicApiPath(
+        schoolId,
+        `/checkout-sessions/${encodeURIComponent(checkoutSessionId)}`,
+      ),
       { credentials: "include", cache: "no-store", headers: learnerHeaders() },
     );
     if (!response.ok) throw new Error("This checkout session has expired.");
@@ -254,7 +260,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
     setSession(nextSession);
     setSelectedPlanId((current) => current ?? nextSession.planId);
     return nextSession;
-  }, []);
+  }, [schoolId]);
 
   useEffect(() => {
     let active = true;
@@ -266,15 +272,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         headers: learnerHeaders(),
       }).then(async (response) => {
         if (response.ok && active) {
-          const nextLearner = (await response.json()) as Learner;
-          if (nextLearner.schoolId) writeSchoolId(nextLearner.schoolId);
-          setLearner(nextLearner);
+          setLearner((await response.json()) as Learner);
         }
       }),
-      fetch("/api/v1/public/school/login-methods", {
-        credentials: "include",
+      fetch(publicApiPath(schoolId, "/login-methods"), {
         cache: "no-store",
-        headers: learnerHeaders(),
       }).then(async (response) => {
         if (!response.ok || !active) return;
         const body = (await response.json()) as {
@@ -298,19 +300,25 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
     return () => {
       active = false;
     };
-  }, [loadSession, sessionId]);
+  }, [loadSession, schoolId, sessionId]);
 
   useEffect(() => {
     if (!session) return;
     let active = true;
     const resourcePath =
       session.resourceType === "product"
-        ? `/api/v1/products/${encodeURIComponent(session.resourceId)}`
-        : `/api/v1/public/communities/${encodeURIComponent(session.resourceId)}`;
+        ? publicApiPath(schoolId, `/products/${encodeURIComponent(session.resourceId)}`)
+        : publicApiPath(schoolId, `/communities/${encodeURIComponent(session.resourceId)}`);
     const plansPath =
       session.resourceType === "product"
-        ? `/api/v1/storefront/products/${encodeURIComponent(session.resourceId)}/plans`
-        : `/api/v1/public/communities/${encodeURIComponent(session.resourceId)}/plans`;
+        ? publicApiPath(
+            schoolId,
+            `/products/${encodeURIComponent(session.resourceId)}/plans`,
+          )
+        : publicApiPath(
+            schoolId,
+            `/communities/${encodeURIComponent(session.resourceId)}/plans`,
+          );
     void Promise.all([
       fetch(resourcePath, {
         credentials: "include",
@@ -360,7 +368,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
     return () => {
       active = false;
     };
-  }, [session]);
+  }, [schoolId, session]);
 
   useEffect(() => {
     if (!session?.checkoutId || session.checkoutStatus !== "pending") return;
@@ -397,7 +405,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
 
   async function createSessionForPlan(plan: Plan) {
     if (!session) throw new Error("Checkout is unavailable.");
-    const response = await fetch("/api/v1/storefront/checkout-sessions", {
+    const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
       method: "POST",
       credentials: "include",
       headers: learnerHeaders({ "content-type": "application/json" }),
@@ -499,7 +507,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         return;
       }
       if (checkout.status === "paid") {
-        await openResource(activeSession);
+        await openResource(activeSession, schoolId);
         return;
       }
       setNotice("Your payment is processing. This page will update automatically.");
@@ -536,7 +544,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
           <Button
             theme={theme}
             type="button"
-            onClick={() => void openResource(session)}
+            onClick={() => void openResource(session, schoolId)}
           >
             Go to the resource
           </Button>

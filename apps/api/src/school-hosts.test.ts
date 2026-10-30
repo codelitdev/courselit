@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
-import { listSchoolsForUser, loadSchoolByPublicId } from "./schools.js";
+import { listSchoolsForUser, resolveSchoolByHost } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { customDomainConfig, type DnsResolver } from "./school-hosts.js";
 
@@ -129,7 +129,7 @@ describe.serial("school custom host lifecycle", () => {
       ]),
     });
 
-    expect(await loadSchoolByPublicId(runtime.db, "learn.example.com")).toBeNull();
+    expect(await resolveSchoolByHost(runtime.db, "learn.example.com")).toBeNull();
     // Without DNS records the check fails and records which side is missing.
     const unconfigured = await dispatch(runtime, {
       method: "POST",
@@ -144,7 +144,7 @@ describe.serial("school custom host lifecycle", () => {
       verificationStatus: "unverified",
       verificationRecords: { txtSatisfied: false, routingSatisfied: false },
     });
-    expect(await loadSchoolByPublicId(runtime.db, "learn.example.com")).toBeNull();
+    expect(await resolveSchoolByHost(runtime.db, "learn.example.com")).toBeNull();
 
     dns.txt["_courselit-verification.learn.example.com"] = [[token]];
     const txtOnly = await dispatch(runtime, {
@@ -193,7 +193,7 @@ describe.serial("school custom host lifecycle", () => {
       hostname: "learn.example.com",
       verificationStatus: "verified",
     });
-    expect((await loadSchoolByPublicId(runtime.db, "learn.example.com"))?.id).toBe(
+    expect((await resolveSchoolByHost(runtime.db, "learn.example.com"))?.id).toBe(
       world.schoolA.id,
     );
 
@@ -206,7 +206,7 @@ describe.serial("school custom host lifecycle", () => {
       },
     });
     expect(removed.status).toBe(204);
-    expect(await loadSchoolByPublicId(runtime.db, "learn.example.com")).toBeNull();
+    expect(await resolveSchoolByHost(runtime.db, "learn.example.com")).toBeNull();
 
     const reused = await dispatch(runtime, {
       method: "POST",
@@ -288,7 +288,7 @@ describe.serial("school custom host lifecycle", () => {
         body: {},
       });
       expect(rechecked.body).toMatchObject({ verificationStatus: "unverified" });
-      expect(await loadSchoolByPublicId(runtime.db, "example.org")).toBeNull();
+      expect(await resolveSchoolByHost(runtime.db, "example.org")).toBeNull();
     } finally {
       await runtime.close();
       if (originalARecords === undefined) delete process.env.CUSTOM_DOMAIN_A_RECORDS;
@@ -350,7 +350,7 @@ describe.serial("school custom host lifecycle", () => {
       code: "conflict",
       details: { reason: "primary_host_cannot_be_removed" },
     });
-    expect(await loadSchoolByPublicId(runtime.db, "not-a-real-school")).toBeNull();
+    expect(await resolveSchoolByHost(runtime.db, "not-a-real-school")).toBeNull();
     await runtime.close();
   });
 });

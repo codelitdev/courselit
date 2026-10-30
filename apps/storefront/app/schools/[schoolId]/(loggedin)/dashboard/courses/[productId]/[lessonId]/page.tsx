@@ -1,6 +1,7 @@
 "use client";
 
 // Lesson viewing is protected, except for explicit preview tokens.
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -41,6 +42,7 @@ export default function LearnerLessonPage() {
   const params = useParams<{ productId: string; lessonId: string }>();
   const productId = params.productId;
   const lessonId = params.lessonId;
+  const schoolId = useSchoolId();
   const [product, setProduct] = useState<Product | null>(null);
   const { learner: me } = useLearnerSessionState();
   const [previewToken, setPreviewToken] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export default function LearnerLessonPage() {
     setError(null);
     const url = previewToken
       ? `/api/v1/preview/products/${encodeURIComponent(productId)}`
-      : `/api/v1/products/${encodeURIComponent(productId)}`;
+      : publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}`);
     void fetch(url, {
       credentials: "include",
       cache: "no-store",
@@ -119,7 +121,7 @@ export default function LearnerLessonPage() {
     return () => {
       active = false;
     };
-  }, [lessonId, previewChecked, previewToken, productId]);
+  }, [lessonId, previewChecked, previewToken, productId, schoolId]);
 
   const lesson = useMemo(
     () => product?.lessons.find((item) => item.id === lessonId) ?? null,

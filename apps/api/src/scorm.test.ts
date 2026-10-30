@@ -195,8 +195,9 @@ describe.serial("SCORM runtime", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "scorm-learner@example.com",
         password: "learner-password-1",
         name: "SCORM Learner",

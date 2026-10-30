@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { publicCommunityListItemSchema } from "@courselit/api-contract";
 import { Button, Header1, Subheader1, Text2 } from "@frontlit/page-builder/primitives";
 import { Users } from "lucide-react";
@@ -13,6 +14,7 @@ type PublicCommunity = z.infer<typeof publicCommunityListItemSchema>;
 
 export function PublicCommunitiesCatalog() {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [communities, setCommunities] = useState<PublicCommunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -21,7 +23,7 @@ export function PublicCommunitiesCatalog() {
 
   useEffect(() => {
     let active = true;
-    void fetch("/api/v1/public/communities?limit=12", {
+    void fetch(publicApiPath(schoolId, "/communities?limit=12"), {
       credentials: "include",
       cache: "no-store",
     })
@@ -47,7 +49,7 @@ export function PublicCommunitiesCatalog() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [schoolId]);
 
   async function loadMore() {
     if (!nextCursor || loadingMore) return;
@@ -57,7 +59,7 @@ export function PublicCommunitiesCatalog() {
         cursor: nextCursor,
         limit: "12",
       });
-      const response = await fetch(`/api/v1/public/communities?${query.toString()}`, {
+      const response = await fetch(publicApiPath(schoolId, `/communities?${query.toString()}`), {
         credentials: "include",
         cache: "no-store",
       });

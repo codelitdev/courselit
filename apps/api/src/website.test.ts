@@ -41,11 +41,12 @@ async function setup() {
       },
       ...(body === undefined ? {} : { body }),
     });
+  // Public routes name the school in the path: `/v1/public/:schoolId/...`.
   const publicGet = (path: string) =>
     dispatch(runtime, {
       method: "GET",
-      path,
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: path.replace(/^\/v1\/public\//, `/v1/public/${world.schoolA.publicId}/`),
+      headers: {},
     });
   return { clock, runtime, world, admin, publicGet };
 }
@@ -223,6 +224,63 @@ describe.serial("school website", () => {
         slug: "our-story",
       });
       expect(product.status).toBe(409);
+    } finally {
+      await runtime.close();
+    }
+  });
+
+  it("selects the school from the path and ignores the request host", async () => {
+    const { runtime, world } = await setup();
+    const titleOf = async (schoolPublicId: string, headers: Record<string, string>) => {
+      const response = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/public/${schoolPublicId}/site/settings`,
+        headers,
+      });
+      expect(response.status).toBe(200);
+      return (response.body as { title: string | null }).title;
+    };
+    try {
+      for (const [school, title] of [
+        [world.schoolA, "School A"],
+        [world.schoolB, "School B"],
+      ] as const) {
+        await runtime.db
+          .update(schema.websiteSettings)
+          .set({ title })
+          .where(eq(schema.websiteSettings.schoolId, school.id));
+      }
+      // Internal service hosts, the public API origin, and even another
+      // school's host never change which school a public route serves.
+      const hostHeaders: Array<Record<string, string>> = [
+        { host: "courselit-api:4000" },
+        { host: "api.courselit.app" },
+        { host: "school-a.localhost:3001" },
+        { "x-forwarded-host": "school-a.localhost:3001", "x-school-id": world.schoolA.publicId },
+      ];
+      for (const headers of hostHeaders) {
+        expect(await titleOf(world.schoolB.publicId, headers)).toBe("School B");
+      }
+      expect(await titleOf(world.schoolA.publicId, { host: "courselit-api:4000" })).toBe(
+        "School A",
+      );
+
+      // Unknown schools, subdomains, and hostnames are not school ids.
+      for (const schoolKey of ["sch_unknown", "school-a", "school-a.localhost"]) {
+        const response = await dispatch(runtime, {
+          method: "GET",
+          path: `/v1/public/${schoolKey}/site/settings`,
+          headers: { host: "school-a.localhost:3001" },
+        });
+        expect(response.status).toBe(404);
+      }
+      // The old host-selected routes are gone.
+      const legacy = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/public/site/settings",
+        headers: { host: "school-a.localhost:3001" },
+      });
+      expect(legacy.status).toBe(404);
     } finally {
       await runtime.close();
     }

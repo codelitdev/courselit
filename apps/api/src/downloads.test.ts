@@ -108,8 +108,9 @@ describe.serial("digital downloads", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "download-learner@example.com",
         password: "learner-password-1",
         name: "Download Learner",
@@ -243,8 +244,9 @@ describe.serial("digital downloads", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "expired-download@example.com",
         password: "learner-password-1",
         name: "Expired Download",

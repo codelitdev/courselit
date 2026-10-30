@@ -503,8 +503,8 @@ describe.serial("first vertical slice", () => {
 
     const publicDraft = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${product.id}`,
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/products/${product.id}`,
+      headers: {},
     });
     expect(publicDraft.status).toBe(404);
 
@@ -531,8 +531,8 @@ describe.serial("first vertical slice", () => {
 
     const publicCourseDraftLesson = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${product.id}`,
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/products/${product.id}`,
+      headers: {},
     });
     expect(publicCourseDraftLesson.status).toBe(200);
     const publicBody = publicCourseDraftLesson.body as {
@@ -556,8 +556,8 @@ describe.serial("first vertical slice", () => {
 
     const publicPublished = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${product.id}`,
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/products/${product.id}`,
+      headers: {},
     });
     expect(publicPublished.status).toBe(200);
     const visible = publicPublished.body as {
@@ -671,11 +671,9 @@ describe.serial("first vertical slice", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: {
-        "x-request-id": "req_learner_signup",
-        "x-forwarded-host": "school-a.localhost:3001",
-      },
+      headers: { "x-request-id": "req_learner_signup" },
       body: {
+        schoolId: world.schoolA.publicId,
         email: world.owner.email,
         password: "learner-password-1",
         name: "Pat Learner",
@@ -724,8 +722,8 @@ describe.serial("first vertical slice", () => {
 
     const enrolledRead = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
-      headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/products/${productId}`,
+      headers: { cookie: learnerCookie },
     });
     expect(
       (
@@ -789,12 +787,14 @@ describe.serial("first vertical slice", () => {
     expect(replay.status).toBe(403);
     expect(replay.body).toMatchObject({ code: "tenant_forbidden" });
 
+    // School A's learner session is ignored on school B's public path, and
+    // school A's product does not exist there.
     const otherSchoolProduct = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
-      headers: { cookie: learnerCookie, "x-school-id": world.schoolB.publicId },
+      path: `/v1/public/${world.schoolB.publicId}/products/${productId}`,
+      headers: { cookie: learnerCookie },
     });
-    expect(otherSchoolProduct.status).toBe(403);
+    expect(otherSchoolProduct.status).toBe(404);
 
     const enrollEvents = await runtime.db
       .select()

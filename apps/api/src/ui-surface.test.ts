@@ -451,7 +451,7 @@ describe("admin and learner surfaces", () => {
     expect(learnerAccount).toContain('redirect("/dashboard/account/profile")');
     expect(learnerCommunities).toContain("notFound()");
     expect(publicCommunitiesCatalog).toContain("@frontlit/page-builder/primitives");
-    expect(publicCommunitiesCatalog).toContain("/api/v1/public/communities");
+    expect(publicCommunitiesCatalog).toContain('publicApiPath(schoolId, "/communities');
     expect(learnerSpacePost).toContain("spaceId");
     expect(learnerSpacePost).toContain("<LearnerSpacePost");
     expect(learnerSpacePost).not.toContain("communityId");
@@ -633,12 +633,13 @@ describe("admin and learner surfaces", () => {
     expect(home).toContain("publicSystemRouteForSlug");
     expect(publicProductsCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicProductsCatalog).toContain("useSchoolThemeStyle");
-    expect(publicProductsCatalog).toContain("/api/v1/public/products");
+    expect(publicProductsCatalog).toContain('publicApiPath(schoolId, "/products');
     expect(publicProductsCatalog).toContain("/p/");
     expect(publicProductDetailPage).toContain('systemRoute="product"');
     expect(publicProductDetail).toContain("@frontlit/page-builder/primitives");
-    expect(publicProductDetail).toContain("/api/v1/storefront/products/");
-    expect(publicProductDetail).toContain("/api/v1/storefront/checkout-sessions");
+    expect(publicProductDetail).toContain("publicApiPath(schoolId, `/products/");
+    expect(publicProductDetail).toContain('publicApiPath(schoolId, "/checkout-sessions")');
+    expect(publicProductDetail).not.toContain("/api/v1/storefront/");
     expect(publicCheckout).toContain("/api/v1/learner/checkout-sessions/");
     expect(publicCheckout).toContain("Check status again");
     expect(publicCheckout).toContain("Payment verified successfully");
@@ -695,10 +696,14 @@ describe("admin and learner surfaces", () => {
     expect(dashboardProductsComponent).toContain("CourseLitLoading");
     expect(dashboard).not.toContain('name="schoolId"');
     expect(login).not.toContain('name="schoolId"');
-    expect(proxy).toContain("x-forwarded-host");
+    // The browser proxy never lets the client or the request host pick a
+    // school for the API: learner routes get x-school-id from host resolution.
+    expect(proxy).toContain('headers.delete("x-school-id")');
+    expect(proxy).toContain("resolveSchoolForRequest");
     expect(surface).toContain("/api/v1/learner/auth/sign-in");
     expect(surface).toContain("/api/v1/learner/auth/sign-up");
-    expect(surface).toContain("/api/v1/products/");
+    expect(surface).toContain("publicApiPath(");
+    expect(surface).not.toContain("/api/v1/products/");
     expect(surface).toContain("/api/v1/learner/memberships");
     expect(surface).toContain("/api/v1/learner/lessons/");
     expect(courseSpaceDiscussion).toContain("<LearnerFeed");

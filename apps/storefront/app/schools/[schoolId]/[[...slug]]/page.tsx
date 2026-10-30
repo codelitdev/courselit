@@ -21,8 +21,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { schoolId, slug } = await params;
   const pageSlug = (slug ?? []).join("/");
-  const host = schoolId;
-  const settings = await getSettings(host);
+  const settings = await getSettings(schoolId);
   const siteTitle = settings?.title?.trim() || "CourseLit";
   const siteLogoUrl =
     typeof settings?.logo?.url === "string" && settings.logo.url.trim()
@@ -59,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return metadataForPublicPage(page, siteTitle, settings, true);
   }
 
-  const product = await getPublicProduct(host, pageSlug);
+  const product = await getPublicProduct(schoolId, pageSlug);
   if (product) {
     const { page } = await loadPublicPage(product.slug, schoolId);
     return {
@@ -70,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const community = await getPublicCommunity(host, pageSlug);
+  const community = await getPublicCommunity(schoolId, pageSlug);
   if (community) {
     const { page } = await loadPublicPage(community.slug, schoolId);
     return {
@@ -116,9 +115,8 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
     );
   }
 
-  const host = schoolId;
 
-  const product = await getPublicProduct(host, pageSlug);
+  const product = await getPublicProduct(schoolId, pageSlug);
   if (product) {
     return (
       <PublicSitePage
@@ -134,7 +132,7 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
     );
   }
 
-  const community = await getPublicCommunity(host, pageSlug);
+  const community = await getPublicCommunity(schoolId, pageSlug);
   if (community) {
     return (
       <PublicSitePage

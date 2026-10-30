@@ -507,7 +507,7 @@ describe.serial("reference API adapters", () => {
     await runtime.close();
   });
 
-  it("resolves only verified custom hosts belonging to non-deleted schools", async () => {
+  it("resolves website hosts: verified custom domains and platform subdomains only", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
@@ -551,17 +551,51 @@ describe.serial("reference API adapters", () => {
       },
     ]);
 
-    const verified = await dispatch(runtime, {
+    const schoolA = {
+      schoolId: world.schoolA.publicId,
+      subdomain: "school-a",
+      name: "School A",
+    };
+    for (const host of [
+      "LEARN.EXAMPLE.COM.",
+      "learn.example.com:443",
+      "school-a.courselit.app",
+      "school-a.localhost",
+      "school-a.localhost:3002",
+    ]) {
+      const resolved = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/public/resolve-host?host=${encodeURIComponent(host)}`,
+        headers: {},
+      });
+      expect(resolved).toEqual({ status: 200, body: schoolA });
+    }
+    const schoolB = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/public/resolve-host?host=LEARN.EXAMPLE.COM.",
-      headers: {},
+      path: "/v1/public/resolve-host?host=school-b.courselit.app",
+      // The request's own host never matters, only the `host` query.
+      headers: { host: "school-a.localhost:3002" },
     });
-    expect(verified).toEqual({ status: 200, body: { resolved: true } });
+    expect(schoolB).toEqual({
+      status: 200,
+      body: { schoolId: world.schoolB.publicId, subdomain: "school-b", name: "School B" },
+    });
 
     for (const host of [
+      // An unverified custom domain is not yet routed.
       "pending.example.com",
+      // Only `custom` host records resolve by hostname.
       "native.example.com",
       "unknown.example.com",
+      "unknown.courselit.app",
+      "courselit.app",
+      "www.courselit.app",
+      "a.school-a.courselit.app",
+      "localhost",
+      "127.0.0.1",
+      // Internal service names used to reach the API are not school hosts.
+      "courselit-api",
+      "courselit-api:4000",
     ]) {
       const unresolved = await dispatch(runtime, {
         method: "GET",
@@ -581,82 +615,6 @@ describe.serial("reference API adapters", () => {
       headers: {},
     });
     expect(deletedSchoolHost.status).toBe(404);
-    await runtime.close();
-  });
-
-  it("resolves storefront school identities for subdomains, custom domains, and query params", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock });
-    const world = await seedWorld(runtime, clock);
-    const now = clock.now();
-    await runtime.db.insert(schema.schoolHosts).values([
-      {
-        id: crypto.randomUUID(),
-        schoolId: world.schoolA.id,
-        hostname: "learn.acme.org",
-        kind: "custom",
-        verificationStatus: "verified",
-        verificationToken: null,
-        verifiedAt: now,
-        isPrimary: false,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ]);
-
-    // 1. Resolve by verified custom domain
-    const customHost = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/public/school/resolve?host=learn.acme.org",
-      headers: {},
-    });
-    expect(customHost).toEqual({
-      status: 200,
-      body: {
-        schoolId: world.schoolA.publicId,
-        subdomain: "school-a",
-        name: "School A",
-      },
-    });
-
-    // 2. Resolve by platform subdomain
-    const subdomainHost = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/public/school/resolve?host=school-a.courselit.app",
-      headers: {},
-    });
-    expect(subdomainHost).toEqual({
-      status: 200,
-      body: {
-        schoolId: world.schoolA.publicId,
-        subdomain: "school-a",
-        name: "School A",
-      },
-    });
-
-    // 3. Resolve by explicit school query param
-    const explicitSchool = await dispatch(runtime, {
-      method: "GET",
-      path: `/v1/public/school/resolve?school=${world.schoolA.publicId}`,
-      headers: {},
-    });
-    expect(explicitSchool).toEqual({
-      status: 200,
-      body: {
-        schoolId: world.schoolA.publicId,
-        subdomain: "school-a",
-        name: "School A",
-      },
-    });
-
-    // 4. Reject unknown host
-    const unknownHost = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/public/school/resolve?host=unknown.example.com",
-      headers: {},
-    });
-    expect(unknownHost.status).toBe(404);
-
     await runtime.close();
   });
 
@@ -684,10 +642,10 @@ describe.serial("reference API adapters", () => {
     expect(document.paths["/v1/learner/lessons/{lessonId}/complete"]).toBeDefined();
     expect(document.paths["/v1/learner/community-posts/{postId}"]).toBeDefined();
     expect(document.paths["/v1/public/resolve-host"]).toBeDefined();
-    expect(document.paths["/v1/public/site/settings"]).toBeDefined();
-    expect(document.paths["/v1/public/site/pages"]).toBeDefined();
-    expect(document.paths["/v1/public/site/blogs"]).toBeDefined();
-    expect(document.paths["/v1/public/site/blogs/{slug}"]).toBeDefined();
+    expect(document.paths["/v1/public/{schoolId}/site/settings"]).toBeDefined();
+    expect(document.paths["/v1/public/{schoolId}/site/pages"]).toBeDefined();
+    expect(document.paths["/v1/public/{schoolId}/site/blogs"]).toBeDefined();
+    expect(document.paths["/v1/public/{schoolId}/site/blogs/{slug}"]).toBeDefined();
     expect(document.paths["/v1/products/{productId}/preview"]).toBeDefined();
     expect(document.paths["/v1/preview/products/{productId}"]).toBeDefined();
     expect(document.paths["/v1/learner/spaces"]).toBeDefined();

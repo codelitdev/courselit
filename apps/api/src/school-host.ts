@@ -1,38 +1,41 @@
-export function hostnameFromHeaders(
-  headers: Record<string, string | string[] | undefined>,
-): string | null {
-  const raw =
-    headers["x-forwarded-host"] ??
-    headers["X-Forwarded-Host"] ??
-    headers.host ??
-    headers.Host;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (!value) return null;
+/** Normalize a request hostname (`Acme.Localhost:3002.` -> `acme.localhost`). */
+export function normalizeRequestHostname(value: string): string | null {
   const host = value.split(",")[0]?.trim().toLowerCase() ?? "";
-  const hostname = host.split(":")[0] ?? "";
-  return hostname.length > 0 ? hostname : null;
+  if (!host) return null;
+  let hostname: string;
+  try {
+    hostname = new URL(`http://${host}`).hostname;
+  } catch {
+    hostname = host.replace(/:\d+$/, "");
+  }
+  hostname = hostname.replace(/\.$/, "");
+  return hostname.length > 0 && hostname.length <= 253 ? hostname : null;
 }
 
-/** First label of `<school>.courselit.app` / `<school>.localhost`, or the full custom host. */
-export function schoolLookupKeyFromHost(
+/**
+ * The school label of a single-label platform subdomain:
+ * `<label>.<PLATFORM_SITE_DOMAIN>` or `<label>.localhost`. Any other host
+ * (bare platform domain, `www`, nested labels, custom domains, IPs) is null.
+ */
+export function platformSubdomainFromHost(
   hostname: string,
   platformDomain = process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app",
 ): string | null {
   const host = hostname.trim().toLowerCase();
-  if (!host || host === "localhost" || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) {
-    return null;
+  if (!host) return null;
+  const platform = platformDomain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/[:/].*$/, "")
+    .replace(/^\./, "");
+  for (const suffix of [platform, "localhost"]) {
+    if (!suffix || !host.endsWith(`.${suffix}`)) continue;
+    const label = host.slice(0, -(suffix.length + 1));
+    if (!label || label.includes(".") || label === "www") return null;
+    return label;
   }
-  const platform = platformDomain.trim().toLowerCase().replace(/^\./, "");
-  if (host === platform || host === `www.${platform}`) return null;
-  if (platform && host.endsWith(`.${platform}`)) {
-    const label = host.slice(0, -(platform.length + 1));
-    return label.includes(".") ? null : label;
-  }
-  if (host.endsWith(".localhost")) {
-    const label = host.slice(0, -".localhost".length);
-    return label.includes(".") ? null : label;
-  }
-  return host;
+  return null;
 }
 
 /** Normalize a custom hostname before it is persisted or used for routing. */

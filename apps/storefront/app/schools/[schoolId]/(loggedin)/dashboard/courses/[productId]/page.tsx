@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 // Course viewing is protected, except for explicit preview tokens.
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
@@ -76,6 +77,7 @@ function ProductDescription({ value }: { value: string }) {
 export default function CoursePage() {
   const params = useParams<{ productId: string }>();
   const productId = params.productId;
+  const schoolId = useSchoolId();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -100,7 +102,7 @@ export default function CoursePage() {
     let active = true;
     const url = previewToken
       ? `/api/v1/preview/products/${productId}`
-      : `/api/v1/products/${productId}`;
+      : publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}`);
     void fetch(url, {
       credentials: "include",
       cache: "no-store",
@@ -116,7 +118,7 @@ export default function CoursePage() {
       }
       const loadedProduct = (await response.json()) as Product;
       const plansResponse = await fetch(
-        `/api/v1/storefront/products/${productId}/plans`,
+        publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`),
         {
           credentials: "include",
           cache: "no-store",
@@ -156,7 +158,7 @@ export default function CoursePage() {
     return () => {
       active = false;
     };
-  }, [productId, previewChecked, previewToken]);
+  }, [productId, previewChecked, previewToken, schoolId]);
 
   useEffect(() => {
     if (!product) return;
@@ -188,11 +190,14 @@ export default function CoursePage() {
       setError("Unable to enroll.");
       return;
     }
-    const refreshed = await fetch(`/api/v1/products/${productId}`, {
-      credentials: "include",
-      cache: "no-store",
-      headers: learnerHeaders(),
-    });
+    const refreshed = await fetch(
+      publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}`),
+      {
+        credentials: "include",
+        cache: "no-store",
+        headers: learnerHeaders(),
+      },
+    );
     if (refreshed.ok) {
       const updated = (await refreshed.json()) as Product;
       setProduct((current) => ({ ...updated, plans: current?.plans ?? [] }));
@@ -232,7 +237,7 @@ export default function CoursePage() {
 
   async function checkout(plan: Plan) {
     setError(null);
-    const response = await fetch("/api/v1/storefront/checkout-sessions", {
+    const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
       method: "POST",
       credentials: "include",
       headers: learnerHeaders({ "content-type": "application/json" }),

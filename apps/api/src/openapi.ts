@@ -35,7 +35,7 @@ const openApiTags = [
   {
     name: "Public Website",
     description:
-      "Public site content, public catalog and host resolution, and newsletter subscription.",
+      "School-scoped public routes (`/v1/public/{schoolId}/...`): site content, catalog, lead magnets, and newsletter subscription, plus website host resolution.",
   },
   {
     name: "Media",
@@ -73,9 +73,10 @@ function tagForPath(path: string | undefined): OpenApiTag {
     return "Learners";
   }
   if (isPathOrChild(path, "/v1/notifications")) return "Notifications";
-  if (isPathOrChild(path, "/v1/public") || isPathOrChild(path, "/v1/newsletter")) {
-    return "Public Website";
+  if (/^\/v1\/public\/[^/]+\/checkout-sessions(?:\/|$)/.test(path)) {
+    return "Storefront & Payments";
   }
+  if (isPathOrChild(path, "/v1/public")) return "Public Website";
   if (
     isPathOrChild(path, "/v1/school/website") ||
     path === "/v1/school/code-injection"

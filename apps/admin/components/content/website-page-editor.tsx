@@ -229,14 +229,20 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
     let active = true;
     const loadPlans = (path: string) =>
       websiteRequest<{ items: CourseLitProductPreview["plans"] }>(path)
-        .then((response) => response.items ?? [])
+        // Admin plan routes include archived plans; the preview mirrors the
+        // storefront, which only offers active ones.
+        .then((response) =>
+          (response.items ?? []).filter(
+            (plan) => (plan as { status?: string }).status !== "archived",
+          ),
+        )
         .catch(() => []);
     const loadProduct = (id: string) =>
       Promise.all([
         websiteRequest<CourseLitProductPreview>(
           `/api/v1/products/${encodeURIComponent(id)}`,
         ),
-        loadPlans(`/api/v1/storefront/products/${encodeURIComponent(id)}/plans`),
+        loadPlans(`/api/v1/products/${encodeURIComponent(id)}/plans`),
       ]).then(([product, plans]) => ({
         resourceType: "product" as const,
         resource: { ...product, plans },

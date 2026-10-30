@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole } from "lucide-react";
@@ -38,7 +39,7 @@ import {
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { CourseLitLoading } from "@/components/course-lit-loader";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type Learner = {
@@ -142,6 +143,7 @@ function AccessActions({
   selectedPlanId?: string | null;
   onSelectedPlanIdChange?: (planId: string) => void;
 }) {
+  const schoolId = useSchoolId();
   const [internalSelectedPlanId, setInternalSelectedPlanId] = useState<string | null>(
     null,
   );
@@ -157,7 +159,7 @@ function AccessActions({
     setBusyPlanId(selectedPlan.id);
     onError("");
     try {
-      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+      const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
         method: "POST",
         credentials: "include",
         headers: learnerHeaders({ "content-type": "application/json" }),
@@ -490,6 +492,7 @@ export function PublicCourseViewer({
   lessonId?: string;
 }) {
   const router = useRouter();
+  const schoolId = useSchoolId();
   const searchParams = useSearchParams();
   const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const [product, setProduct] = useState<Product | null>(null);
@@ -520,9 +523,7 @@ export function PublicCourseViewer({
     })
       .then(async (response) => {
         if (!active || !response.ok) return;
-        const body = (await response.json()) as Learner;
-        writeSchoolId(body.schoolId);
-        setLearner(body);
+        setLearner((await response.json()) as Learner);
       })
       .catch(() => undefined);
     return () => {
@@ -537,7 +538,7 @@ export function PublicCourseViewer({
     setError(null);
     const endpoint = previewToken
       ? `/api/v1/preview/products/${encodeURIComponent(productId)}`
-      : `/api/v1/products/${encodeURIComponent(productId)}`;
+      : publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}`);
     void Promise.all([
       fetch(endpoint, {
         credentials: "include",
@@ -546,7 +547,7 @@ export function PublicCourseViewer({
           previewToken ? { "x-preview-token": previewToken } : undefined,
         ),
       }),
-      fetch(`/api/v1/storefront/products/${encodeURIComponent(productId)}/plans`, {
+      fetch(publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`), {
         credentials: "include",
         cache: "no-store",
         headers: learnerHeaders(),
@@ -577,7 +578,7 @@ export function PublicCourseViewer({
     return () => {
       active = false;
     };
-  }, [previewChecked, previewToken, productId, productSlug]);
+  }, [previewChecked, previewToken, productId, productSlug, schoolId]);
 
   useEffect(() => {
     if (!learner || previewToken) return;

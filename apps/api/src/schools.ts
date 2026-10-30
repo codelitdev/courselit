@@ -6,7 +6,7 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
-import { and, eq, inArray, ne, or } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import {
@@ -15,6 +15,7 @@ import {
   serializePermissions,
   type CourseLitPermission,
 } from "./permissions.js";
+import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
@@ -303,40 +304,57 @@ export async function listSchoolsForUser(
   );
 }
 
+/** Load an active school by its public id (`sch_...`) only. Subdomains and
+ * hostnames are not school ids; hosts resolve only via `resolveSchoolByHost`. */
 export async function loadSchoolByPublicId(db: AppDb, publicId: string) {
   const identifier = publicId.trim();
-  const rows = await db
+  if (!identifier) return null;
+  const [row] = await db
     .select()
     .from(schema.schools)
     .where(
+      and(eq(schema.schools.publicId, identifier), ne(schema.schools.status, "deleted")),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * The single host -> school mapping (`GET /v1/public/resolve-host`). A
+ * verified custom domain wins; otherwise a single-label subdomain of
+ * `PLATFORM_SITE_DOMAIN` (or `<label>.localhost` for development) resolves by
+ * school subdomain. Everything else, including internal service hosts, is
+ * unknown. No other API route selects a school from the request host.
+ */
+export async function resolveSchoolByHost(db: AppDb, rawHost: string) {
+  const hostname = normalizeRequestHostname(rawHost);
+  if (!hostname) return null;
+  const [custom] = await db
+    .select({ school: schema.schools })
+    .from(schema.schoolHosts)
+    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolHosts.schoolId))
+    .where(
       and(
-        or(
-          eq(schema.schools.publicId, identifier),
-          eq(schema.schools.subdomain, identifier),
-        ),
+        eq(schema.schoolHosts.hostname, hostname),
+        eq(schema.schoolHosts.kind, "custom"),
+        eq(schema.schoolHosts.verificationStatus, "verified"),
         ne(schema.schools.status, "deleted"),
       ),
     )
     .limit(1);
-  if (rows[0]) return rows[0];
-  try {
-    const hosts = await db
-      .select({ school: schema.schools })
-      .from(schema.schoolHosts)
-      .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolHosts.schoolId))
-      .where(
-        and(
-          eq(schema.schoolHosts.hostname, identifier.toLowerCase()),
-          eq(schema.schoolHosts.verificationStatus, "verified"),
-          ne(schema.schools.status, "deleted"),
-        ),
-      )
-      .limit(1);
-    return hosts[0]?.school ?? null;
-  } catch {
-    return null;
-  }
+  if (custom) return custom.school;
+  const subdomain = platformSubdomainFromHost(hostname);
+  if (!subdomain) return null;
+  const [school] = await db
+    .select()
+    .from(schema.schools)
+    .where(
+      and(eq(schema.schools.subdomain, subdomain), ne(schema.schools.status, "deleted")),
+    )
+    .limit(1);
+  return school ?? null;
 }
+
 
 export async function updateSchoolCurrency(
   db: AppDb,

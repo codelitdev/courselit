@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { loadPublicPage } from "@/components/public-site-page";
 import { getPublicArticleBySlug } from "@/lib/courselit-public";
 
 interface Props {
@@ -14,10 +13,9 @@ async function loadBlogArticle({
 }: {
   slug: string;
   id: string;
-  schoolId?: string;
+  schoolId: string;
 }) {
-  const { host } = await loadPublicPage("", schoolId);
-  const article = await getPublicArticleBySlug(host, slug);
+  const article = await getPublicArticleBySlug(schoolId, slug);
   return article?.blogId === id ? article : null;
 }
 

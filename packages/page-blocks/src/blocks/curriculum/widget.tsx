@@ -13,7 +13,7 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ThemedSkeleton } from "../_shared/themed-skeleton";
 import type { CourseLitProductPreview } from "../shared/types";
-import { learnerHeaders, salesData, sectionTheme } from "../shared/utils";
+import { publicApiPath, salesData, sectionTheme } from "../shared/utils";
 import type { CurriculumSettings } from "./settings";
 
 export default function CurriculumWidget({
@@ -29,9 +29,17 @@ export default function CurriculumWidget({
   const [product, setProduct] = useState<CourseLitProductPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const resolvedTheme = sectionTheme(theme.theme, settings);
+  const productPath = sourceProduct
+    ? `/products/${encodeURIComponent(sourceProduct.id)}`
+    : null;
+  // Storefront pages carry the school; the admin page editor previews through
+  // its own admin-authenticated product route.
+  const productEndpoint = productPath
+    ? (publicApiPath(pageData, productPath) ?? `/api/v1${productPath}`)
+    : null;
 
   useEffect(() => {
-    if (!sourceProduct) {
+    if (!sourceProduct || !productEndpoint) {
       setProduct(null);
       setLoading(false);
       return;
@@ -40,10 +48,9 @@ export default function CurriculumWidget({
     let active = true;
     setProduct(null);
     setLoading(true);
-    void fetch(`/api/v1/products/${encodeURIComponent(sourceProduct.id)}`, {
+    void fetch(productEndpoint, {
       credentials: "include",
       cache: "no-store",
-      headers: learnerHeaders(),
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("Unable to load curriculum.");
@@ -71,7 +78,7 @@ export default function CurriculumWidget({
     return () => {
       active = false;
     };
-  }, [sourceProduct]);
+  }, [productEndpoint, sourceProduct]);
 
   if (!sourceProduct) return null;
 

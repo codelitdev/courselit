@@ -363,18 +363,21 @@ describe.serial("media library", () => {
     });
     const lessonId = (lesson.body as { id: string }).id;
 
+    const mediaPath = (schoolPublicId: string) =>
+      `/v1/public/${schoolPublicId}/products/${world.noteA.publicId}/lessons/${lessonId}/media`;
     const publicRead = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}/lessons/${lessonId}/media`,
-      headers: { "x-school-id": world.schoolA.publicId },
+      path: mediaPath(world.schoolA.publicId),
+      headers: {},
     });
     expect(publicRead.status).toBe(403);
 
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "private-media-learner@example.com",
         password: "learner-password-1",
         name: "Media Learner",
@@ -383,8 +386,8 @@ describe.serial("media library", () => {
     const learnerCookie = cookieFrom(signedUp.headers);
     const beforeEnrollment = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}/lessons/${lessonId}/media`,
-      headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+      path: mediaPath(world.schoolA.publicId),
+      headers: { cookie: learnerCookie },
     });
     expect(beforeEnrollment.status).toBe(403);
 
@@ -398,8 +401,8 @@ describe.serial("media library", () => {
 
     const delivered = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}/lessons/${lessonId}/media`,
-      headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+      path: mediaPath(world.schoolA.publicId),
+      headers: { cookie: learnerCookie, host: "courselit-api:4000" },
     });
     expect(delivered.status).toBe(200);
     expect(delivered.body).toMatchObject({
@@ -409,6 +412,27 @@ describe.serial("media library", () => {
       url: expect.stringContaining("media.test/assets/"),
     });
     expect(delivered.body).not.toHaveProperty("mediaLitId");
+
+    // The learner session only applies on its own school's path: anonymous
+    // callers and other schools' paths never get the enrolled view.
+    const anonymousAfterEnrollment = await dispatch(runtime, {
+      method: "GET",
+      path: mediaPath(world.schoolA.publicId),
+      headers: {},
+    });
+    expect(anonymousAfterEnrollment.status).toBe(403);
+    const viaOtherSchool = await dispatch(runtime, {
+      method: "GET",
+      path: mediaPath(world.schoolB.publicId),
+      headers: { cookie: learnerCookie },
+    });
+    expect(viaOtherSchool.status).toBe(404);
+    const enrolledDetail = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/public/${world.schoolA.publicId}/products/${world.noteA.publicId}`,
+      headers: { cookie: learnerCookie },
+    });
+    expect(enrolledDetail.body).toMatchObject({ enrolled: true });
     await runtime.close();
   });
 
@@ -419,8 +443,9 @@ describe.serial("media library", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "profile-media-learner@example.com",
         password: "learner-password-1",
         name: "Profile Media Learner",

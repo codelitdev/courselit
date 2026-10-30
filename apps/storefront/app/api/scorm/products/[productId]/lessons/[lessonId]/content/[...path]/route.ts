@@ -3,8 +3,10 @@ import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
+import { resolveSchoolForRequest } from "@/lib/school-resolution";
 
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
+const LEARNER_SESSION_COOKIE = "courselit.learner.session";
 const MAX_PACKAGE_BYTES = 300 * 1024 * 1024;
 const CACHE_ROOT = process.env.SCORM_CACHE_DIR?.trim() || path.join(os.tmpdir(), "courselit-scorm");
 
@@ -127,14 +129,19 @@ async function extractPackage(mediaId: string, url: string): Promise<void> {
   }
 }
 
-async function getMediaUrl(request: NextRequest, productId: string, lessonId: string) {
+async function getMediaUrl(
+  request: NextRequest,
+  schoolId: string,
+  productId: string,
+  lessonId: string,
+) {
   const headers = new Headers();
-  for (const name of ["cookie", "x-school-id", "x-forwarded-host"]) {
-    const value = request.headers.get(name);
-    if (value) headers.set(name, value);
+  const learnerSession = request.cookies.get(LEARNER_SESSION_COOKIE)?.value;
+  if (learnerSession) {
+    headers.set("cookie", `${LEARNER_SESSION_COOKIE}=${learnerSession}`);
   }
   const response = await fetch(
-    `${API_URL}/v1/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lessonId)}/media`,
+    `${API_URL}/v1/public/${encodeURIComponent(schoolId)}/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lessonId)}/media`,
     { headers, cache: "no-store" },
   );
   if (!response.ok) return null;
@@ -151,7 +158,14 @@ export async function GET(
     return NextResponse.json({ message: "Invalid SCORM path" }, { status: 400 });
   }
   try {
-    const media = await getMediaUrl(request, productId, lessonId);
+    const school = await resolveSchoolForRequest(request);
+    if (school.status === "unavailable") {
+      return NextResponse.json({ message: "Unable to load SCORM content" }, { status: 503 });
+    }
+    if (school.status === "unknown") {
+      return NextResponse.json({ message: "SCORM package not found" }, { status: 404 });
+    }
+    const media = await getMediaUrl(request, school.schoolId, productId, lessonId);
     if (!media) return NextResponse.json({ message: "SCORM package not found" }, { status: 404 });
     await extractPackage(media.id, media.url);
     const file = await findFileCaseInsensitive(path.join(CACHE_ROOT, media.id), requestedPath);

@@ -1,5 +1,6 @@
 "use client";
 
+import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { ThemeStyle } from "@frontlit/page-builder/models";
 import type { MediaRef } from "@courselit/api-contract";
 import { Caption, Header1, Text2 } from "@frontlit/page-builder/primitives";
@@ -49,6 +50,7 @@ function ProductDescription({ value, theme }: { value: string; theme: ThemeStyle
 
 export function PublicProductDetail({ productId }: { productId: string }) {
   const theme = useSchoolThemeStyle();
+  const schoolId = useSchoolId();
   const [product, setProduct] = useState<PublicProduct | null>(null);
   const [plans, setPlans] = useState<ProductPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,12 +62,12 @@ export function PublicProductDetail({ productId }: { productId: string }) {
     let active = true;
     setLoading(true);
     void Promise.all([
-      fetch(`/api/v1/products/${encodeURIComponent(productId)}`, {
+      fetch(publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}`), {
         credentials: "include",
         cache: "no-store",
         headers: learnerHeaders(),
       }),
-      fetch(`/api/v1/storefront/products/${encodeURIComponent(productId)}/plans`, {
+      fetch(publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`), {
         credentials: "include",
         cache: "no-store",
         headers: learnerHeaders(),
@@ -93,13 +95,13 @@ export function PublicProductDetail({ productId }: { productId: string }) {
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, schoolId]);
 
   async function choosePlan(plan: ProductPlan) {
     setError(null);
     setBusyPlanId(plan.id);
     try {
-      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+      const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
         method: "POST",
         credentials: "include",
         headers: learnerHeaders({

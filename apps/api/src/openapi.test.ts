@@ -27,10 +27,10 @@ describe("CourseLit OpenAPI tags", () => {
     expect(document.paths["/v1/learner/auth/sign-in"]?.post?.tags).toEqual([
       "Learners",
     ]);
-    expect(document.paths["/v1/storefront/checkout-sessions"]?.post?.tags).toEqual([
+    expect(document.paths["/v1/public/{schoolId}/checkout-sessions"]?.post?.tags).toEqual([
       "Storefront & Payments",
     ]);
-    expect(document.paths["/v1/public/site/pages"]?.get?.tags).toEqual([
+    expect(document.paths["/v1/public/{schoolId}/site/pages"]?.get?.tags).toEqual([
       "Public Website",
     ]);
     expect(document.paths["/v1/school/website/pages"]?.get?.tags).toEqual([

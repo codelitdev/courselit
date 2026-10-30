@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { resolveSchoolForRequest } from "@/lib/school-resolution";
 
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
 
@@ -22,10 +23,36 @@ async function proxy(
     const upstreamPath = isAuth ? `/api/${suffix}` : `/${suffix}`;
     const target = `${API_URL}${upstreamPath}${request.nextUrl.search}`;
     const headers = new Headers(request.headers);
-    const incomingHost =
-      request.headers.get("x-forwarded-host") ?? request.headers.get("host");
     headers.delete("host");
-    if (incomingHost) headers.set("x-forwarded-host", incomingHost);
+    // The browser never names the school: learner routes get it from the
+    // request host below, public routes carry it in the path.
+    headers.delete("x-school-id");
+    headers.delete("x-tenant-id");
+    if (isAuth) {
+      // Better Auth only uses the forwarded host for CSRF origin checks
+      // (trustedOrigins); it is not tenant selection.
+      const incomingHost =
+        request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+      if (incomingHost) headers.set("x-forwarded-host", incomingHost);
+    } else {
+      headers.delete("x-forwarded-host");
+      if (path[1] === "learner") {
+        const resolution = await resolveSchoolForRequest(request);
+        if (resolution.status === "unavailable") {
+          return NextResponse.json(
+            { code: "service_unavailable", message: "School lookup is unavailable." },
+            { status: 503 },
+          );
+        }
+        if (resolution.status === "unknown") {
+          return NextResponse.json(
+            { code: "tenant_required", message: "This host is not a school website." },
+            { status: 404 },
+          );
+        }
+        headers.set("x-school-id", resolution.schoolId);
+      }
+    }
     const rawCookie = request.headers.get("cookie");
     if (rawCookie) {
       const isCourseLitSessionCookie = (name: string) =>

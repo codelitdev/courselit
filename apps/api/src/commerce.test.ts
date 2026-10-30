@@ -60,8 +60,9 @@ describe.serial("storefront commerce", () => {
     const signedUp = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "paid-learner@example.com",
         password: "learner-password-1",
         name: "Paid Learner",
@@ -273,8 +274,9 @@ describe.serial("storefront commerce", () => {
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "mismatch@example.com",
         password: "learner-password-1",
         name: "Mismatch",
@@ -349,8 +351,8 @@ describe.serial("storefront commerce", () => {
     });
     const publicPlans = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/storefront/products/${productId}/plans`,
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/products/${productId}/plans`,
+      headers: {},
     });
     expect(publicPlans.status).toBe(200);
     expect(publicPlans.body).toMatchObject({ items: [{ id: planId, kind: "free" }] });
@@ -358,8 +360,13 @@ describe.serial("storefront commerce", () => {
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
-      body: { email: "free@example.com", password: "learner-password-1", name: "Free" },
+      headers: {},
+      body: {
+        schoolId: world.schoolA.publicId,
+        email: "free@example.com",
+        password: "learner-password-1",
+        name: "Free",
+      },
     });
     const cookie = (learner.headers?.["Set-Cookie"] ?? "").split(";", 1)[0];
     const checkout = await dispatch(runtime, {
@@ -433,8 +440,8 @@ describe.serial("storefront commerce", () => {
     });
     const created = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/storefront/checkout-sessions",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/checkout-sessions`,
+      headers: { host: "courselit-api:4000" },
       body: { productId, planId },
     });
     expect(created.status).toBe(201);
@@ -450,8 +457,8 @@ describe.serial("storefront commerce", () => {
 
     const publicSession = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/storefront/checkout-sessions/${sessionId}`,
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      path: `/v1/public/${world.schoolA.publicId}/checkout-sessions/${sessionId}`,
+      headers: {},
     });
     expect(publicSession.status).toBe(200);
     expect(publicSession.body).toMatchObject({ id: sessionId, status: "open" });
@@ -459,8 +466,9 @@ describe.serial("storefront commerce", () => {
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
-      headers: { "x-forwarded-host": "school-a.localhost:3001" },
+      headers: {},
       body: {
+        schoolId: world.schoolA.publicId,
         email: "session-learner@example.com",
         password: "learner-password-1",
         name: "Session Learner",
@@ -486,8 +494,8 @@ describe.serial("storefront commerce", () => {
 
     const completed = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/storefront/checkout-sessions/${sessionId}`,
-      headers: { cookie, "x-school-id": world.schoolA.publicId },
+      path: `/v1/public/${world.schoolA.publicId}/checkout-sessions/${sessionId}`,
+      headers: { cookie },
     });
     expect(completed.body).toMatchObject({
       id: sessionId,

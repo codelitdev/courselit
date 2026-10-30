@@ -18,6 +18,7 @@ import {
   DEFAULT_NEWSLETTER_SUCCESS,
   DEFAULT_NEWSLETTER_TITLE,
 } from "./constants";
+import { publicApiPath } from "../shared/utils";
 import type { NewsletterSignupSettings } from "./settings";
 
 function sectionTheme(theme: ThemeStyle, settings: NewsletterSignupSettings) {
@@ -32,6 +33,7 @@ export default function NewsletterSignupWidget({
   settings,
   state: { theme },
   editing,
+  pageData,
 }: WidgetProps<NewsletterSignupSettings>) {
   const resolvedTheme = sectionTheme(theme.theme, settings);
   const inputId = useId();
@@ -49,7 +51,9 @@ export default function NewsletterSignupWidget({
     setSubmitting(true);
     setMessage(null);
     try {
-      const response = await fetch("/api/v1/newsletter/subscribe", {
+      const endpoint = publicApiPath(pageData, "/newsletter/subscribe");
+      if (!endpoint) throw new Error("newsletter_signup_unavailable");
+      const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },

@@ -1621,12 +1621,15 @@ export const certificateVerificationSchema = certificateSchema.extend({
   logoUrl: z.string().url().nullable(),
 });
 
+/** Every public route names its school in the path; the API never selects a
+ * school from the request host. */
+export const publicSchoolPathParams = z.object({ schoolId: z.string().min(1).max(64) });
 export const learnerAuthBodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(200),
   name: z.string().min(1).max(200).optional(),
   identityLinkToken: z.string().min(1).max(200).optional(),
-  schoolId: z.string().min(1).optional(),
+  schoolId: z.string().min(1),
 });
 export const learnerIdentityLinkSchema = z.object({
   token: z.string().min(1),
@@ -2533,7 +2536,8 @@ export const contract = c.router({
   },
   listPublicProducts: {
     method: "GET",
-    path: "/v1/public/products",
+    path: "/v1/public/:schoolId/products",
+    pathParams: publicSchoolPathParams,
     query: listProductsQuerySchema,
     responses: {
       200: z.object({
@@ -2549,19 +2553,6 @@ export const contract = c.router({
     path: "/v1/public/resolve-host",
     query: z.object({ host: z.string().trim().min(1).max(253) }),
     responses: {
-      200: z.object({ resolved: z.literal(true) }),
-      404: platformErrorSchema,
-    },
-    summary: "Check whether a verified custom host is assigned to a school",
-  },
-  resolveStorefrontSchool: {
-    method: "GET",
-    path: "/v1/public/school/resolve",
-    query: z.object({
-      host: z.string().trim().max(253).optional(),
-      school: z.string().trim().max(253).optional(),
-    }),
-    responses: {
       200: z.object({
         schoolId: z.string(),
         subdomain: z.string(),
@@ -2569,11 +2560,13 @@ export const contract = c.router({
       }),
       404: platformErrorSchema,
     },
-    summary: "Resolve a school identity for storefront proxy routing",
+    summary:
+      "Resolve a school website host (verified custom domain or platform subdomain) to its school",
   },
   createCheckoutSession: {
     method: "POST",
-    path: "/v1/storefront/checkout-sessions",
+    path: "/v1/public/:schoolId/checkout-sessions",
+    pathParams: publicSchoolPathParams,
     body: createCheckoutSessionBodySchema,
     responses: {
       201: storefrontCheckoutSessionSchema,
@@ -2584,8 +2577,8 @@ export const contract = c.router({
   },
   getCheckoutSession: {
     method: "GET",
-    path: "/v1/storefront/checkout-sessions/:sessionId",
-    pathParams: z.object({ sessionId: z.string() }),
+    path: "/v1/public/:schoolId/checkout-sessions/:sessionId",
+    pathParams: publicSchoolPathParams.extend({ sessionId: z.string() }),
     responses: {
       200: storefrontCheckoutSessionSchema,
       403: platformErrorSchema,
@@ -2594,7 +2587,8 @@ export const contract = c.router({
   },
   listPublicCommunities: {
     method: "GET",
-    path: "/v1/public/communities",
+    path: "/v1/public/:schoolId/communities",
+    pathParams: publicSchoolPathParams,
     query: communityListQuerySchema,
     responses: {
       200: z.object({
@@ -2607,8 +2601,8 @@ export const contract = c.router({
   },
   getPublicCommunity: {
     method: "GET",
-    path: "/v1/public/communities/:communityId",
-    pathParams: z.object({ communityId: z.string() }),
+    path: "/v1/public/:schoolId/communities/:communityId",
+    pathParams: publicSchoolPathParams.extend({ communityId: z.string() }),
     responses: {
       200: communitySchema,
       403: platformErrorSchema,
@@ -2617,8 +2611,8 @@ export const contract = c.router({
   },
   listPublicCommunityPlans: {
     method: "GET",
-    path: "/v1/public/communities/:communityId/plans",
-    pathParams: z.object({ communityId: z.string() }),
+    path: "/v1/public/:schoolId/communities/:communityId/plans",
+    pathParams: publicSchoolPathParams.extend({ communityId: z.string() }),
     responses: {
       200: z.object({ items: z.array(communityPaymentPlanSchema) }),
       403: platformErrorSchema,
@@ -2627,7 +2621,8 @@ export const contract = c.router({
   },
   getPublicSiteSettings: {
     method: "GET",
-    path: "/v1/public/site/settings",
+    path: "/v1/public/:schoolId/site/settings",
+    pathParams: publicSchoolPathParams,
     responses: {
       200: publicSiteSettingsSchema,
       403: platformErrorSchema,
@@ -2636,7 +2631,8 @@ export const contract = c.router({
   },
   getPublicSitePage: {
     method: "GET",
-    path: "/v1/public/site/pages",
+    path: "/v1/public/:schoolId/site/pages",
+    pathParams: publicSchoolPathParams,
     query: z.object({ slug: z.string().max(200).default("") }),
     responses: {
       200: publicSitePageSchema,
@@ -2647,7 +2643,8 @@ export const contract = c.router({
   },
   listPublicSiteBlogs: {
     method: "GET",
-    path: "/v1/public/site/blogs",
+    path: "/v1/public/:schoolId/site/blogs",
+    pathParams: publicSchoolPathParams,
     responses: {
       200: z.object({ items: z.array(publicSiteBlogSchema), total: z.number().int() }),
       403: platformErrorSchema,
@@ -2656,8 +2653,8 @@ export const contract = c.router({
   },
   getPublicSiteBlog: {
     method: "GET",
-    path: "/v1/public/site/blogs/:slug",
-    pathParams: z.object({ slug: z.string().min(1).max(200) }),
+    path: "/v1/public/:schoolId/site/blogs/:slug",
+    pathParams: publicSchoolPathParams.extend({ slug: z.string().min(1).max(200) }),
     responses: {
       200: publicSiteBlogSchema,
       403: platformErrorSchema,
@@ -2839,7 +2836,8 @@ export const contract = c.router({
   },
   subscribeNewsletter: {
     method: "POST",
-    path: "/v1/newsletter/subscribe",
+    path: "/v1/public/:schoolId/newsletter/subscribe",
+    pathParams: publicSchoolPathParams,
     body: newsletterSubscribeBodySchema,
     responses: {
       200: z.object({
@@ -2923,8 +2921,8 @@ export const contract = c.router({
   },
   listPublicPlans: {
     method: "GET",
-    path: "/v1/storefront/products/:productId/plans",
-    pathParams: z.object({ productId: z.string() }),
+    path: "/v1/public/:schoolId/products/:productId/plans",
+    pathParams: publicSchoolPathParams.extend({ productId: z.string() }),
     responses: {
       200: z.object({ items: z.array(storefrontPlanSchema) }),
       400: platformErrorSchema,
@@ -3061,6 +3059,44 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
+  getPublicProduct: {
+    method: "GET",
+    path: "/v1/public/:schoolId/products/:productId",
+    pathParams: publicSchoolPathParams.extend({ productId: z.string() }),
+    responses: {
+      200: productDetailSchema,
+      404: platformErrorSchema,
+    },
+    summary:
+      "Read a published product; a learner session for the same school receives its enrolled view",
+  },
+  getPublicLoginMethods: {
+    method: "GET",
+    path: "/v1/public/:schoolId/login-methods",
+    pathParams: publicSchoolPathParams,
+    responses: {
+      200: z.object({
+        schoolId: z.string(),
+        loginMethods: z.array(z.enum(["email", "google"])),
+        hasGoogle: z.boolean(),
+      }),
+      404: platformErrorSchema,
+    },
+  },
+  signUpForLeadMagnet: {
+    method: "POST",
+    path: "/v1/public/:schoolId/lead-magnets",
+    pathParams: publicSchoolPathParams,
+    body: leadMagnetSignUpBodySchema,
+    responses: {
+      200: z.object({ status: z.literal("sent"), email: z.string() }),
+      400: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+      422: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
   getProductAnalytics: {
     method: "GET",
     path: "/v1/products/:productId/analytics",
@@ -3140,10 +3176,13 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
-  getLearnerLessonMedia: {
+  getPublicLessonMedia: {
     method: "GET",
-    path: "/v1/products/:productId/lessons/:lessonId/media",
-    pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
+    path: "/v1/public/:schoolId/products/:productId/lessons/:lessonId/media",
+    pathParams: publicSchoolPathParams.extend({
+      productId: z.string(),
+      lessonId: z.string(),
+    }),
     responses: {
       200: learnerLessonMediaSchema,
       401: platformErrorSchema,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
-import { loadSchoolByPublicId } from "../schools.js";
+import { resolveSchoolByHost } from "../schools.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "../runtime.js";
 import { seedWorld } from "../seed.js";
 import { importLegacyDomains } from "./domains.js";
@@ -101,10 +101,10 @@ describe.serial("legacy domain migration", () => {
       locale: "en-IN",
       currency: "INR",
     });
-    expect(await loadSchoolByPublicId(runtime.db, "learn.imported.example")).toMatchObject({
+    expect(await resolveSchoolByHost(runtime.db, "learn.imported.example")).toMatchObject({
       id: school.id,
     });
-    expect(await loadSchoolByPublicId(runtime.db, "pending.imported.example")).toBeNull();
+    expect(await resolveSchoolByHost(runtime.db, "pending.imported.example")).toBeNull();
     const pendingHosts = await runtime.db
       .select()
       .from(schema.schoolHosts)

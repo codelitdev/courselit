@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import type { CourseLitPlan } from "../shared/types";
 import {
   descriptionContent,
-  learnerHeaders,
+  publicApiPath,
   salesData,
   sectionTheme,
 } from "../shared/utils";
@@ -92,14 +92,16 @@ export default function CommunityWidget({
   const [membershipStatus, setMembershipStatus] = useState<string | null>(
     community?.membership?.status ?? null,
   );
+  const communityPath = community?.id
+    ? publicApiPath(pageData, `/communities/${encodeURIComponent(community.id)}`)
+    : null;
 
   useEffect(() => {
-    if (!community?.id || editing) return;
+    if (!community?.id || editing || !communityPath) return;
     let active = true;
-    void fetch(`/api/v1/public/communities/${encodeURIComponent(community.id)}`, {
+    void fetch(communityPath, {
       credentials: "include",
       cache: "no-store",
-      headers: learnerHeaders(),
     })
       .then(async (response) => {
         if (!response.ok || !active) return;
@@ -112,7 +114,7 @@ export default function CommunityWidget({
     return () => {
       active = false;
     };
-  }, [community?.id, editing]);
+  }, [community?.id, communityPath, editing]);
 
   if (!community) {
     return (
@@ -151,10 +153,12 @@ export default function CommunityWidget({
     setBusyPlan(planId);
     setError(null);
     try {
-      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+      const endpoint = publicApiPath(pageData, "/checkout-sessions");
+      if (!endpoint) throw new Error("Checkout is not available here.");
+      const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ communityId: community!.id, planId }),
       });
       if (!response.ok) throw new Error("Unable to start checkout.");
