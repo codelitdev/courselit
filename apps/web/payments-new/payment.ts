@@ -19,7 +19,11 @@ interface Metadata {
 export default interface Payment {
     setup: () => void;
     initiate: (obj: InitiateProps) => void;
-    verify: (event: any) => Promise<boolean>;
+    verify: (
+        event: any,
+        rawBody: string,
+        headers: Record<string, string | null>,
+    ) => Promise<boolean>;
     getPaymentIdentifier: (event: any) => unknown;
     getMetadata: (event: any) => Record<string, unknown>;
     getName: () => string;
