@@ -470,24 +470,6 @@ describe("SendLit Service", () => {
       expect(patchSettings.body).toMatchObject({ mailingAddress: "200 University Ave" });
 
 
-      // 4. GET /v1/school/mails/overview
-      const getOverviewRes = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/school/mails/overview",
-        headers: adminHeaders,
-      });
-      expect(getOverviewRes.status).toBe(200);
-      expect(getOverviewRes.body).toMatchObject({ totalSubscribers: 50 });
-
-      // 5. GET /v1/school/segments
-      const getSegmentsRes = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/school/segments",
-        headers: adminHeaders,
-      });
-      expect(getSegmentsRes.status).toBe(200);
-      expect(getSegmentsRes.body).toMatchObject({ items: [{ id: "seg_1", name: "High Achievers" }] });
-
       // 6. GET /v1/school/mails/sequences
       const getSequencesRes = await dispatch(runtime, {
         method: "GET",
@@ -505,32 +487,6 @@ describe("SendLit Service", () => {
       });
       expect(getTemplatesRes.status).toBe(200);
       expect(getTemplatesRes.body).toMatchObject({ items: [{ id: "tmpl_1" }] });
-
-      // 8. GET /v1/school/mails/subscribers
-      const getSubscribersRes = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/school/mails/subscribers",
-        headers: adminHeaders,
-      });
-      expect(getSubscribersRes.status).toBe(200);
-      expect(getSubscribersRes.body).toMatchObject({ items: [{ contactId: "c_1" }] });
-
-      // 9. GET /v1/school/contacts (aliased to contacts list)
-      const getContactsRes = await dispatch(runtime, {
-        method: "GET",
-        path: "/v1/school/contacts",
-        headers: adminHeaders,
-      });
-      expect(getContactsRes.status).toBe(200);
-      expect(getContactsRes.body).toMatchObject({ items: [{ contactId: "c_1" }] });
-
-      // 10. POST /v1/school/contacts/:contactId/tags/:tag
-      const postContactTagRes = await dispatch(runtime, {
-        method: "POST",
-        path: "/v1/school/contacts/c_1/tags/vip",
-        headers: adminHeaders,
-      });
-      expect(postContactTagRes.status).toBe(200);
     } finally {
       globalThis.fetch = originalFetch;
       await runtime.close();

@@ -128,6 +128,7 @@ for the detailed staff, learner, product-access, and community-access contract.
 Key principles:
 - **No Automatic Entitlement Escalation**: Creating or administering a school does not automatically enroll the staff member into every paid product or community.
 - **Dual Role Support**: A person can simultaneously be the `Owner` of School A and a `Learner` in School A. Removing staff access leaves purchased learner entitlements intact; revoking learner access leaves administrative permissions untouched.
+- **One Operation Policy**: `OPERATION_POLICIES` (`apps/api/src/auth/operation-policy.ts`) names, per contract operation, the credential kinds that may call it and the permissions it needs. The REST dispatcher enforces it for every school operation before any handler runs: the credential kind first, then the permissions and school ownership. MCP tools apply the same policy, so a handler never decides who may call an operation. A route that is not a contract operation is closed to every credential; `/api/school/select` is the one internal browser route allowed. `src/operation-permissions.test.ts` checks that every route the dispatcher handles is in the contract and that no handler demands more than its policy.
 - **Discussion & Community Participation**: Community creators and staff participate using their single school account profile, with staff badges derived dynamically from their active permissions rather than from a duplicate identity.
 
 ---

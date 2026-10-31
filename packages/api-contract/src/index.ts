@@ -1706,6 +1706,87 @@ export const createSchoolResponseSchema = schoolSchema.extend({
   checkoutUrl: z.string().optional(),
 });
 
+// Mailing-service objects (sequences, emails, templates) that CourseLit hands
+// through unchanged, so only the fields CourseLit itself reads are named.
+const mailServiceObjectSchema = z.object({}).passthrough();
+const mailServiceListSchema = z.object({
+  items: z.array(mailServiceObjectSchema),
+  total: z.number().int().nonnegative(),
+});
+export const mailingSettingsSchema = z
+  .object({
+    mailingAddress: z.string().nullable(),
+    updatedAt: z.string().nullable().optional(),
+  })
+  .passthrough();
+export const updateMailingSettingsBodySchema = z
+  .object({ mailingAddress: z.string().trim().min(1).max(1000) })
+  .passthrough();
+export const mailSequenceListQuerySchema = z.object({
+  type: z.enum(["broadcast", "sequence"]).optional(),
+  status: z.string().optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+export const mailTemplateListQuerySchema = z.object({
+  search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+export const createMailSequenceBodySchema = z
+  .object({
+    type: z.enum(["broadcast", "sequence"]),
+    title: z.string().trim().max(200).optional(),
+    templateId: z.string().optional(),
+    deliverySource: z.unknown().optional(),
+  })
+  .passthrough();
+export const updateMailSequenceBodySchema = z
+  .object({
+    title: z.string().trim().max(200).optional(),
+    triggerType: z.string().nullable().optional(),
+    triggerData: z.string().nullable().optional(),
+    triggerFilter: z.unknown().optional(),
+    filter: z.unknown().optional(),
+    excludeFilter: z.unknown().optional(),
+    emailsOrder: z.array(z.string()).optional(),
+  })
+  .passthrough();
+export const createMailSequenceEmailBodySchema = z
+  .object({
+    subject: z.string().trim().min(1).max(500),
+    templateId: z.string().min(1),
+    delayHours: z.number().min(0).optional(),
+  })
+  .passthrough();
+export const updateMailSequenceEmailBodySchema = z
+  .object({
+    subject: z.string().trim().min(1).max(500).optional(),
+    templateId: z.string().optional(),
+    delayHours: z.number().min(0).optional(),
+    delayInMillis: z.number().min(0).optional(),
+    content: z.unknown().optional(),
+    published: z.boolean().optional(),
+  })
+  .passthrough();
+export const sendMailSequenceTestEmailBodySchema = z.object({
+  to: z.array(z.string().email()).min(1).max(5).optional(),
+});
+export const mailTemplateBodySchema = z
+  .object({
+    name: z.string().trim().max(200).optional(),
+    title: z.string().trim().max(200).optional(),
+    content: z
+      .object({
+        style: z.record(z.unknown()).optional(),
+        meta: z.record(z.unknown()).optional(),
+        content: z.unknown(),
+      })
+      .optional(),
+    thumbnail: z.string().optional(),
+    purpose: z.enum(["marketing", "transactional"]).optional(),
+  })
+  .passthrough();
+
 export const contract = c.router({
   health: {
     method: "GET",
@@ -4344,6 +4425,303 @@ export const contract = c.router({
     method: "DELETE",
     path: "/v1/invitations/:invitationId",
     pathParams: z.object({ invitationId: z.string() }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getSchoolCommunity: {
+    method: "GET",
+    path: "/v1/community",
+    summary: "Get the school's community",
+    responses: {
+      200: communitySchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listStaffNotificationPreferences: {
+    method: "GET",
+    path: "/v1/notification-preferences",
+    summary: "List the signed-in team member's notification preferences",
+    responses: {
+      200: z.object({ items: z.array(notificationPreferenceSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  updateStaffNotificationPreference: {
+    method: "PATCH",
+    path: "/v1/notification-preferences/:type",
+    summary: "Update one of the signed-in team member's notification preferences",
+    pathParams: z.object({ type: z.string() }),
+    body: updateNotificationPreferenceBodySchema,
+    responses: {
+      200: notificationPreferenceSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getMailingSettings: {
+    method: "GET",
+    path: "/v1/school/mails/settings",
+    summary: "Get the school's mailing settings",
+    responses: {
+      200: mailingSettingsSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  updateMailingSettings: {
+    method: "PATCH",
+    path: "/v1/school/mails/settings",
+    summary: "Update the school's mailing settings",
+    body: updateMailingSettingsBodySchema,
+    responses: {
+      200: mailingSettingsSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  listMailSequences: {
+    method: "GET",
+    path: "/v1/school/mails/sequences",
+    summary: "List broadcasts and sequences",
+    query: mailSequenceListQuerySchema,
+    responses: {
+      200: mailServiceListSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  createMailSequence: {
+    method: "POST",
+    path: "/v1/school/mails/sequences",
+    summary: "Create a broadcast or sequence",
+    body: createMailSequenceBodySchema,
+    responses: {
+      201: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getMailSequence: {
+    method: "GET",
+    path: "/v1/school/mails/sequences/:sequenceId",
+    summary: "Get a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    responses: {
+      200: mailServiceObjectSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateMailSequence: {
+    method: "PATCH",
+    path: "/v1/school/mails/sequences/:sequenceId",
+    summary: "Update a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    body: updateMailSequenceBodySchema,
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  deleteMailSequence: {
+    method: "DELETE",
+    path: "/v1/school/mails/sequences/:sequenceId",
+    summary: "Delete a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getMailSequenceStats: {
+    method: "GET",
+    path: "/v1/school/mails/sequences/:sequenceId/stats",
+    summary: "Get a broadcast or sequence's delivery statistics",
+    pathParams: z.object({ sequenceId: z.string() }),
+    responses: {
+      200: mailServiceObjectSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  startMailSequence: {
+    method: "POST",
+    path: "/v1/school/mails/sequences/:sequenceId/start",
+    summary: "Start sending a broadcast or sequence (session or OAuth only)",
+    pathParams: z.object({ sequenceId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  pauseMailSequence: {
+    method: "POST",
+    path: "/v1/school/mails/sequences/:sequenceId/pause",
+    summary: "Pause a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  createMailSequenceEmail: {
+    method: "POST",
+    path: "/v1/school/mails/sequences/:sequenceId/emails",
+    summary: "Add an email to a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    body: createMailSequenceEmailBodySchema,
+    responses: {
+      201: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateMailSequenceEmail: {
+    method: "PATCH",
+    path: "/v1/school/mails/sequences/:sequenceId/emails/:emailId",
+    summary: "Update an email of a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string(), emailId: z.string() }),
+    body: updateMailSequenceEmailBodySchema,
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  deleteMailSequenceEmail: {
+    method: "DELETE",
+    path: "/v1/school/mails/sequences/:sequenceId/emails/:emailId",
+    summary: "Delete an email from a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string(), emailId: z.string() }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  sendMailSequenceTestEmail: {
+    method: "POST",
+    path: "/v1/school/mails/sequences/:sequenceId/emails/:emailId/test",
+    summary:
+      "Send a test copy of an email to up to five addresses, or to the caller (session or OAuth only)",
+    pathParams: z.object({ sequenceId: z.string(), emailId: z.string() }),
+    body: sendMailSequenceTestEmailBodySchema,
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listSystemMailTemplates: {
+    method: "GET",
+    path: "/v1/school/mails/system-templates",
+    summary: "List the built-in email templates",
+    responses: {
+      200: mailServiceListSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  listMailTemplates: {
+    method: "GET",
+    path: "/v1/school/mails/templates",
+    summary: "List the school's email templates",
+    query: mailTemplateListQuerySchema,
+    responses: {
+      200: mailServiceListSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  createMailTemplate: {
+    method: "POST",
+    path: "/v1/school/mails/templates",
+    summary: "Create an email template",
+    body: mailTemplateBodySchema,
+    responses: {
+      201: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  duplicateMailTemplate: {
+    method: "POST",
+    path: "/v1/school/mails/templates/:templateId/duplicate",
+    summary: "Duplicate an email template",
+    pathParams: z.object({ templateId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      201: mailServiceObjectSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getMailTemplate: {
+    method: "GET",
+    path: "/v1/school/mails/templates/:templateId",
+    summary: "Get an email template",
+    pathParams: z.object({ templateId: z.string() }),
+    responses: {
+      200: mailServiceObjectSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateMailTemplate: {
+    method: "PATCH",
+    path: "/v1/school/mails/templates/:templateId",
+    summary: "Update an email template",
+    pathParams: z.object({ templateId: z.string() }),
+    body: mailTemplateBodySchema,
+    responses: {
+      200: mailServiceObjectSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  deleteMailTemplate: {
+    method: "DELETE",
+    path: "/v1/school/mails/templates/:templateId",
+    summary: "Delete an email template",
+    pathParams: z.object({ templateId: z.string() }),
     responses: {
       204: z.undefined(),
       401: platformErrorSchema,

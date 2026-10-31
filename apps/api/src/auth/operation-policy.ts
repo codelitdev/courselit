@@ -137,7 +137,7 @@ export const OPERATION_POLICIES = {
   revokeInvitation: schoolSessionOp(["members:manage"]),
 
   // School configuration
-  getSchoolOverview: schoolOp(["school:read"]),
+  getSchoolOverview: schoolOp(["analytics:read"]),
   updateSchool: schoolOp(["school:write"]),
   getSchoolCodeInjection: schoolOp(["school:read"]),
   updateSchoolCodeInjection: schoolOp(["school:write"], ["session", "oauth"]),
@@ -150,6 +150,30 @@ export const OPERATION_POLICIES = {
   createSchoolHost: schoolOp(["school:write"]),
   deleteSchoolHost: schoolOp(["school:write"]),
   verifySchoolHost: schoolOp(["school:write"]),
+
+  // Mailing (broadcasts, sequences, templates). Sending is kept off API keys:
+  // a leaked key must not be able to send email to the school's contacts.
+  getMailingSettings: schoolOp(["contacts:read"]),
+  updateMailingSettings: schoolOp(["contacts:write"]),
+  listMailSequences: schoolOp(["contacts:read"]),
+  createMailSequence: schoolOp(["contacts:write"]),
+  getMailSequence: schoolOp(["contacts:read"]),
+  updateMailSequence: schoolOp(["contacts:write"]),
+  deleteMailSequence: schoolOp(["contacts:write"]),
+  getMailSequenceStats: schoolOp(["contacts:read"]),
+  startMailSequence: schoolOp(["contacts:write"], ["session", "oauth"]),
+  pauseMailSequence: schoolOp(["contacts:write"]),
+  createMailSequenceEmail: schoolOp(["contacts:write"]),
+  updateMailSequenceEmail: schoolOp(["contacts:write"]),
+  deleteMailSequenceEmail: schoolOp(["contacts:write"]),
+  sendMailSequenceTestEmail: schoolOp(["contacts:write"], ["session", "oauth"]),
+  listSystemMailTemplates: schoolOp(["contacts:read"]),
+  listMailTemplates: schoolOp(["contacts:read"]),
+  createMailTemplate: schoolOp(["contacts:write"]),
+  getMailTemplate: schoolOp(["contacts:read"]),
+  updateMailTemplate: schoolOp(["contacts:write"]),
+  duplicateMailTemplate: schoolOp(["contacts:write"]),
+  deleteMailTemplate: schoolOp(["contacts:write"]),
 
   // Products & curriculum
   listProducts: schoolOp(["products:read"]),
@@ -202,7 +226,7 @@ export const OPERATION_POLICIES = {
   deleteCommunity: schoolOp(["communities:write"]),
   listCommunityMembers: schoolOp(["communities:read"]),
   inviteCommunityMember: schoolOp(["communities:write"]),
-  updateCommunityMembership: schoolOp(["communities:write"]),
+  updateCommunityMembership: schoolOp(["communities:moderate"]),
   addCommunityCategory: schoolOp(["communities:write"]),
   deleteCommunityCategory: schoolOp(["communities:write"]),
   listCommunityPosts: schoolOp(["communities:read"]),
@@ -218,6 +242,7 @@ export const OPERATION_POLICIES = {
   listCommunityReports: schoolOp(["communities:moderate"]),
   createCommunityReport: schoolOp(["communities:moderate"]),
   updateCommunityReport: schoolOp(["communities:moderate"]),
+  getSchoolCommunity: schoolOp(["communities:read"]),
   listCommunityPlans: schoolOp(["communities:read"]),
   createCommunityPlan: schoolOp(["communities:write"]),
   updateCommunityPlan: schoolOp(["communities:write"]),
@@ -275,6 +300,9 @@ export const OPERATION_POLICIES = {
   revokeApiKey: schoolOwnerOp(["session"]),
 
   // Admin notifications
+  // A team member's own preferences: school membership is the only requirement.
+  listStaffNotificationPreferences: schoolSessionOp([]),
+  updateStaffNotificationPreference: schoolSessionOp([]),
   listAdminNotifications: schoolSessionOp(["members:read"]),
   markAdminNotificationRead: schoolSessionOp(["members:read"]),
   markAllAdminNotificationsRead: schoolSessionOp(["members:read"]),
@@ -377,6 +405,23 @@ export function credentialAllowedByPolicy(
   }
 }
 
+/**
+ * Whether a caller holding these permissions may run a school operation:
+ * every required permission, and school ownership where the policy asks for
+ * it. Operations of other audiences are not decided here.
+ */
+export function operationPermissionsAllow(
+  operationId: string,
+  caller: { permissions: ReadonlySet<string>; isOwner: boolean },
+): boolean {
+  const policy = getOperationPolicy(operationId);
+  if (policy?.audience !== "school") return true;
+  if (policy.ownerOnly && !caller.isOwner) return false;
+  return (policy.requiredPermissions ?? []).every((permission) =>
+    caller.permissions.has(permission),
+  );
+}
+
 function credentialNotAllowed(): PlatformError {
   return createPlatformError("forbidden", {
     safeDetails: { reason: "credential_not_allowed" },
@@ -388,16 +433,20 @@ function credentialNotAllowed(): PlatformError {
  * staff-authenticated handler:
  * - a contract operation without a registered policy is denied for everyone;
  * - a credential kind outside the policy's allowed list is denied;
- * - a route that is not a contract operation is denied to API keys (only
- *   explicitly registered operations are API-key reachable).
- * Permission checks still happen in the handlers.
+ * - a route that is not a contract operation is denied to every credential,
+ *   unless the caller names it an internal browser route (`internalRoute`),
+ *   and even then never to an API key.
+ * Permissions are enforced right after, by `operationPermissionsAllow`.
  */
 export function authorizeOperationCredential(
   operationId: string | null,
   credentialKind: CredentialKind,
+  options: { internalRoute?: boolean } = {},
 ): PlatformError | null {
   if (operationId === null) {
-    return credentialKind === "api_key" ? credentialNotAllowed() : null;
+    return options.internalRoute && credentialKind !== "api_key"
+      ? null
+      : credentialNotAllowed();
   }
   const policy = getOperationPolicy(operationId);
   if (!policy) return credentialNotAllowed();

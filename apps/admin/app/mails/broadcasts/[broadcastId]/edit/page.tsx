@@ -213,22 +213,22 @@ export default function BroadcastDetailsPage({
     const timeout = window.setTimeout(async () => {
       setLoadingRecipients(true);
       try {
-        const params = new URLSearchParams({
-          filter: JSON.stringify(filter),
-          limit: "1",
-        });
-        const response = await fetch(
-          `/api/v1/school/mails/subscribers?${params.toString()}`,
-          {
-            credentials: "include",
-            cache: "no-store",
-            headers: { "x-school-id": school.id },
-            signal: controller.signal,
+        const response = await fetch("/api/v1/contacts/filter-preview", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            "content-type": "application/json",
+            "x-school-id": school.id,
           },
-        );
+          body: JSON.stringify({ filter, page: 1, rowsPerPage: 1 }),
+          signal: controller.signal,
+        });
         if (!response.ok) throw new Error("Unable to count eligible recipients.");
-        const data = (await response.json()) as { total?: number };
-        if (!cancelled) setRecipientCount(typeof data.total === "number" ? data.total : 0);
+        const data = (await response.json()) as { totalCount?: number };
+        if (!cancelled) {
+          setRecipientCount(typeof data.totalCount === "number" ? data.totalCount : 0);
+        }
       } catch {
         if (!cancelled) setRecipientCount(null);
       } finally {

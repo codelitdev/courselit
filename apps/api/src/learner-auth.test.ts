@@ -60,7 +60,8 @@ describe.serial("learner authentication", () => {
     });
     expect(unknownSchoolRes.status).toBe(404);
 
-    // Admin login-methods endpoint no longer exists
+    // Admin login-methods endpoint no longer exists, and routes outside the
+    // contract are closed to every credential.
     const adminRes = await dispatch(runtime, {
       method: "GET",
       path: "/v1/school/login-methods",
@@ -69,7 +70,7 @@ describe.serial("learner authentication", () => {
         cookie: world.owner.sessionCookie,
       },
     });
-    expect(adminRes.status).toBe(404);
+    expect(adminRes.status).toBe(403);
 
     await runtime.close();
   });

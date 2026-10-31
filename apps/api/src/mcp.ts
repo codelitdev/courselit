@@ -8,7 +8,7 @@ import { authenticateMcpRequest } from "./auth/authenticate.js";
 import {
   authorizeOperationCredential,
   type CredentialKind,
-  getOperationPolicy,
+  operationPermissionsAllow,
 } from "./auth/operation-policy.js";
 import type { DispatchDeps } from "./deps.js";
 import { apiTools } from "./mcp-tools/api.js";
@@ -66,15 +66,9 @@ export function guardMcpTool(tool: CourseLitMcpTool): CourseLitMcpTool {
         );
         if (denied) return { error: denied };
         // Dedicated tools call domain functions directly, so the operation's
-        // required permissions are enforced here rather than in a REST handler.
-        const policy = getOperationPolicy(operationId);
-        if (policy?.audience === "school") {
-          const missing = (policy.requiredPermissions ?? []).some(
-            (permission) => !input.context.permissions.has(permission),
-          );
-          if (missing || (policy.ownerOnly && !input.context.isOwner)) {
-            return { error: createPlatformError("forbidden") };
-          }
+        // required permissions are enforced here rather than by the dispatcher.
+        if (!operationPermissionsAllow(operationId, input.context)) {
+          return { error: createPlatformError("forbidden") };
         }
       }
       return tool.handler(input);

@@ -6,7 +6,6 @@ import {
   type PlatformRequestContext,
   readinessReport,
   readOrCreateRequestId,
-  selectHttpCredential,
   toPublicHttpError,
   uuidv7,
 } from "@codelitdev/platform";
@@ -23,7 +22,6 @@ import {
   communitySubscriptionBodySchema,
   createCertificateTemplateBodySchema,
   createCheckoutSessionBodySchema,
-  createCommunityBodySchema,
   createCommunityCommentBodySchema,
   createCommunityPaymentPlanBodySchema,
   createCommunityPostBodySchema,
@@ -82,6 +80,12 @@ import {
   updateContactBodySchema,
   updateContactMarketingBodySchema,
   updateContactSegmentBodySchema,
+  createMailSequenceBodySchema,
+  createMailSequenceEmailBodySchema,
+  mailTemplateBodySchema,
+  updateMailingSettingsBodySchema,
+  updateMailSequenceBodySchema,
+  updateMailSequenceEmailBodySchema,
   updateLearnerProfileBodySchema,
   updateLessonBodySchema,
   updateMediaBodySchema,
@@ -101,8 +105,8 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
-import { and, eq, ne, or } from "drizzle-orm";
-import { ActivityType, getSchoolOverview, recordActivity } from "./activities.js";
+import { and, eq } from "drizzle-orm";
+import { getSchoolOverview } from "./activities.js";
 import {
   apiKeyDisplayPrefix,
   createApiKeyRecord,
@@ -115,6 +119,7 @@ import { authenticateHttpRequest } from "./auth/authenticate.js";
 import {
   authorizeOperationCredential,
   type CredentialKind,
+  operationPermissionsAllow,
   resolveOperationId,
 } from "./auth/operation-policy.js";
 import { ADMIN_SESSION_COOKIE_NAME } from "./auth/options.js";
@@ -150,7 +155,6 @@ import {
 import {
   addCommunityCategory,
   createComment,
-  createCommunity,
   createPost,
   createReport,
   deleteComment,
@@ -162,14 +166,9 @@ import {
   getPublicCommunity,
   inviteCommunityMember,
   leaveCommunity,
-  listAvailableLearnerCommunities,
   listComments,
-  listCommunities,
-  listLearnerCommunities,
-  listLearnerFeed,
   listMemberships,
   listPosts,
-  listPublicCommunities,
   listReports,
   togglePostSubscription,
   toggleReaction,
@@ -238,12 +237,9 @@ import { getSectionDripEmail, updateSectionDripEmail } from "./drip-emails.js";
 import { processNextIntegrationJob } from "./integration-provisioning.js";
 import {
   acceptInvitation,
-  acceptTeamInvitation,
   createInvitation,
   previewInvitation,
-  previewTeamInvitation,
   rejectInvitation,
-  rejectTeamInvitation,
   resendInvitation,
   revokeInvitation,
 } from "./invitations.js";
@@ -309,7 +305,6 @@ import {
   deleteProduct,
   listProducts,
   listPublicProducts,
-  removeMember,
   updateProduct,
 } from "./products.js";
 import { evaluateQuizLesson } from "./quiz.js";
@@ -339,38 +334,25 @@ import {
 } from "./scorm.js";
 import {
   addSequenceEmail,
-  addTagToContact,
-  createSegment,
   createSequence,
-  createSubscriber,
   createTemplate,
-  deleteSegment,
   deleteSequence,
   deleteSequenceEmail,
-  deleteSubscriber,
   deleteTemplate,
   duplicateTemplate,
   getMailingSettings,
-  getOverview,
-  getSegment,
   getSequence,
   getSequenceStats,
-  getSubscriber,
   getTemplate,
-  listSegments,
   listSequences,
-  listSubscribers,
   listSystemTemplates,
   listTemplates,
   pauseSequence,
-  removeTagFromContact,
   sendSequenceEmailTest,
   startSequence,
   updateMailingSettings,
-  updateSegment,
   updateSequence,
   updateSequenceEmail,
-  updateSubscriber,
   updateTemplate,
 } from "./sendlit-service.js";
 import {
@@ -409,7 +391,6 @@ import {
 import type { DispatchResponse, IncomingRequest } from "./types.js";
 import {
   decryptIntegrationSecret,
-  encryptIntegrationSecret,
 } from "./utils/integration-secrets.js";
 
 export type { DispatchDeps };
@@ -2005,6 +1986,9 @@ export async function dispatch(
     const credentialDenied = authorizeOperationCredential(
       resolveOperationId(request.method, path),
       auth.credential.kind as CredentialKind,
+      // The only authenticated route outside the contract: it switches the
+      // browser session's selected school.
+      { internalRoute: request.method === "POST" && path === "/api/school/select" },
     );
     if (credentialDenied) return errorResponse(credentialDenied);
 
@@ -2253,6 +2237,19 @@ export async function dispatch(
       schoolId: school.value.publicId,
       principalId: auth.principalId,
     });
+
+    // The operation policy decides who may call a school operation; handlers
+    // below must not be the only thing standing between a caller and it.
+    const policyOperationId = resolveOperationId(request.method, path);
+    if (
+      policyOperationId &&
+      !operationPermissionsAllow(policyOperationId, {
+        permissions: context.permissions,
+        isOwner: school.value.isOwner,
+      })
+    ) {
+      return errorResponse(createPlatformError("forbidden"));
+    }
 
     if (request.method === "GET" && path === "/v1/notification-preferences") {
       const result = await listStaffNotificationPreferences(deps.db, {
@@ -2673,21 +2670,22 @@ export async function dispatch(
     // Mailing, Tags, Segments, Subscribers, Sequences & Templates
     // ---------------------------------------------------------------------------
     if (path === "/v1/school/mails/settings") {
-      if (!context.permissions.has("contacts:write")) {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       if (request.method === "GET") {
         const result = await getMailingSettings(deps.db, context.tenantId!, deps.clock);
         return result.ok
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
       }
-      if (request.method === "PATCH" || request.method === "PUT") {
+      if (request.method === "PATCH") {
+        const parsed = updateMailingSettingsBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
         const result = await updateMailingSettings(
           deps.db,
           context.tenantId!,
           deps.clock,
-          (request.body ?? {}) as any,
+          parsed.data,
         );
         return result.ok
           ? { status: 200, body: result.value }
@@ -2695,20 +2693,7 @@ export async function dispatch(
       }
     }
 
-    if (request.method === "GET" && path === "/v1/school/mails/overview") {
-      if (!context.permissions.has("contacts:read")) {
-        return errorResponse(createPlatformError("forbidden"));
-      }
-      const result = await getOverview(deps.db, context.tenantId!, deps.clock);
-      return result.ok
-        ? { status: 200, body: result.value }
-        : errorResponse(result.error);
-    }
-
     if (request.method === "GET" && path === "/v1/school/overview") {
-      if (!context.permissions.has("contacts:read")) {
-        return errorResponse(createPlatformError("forbidden"));
-      }
       const parsedRange = activityRangeSchema.safeParse(query.get("range") ?? "7d");
       if (!parsedRange.success) {
         return errorResponse(createPlatformError("validation_failed"));
@@ -2722,274 +2707,6 @@ export async function dispatch(
       return result.ok
         ? { status: 200, body: result.value }
         : errorResponse(result.error);
-    }
-
-    const contactTagMatch =
-      /^\/v1\/school\/(?:contacts|users)\/([^/]+)\/tags\/([^/]+)$/.exec(path);
-    if (contactTagMatch) {
-      if (!context.permissions.has("contacts:write")) {
-        return errorResponse(createPlatformError("forbidden"));
-      }
-      const contactId = decodeURIComponent(contactTagMatch[1]!);
-      const tag = decodeURIComponent(contactTagMatch[2]!);
-      if (request.method === "POST") {
-        const result = await addTagToContact(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          contactId,
-          tag,
-        );
-        if (result.ok) {
-          await recordActivity(
-            deps.db,
-            {
-              schoolId: context.tenantId!,
-              actorId: contactId,
-              type: ActivityType.TAG_ADDED,
-              entityId: contactId,
-              metadata: { tag },
-            },
-            deps.clock,
-          );
-        }
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "DELETE") {
-        const result = await removeTagFromContact(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          contactId,
-          tag,
-        );
-        if (result.ok) {
-          await recordActivity(
-            deps.db,
-            {
-              schoolId: context.tenantId!,
-              actorId: contactId,
-              type: ActivityType.TAG_REMOVED,
-              entityId: contactId,
-              metadata: { tag },
-            },
-            deps.clock,
-          );
-        }
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-    }
-
-    if (path === "/v1/school/mails/subscribers" || path === "/v1/school/contacts") {
-      if (request.method === "GET") {
-        if (!context.permissions.has("contacts:read")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await listSubscribers(deps.db, context.tenantId!, deps.clock, {
-          search: query.get("search") ?? undefined,
-          tag: query.get("tag") ?? undefined,
-          status: query.get("status") ?? undefined,
-          filter: query.get("filter") ?? undefined,
-          cursor: query.get("cursor") ?? undefined,
-          limit: query.get("limit") ? Number(query.get("limit")) : undefined,
-        });
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "POST") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await createSubscriber(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          (request.body ?? {}) as any,
-        );
-        if (result.ok) {
-          await subscribeNewsletter(deps.db, {
-            schoolId: context.tenantId!,
-            email: result.value.email,
-            name: result.value.name ?? undefined,
-            clock: deps.clock,
-          });
-          await recordActivity(
-            deps.db,
-            {
-              schoolId: context.tenantId!,
-              actorId: result.value.contactId,
-              type: ActivityType.USER_CREATED,
-              entityId: result.value.contactId,
-              metadata: { email: result.value.email },
-            },
-            deps.clock,
-          );
-          if (result.value.subscribed) {
-            await recordActivity(
-              deps.db,
-              {
-                schoolId: context.tenantId!,
-                actorId: result.value.contactId,
-                type: ActivityType.NEWSLETTER_SUBSCRIBED,
-                entityId: result.value.contactId,
-                metadata: { email: result.value.email },
-              },
-              deps.clock,
-            );
-          }
-        }
-        return result.ok
-          ? { status: 201, body: result.value }
-          : errorResponse(result.error);
-      }
-    }
-
-    const subscriberMatch =
-      /^\/v1\/school\/(?:mails\/subscribers|contacts)\/([^/]+)$/.exec(path);
-    if (subscriberMatch) {
-      const contactId = decodeURIComponent(subscriberMatch[1]!);
-      if (request.method === "GET") {
-        if (!context.permissions.has("contacts:read")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await getSubscriber(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          contactId,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "PATCH" || request.method === "PUT") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await updateSubscriber(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          contactId,
-          (request.body ?? {}) as any,
-        );
-        const updateInput = (request.body ?? {}) as { subscribed?: boolean };
-        if (result.ok && updateInput.subscribed !== undefined) {
-          await recordActivity(
-            deps.db,
-            {
-              schoolId: context.tenantId!,
-              actorId: contactId,
-              type: updateInput.subscribed
-                ? ActivityType.NEWSLETTER_SUBSCRIBED
-                : ActivityType.NEWSLETTER_UNSUBSCRIBED,
-              entityId: contactId,
-              metadata: { email: result.value.email },
-            },
-            deps.clock,
-          );
-        }
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "DELETE") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await deleteSubscriber(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          contactId,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-    }
-
-    if (path === "/v1/school/segments") {
-      if (request.method === "GET") {
-        if (!context.permissions.has("contacts:read")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await listSegments(deps.db, context.tenantId!, deps.clock, {
-          search: query.get("search") ?? undefined,
-          cursor: query.get("cursor") ?? undefined,
-          limit: query.get("limit") ? Number(query.get("limit")) : undefined,
-        });
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "POST") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await createSegment(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          (request.body ?? {}) as any,
-        );
-        return result.ok
-          ? { status: 201, body: result.value }
-          : errorResponse(result.error);
-      }
-    }
-
-    const segmentMatch = /^\/v1\/school\/segments\/([^/]+)$/.exec(path);
-    if (segmentMatch) {
-      const segmentId = decodeURIComponent(segmentMatch[1]!);
-      if (request.method === "GET") {
-        if (!context.permissions.has("contacts:read")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await getSegment(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          segmentId,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "PATCH" || request.method === "PUT") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await updateSegment(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          segmentId,
-          (request.body ?? {}) as any,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
-      if (request.method === "DELETE") {
-        if (!context.permissions.has("contacts:write")) {
-          return errorResponse(createPlatformError("forbidden"));
-        }
-        const result = await deleteSegment(
-          deps.db,
-          context.tenantId!,
-          deps.clock,
-          segmentId,
-        );
-        return result.ok
-          ? { status: 200, body: result.value }
-          : errorResponse(result.error);
-      }
     }
 
     if (path === "/v1/school/mails/sequences") {
@@ -3012,11 +2729,15 @@ export async function dispatch(
         if (!context.permissions.has("contacts:write")) {
           return errorResponse(createPlatformError("forbidden"));
         }
+        const parsed = createMailSequenceBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
         const result = await createSequence(
           deps.db,
           context.tenantId!,
           deps.clock,
-          (request.body ?? {}) as any,
+          parsed.data,
         );
         return result.ok
           ? { status: 201, body: result.value }
@@ -3139,14 +2860,18 @@ export async function dispatch(
       }
       const sequenceId = decodeURIComponent(sequenceEmailItemMatch[1]!);
       const emailId = decodeURIComponent(sequenceEmailItemMatch[2]!);
-      if (request.method === "PATCH" || request.method === "PUT") {
+      if (request.method === "PATCH") {
+        const parsed = updateMailSequenceEmailBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
         const result = await updateSequenceEmail(
           deps.db,
           context.tenantId!,
           deps.clock,
           sequenceId,
           emailId,
-          (request.body ?? {}) as any,
+          parsed.data,
         );
         return result.ok
           ? { status: 200, body: result.value }
@@ -3161,7 +2886,7 @@ export async function dispatch(
           emailId,
         );
         return result.ok
-          ? { status: 200, body: result.value }
+          ? { status: 204, body: undefined }
           : errorResponse(result.error);
       }
     }
@@ -3173,12 +2898,16 @@ export async function dispatch(
         return errorResponse(createPlatformError("forbidden"));
       }
       const sequenceId = decodeURIComponent(sequenceEmailsMatch[1]!);
+      const parsed = createMailSequenceEmailBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
       const result = await addSequenceEmail(
         deps.db,
         context.tenantId!,
         deps.clock,
         sequenceId,
-        (request.body ?? {}) as any,
+        parsed.data,
       );
       return result.ok
         ? { status: 201, body: result.value }
@@ -3202,16 +2931,20 @@ export async function dispatch(
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
       }
-      if (request.method === "PATCH" || request.method === "PUT") {
+      if (request.method === "PATCH") {
         if (!context.permissions.has("contacts:write")) {
           return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = updateMailSequenceBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
         }
         const result = await updateSequence(
           deps.db,
           context.tenantId!,
           deps.clock,
           sequenceId,
-          (request.body ?? {}) as any,
+          parsed.data,
         );
         return result.ok
           ? { status: 200, body: result.value }
@@ -3228,7 +2961,7 @@ export async function dispatch(
           sequenceId,
         );
         return result.ok
-          ? { status: 200, body: result.value }
+          ? { status: 204, body: undefined }
           : errorResponse(result.error);
       }
     }
@@ -3261,11 +2994,15 @@ export async function dispatch(
         if (!context.permissions.has("contacts:write")) {
           return errorResponse(createPlatformError("forbidden"));
         }
+        const parsed = mailTemplateBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
         const result = await createTemplate(
           deps.db,
           context.tenantId!,
           deps.clock,
-          (request.body ?? {}) as any,
+          parsed.data as Parameters<typeof createTemplate>[3],
         );
         return result.ok
           ? { status: 201, body: result.value }
@@ -3308,16 +3045,20 @@ export async function dispatch(
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
       }
-      if (request.method === "PATCH" || request.method === "PUT") {
+      if (request.method === "PATCH") {
         if (!context.permissions.has("contacts:write")) {
           return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = mailTemplateBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
         }
         const result = await updateTemplate(
           deps.db,
           context.tenantId!,
           deps.clock,
           templateId,
-          (request.body ?? {}) as any,
+          parsed.data as Parameters<typeof updateTemplate>[4],
         );
         return result.ok
           ? { status: 200, body: result.value }
@@ -3334,7 +3075,7 @@ export async function dispatch(
           templateId,
         );
         return result.ok
-          ? { status: 200, body: result.value }
+          ? { status: 204, body: undefined }
           : errorResponse(result.error);
       }
     }

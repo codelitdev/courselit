@@ -65,7 +65,8 @@ const openApiTags = [
   },
   {
     name: "Contacts & Marketing",
-    description: "School contacts, contact segments, and segment membership.",
+    description:
+      "School contacts, contact segments, segment membership, and email broadcasts, sequences, templates, and mailing settings.",
   },
   {
     name: "Platform Billing",
@@ -77,7 +78,8 @@ const openApiTags = [
   },
   {
     name: "Notifications",
-    description: "School administrator notification reads and status updates.",
+    description:
+      "School administrator notification reads and status updates, and team members' notification preferences.",
   },
 ] as const;
 
@@ -94,7 +96,12 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (isPathOrChild(path, "/v1/learner") || path === "/v1/memberships") {
     return "Learners";
   }
-  if (isPathOrChild(path, "/v1/notifications")) return "Notifications";
+  if (
+    isPathOrChild(path, "/v1/notifications") ||
+    isPathOrChild(path, "/v1/notification-preferences")
+  ) {
+    return "Notifications";
+  }
   if (/^\/v1\/public\/[^/]+\/checkout-sessions(?:\/|$)/.test(path)) {
     return "Storefront & Payments";
   }
@@ -121,6 +128,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
   }
   if (
     isPathOrChild(path, "/v1/communities") ||
+    path === "/v1/community" ||
     path.startsWith("/v1/community-") ||
     isPathOrChild(path, "/v1/spaces")
   ) {
@@ -138,7 +146,8 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (isPathOrChild(path, "/v1/media")) return "Media";
   if (
     isPathOrChild(path, "/v1/contacts") ||
-    isPathOrChild(path, "/v1/contact-segments")
+    isPathOrChild(path, "/v1/contact-segments") ||
+    isPathOrChild(path, "/v1/school/mails")
   ) {
     return "Contacts & Marketing";
   }

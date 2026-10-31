@@ -101,7 +101,7 @@ export async function getProductAnalytics(
     }
   | { ok: false; error: PlatformError }
 > {
-  if (!ctx.tenantId || !ctx.permissions.has("products:read")) {
+  if (!ctx.tenantId || !ctx.permissions.has("analytics:read")) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
   const products = await db

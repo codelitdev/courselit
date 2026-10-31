@@ -21,6 +21,8 @@ const communityParityExemptions = [
   ["updateLearnerNotificationPreference", "learner.notifications.preferences.update"],
   ["markLearnerNotificationRead", "learner.notifications.read"],
   ["markAllLearnerNotificationsRead", "learner.notifications.readAll"],
+  ["listStaffNotificationPreferences", "admin.notifications.preferences.list"],
+  ["updateStaffNotificationPreference", "admin.notifications.preferences.update"],
   ["listAdminNotifications", "admin.notifications.list"],
   ["markAdminNotificationRead", "admin.notifications.read"],
   ["markAllAdminNotificationsRead", "admin.notifications.readAll"],

@@ -825,7 +825,20 @@ describe("operation policy enforcement", () => {
     expect(authorizeOperationCredential(null, "api_key")).toMatchObject({
       code: "forbidden",
     });
-    expect(authorizeOperationCredential(null, "session")).toBeNull();
+    // Routes outside the contract are closed to every credential unless named
+    // as an internal browser route.
+    expect(authorizeOperationCredential(null, "session")).toMatchObject({
+      code: "forbidden",
+    });
+    expect(authorizeOperationCredential(null, "oauth")).toMatchObject({
+      code: "forbidden",
+    });
+    expect(
+      authorizeOperationCredential(null, "session", { internalRoute: true }),
+    ).toBeNull();
+    expect(
+      authorizeOperationCredential(null, "api_key", { internalRoute: true }),
+    ).toMatchObject({ code: "forbidden" });
     expect(authorizeOperationCredential("listProducts", "api_key")).toBeNull();
     for (const operationId of [
       "listApiKeys",
