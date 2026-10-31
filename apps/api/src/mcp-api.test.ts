@@ -135,6 +135,45 @@ describe.serial("platform conformance: REST and MCP parity", () => {
     expect([...required].filter((id) => !allowsMcpCredential(id))).toEqual([]);
     expect([...REACHABLE_BUT_EXEMPT].filter((id) => required.has(id))).toEqual([]);
   });
+
+  it("gives every tool schema node a single type", async () => {
+    // ChatGPT refuses the whole tool list when a node has no type or a type array.
+    const { runtime, world } = await setup();
+    const listed = await dispatch(runtime, {
+      method: "POST",
+      path: "/mcp",
+      headers: owner(world),
+      body: { jsonrpc: "2.0", id: 1, method: "tools/list", params: {} },
+    });
+    type Schema = Record<string, unknown>;
+    const problems: string[] = [];
+    const visit = (node: Schema, at: string) => {
+      if (Array.isArray(node.anyOf)) {
+        for (const [i, member] of (node.anyOf as Schema[]).entries()) {
+          visit(member, `${at}.anyOf[${i}]`);
+        }
+        return;
+      }
+      if (typeof node.type !== "string") problems.push(at);
+      for (const [key, child] of Object.entries(
+        (node.properties ?? {}) as Record<string, Schema>,
+      )) {
+        visit(child, `${at}.${key}`);
+      }
+      if (node.items && typeof node.items === "object")
+        visit(node.items as Schema, `${at}[]`);
+      if (node.additionalProperties && typeof node.additionalProperties === "object") {
+        visit(node.additionalProperties as Schema, `${at}{}`);
+      }
+    };
+    const tools = (
+      listed.body as { result: { tools: Array<{ name: string; inputSchema: Schema }> } }
+    ).result.tools;
+    expect(tools.length).toBeGreaterThan(0);
+    for (const tool of tools) visit(tool.inputSchema, tool.name);
+    expect(problems).toEqual([]);
+    await runtime.close();
+  });
 });
 
 describe.serial("generic api.* MCP tools", () => {

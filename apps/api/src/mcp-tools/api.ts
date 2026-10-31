@@ -117,12 +117,16 @@ function unknownOperation(operationId: string) {
   };
 }
 
+// Every schema node has a single `type`: some MCP clients (ChatGPT) refuse a
+// tool list with typeless properties or type arrays.
 const queryValueSchema = z.union([
   z.string(),
   z.number(),
   z.boolean(),
-  z.array(z.union([z.string(), z.number(), z.boolean()])),
+  z.array(z.string()),
 ]);
+
+const bodySchema = z.object({}).passthrough();
 
 const callInputShape = {
   operationId: z.string().min(1).describe("An operationId from api.list_operations."),
@@ -339,7 +343,7 @@ export const apiTools: McpToolModule = (deps) => [
     `Runs a CourseLit API operation that creates or changes data (POST, PATCH or PUT). Pass the JSON request body in body. ${CALL_GUIDE} Repeating a create usually makes a duplicate or fails with conflict, so read before retrying.`,
     z.object({
       ...callInputShape,
-      body: z.unknown().optional().describe("The JSON request body."),
+      body: bodySchema.optional().describe("The JSON request body."),
     }),
   ),
   callTool(
@@ -348,8 +352,7 @@ export const apiTools: McpToolModule = (deps) => [
     `Runs a CourseLit API DELETE operation. Deletion cannot be undone: confirm the target with the user first and pass confirm: true. ${CALL_GUIDE}`,
     z.object({
       ...callInputShape,
-      body: z
-        .unknown()
+      body: bodySchema
         .optional()
         .describe("The JSON request body, if the operation takes one."),
       confirm: z.boolean().optional(),
