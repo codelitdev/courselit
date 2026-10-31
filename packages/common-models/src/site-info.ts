@@ -13,7 +13,8 @@ export default interface SiteInfo {
     codeInjectionBody?: string;
     stripeSecret?: string;
     stripeWebhookSecret?: string;
-    paypalSecret?: string;
+    paypalClientId?: string;
+    paypalClientSecret?: string;
     paytmSecret?: string;
     mailingAddress?: string;
     hideCourseLitBranding?: boolean;
@@ -26,6 +27,9 @@ export default interface SiteInfo {
     lemonsqueezySubscriptionMonthlyVariantId?: string;
     lemonsqueezySubscriptionYearlyVariantId?: string;
     lemonsqueezyWebhookSecret?: string;
+    paypalProductId?: string;
+    paypalMonthlyPlanId?: string;
+    paypalYearlyPlanId?: string;
     logins?: LoginProvider[];
     ssoTrustedDomain?: string;
 }

@@ -179,6 +179,48 @@ describe("Payment Initiate Route", () => {
         expect(response.status).toBe(404);
     });
 
+    it("initiates PayPal payments using the existing payment abstraction", async () => {
+        mockRequest.json = jest.fn().mockResolvedValue({
+            id: "course-123",
+            type: Constants.MembershipEntityType.COURSE,
+            planId: "planA",
+            origin: "https://school.example.com",
+        });
+
+        (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            planId: "planA",
+            type: Constants.PaymentPlanType.ONE_TIME,
+            entityId: "course-123",
+            entityType: Constants.MembershipEntityType.COURSE,
+            archived: false,
+            internal: false,
+            oneTimeAmount: 99,
+        });
+
+        const { getPaymentMethodFromSettings } = require("@/payments-new");
+        (getPaymentMethodFromSettings as jest.Mock).mockResolvedValue({
+            name: "paypal",
+            initiate: jest
+                .fn()
+                .mockResolvedValue("https://paypal.test/approve"),
+            getCurrencyISOCode: jest.fn().mockResolvedValue("USD"),
+            validateSubscription: jest.fn().mockResolvedValue(true),
+        });
+
+        const response = await POST(mockRequest);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.status).toBe("initiated");
+        expect(body.paymentTracker).toBe("https://paypal.test/approve");
+        expect(Invoice.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                paymentProcessor: "paypal",
+                paymentProcessorEntityId: "https://paypal.test/approve",
+            }),
+        );
+    });
+
     describe("Free Community with Included Products", () => {
         beforeEach(() => {
             // Reset to community context for these tests
