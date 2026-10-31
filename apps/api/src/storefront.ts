@@ -87,12 +87,13 @@ function normalizeSchoolCurrency(value: string | null | undefined): string {
   return currency && /^[A-Z]{3}$/.test(currency) ? currency : "USD";
 }
 
+// A product's plans are part of the product, not the website.
 function canRead(ctx: StorefrontContext): boolean {
-  return Boolean(ctx.tenantId && ctx.permissions.has("storefront:read"));
+  return Boolean(ctx.tenantId && ctx.permissions.has("products:read"));
 }
 
 function canWrite(ctx: StorefrontContext): boolean {
-  return Boolean(ctx.tenantId && ctx.permissions.has("storefront:write"));
+  return Boolean(ctx.tenantId && ctx.permissions.has("products:write"));
 }
 
 export function sourceTypeForKind(kind: TargetPlanKind): SourcePlanType {

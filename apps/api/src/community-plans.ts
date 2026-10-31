@@ -46,19 +46,11 @@ export type CommunityPlanDto = {
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 
 function canRead(context: StorefrontContext) {
-  return Boolean(
-    context.tenantId &&
-      (context.permissions.has("storefront:read") ||
-        context.permissions.has("communities:read")),
-  );
+  return Boolean(context.tenantId && context.permissions.has("communities:read"));
 }
 
 function canWrite(context: StorefrontContext) {
-  return Boolean(
-    context.tenantId &&
-      (context.permissions.has("storefront:write") ||
-        context.permissions.has("communities:write")),
-  );
+  return Boolean(context.tenantId && context.permissions.has("communities:write"));
 }
 
 function invalidPlan(reason: string): Result<never> {

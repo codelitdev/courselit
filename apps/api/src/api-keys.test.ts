@@ -612,6 +612,42 @@ describe.serial("school API keys", () => {
     await runtime.close();
   });
 
+  it("manages product plans with products and community plans with communities", async () => {
+    const { runtime, world } = await setup();
+    const [community] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const productPlans = `/v1/products/${world.noteA.publicId}/plans`;
+    const communityPlans = `/v1/communities/${community!.publicId}/plans`;
+    const plan = { name: "Free access", kind: "free", amountMinor: 0 };
+    const keyWith = async (permissions: string[]) =>
+      (
+        (await createKey(runtime, world, { name: permissions.join(" "), permissions }))
+          .body as CreatedKey
+      ).key;
+    const call = (key: string, method: string, path: string, body?: unknown) =>
+      dispatch(runtime, { method, path, headers: { "x-api-key": key }, body });
+
+    const products = await keyWith(["products:write"]);
+    expect((await call(products, "POST", productPlans, plan)).status).toBe(201);
+    expect((await call(products, "GET", productPlans)).status).toBe(200);
+    expect((await call(products, "POST", communityPlans, plan)).status).toBe(403);
+
+    const communities = await keyWith(["communities:write"]);
+    expect((await call(communities, "POST", communityPlans, plan)).status).toBe(201);
+    expect((await call(communities, "GET", communityPlans)).status).toBe(200);
+    expect((await call(communities, "GET", productPlans)).status).toBe(403);
+
+    // Website access does not reach pricing.
+    const website = await keyWith(["storefront:write"]);
+    expect((await call(website, "GET", productPlans)).status).toBe(403);
+    expect((await call(website, "POST", productPlans, plan)).status).toBe(403);
+    expect((await call(website, "GET", communityPlans)).status).toBe(403);
+    expect((await call(website, "POST", communityPlans, plan)).status).toBe(403);
+    await runtime.close();
+  });
+
   it("accepts keys only from the x-api-key header", async () => {
     const { runtime, world } = await setup();
     const key = world.apiKeyA.raw;
