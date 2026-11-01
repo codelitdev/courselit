@@ -62137,6 +62137,9 @@
                               "published_with_changes"
                             ]
                           },
+                          "deletable": {
+                            "type": "boolean"
+                          },
                           "featuredImage": {
                             "type": "object",
                             "properties": {
@@ -62203,7 +62206,8 @@
                           "name",
                           "kind",
                           "slug",
-                          "status"
+                          "status",
+                          "deletable"
                         ]
                       }
                     }
@@ -62507,6 +62511,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -62573,7 +62580,8 @@
                     "name",
                     "kind",
                     "slug",
-                    "status"
+                    "status",
+                    "deletable"
                   ]
                 }
               }
@@ -62918,6 +62926,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -62980,9 +62991,6 @@
                     },
                     "pageId": {
                       "type": "string"
-                    },
-                    "deletable": {
-                      "type": "boolean"
                     },
                     "publishedAt": {
                       "type": "string",
@@ -63127,8 +63135,8 @@
                     "kind",
                     "slug",
                     "status",
-                    "pageId",
                     "deletable",
+                    "pageId",
                     "layout",
                     "draftLayout"
                   ]
@@ -63548,6 +63556,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -63610,9 +63621,6 @@
                     },
                     "pageId": {
                       "type": "string"
-                    },
-                    "deletable": {
-                      "type": "boolean"
                     },
                     "publishedAt": {
                       "type": "string",
@@ -63757,8 +63765,8 @@
                     "kind",
                     "slug",
                     "status",
-                    "pageId",
                     "deletable",
+                    "pageId",
                     "layout",
                     "draftLayout"
                   ]
@@ -63819,6 +63827,320 @@
                     "message"
                   ]
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "School Website"
+        ],
+        "parameters": [
+          {
+            "name": "pageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -66022,6 +66344,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -66088,7 +66413,8 @@
                     "name",
                     "kind",
                     "slug",
-                    "status"
+                    "status",
+                    "deletable"
                   ]
                 }
               }
@@ -66433,6 +66759,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -66495,9 +66824,6 @@
                     },
                     "pageId": {
                       "type": "string"
-                    },
-                    "deletable": {
-                      "type": "boolean"
                     },
                     "publishedAt": {
                       "type": "string",
@@ -66642,8 +66968,8 @@
                     "kind",
                     "slug",
                     "status",
-                    "pageId",
                     "deletable",
+                    "pageId",
                     "layout",
                     "draftLayout"
                   ]
@@ -66990,6 +67316,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -67056,7 +67385,8 @@
                     "name",
                     "kind",
                     "slug",
-                    "status"
+                    "status",
+                    "deletable"
                   ]
                 }
               }
@@ -67396,6 +67726,9 @@
                               "published_with_changes"
                             ]
                           },
+                          "deletable": {
+                            "type": "boolean"
+                          },
                           "featuredImage": {
                             "type": "object",
                             "properties": {
@@ -67462,7 +67795,8 @@
                           "name",
                           "kind",
                           "slug",
-                          "status"
+                          "status",
+                          "deletable"
                         ]
                       }
                     }
@@ -67766,6 +68100,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -67832,7 +68169,8 @@
                     "name",
                     "kind",
                     "slug",
-                    "status"
+                    "status",
+                    "deletable"
                   ]
                 }
               }
@@ -68177,6 +68515,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -68343,6 +68684,7 @@
                     "kind",
                     "slug",
                     "status",
+                    "deletable",
                     "blogId",
                     "meta",
                     "draftTitle",
@@ -68779,6 +69121,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "deletable": {
+                      "type": "boolean"
+                    },
                     "featuredImage": {
                       "type": "object",
                       "properties": {
@@ -68945,6 +69290,7 @@
                     "kind",
                     "slug",
                     "status",
+                    "deletable",
                     "blogId",
                     "meta",
                     "draftTitle",
@@ -69300,6 +69646,320 @@
             "oauth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "School Website"
+        ],
+        "parameters": [
+          {
+            "name": "blogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
       }
     },
     "/v1/school/website/blogs/{blogId}/discard-draft": {
@@ -69349,6 +70009,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "deletable": {
+                      "type": "boolean"
                     },
                     "featuredImage": {
                       "type": "object",
@@ -69516,6 +70179,7 @@
                     "kind",
                     "slug",
                     "status",
+                    "deletable",
                     "blogId",
                     "meta",
                     "draftTitle",

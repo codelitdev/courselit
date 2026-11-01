@@ -22,6 +22,8 @@ import {
 } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
+  deleteUnreferencedMedia,
+  type MediaLitClient,
   mediaIdsForRichTextContent,
   mediaRefFromCatalog,
   normalizeMediaRef,
@@ -117,13 +119,13 @@ async function toDto(
     discussions: row.discussions,
     includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: row.discussionSpaceId
-      ? (
+      ? ((
           await db
             .select({ publicId: schema.spaces.publicId })
             .from(schema.spaces)
             .where(eq(schema.spaces.id, row.discussionSpaceId))
             .limit(1)
-        )[0]?.publicId ?? null
+        )[0]?.publicId ?? null)
       : null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),
@@ -579,8 +581,7 @@ export async function updateProduct(
           ),
         )
         .limit(1);
-      const included =
-        input.includedWithCommunity ?? row.includedWithCommunity;
+      const included = input.includedWithCommunity ?? row.includedWithCommunity;
       if (activePlans.length === 0 && !included) {
         return {
           ok: false as const,
@@ -782,16 +783,19 @@ export async function updateProduct(
   });
 }
 
+/** Deletes a product, then the media that only it, its lessons, its sales
+ * page, or its certificate template used. */
 export async function deleteProduct(
   db: AppDb,
   ctx: Ctx,
+  mediaLit: MediaLitClient,
   productPublicId: string,
   clock: Clock,
 ): Promise<{ ok: true; value: { id: string } } | { ok: false; error: PlatformError }> {
   if (!ctx.permissions.has("products:delete")) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const existing = await tx
       .select()
       .from(schema.products)
@@ -851,43 +855,38 @@ export async function deleteProduct(
           eq(schema.spaceUnlocks.entityId, row.publicId),
         ),
       );
-    const productLessons = await tx
-      .select({ id: schema.lessons.id })
-      .from(schema.lessons)
-      .where(eq(schema.lessons.productId, row.id));
-    if (productLessons.length > 0) {
-      await tx.delete(schema.mediaReferences).where(
-        and(
-          eq(schema.mediaReferences.schoolId, ctx.tenantId!),
-          inArray(schema.mediaReferences.resourceType, [
-            "lesson_media",
-            "lesson_content",
-          ]),
-          inArray(
-            schema.mediaReferences.resourceInternalId,
-            productLessons.map((lesson) => lesson.id),
+    const ownedIds = async (
+      table:
+        | typeof schema.lessons
+        | typeof schema.websitePages
+        | typeof schema.certificateTemplates,
+    ) =>
+      (
+        await tx.select({ id: table.id }).from(table).where(eq(table.productId, row.id))
+      ).map((owned) => owned.id);
+    // The sales page and certificate template go by cascade, so their media
+    // references are released here along with the product's own.
+    const owners: Array<[string[], string[]]> = [
+      [["product_artwork", "product_content"], [row.id]],
+      [["lesson_media", "lesson_content"], await ownedIds(schema.lessons)],
+      [["website_page"], await ownedIds(schema.websitePages)],
+      [["certificate_template"], await ownedIds(schema.certificateTemplates)],
+    ];
+    const releasedMediaIds: string[] = [];
+    for (const [resourceTypes, resourceIds] of owners) {
+      if (resourceIds.length === 0) continue;
+      const released = await tx
+        .delete(schema.mediaReferences)
+        .where(
+          and(
+            eq(schema.mediaReferences.schoolId, ctx.tenantId!),
+            inArray(schema.mediaReferences.resourceType, resourceTypes),
+            inArray(schema.mediaReferences.resourceInternalId, resourceIds),
           ),
-        ),
-      );
+        )
+        .returning({ mediaId: schema.mediaReferences.mediaId });
+      releasedMediaIds.push(...released.map((reference) => reference.mediaId));
     }
-    await tx
-      .delete(schema.mediaReferences)
-      .where(
-        and(
-          eq(schema.mediaReferences.schoolId, ctx.tenantId!),
-          eq(schema.mediaReferences.resourceType, "product_artwork"),
-          eq(schema.mediaReferences.resourceInternalId, row.id),
-        ),
-      );
-    await tx
-      .delete(schema.mediaReferences)
-      .where(
-        and(
-          eq(schema.mediaReferences.schoolId, ctx.tenantId!),
-          eq(schema.mediaReferences.resourceType, "product_content"),
-          eq(schema.mediaReferences.resourceInternalId, row.id),
-        ),
-      );
     await tx.delete(schema.products).where(eq(schema.products.id, row.id));
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -899,8 +898,21 @@ export async function deleteProduct(
       requestId: ctx.requestId,
       createdAt: clock.now(),
     });
-    return { ok: true as const, value: { id: row.publicId } };
+    return { ok: true as const, value: { id: row.publicId }, releasedMediaIds };
   });
+  if (!result.ok) return result;
+  await deleteUnreferencedMedia(
+    db,
+    mediaLit,
+    {
+      schoolId: ctx.tenantId!,
+      mediaIds: result.releasedMediaIds,
+      actorId: ctx.principalId,
+      requestId: ctx.requestId,
+    },
+    clock,
+  );
+  return { ok: true, value: result.value };
 }
 
 function slugify(title: string, fallback: string): string {

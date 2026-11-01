@@ -9,7 +9,12 @@ import type { MediaRef } from "@courselit/api-contract";
 import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
-import { normalizeMediaRef, syncMediaReferencesForContent } from "./media.js";
+import {
+  deleteUnreferencedMedia,
+  type MediaLitClient,
+  normalizeMediaRef,
+  syncMediaReferencesForContent,
+} from "./media.js";
 import type { AppDb } from "./types.js";
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
@@ -768,6 +773,7 @@ export type WebsiteContentSummaryDto = {
   kind: "page" | "blog";
   slug: string;
   status: WebsiteContentStatus;
+  deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
   updatedAt?: string | null;
@@ -775,7 +781,6 @@ export type WebsiteContentSummaryDto = {
 
 export type WebsitePageDto = WebsiteContentSummaryDto & {
   pageId: string;
-  deletable: boolean;
   publishedAt: string | null;
   layout: WebsiteWidgetRow[];
   title: string | null;
@@ -802,6 +807,7 @@ function toPageSummary(row: PageRow): WebsiteContentSummaryDto {
     kind: "page",
     slug: row.slug,
     status: derivePageStatus(row),
+    deletable: row.deletable,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -1113,6 +1119,86 @@ export async function discardWebsitePageDraft(
   });
 }
 
+export type WebsiteDeleteInput = {
+  schoolId: string;
+  actorId: string;
+  requestId: string;
+};
+
+/** Removes one website resource with its media references and audit event,
+ * then deletes the media it was the last user of. */
+async function deleteWebsiteResource(
+  db: AppDb,
+  mediaLit: MediaLitClient,
+  input: WebsiteDeleteInput,
+  resource: {
+    resourceType: "website_page" | "blog_artwork";
+    id: string;
+    publicId: string;
+    auditResourceType: string;
+    action: string;
+    remove: (tx: AppDb) => Promise<unknown>;
+  },
+  clock: Clock,
+): Promise<void> {
+  const references = and(
+    eq(schema.mediaReferences.schoolId, input.schoolId),
+    eq(schema.mediaReferences.resourceType, resource.resourceType),
+    eq(schema.mediaReferences.resourceInternalId, resource.id),
+  );
+  const mediaIds = await db.transaction(async (tx) => {
+    const released = await tx
+      .delete(schema.mediaReferences)
+      .where(references)
+      .returning({ mediaId: schema.mediaReferences.mediaId });
+    await resource.remove(tx as AppDb);
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: input.schoolId,
+      actorId: input.actorId,
+      action: resource.action,
+      resourceType: resource.auditResourceType,
+      resourceId: resource.publicId,
+      requestId: input.requestId,
+      createdAt: clock.now(),
+    });
+    return released.map((row) => row.mediaId);
+  });
+  await deleteUnreferencedMedia(db, mediaLit, { ...input, mediaIds }, clock);
+}
+
+/** Deletes an ordinary page. The home page, system pages and sales pages are
+ * not deletable; sales pages go with their product or community. */
+export async function deleteWebsitePage(
+  db: AppDb,
+  mediaLit: MediaLitClient,
+  input: WebsiteDeleteInput,
+  pageId: string,
+  clock: Clock,
+): Promise<Result<null>> {
+  const existing = await findPage(db, input.schoolId, pageId);
+  if (!existing) return notFound();
+  if (!existing.deletable || existing.productId || existing.communityId) {
+    return conflict("page_not_deletable");
+  }
+  await deleteWebsiteResource(
+    db,
+    mediaLit,
+    input,
+    {
+      resourceType: "website_page",
+      id: existing.id,
+      publicId: existing.publicId,
+      auditResourceType: "website_page",
+      action: "website_page.deleted",
+      remove: (tx) =>
+        tx.delete(schema.websitePages).where(eq(schema.websitePages.id, existing.id)),
+    },
+    clock,
+  );
+  return { ok: true, value: null };
+}
+
 export type PublicWebsitePageDto = {
   pageId: string;
   name: string;
@@ -1383,6 +1469,7 @@ function toBlogSummary(row: BlogRow): WebsiteContentSummaryDto {
     kind: "blog",
     slug: row.slug,
     status: deriveBlogStatus(row),
+    deletable: true,
     featuredImage,
     excerpt,
     updatedAt: row.updatedAt.toISOString(),
@@ -1584,6 +1671,33 @@ export async function publishBlogPost(
     await syncBlogMediaReferences(tx as AppDb, row!, clock);
     return { ok: true as const, value: toBlogDto(row!) };
   });
+}
+
+export async function deleteBlogPost(
+  db: AppDb,
+  mediaLit: MediaLitClient,
+  input: WebsiteDeleteInput,
+  blogId: string,
+  clock: Clock,
+): Promise<Result<null>> {
+  const existing = await findBlogPost(db, input.schoolId, blogId);
+  if (!existing) return notFound();
+  await deleteWebsiteResource(
+    db,
+    mediaLit,
+    input,
+    {
+      resourceType: "blog_artwork",
+      id: existing.id,
+      publicId: existing.publicId,
+      auditResourceType: "blog_post",
+      action: "blog_post.deleted",
+      remove: (tx) =>
+        tx.delete(schema.blogPosts).where(eq(schema.blogPosts.id, existing.id)),
+    },
+    clock,
+  );
+  return { ok: true, value: null };
 }
 
 export async function discardBlogPostDraft(

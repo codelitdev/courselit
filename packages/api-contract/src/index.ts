@@ -511,6 +511,8 @@ export const websiteContentSummarySchema = z.object({
   kind: z.enum(["page", "blog"]),
   slug: z.string(),
   status: z.enum(["draft", "published", "published_with_changes"]),
+  /** False for the home page and other pages the website needs. */
+  deletable: z.boolean(),
   featuredImage: mediaRefSchema.nullable().optional(),
   excerpt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
@@ -4063,6 +4065,19 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
+  deleteSchoolWebsitePage: {
+    method: "DELETE",
+    path: "/v1/school/website/pages/:pageId",
+    pathParams: z.object({ pageId: z.string().min(1) }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
   // Website / Branding
   getSchoolWebsiteBranding: {
     method: "GET",
@@ -4231,6 +4246,19 @@ export const contract = c.router({
     body: c.noBody(),
     responses: {
       200: websiteBlogSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  deleteSchoolWebsiteBlog: {
+    method: "DELETE",
+    path: "/v1/school/website/blogs/:blogId",
+    pathParams: z.object({ blogId: z.string().min(1) }),
+    responses: {
+      204: z.undefined(),
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,

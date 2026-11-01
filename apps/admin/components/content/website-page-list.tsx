@@ -1,9 +1,10 @@
 "use client";
 
 import type { MediaRef } from "@courselit/api-contract";
-import { FileText, Plus } from "lucide-react";
+import { FileText, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AuthGate } from "@/components/auth-gate";
 import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
@@ -18,6 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/codelit/dropdown-menu";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 
@@ -27,6 +34,7 @@ type WebsiteContent = {
   kind: "page" | "blog";
   slug: string;
   status: "draft" | "published" | "published_with_changes";
+  deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
   updatedAt?: string | null;
@@ -58,6 +66,8 @@ export function WebsitePageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const createFormRef = useRef({ name: "" });
+  const [pageToDelete, setPageToDelete] = useState<WebsiteContent | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const editorReturnPath = onlyBlogs ? "/website/blogs" : "/website/pages";
 
   useEffect(() => {
@@ -159,6 +169,33 @@ export function WebsitePageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) 
     }
   }
 
+  async function deletePage() {
+    if (!pageToDelete) return;
+    const kind = onlyBlogs ? "blog" : "page";
+    setDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/v1/school/website/${onlyBlogs ? "blogs" : "pages"}/${encodeURIComponent(pageToDelete.id)}`,
+        { method: "DELETE", credentials: "include" },
+      );
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(body?.message || `Unable to delete the ${kind}.`);
+      }
+      setPages((current) => current.filter((page) => page.id !== pageToDelete.id));
+      setPageToDelete(null);
+      toast.success(onlyBlogs ? "Blog deleted." : "Page deleted.");
+    } catch (caught: unknown) {
+      toast.error(
+        caught instanceof Error ? caught.message : `Unable to delete the ${kind}.`,
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <AuthGate>
       <main className="page-shell">
@@ -212,46 +249,105 @@ export function WebsitePageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) 
             aria-label={onlyBlogs ? "Blogs" : "Pages"}
           >
             {visiblePages.map((page) => (
-              <FeaturedCard
-                key={page.id}
-                href={`${onlyBlogs ? "/website/blogs" : "/pages"}/${encodeURIComponent(page.id)}/edit?redirectTo=${encodeURIComponent(editorReturnPath)}`}
-                title={page.name}
-                imageUrl={imageUrl(page.featuredImage)}
-                imageAlt={page.name}
-              >
-                {!onlyBlogs ? (
-                  page.excerpt ? (
-                    <p className="mt-2 line-clamp-2 min-h-10 text-sm text-muted-foreground">
-                      {page.excerpt}
-                    </p>
-                  ) : (
-                    <p className="mt-2 min-h-10 text-sm text-muted-foreground">
-                      No description
-                    </p>
-                  )
-                ) : null}
-                <div className="mt-3 flex items-center justify-between gap-3">
+              <div key={page.id} className="relative">
+                <FeaturedCard
+                  href={`${onlyBlogs ? "/website/blogs" : "/pages"}/${encodeURIComponent(page.id)}/edit?redirectTo=${encodeURIComponent(editorReturnPath)}`}
+                  title={page.name}
+                  imageUrl={imageUrl(page.featuredImage)}
+                  imageAlt={page.name}
+                >
                   {!onlyBlogs ? (
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
-                      <FileText className="size-3.5" />
-                      Page
-                    </span>
+                    page.excerpt ? (
+                      <p className="mt-2 line-clamp-2 min-h-10 text-sm text-muted-foreground">
+                        {page.excerpt}
+                      </p>
+                    ) : (
+                      <p className="mt-2 min-h-10 text-sm text-muted-foreground">
+                        No description
+                      </p>
+                    )
                   ) : null}
-                  <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
-                    {contentStatusLabel(page.status)}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span className="truncate">/{page.slug}</span>
-                  <span className="shrink-0">
-                    {formatUpdatedAt(page.updatedAt) ?? "Not updated yet"}
-                  </span>
-                </div>
-              </FeaturedCard>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    {!onlyBlogs ? (
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
+                        <FileText className="size-3.5" />
+                        Page
+                      </span>
+                    ) : null}
+                    <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                      {contentStatusLabel(page.status)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="truncate">/{page.slug}</span>
+                    <span className="shrink-0">
+                      {formatUpdatedAt(page.updatedAt) ?? "Not updated yet"}
+                    </span>
+                  </div>
+                </FeaturedCard>
+                {page.deletable ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="absolute right-2 top-2 px-2"
+                        aria-label={`Actions for ${page.name}`}
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => setPageToDelete(page)}
+                      >
+                        <Trash2 className="size-4" />
+                        {onlyBlogs ? "Delete blog" : "Delete page"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
             ))}
           </section>
         ) : null}
       </main>
+      <Dialog
+        open={pageToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setPageToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{onlyBlogs ? "Delete blog?" : "Delete page?"}</DialogTitle>
+            <DialogDescription>
+              {pageToDelete?.name} will be removed from your website. Images and files
+              used only by this {onlyBlogs ? "blog" : "page"} are deleted from the media
+              library. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPageToDelete(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void deletePage()}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <form onSubmit={createPage}>

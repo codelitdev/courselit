@@ -9,7 +9,18 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
-import { and, asc, count, desc, eq, ilike, inArray, lt, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  lt,
+  notExists,
+  or,
+} from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
 import type { AppDb } from "./types.js";
@@ -1448,6 +1459,70 @@ export async function deleteMedia(
     });
   });
   return { ok: true };
+}
+
+/** Deletes the given catalog assets that no resource references anymore.
+ * Runs after the owning resource is deleted, outside its transaction, so a
+ * failure here never undoes that deletion; an asset the media service cannot
+ * remove simply stays in the library. */
+export async function deleteUnreferencedMedia(
+  db: AppDb,
+  client: MediaLitClient,
+  input: {
+    schoolId: string;
+    mediaIds: readonly string[];
+    actorId: string;
+    requestId: string;
+  },
+  clock: Clock,
+): Promise<void> {
+  for (const mediaId of new Set(input.mediaIds)) {
+    // Claiming the asset only while it is unused means a concurrent save
+    // either references it first and keeps it, or no longer sees it as active.
+    const [claimed] = await db
+      .update(schema.media)
+      .set({ status: "deleting", updatedAt: clock.now() })
+      .where(
+        and(
+          eq(schema.media.id, mediaId),
+          eq(schema.media.schoolId, input.schoolId),
+          eq(schema.media.status, "active"),
+          notExists(
+            db
+              .select({ id: schema.mediaReferences.id })
+              .from(schema.mediaReferences)
+              .where(eq(schema.mediaReferences.mediaId, schema.media.id)),
+          ),
+        ),
+      )
+      .returning();
+    if (!claimed) continue;
+    try {
+      await client.deleteAsset({
+        schoolId: input.schoolId,
+        mediaLitId: claimed.mediaLitId,
+      });
+    } catch {
+      await db
+        .update(schema.media)
+        .set({ status: "active", updatedAt: clock.now() })
+        .where(eq(schema.media.id, claimed.id));
+      continue;
+    }
+    await db.transaction(async (tx) => {
+      await tx.delete(schema.media).where(eq(schema.media.id, claimed.id));
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: input.schoolId,
+        actorId: input.actorId,
+        action: "media.deleted",
+        resourceType: "media",
+        resourceId: claimed.publicId,
+        requestId: input.requestId,
+        createdAt: clock.now(),
+      });
+    });
+  }
 }
 
 export function digestMediaUploadToken(value: string): string {

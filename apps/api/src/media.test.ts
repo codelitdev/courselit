@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
+import { MemoryMediaLitClient } from "./media.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
@@ -651,6 +652,98 @@ describe.serial("media library", () => {
       items: [{ id: "photo_1", photographer: "CourseLit Test" }],
     });
     expect(queries).toEqual(["workspace"]);
+    await runtime.close();
+  });
+
+  it("deletes media only a deleted product used", async () => {
+    const deletedAssets: string[] = [];
+    const mediaLit = new (class extends MemoryMediaLitClient {
+      override async deleteAsset(input: { schoolId: string; mediaLitId: string }) {
+        deletedAssets.push(input.mediaLitId);
+      }
+    })();
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, mediaLit });
+    const world = await seedWorld(runtime, clock);
+    const headers = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const call = (method: string, path: string, body?: unknown) =>
+      dispatch(runtime, { method, path, headers, body });
+    const addMedia = async (
+      name: string,
+      mimeType: string,
+      kind: "image" | "video",
+    ) => {
+      const now = clock.now();
+      await runtime.db.insert(schema.media).values({
+        id: crypto.randomUUID(),
+        publicId: `med_${name}`,
+        schoolId: world.schoolA.id,
+        mediaLitId: `ml_${name}`,
+        canonicalUrl: `https://cdn.example.com/${name}`,
+        fileName: name,
+        mimeType,
+        byteSize: 10,
+        kind,
+        accessPolicy: "public",
+        createdAt: now,
+        updatedAt: now,
+      });
+    };
+    await addMedia("cover", "image/png", "image");
+    await addMedia("video", "video/mp4", "video");
+    await addMedia("shared", "image/png", "image");
+
+    const cover = await call("PATCH", `/v1/products/${world.noteA.publicId}`, {
+      featuredImage: { mediaId: "med_cover", url: "https://cdn.example.com/cover" },
+    });
+    expect(cover.status).toBe(200);
+    const fileLesson = await call(
+      "POST",
+      `/v1/products/${world.noteA.publicId}/lessons`,
+      {
+        title: "Handout",
+        type: "file",
+        content: { value: "" },
+        mediaId: "med_shared",
+      },
+    );
+    expect(fileLesson.status).toBe(201);
+    const lesson = await call("POST", `/v1/products/${world.noteA.publicId}/lessons`, {
+      title: "Video",
+      type: "video",
+      content: { value: "" },
+      mediaId: "med_video",
+    });
+    expect(lesson.status).toBe(201);
+    // A blog post also uses the shared image, so it outlives the product.
+    const blog = await call("POST", "/v1/school/website/blogs", { title: "Shared" });
+    await call(
+      "PATCH",
+      `/v1/school/website/blogs/${(blog.body as { id: string }).id}`,
+      {
+        content: {
+          type: "doc",
+          content: [
+            { type: "image", attrs: { src: "https://cdn.example.com/shared" } },
+          ],
+        },
+      },
+    );
+
+    expect((await call("DELETE", `/v1/products/${world.noteA.publicId}`)).status).toBe(
+      200,
+    );
+    expect(deletedAssets.sort()).toEqual(["ml_cover", "ml_video"]);
+    const remaining = await runtime.db
+      .select({ publicId: schema.media.publicId })
+      .from(schema.media)
+      .where(eq(schema.media.schoolId, world.schoolA.id));
+    expect(remaining.map((row) => row.publicId)).toContain("med_shared");
+    expect(remaining.map((row) => row.publicId)).not.toContain("med_cover");
+    expect(remaining.map((row) => row.publicId)).not.toContain("med_video");
     await runtime.close();
   });
 });

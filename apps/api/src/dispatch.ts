@@ -213,6 +213,8 @@ import {
   createBlogPost,
   createWebsitePage,
   createWebsiteTheme,
+  deleteBlogPost,
+  deleteWebsitePage,
   discardBlogPostDraft,
   discardWebsitePageDraft,
   getBlogPost,
@@ -2465,6 +2467,20 @@ export async function dispatch(
     }
 
     const websitePageMatch = /^\/v1\/school\/website\/pages\/([^/]+)$/.exec(path);
+    if (request.method === "DELETE" && websitePageMatch) {
+      const result = await deleteWebsitePage(
+        deps.db,
+        deps.mediaLit,
+        {
+          schoolId: context.tenantId!,
+          actorId: context.principalId,
+          requestId: context.requestId,
+        },
+        decodeURIComponent(websitePageMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
+    }
     if ((request.method === "GET" || request.method === "PATCH") && websitePageMatch) {
       const requiredPerm =
         request.method === "PATCH" ? "storefront:write" : "storefront:read";
@@ -2506,6 +2522,20 @@ export async function dispatch(
       return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
     const websiteBlogMatch = /^\/v1\/school\/website\/blogs\/([^/]+)$/.exec(path);
+    if (request.method === "DELETE" && websiteBlogMatch) {
+      const result = await deleteBlogPost(
+        deps.db,
+        deps.mediaLit,
+        {
+          schoolId: context.tenantId!,
+          actorId: context.principalId,
+          requestId: context.requestId,
+        },
+        decodeURIComponent(websiteBlogMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
+    }
     if ((request.method === "GET" || request.method === "PATCH") && websiteBlogMatch) {
       const requiredPerm =
         request.method === "PATCH" ? "storefront:write" : "storefront:read";
@@ -4866,6 +4896,7 @@ export async function dispatch(
       const result = await deleteProduct(
         deps.db,
         context,
+        deps.mediaLit,
         decodeURIComponent(noteMatch[1]!),
         deps.clock,
       );

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
+import { MemoryMediaLitClient } from "./media.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
@@ -27,9 +28,9 @@ type PageBody = {
   salesResourceId?: string;
 };
 
-async function setup() {
+async function setup(options: { mediaLit?: MemoryMediaLitClient } = {}) {
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-  const runtime = await createPgliteRuntime({ clock });
+  const runtime = await createPgliteRuntime({ clock, ...options });
   const world = await seedWorld(runtime, clock);
   const admin = (method: string, path: string, body?: unknown) =>
     dispatch(runtime, {
@@ -75,7 +76,10 @@ describe.serial("school website", () => {
         .sort();
       expect(slugs).toEqual(["", "privacy", "terms"]);
 
-      const salesPage = await admin("GET", `/v1/sales-pages/product/${world.noteA.publicId}`);
+      const salesPage = await admin(
+        "GET",
+        `/v1/sales-pages/product/${world.noteA.publicId}`,
+      );
       expect(salesPage.body).toMatchObject({
         resourceType: "product",
         resourceId: world.noteA.publicId,
@@ -117,7 +121,9 @@ describe.serial("school website", () => {
   it("saves to the draft, publishes, and discards with shared header and footer", async () => {
     const { runtime, world, admin, publicGet } = await setup();
     try {
-      const created = await admin("POST", "/v1/school/website/pages", { name: "About us" });
+      const created = await admin("POST", "/v1/school/website/pages", {
+        name: "About us",
+      });
       expect(created.status).toBe(201);
       expect(created.body).toMatchObject({ slug: "about-us", status: "draft" });
       const pageId = (created.body as { id: string }).id;
@@ -170,16 +176,19 @@ describe.serial("school website", () => {
       });
       expect(publishPermissionDenied.status).toBe(403);
 
-      const published = await admin("POST", `/v1/school/website/pages/${pageId}/publish`);
+      const published = await admin(
+        "POST",
+        `/v1/school/website/pages/${pageId}/publish`,
+      );
       expect(published.body).toMatchObject({ status: "published", title: "About" });
       const publicPage = await publicGet("/v1/public/site/pages?slug=about-us");
       expect(publicPage.status).toBe(200);
       const publicLayout = (publicPage.body as { layout: Widget[] }).layout;
       expect(publicLayout[0]!.settings?.logoText).toBe("Acme");
       const publicHome = await publicGet("/v1/public/site/pages?slug=");
-      expect((publicHome.body as { layout: Widget[] }).layout[0]!.settings?.logoText).toBe(
-        "Acme",
-      );
+      expect(
+        (publicHome.body as { layout: Widget[] }).layout[0]!.settings?.logoText,
+      ).toBe("Acme");
 
       await admin("PATCH", `/v1/school/website/pages/${pageId}`, { title: "Changed" });
       const changed = await admin("GET", `/v1/school/website/pages/${pageId}`);
@@ -210,7 +219,9 @@ describe.serial("school website", () => {
       const pageId = (created.body as { id: string }).id;
 
       for (const slug of ["seed-product", "community", "terms"]) {
-        const taken = await admin("PATCH", `/v1/school/website/pages/${pageId}`, { slug });
+        const taken = await admin("PATCH", `/v1/school/website/pages/${pageId}`, {
+          slug,
+        });
         expect(taken.status).toBe(409);
       }
       const renamed = await admin("PATCH", `/v1/school/website/pages/${pageId}`, {
@@ -256,14 +267,17 @@ describe.serial("school website", () => {
         { host: "courselit-api:4000" },
         { host: "api.courselit.app" },
         { host: "school-a.localhost:3001" },
-        { "x-forwarded-host": "school-a.localhost:3001", "x-school-id": world.schoolA.publicId },
+        {
+          "x-forwarded-host": "school-a.localhost:3001",
+          "x-school-id": world.schoolA.publicId,
+        },
       ];
       for (const headers of hostHeaders) {
         expect(await titleOf(world.schoolB.publicId, headers)).toBe("School B");
       }
-      expect(await titleOf(world.schoolA.publicId, { host: "courselit-api:4000" })).toBe(
-        "School A",
-      );
+      expect(
+        await titleOf(world.schoolA.publicId, { host: "courselit-api:4000" }),
+      ).toBe("School A");
 
       // Unknown schools, subdomains, and hostnames are not school ids.
       for (const schoolKey of ["sch_unknown", "school-a", "school-a.localhost"]) {
@@ -289,13 +303,19 @@ describe.serial("school website", () => {
   it("hides sales pages of unpublished products from the storefront", async () => {
     const { runtime, world, publicGet } = await setup();
     try {
-      expect((await publicGet("/v1/public/site/pages?slug=seed-product")).status).toBe(404);
+      expect((await publicGet("/v1/public/site/pages?slug=seed-product")).status).toBe(
+        404,
+      );
       await runtime.db
         .update(schema.products)
         .set({ status: "published" })
         .where(eq(schema.products.publicId, world.noteA.publicId));
-      expect((await publicGet("/v1/public/site/pages?slug=seed-product")).status).toBe(200);
-      expect((await publicGet("/v1/public/site/pages?slug=community")).status).toBe(200);
+      expect((await publicGet("/v1/public/site/pages?slug=seed-product")).status).toBe(
+        200,
+      );
+      expect((await publicGet("/v1/public/site/pages?slug=community")).status).toBe(
+        200,
+      );
     } finally {
       await runtime.close();
     }
@@ -374,8 +394,14 @@ describe.serial("school website", () => {
         total: 0,
       });
 
-      const published = await admin("POST", `/v1/school/website/blogs/${blogId}/publish`);
-      expect(published.body).toMatchObject({ status: "published", title: "Hello world" });
+      const published = await admin(
+        "POST",
+        `/v1/school/website/blogs/${blogId}/publish`,
+      );
+      expect(published.body).toMatchObject({
+        status: "published",
+        title: "Hello world",
+      });
       const article = await publicGet("/v1/public/site/blogs/hello-world");
       expect(article.body).toMatchObject({
         blogId,
@@ -387,7 +413,9 @@ describe.serial("school website", () => {
       });
 
       await admin("PATCH", `/v1/school/website/blogs/${blogId}`, { title: "Edited" });
-      expect((await admin("GET", `/v1/school/website/blogs/${blogId}`)).body).toMatchObject({
+      expect(
+        (await admin("GET", `/v1/school/website/blogs/${blogId}`)).body,
+      ).toMatchObject({
         status: "published_with_changes",
         draftTitle: "Edited",
         title: "Hello world",
@@ -396,8 +424,13 @@ describe.serial("school website", () => {
         "POST",
         `/v1/school/website/blogs/${blogId}/discard-draft`,
       );
-      expect(discarded.body).toMatchObject({ status: "published", draftTitle: "Hello world" });
-      expect((await publicGet("/v1/public/site/blogs")).body).toMatchObject({ total: 1 });
+      expect(discarded.body).toMatchObject({
+        status: "published",
+        draftTitle: "Hello world",
+      });
+      expect((await publicGet("/v1/public/site/blogs")).body).toMatchObject({
+        total: 1,
+      });
     } finally {
       await runtime.close();
     }
@@ -435,7 +468,10 @@ describe.serial("school website", () => {
             moveable: true,
             shared: false,
             settings: {
-              media: { mediaId: "med_page_image", url: "https://cdn.example.com/page.png" },
+              media: {
+                mediaId: "med_page_image",
+                url: "https://cdn.example.com/page.png",
+              },
               unsplash: { url: "https://images.unsplash.com/photo-1" },
             },
           },
@@ -454,7 +490,9 @@ describe.serial("school website", () => {
       await admin("PATCH", `/v1/school/website/blogs/${blogId}`, {
         content: {
           type: "doc",
-          content: [{ type: "image", attrs: { src: "https://cdn.example.com/page.png" } }],
+          content: [
+            { type: "image", attrs: { src: "https://cdn.example.com/page.png" } },
+          ],
         },
       });
       expect((await references()).map((row) => row.resourceType).sort()).toEqual([
@@ -465,6 +503,141 @@ describe.serial("school website", () => {
       // Discarding the unpublished page draft drops the page's reference.
       await admin("POST", `/v1/school/website/pages/${homeId}/discard-draft`);
       expect(await references()).toEqual([{ resourceType: "blog_artwork" }]);
+    } finally {
+      await runtime.close();
+    }
+  });
+
+  it("deletes pages and blogs and the media only they used", async () => {
+    const deletedAssets: string[] = [];
+    let failDeletes = false;
+    const mediaLit = new (class extends MemoryMediaLitClient {
+      override async deleteAsset(input: { schoolId: string; mediaLitId: string }) {
+        if (failDeletes) throw new Error("media service unavailable");
+        deletedAssets.push(input.mediaLitId);
+      }
+    })();
+    const { runtime, world, admin, clock } = await setup({ mediaLit });
+    try {
+      const addMedia = async (name: string) => {
+        const id = crypto.randomUUID();
+        const now = clock.now();
+        await runtime.db.insert(schema.media).values({
+          id,
+          publicId: `med_${name}`,
+          schoolId: world.schoolA.id,
+          mediaLitId: `ml_${name}`,
+          canonicalUrl: `https://cdn.example.com/${name}.png`,
+          fileName: `${name}.png`,
+          mimeType: "image/png",
+          byteSize: 10,
+          kind: "image",
+          accessPolicy: "public",
+          createdAt: now,
+          updatedAt: now,
+        });
+        return id;
+      };
+      const shared = await addMedia("shared");
+      const pageOnly = await addMedia("page_only");
+      const blogOnly = await addMedia("blog_only");
+      const unused = await addMedia("unused");
+      const exists = async (id: string) =>
+        (await runtime.db.select().from(schema.media).where(eq(schema.media.id, id)))
+          .length === 1;
+
+      const created = await admin("POST", "/v1/school/website/pages", {
+        name: "Gallery",
+      });
+      const pageId = (created.body as { id: string; deletable: boolean }).id;
+      expect(created.body).toMatchObject({ deletable: true });
+      const page = (await admin("GET", `/v1/school/website/pages/${pageId}`))
+        .body as PageBody;
+      await admin("PATCH", `/v1/school/website/pages/${pageId}`, {
+        layout: [
+          page.draftLayout[0],
+          {
+            widgetId: "gallery",
+            name: "grid",
+            deletable: true,
+            moveable: true,
+            shared: false,
+            settings: {
+              items: [
+                { media: { mediaId: "med_shared" } },
+                { media: { mediaId: "med_page_only" } },
+              ],
+            },
+          },
+          page.draftLayout.at(-1),
+        ],
+      });
+      const blog = await admin("POST", "/v1/school/website/blogs", { title: "Photos" });
+      const blogId = (blog.body as { id: string }).id;
+      await admin("PATCH", `/v1/school/website/blogs/${blogId}`, {
+        content: {
+          type: "doc",
+          content: [
+            { type: "image", attrs: { src: "https://cdn.example.com/shared.png" } },
+            { type: "image", attrs: { src: "https://cdn.example.com/blog_only.png" } },
+          ],
+        },
+      });
+
+      // The home page and sales pages stay.
+      const homeId = await pageBySlug(runtime, world, "");
+      const home = await admin("DELETE", `/v1/school/website/pages/${homeId}`);
+      expect(home.status).toBe(409);
+      expect(home.body).toMatchObject({ details: { reason: "page_not_deletable" } });
+
+      // The blog goes with the media only it used; the page keeps the shared one.
+      expect((await admin("DELETE", `/v1/school/website/blogs/${blogId}`)).status).toBe(
+        204,
+      );
+      expect((await admin("GET", `/v1/school/website/blogs/${blogId}`)).status).toBe(
+        404,
+      );
+      expect(deletedAssets).toEqual(["ml_blog_only"]);
+      expect(await exists(blogOnly)).toBe(false);
+      expect(await exists(shared)).toBe(true);
+
+      const pageReferences = await runtime.db
+        .select({ mediaId: schema.mediaReferences.mediaId })
+        .from(schema.mediaReferences)
+        .where(eq(schema.mediaReferences.resourceType, "website_page"));
+      expect(pageReferences.map((row) => row.mediaId)).toEqual(
+        expect.arrayContaining([shared, pageOnly]),
+      );
+
+      // An asset the media service cannot delete stays in the library.
+      failDeletes = true;
+      expect((await admin("DELETE", `/v1/school/website/pages/${pageId}`)).status).toBe(
+        204,
+      );
+      expect((await admin("GET", `/v1/school/website/pages/${pageId}`)).status).toBe(
+        404,
+      );
+      expect(await exists(shared)).toBe(true);
+      expect(await exists(pageOnly)).toBe(true);
+      const [kept] = await runtime.db
+        .select({ status: schema.media.status })
+        .from(schema.media)
+        .where(eq(schema.media.id, shared));
+      expect(kept).toEqual({ status: "active" });
+
+      // Media nothing referenced is never touched.
+      expect(await exists(unused)).toBe(true);
+      const audit = await runtime.db
+        .select({ action: schema.auditEvents.action })
+        .from(schema.auditEvents)
+        .where(eq(schema.auditEvents.schoolId, world.schoolA.id));
+      expect(audit.map((row) => row.action)).toEqual(
+        expect.arrayContaining([
+          "blog_post.deleted",
+          "website_page.deleted",
+          "media.deleted",
+        ]),
+      );
     } finally {
       await runtime.close();
     }

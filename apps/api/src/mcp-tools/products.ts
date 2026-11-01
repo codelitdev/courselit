@@ -108,6 +108,7 @@ export const productTools: McpToolModule = (deps) => [
       const result = await deleteProduct(
         deps.db,
         context,
+        deps.mediaLit,
         parsed.productId,
         deps.clock,
       );
