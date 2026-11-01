@@ -5,7 +5,7 @@ import {
   processNextIntegrationJob,
   type SendLitOperations,
 } from "./integration-provisioning.js";
-import { signUpLearner } from "./learners.js";
+import { signUpLearner } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { createSchool } from "./schools.js";
 import { seedWorld } from "./seed.js";

@@ -178,6 +178,9 @@ export const schoolAuthTickets = pgTable(
   {
     id: uuid("id").primaryKey(),
     ticketDigest: text("ticket_digest").notNull().unique(),
+    // Digest of the nonce cookie the browser got when it started signing in;
+    // the ticket is redeemable only alongside that cookie.
+    nonceDigest: text("nonce_digest").notNull(),
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
@@ -195,6 +198,45 @@ export const schoolAuthTickets = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
 );
+
+/** Six-digit email sign-in codes, each valid for one school only. */
+export const schoolLoginCodes = pgTable(
+  "school_login_codes",
+  {
+    id: uuid("id").primaryKey(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    codeDigest: text("code_digest").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("school_login_codes_school_email_idx").on(
+      table.schoolId,
+      table.email,
+      table.createdAt,
+    ),
+  ],
+);
+
+/** A "Sign in with Google" started on a school website, open until it returns. */
+export const schoolLoginRequests = pgTable("school_login_requests", {
+  id: uuid("id").primaryKey(),
+  requestDigest: text("request_digest").notNull().unique(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  nonceDigest: text("nonce_digest").notNull(),
+  returnOrigin: text("return_origin").notNull(),
+  nextPath: text("next_path").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
 
 export const selectedSchools = pgTable("selected_schools", {
   userId: text("user_id")

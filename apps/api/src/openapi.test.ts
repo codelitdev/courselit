@@ -24,7 +24,7 @@ describe("CourseLit OpenAPI tags", () => {
     expect(document.paths["/health"]?.get?.tags).toEqual(["System"]);
     expect(document.paths["/v1/products"]?.get?.tags).toEqual(["Products & Courses"]);
     expect(document.paths["/v1/communities"]?.get?.tags).toEqual(["Communities"]);
-    expect(document.paths["/v1/learner/auth/sign-in"]?.post?.tags).toEqual([
+    expect(document.paths["/v1/learner/auth/email-code/verify"]?.post?.tags).toEqual([
       "Learners",
     ]);
     expect(document.paths["/v1/public/{schoolId}/checkout-sessions"]?.post?.tags).toEqual([

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { MemoryPaymentProvider } from "./test-payment-provider.js";

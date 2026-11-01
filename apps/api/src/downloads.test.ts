@@ -4,7 +4,7 @@ import { unzipSync } from "fflate";
 import { createPublicId, uuidv7 } from "@codelitdev/platform";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { authenticateLearner } from "./learners.js";
 import type { MediaLitClient } from "./media.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";

@@ -1,4 +1,4 @@
-// Supported learner auth endpoints: /api/v1/learner/auth/sign-in, /api/v1/learner/auth/sign-up
+// Learners sign in here with an emailed code or Google; both end in a session for this school only.
 import { PublicLoginBlock } from "@/components/public-login-block";
 import { PublicSitePage } from "@/components/public-site-page";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { lessonUnlockAt } from "./catalog.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { textDoc } from "./test-content.js";

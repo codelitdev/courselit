@@ -9,7 +9,11 @@ import {
   LearnerLabel,
   LearnerText2,
 } from "@/components/themed-page-builder";
-import { authClient } from "@/lib/auth-client";
+import {
+  requestEmailCode,
+  signInWithGoogle as startGoogleSignIn,
+  verifyEmailCode,
+} from "@/lib/learner-sign-in";
 import { learnerHeaders } from "@/lib/school";
 type Learner = {
   id: string;
@@ -54,12 +58,7 @@ export function CheckoutLoginForm({
     setError(null);
     setLoading(true);
     try {
-      const result = await authClient.emailOtp.sendVerificationOtp({
-        email,
-        type: "sign-in",
-      });
-      if (result.error)
-        throw new Error(result.error.message || "Unable to send a sign-in code.");
+      await requestEmailCode(email);
       setOtpStep("otp");
     } catch (caught) {
       setError(
@@ -75,9 +74,7 @@ export function CheckoutLoginForm({
     setError(null);
     setLoading(true);
     try {
-      const result = await authClient.signIn.emailOtp({ email, otp });
-      if (result.error)
-        throw new Error(result.error.message || "Invalid or expired code.");
+      await verifyEmailCode(email, otp);
       await completeFromSession();
     } catch (caught) {
       setError(
@@ -88,24 +85,10 @@ export function CheckoutLoginForm({
     }
   }
 
-  async function signInWithGoogle() {
+  function signInWithGoogle() {
     setError(null);
     setLoading(true);
-    try {
-      const result = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: checkoutPath,
-      });
-      if (result?.error) {
-        throw new Error(result.error.message || "Unable to sign in with Google.");
-      }
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Unable to sign in with Google.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    startGoogleSignIn(checkoutPath);
   }
 
   return (

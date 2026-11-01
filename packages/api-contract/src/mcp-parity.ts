@@ -705,8 +705,8 @@ const mcpParityOverrides = [
     },
   },
   {
-    capability: "learner.signUp",
-    rest: { operationId: "learnerSignUp" },
+    capability: "learner.requestEmailCode",
+    rest: { operationId: "learnerRequestEmailCode" },
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",
@@ -715,8 +715,28 @@ const mcpParityOverrides = [
     },
   },
   {
-    capability: "learner.signIn",
-    rest: { operationId: "learnerSignIn" },
+    capability: "learner.verifyEmailCode",
+    rest: { operationId: "learnerVerifyEmailCode" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.startGoogleSignIn",
+    rest: { operationId: "learnerStartGoogleSignIn" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.consumeAuthTicket",
+    rest: { operationId: "consumeSchoolAuthTicket" },
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",

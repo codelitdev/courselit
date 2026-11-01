@@ -25,7 +25,7 @@ import {
   LearnerCard as PageCard,
   LearnerCardContent as PageCardContent,
 } from "@/components/themed-page-builder";
-import { authClient } from "@/lib/auth-client";
+import { signOutLearner } from "@/lib/learner-sign-in";
 import {
   type LearnerAvatarMedia,
   useLearnerProfileMediaUploader,
@@ -209,13 +209,7 @@ export default function AccountPage() {
 
   async function signOut() {
     setSigningOut(true);
-    await Promise.allSettled([
-      authClient.signOut(),
-      fetch("/api/v1/learner/auth/sign-out", {
-        method: "POST",
-        credentials: "include",
-      }),
-    ]);
+    await signOutLearner();
     window.location.href = "/";
   }
 

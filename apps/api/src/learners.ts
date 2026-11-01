@@ -30,6 +30,7 @@ import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import type { AppDb } from "./types.js";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
+export const LOGIN_NONCE_COOKIE = "courselit.login.nonce";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type LearnerDto = {
@@ -425,8 +426,9 @@ export async function listLearnerProducts(
   );
 }
 
-export function readLearnerSessionCookie(
+function readCookie(
   headers: Record<string, string | string[] | undefined>,
+  name: string,
 ): string | null {
   const raw = headers.cookie ?? headers.Cookie;
   const header = Array.isArray(raw) ? raw.join("; ") : raw;
@@ -435,12 +437,28 @@ export function readLearnerSessionCookie(
     const trimmed = part.trim();
     const eqIndex = trimmed.indexOf("=");
     if (eqIndex <= 0) continue;
-    if (trimmed.slice(0, eqIndex) === LEARNER_SESSION_COOKIE) {
+    if (trimmed.slice(0, eqIndex) === name) {
       const value = trimmed.slice(eqIndex + 1).trim();
       return value.length > 0 ? value : null;
     }
   }
   return null;
+}
+
+export function readLearnerSessionCookie(
+  headers: Record<string, string | string[] | undefined>,
+): string | null {
+  return readCookie(headers, LEARNER_SESSION_COOKIE);
+}
+
+/**
+ * The nonce a school website puts in a cookie when a learner starts signing
+ * in elsewhere (Google); a sign-in ticket is redeemable only alongside it.
+ */
+export function readLoginNonceCookie(
+  headers: Record<string, string | string[] | undefined>,
+): string | null {
+  return readCookie(headers, LOGIN_NONCE_COOKIE);
 }
 
 export function learnerSessionCookieHeader(token: string): string {
@@ -663,90 +681,6 @@ export async function issueSchoolSession(
   };
 }
 
-export async function createSchoolAuthTicket(
-  db: AppDb,
-  input: {
-    schoolId: string;
-    schoolAccountId: string;
-    userId: string;
-    authenticationMethod: "email" | "google";
-    clock: Clock;
-  },
-): Promise<string> {
-  const ticket = randomBytes(32).toString("base64url");
-  const now = input.clock.now();
-  const expiresAt = new Date(now.getTime() + 30 * 1000); // 30s TTL
-  await db.insert(schema.schoolAuthTickets).values({
-    id: uuidv7(input.clock),
-    schoolId: input.schoolId,
-    schoolAccountId: input.schoolAccountId,
-    userId: input.userId,
-    ticketDigest: digestToken(ticket),
-    authenticationMethod: input.authenticationMethod,
-    expiresAt,
-    createdAt: now,
-  });
-  return ticket;
-}
-
-export async function consumeSchoolAuthTicket(
-  db: AppDb,
-  input: {
-    ticket: string;
-    clock: Clock;
-  },
-): Promise<
-  | { ok: true; value: { sessionToken: string; dto: LearnerDto; session: LearnerSession } }
-  | { ok: false; error: PlatformError }
-> {
-  const digest = digestToken(input.ticket);
-  const now = input.clock.now();
-  const rows = await db
-    .select({
-      ticket: schema.schoolAuthTickets,
-      account: schema.schoolAccounts,
-      school: schema.schools,
-    })
-    .from(schema.schoolAuthTickets)
-    .innerJoin(
-      schema.schoolAccounts,
-      eq(schema.schoolAccounts.id, schema.schoolAuthTickets.schoolAccountId),
-    )
-    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolAuthTickets.schoolId))
-    .where(
-      and(
-        eq(schema.schoolAuthTickets.ticketDigest, digest),
-        isNull(schema.schoolAuthTickets.consumedAt),
-        gt(schema.schoolAuthTickets.expiresAt, now),
-      ),
-    )
-    .limit(1);
-  const row = rows[0];
-  if (!row) {
-    return { ok: false, error: createPlatformError("unauthenticated") };
-  }
-  await db
-    .update(schema.schoolAuthTickets)
-    .set({ consumedAt: now })
-    .where(eq(schema.schoolAuthTickets.id, row.ticket.id));
-
-  const sessionRes = await issueSchoolSession(db, {
-    school: row.school,
-    schoolAccount: row.account,
-    userId: row.ticket.userId,
-    authenticationMethod: row.ticket.authenticationMethod,
-    clock: input.clock,
-  });
-  return {
-    ok: true,
-    value: {
-      sessionToken: sessionRes.token,
-      dto: sessionRes.dto,
-      session: sessionRes.session,
-    },
-  };
-}
-
 function learnerNameFromEmail(email: string): string {
   const localPart = email.split("@", 1)[0]?.trim();
   return (localPart || "Learner").slice(0, 200);
@@ -789,39 +723,31 @@ export async function enqueueLearnerContactSync(
 }
 
 /**
- * Bridge a verified Better Auth user into the school account and session.
+ * Admit a person whose email has been proven into one school: find or create
+ * their school account, mark them registered and queue the contact sync. The
+ * caller decides how the proof happened and what session to hand out.
  */
-export async function signInLearnerWithIdentity(
+export async function admitLearner(
   db: AppDb,
   input: {
     userId: string;
     email: string;
     name?: string | null;
     image?: string | null;
-    schoolPublicId: string;
-    authenticationMethod?: "email" | "google";
+    school: typeof schema.schools.$inferSelect;
+    authenticationMethod: "email" | "google";
   },
   clock: Clock,
-  requestId: string,
 ): Promise<
-  | {
-      ok: true;
-      value: LearnerDto;
-      token: string;
-      session: LearnerSession;
-    }
+  | { ok: true; value: typeof schema.schoolAccounts.$inferSelect }
   | { ok: false; error: PlatformError }
 > {
-  const school = await loadSchoolByPublicId(db, input.schoolPublicId);
-  if (!school) {
-    return { ok: false, error: createPlatformError("unauthenticated") };
-  }
-  const authenticationMethod = input.authenticationMethod ?? "email";
+  const { school } = input;
   const hasGoogle = Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
   );
   const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
-  if (!allowedMethods.includes(authenticationMethod)) {
+  if (!allowedMethods.includes(input.authenticationMethod)) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
 
@@ -837,14 +763,6 @@ export async function signInLearnerWithIdentity(
   if (schoolAccount.status !== "active") {
     return { ok: false, error: createPlatformError("unauthenticated") };
   }
-
-  const issued = await issueSchoolSession(db, {
-    school,
-    schoolAccount,
-    userId: input.userId,
-    authenticationMethod,
-    clock,
-  });
 
   try {
     await recordActivity(
@@ -883,6 +801,51 @@ export async function signInLearnerWithIdentity(
     { reason: "learner_login" },
   );
 
+  return { ok: true, value: schoolAccount };
+}
+
+/**
+ * Admit a person whose email has been proven and give them a session in that
+ * one school.
+ */
+export async function signInLearnerWithIdentity(
+  db: AppDb,
+  input: {
+    userId: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+    schoolPublicId: string;
+    authenticationMethod?: "email" | "google";
+  },
+  clock: Clock,
+): Promise<
+  | {
+      ok: true;
+      value: LearnerDto;
+      token: string;
+      session: LearnerSession;
+    }
+  | { ok: false; error: PlatformError }
+> {
+  const school = await loadSchoolByPublicId(db, input.schoolPublicId);
+  if (!school) {
+    return { ok: false, error: createPlatformError("unauthenticated") };
+  }
+  const authenticationMethod = input.authenticationMethod ?? "email";
+  const admitted = await admitLearner(
+    db,
+    { ...input, school, authenticationMethod },
+    clock,
+  );
+  if (!admitted.ok) return admitted;
+  const issued = await issueSchoolSession(db, {
+    school,
+    schoolAccount: admitted.value,
+    userId: input.userId,
+    authenticationMethod,
+    clock,
+  });
   return {
     ok: true,
     value: issued.dto,
@@ -891,182 +854,38 @@ export async function signInLearnerWithIdentity(
   };
 }
 
-/** Fallback/convenience for direct API sign-up tests */
-export async function signUpLearner(
+/**
+ * The CourseLit user for an email address someone has just proven they own,
+ * created when it doesn't exist yet.
+ */
+export async function findOrCreateVerifiedUser(
   db: AppDb,
-  input: {
-    email: string;
-    password?: string;
-    name: string;
-    schoolPublicId: string;
-  },
+  email: string,
   clock: Clock,
-  requestId: string,
-): Promise<
-  { ok: true; value: LearnerDto; token: string } | { ok: false; error: PlatformError }
-> {
-  const school = await loadSchoolByPublicId(db, input.schoolPublicId);
-  if (!school) {
-    return { ok: false, error: createPlatformError("tenant_forbidden") };
-  }
-  const email = normalizeEmail(input.email);
-  const now = clock.now();
-
-  // Find or create global user
-  let user = (
-    await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+  name?: string,
+): Promise<typeof schema.user.$inferSelect> {
+  const normalized = normalizeEmail(email);
+  const existing = (
+    await db.select().from(schema.user).where(eq(schema.user.email, normalized)).limit(1)
   )[0];
-  if (!user) {
-    const created = await db
-      .insert(schema.user)
-      .values({
-        id: uuidv7(clock),
-        name: input.name.trim() || learnerNameFromEmail(email),
-        email,
-        emailVerified: true,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-    user = created[0];
-  }
-
-  const schoolAccount = await ensureSchoolAccount(db, {
-    schoolId: school.id,
-    userId: user.id,
-    email,
-    displayName: input.name,
-    clock,
-  });
-
-  const issued = await issueSchoolSession(db, {
-    school,
-    schoolAccount,
-    userId: user.id,
-    authenticationMethod: "email",
-    clock,
-  });
-
-  await db.insert(schema.auditEvents).values({
-    id: uuidv7(clock),
-    schoolId: school.id,
-    actorId: schoolAccount.publicId,
-    action: "learner.signed_up",
-    resourceType: "learner",
-    resourceId: schoolAccount.publicId,
-    requestId,
-    createdAt: now,
-  });
-  await recordActivity(
-    db,
-    {
-      schoolId: school.id,
-      actorId: schoolAccount.publicId,
-      type: ActivityType.USER_CREATED,
-      entityId: schoolAccount.publicId,
-      metadata: { email: schoolAccount.email },
-    },
-    clock,
-  );
-  await db
-    .update(schema.schoolAccounts)
-    .set({
-      learnerRegisteredAt: now,
-      lastActiveAt: now,
+  if (existing) return existing;
+  const now = clock.now();
+  const created = await db
+    .insert(schema.user)
+    .values({
+      id: uuidv7(clock),
+      name: name?.trim() || learnerNameFromEmail(normalized),
+      email: normalized,
+      emailVerified: true,
+      createdAt: now,
       updatedAt: now,
     })
-    .where(eq(schema.schoolAccounts.id, schoolAccount.id));
-
-  await enqueueLearnerContactSync(
-    db,
-    school.id,
-    { email: schoolAccount.email, name: schoolAccount.displayName, id: schoolAccount.id },
-    clock,
-    { ensureSubscribed: true, reason: "learner_signup" },
-  );
-
-  return { ok: true, value: issued.dto, token: issued.token };
-}
-
-/** Fallback/convenience for direct API sign-in tests */
-export async function signInLearner(
-  db: AppDb,
-  input: {
-    email: string;
-    password?: string;
-    identityLinkToken?: string;
-    schoolPublicId: string;
-  },
-  clock: Clock,
-  requestId: string,
-): Promise<
-  { ok: true; value: LearnerDto; token: string } | { ok: false; error: PlatformError }
-> {
-  const school = await loadSchoolByPublicId(db, input.schoolPublicId);
-  if (!school) {
-    return { ok: false, error: createPlatformError("unauthenticated") };
-  }
-  const email = normalizeEmail(input.email);
-  const now = clock.now();
-
-  let user = (
-    await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
-  )[0];
-  if (!user) {
-    const created = await db
-      .insert(schema.user)
-      .values({
-        id: uuidv7(clock),
-        name: learnerNameFromEmail(email),
-        email,
-        emailVerified: true,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-    user = created[0];
-  }
-
-  const schoolAccount = await ensureSchoolAccount(db, {
-    schoolId: school.id,
-    userId: user.id,
-    email,
-    clock,
-  });
-
-  if (schoolAccount.status !== "active") {
-    return { ok: false, error: createPlatformError("unauthenticated") };
-  }
-
-  const issued = await issueSchoolSession(db, {
-    school,
-    schoolAccount,
-    userId: user.id,
-    authenticationMethod: "email",
-    clock,
-  });
-
-  const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
-    lastActiveAt: now,
-    updatedAt: now,
-  };
-  if (!schoolAccount.learnerRegisteredAt) {
-    updates.learnerRegisteredAt = now;
-  }
-  await db
-    .update(schema.schoolAccounts)
-    .set(updates)
-    .where(eq(schema.schoolAccounts.id, schoolAccount.id));
-
-  await enqueueLearnerContactSync(
-    db,
-    school.id,
-    { email: schoolAccount.email, name: schoolAccount.displayName, id: schoolAccount.id },
-    clock,
-    { reason: "learner_login" },
-  );
-
-  return { ok: true, value: issued.dto, token: issued.token };
+    .onConflictDoNothing({ target: schema.user.email })
+    .returning();
+  if (created[0]) return created[0];
+  return (
+    await db.select().from(schema.user).where(eq(schema.user.email, normalized)).limit(1)
+  )[0]!;
 }
 
 export async function signOutLearner(

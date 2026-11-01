@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { createGifClientFromEnv, type GifClient, HttpGiphyClient } from "./gifs.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";

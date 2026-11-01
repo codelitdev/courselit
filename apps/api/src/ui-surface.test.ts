@@ -700,8 +700,12 @@ describe("admin and learner surfaces", () => {
     // school for the API: learner routes get x-school-id from host resolution.
     expect(proxy).toContain('headers.delete("x-school-id")');
     expect(proxy).toContain("resolveSchoolForRequest");
-    expect(surface).toContain("/api/v1/learner/auth/sign-in");
-    expect(surface).toContain("/api/v1/learner/auth/sign-up");
+    expect(read("storefront/lib/learner-sign-in.ts")).toContain(
+      "/api/v1/learner/auth/email-code",
+    );
+    // Learners never sign in through Better Auth on a school's host.
+    expect(surface).not.toContain("/api/auth/");
+    expect(proxy).not.toContain("courselit.session_token");
     expect(surface).toContain("publicApiPath(");
     expect(surface).not.toContain("/api/v1/products/");
     expect(surface).toContain("/api/v1/learner/memberships");

@@ -55,34 +55,26 @@ async function forwardedCookie(path: string, cookie: string): Promise<string | n
 }
 
 describe("storefront API proxy cookies", () => {
-  it("forwards the CourseLit Better Auth session cookie to learner /me", async () => {
-    const cookie = "__Secure-courselit.session_token=session-value";
-
-    expect(await forwardedCookie("v1/learner/me", cookie)).toBe(cookie);
-  });
-
-  it("forwards regular and chunked CourseLit session cookie variants", async () => {
+  it("never forwards a CourseLit-wide session cookie", async () => {
     const cookie = [
       "courselit.session_token=session-value",
       "__Secure-courselit.session_token.0=session-chunk",
     ].join("; ");
-
-    expect(await forwardedCookie("v1/learner/me", cookie)).toBe(cookie);
+    expect(await forwardedCookie("v1/learner/me", cookie)).toBeNull();
   });
 
-  it("does not forward the Better Auth session cookie to unrelated API routes", async () => {
-    expect(
-      await forwardedCookie(
-        "v1/public/sch_school/products/product-id",
-        "__Secure-courselit.session_token=session-value",
-      ),
-    ).toBeNull();
-  });
-
-  it("continues forwarding the active learner session cookie", async () => {
+  it("forwards the learner session cookie", async () => {
     const cookie = "courselit.learner.session=learner-session";
 
     expect(await forwardedCookie("v1/learner/me", cookie)).toBe(cookie);
+  });
+
+  it("forwards the sign-in nonce only when redeeming a ticket", async () => {
+    const cookie = "courselit.login.nonce=nonce-value";
+    expect(await forwardedCookie("v1/learner/me", cookie)).toBeNull();
+    const { upstream } = await proxied("v1/auth/tickets/consume", { cookie });
+    expect(upstream?.headers.get("cookie")).toBe(cookie);
+    expect(upstream?.headers.get("x-school-id")).toBe("sch_school");
   });
 });
 
@@ -130,9 +122,11 @@ describe("storefront API proxy tenancy", () => {
     expect(resolveCalls).toBe(0);
   });
 
-  it("keeps forwarding the host to Better Auth for CSRF origin checks", async () => {
-    const { upstream } = await proxied("auth/get-session", {});
-    expect(upstream?.url).toEndWith("/api/auth/get-session");
-    expect(upstream?.headers.get("x-forwarded-host")).toBe("school.example");
+  it("does not proxy Better Auth", async () => {
+    for (const path of ["auth/get-session", "learner-auth/sign-in/email-otp"]) {
+      const { status, upstream } = await proxied(path, {});
+      expect(status).toBe(404);
+      expect(upstream).toBeNull();
+    }
   });
 });

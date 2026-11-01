@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { createAdminAuth } from "./auth/better-auth.js";
 import { composeOAuthProviderOptions } from "./auth/oauth.js";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { createExpressApp } from "./express-app.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
@@ -649,7 +649,7 @@ describe.serial("reference API adapters", () => {
     const document = (await openapi.json()) as { paths: Record<string, unknown> };
     expect(document.paths["/v1/products"]).toBeDefined();
     expect(document.paths["/v1/products/{productId}"]).toBeDefined();
-    expect(document.paths["/v1/learner/auth/sign-in"]).toBeDefined();
+    expect(document.paths["/v1/learner/auth/email-code/verify"]).toBeDefined();
     expect(document.paths["/v1/learner/products/{productId}/download"]).toBeDefined();
     expect(document.paths["/v1/learner/lessons/{lessonId}/complete"]).toBeDefined();
     expect(document.paths["/v1/learner/community-posts/{postId}"]).toBeDefined();

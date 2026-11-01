@@ -4,8 +4,6 @@ import { emailOTP } from "better-auth/plugins";
 import { jwt } from "better-auth/plugins/jwt";
 import { oauthProvider } from "@better-auth/oauth-provider";
 import type { BetterAuthOptions } from "better-auth";
-import { and, eq } from "drizzle-orm";
-import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
 import { fetchClientMetadataResource } from "./cimd-fetch.js";
@@ -58,13 +56,6 @@ export function buildBetterAuthOptions(input: {
   const hasPlatformGoogle = Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
   );
-  const platformDomain = (process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app")
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/:\d+$/, "")
-    .replace(/^\./, "");
-
   return {
     secret: input.secret,
     baseURL: input.publicApiUrl,
@@ -72,25 +63,16 @@ export function buildBetterAuthOptions(input: {
     advanced: {
       cookiePrefix: AUTH_COOKIE_PREFIX,
     },
+    // Only CourseLit's own hosts. School websites never call Better Auth:
+    // learners sign in to a school through school-scoped routes, so a host a
+    // school controls never holds a CourseLit-wide session.
     trustedOrigins: async (request?: Request) => {
       const origins: string[] = [
         input.publicApiUrl,
         ...(input.webOrigin ? [input.webOrigin] : []),
-        ...(platformDomain
-          ? [
-              `https://*.${platformDomain}`,
-              `http://*.${platformDomain}`,
-              `https://${platformDomain}`,
-              `http://${platformDomain}`,
-            ]
-          : []),
         ...(isProduction
           ? []
           : [
-              "http://*.localhost:*",
-              "http://*.localhost",
-              "https://*.localhost:*",
-              "https://*.localhost",
               "http://localhost:*",
               "http://localhost",
               "https://localhost:*",
@@ -99,54 +81,16 @@ export function buildBetterAuthOptions(input: {
               "http://127.0.0.1",
               "https://127.0.0.1:*",
               "https://127.0.0.1",
-              "http://localhost:3000",
-              "http://localhost:3001",
-              "http://127.0.0.1:3000",
-              "http://127.0.0.1:3001",
-              "http://localhost:5173",
-              "http://localhost:5174",
             ]),
       ];
-
-      if (request) {
-        const originHeader =
-          request.headers.get("origin") ??
-          request.headers.get("referer") ??
-          request.headers.get("x-forwarded-host");
-        if (originHeader) {
-          try {
-            const parsedUrl =
-              originHeader.startsWith("http://") || originHeader.startsWith("https://")
-                ? new URL(originHeader)
-                : new URL(`http://${originHeader}`);
-            const hostname = parsedUrl.hostname.toLowerCase();
-            if (
-              !isProduction &&
-              (hostname === "localhost" ||
-                hostname.endsWith(".localhost") ||
-                hostname === "127.0.0.1")
-            ) {
-              origins.push(parsedUrl.origin);
-            }
-            if (input.db && hostname) {
-              const host = await input.db
-                .select({ id: schema.schoolHosts.id })
-                .from(schema.schoolHosts)
-                .where(
-                  and(
-                    eq(schema.schoolHosts.hostname, hostname),
-                    eq(schema.schoolHosts.verificationStatus, "verified"),
-                  ),
-                )
-                .limit(1);
-              if (host[0]) {
-                origins.push(`https://${hostname}`);
-                origins.push(`http://${hostname}`);
-                origins.push(parsedUrl.origin);
-              }
-            }
-          } catch {}
-        }
+      const originHeader = request?.headers.get("origin");
+      if (!isProduction && originHeader) {
+        try {
+          const parsedUrl = new URL(originHeader);
+          if (parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1") {
+            origins.push(parsedUrl.origin);
+          }
+        } catch {}
       }
       return origins;
     },
@@ -187,6 +131,9 @@ export function buildBetterAuthOptions(input: {
             google: {
               clientId: process.env.GOOGLE_CLIENT_ID!,
               clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+              // Always show the account picker, so a school website can't
+              // sign a visitor in silently with whichever account is active.
+              prompt: "select_account",
             },
           },
         }
@@ -271,7 +218,6 @@ export async function sendVerificationOTP(
 }
 
 export const AUTH_BASE_PATH = "/api/auth";
-export const LEARNER_AUTH_BASE_PATH = "/api/auth";
 export const ADMIN_SESSION_COOKIE_NAME = `${AUTH_COOKIE_PREFIX}.session_token`;
 export const adminAuthOptions = buildBetterAuthOptions;
 

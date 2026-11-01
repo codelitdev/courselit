@@ -14,12 +14,12 @@ import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
 import swaggerUi from "swagger-ui-express";
 import {
   AUTH_BASE_PATH,
-  LEARNER_AUTH_BASE_PATH,
   MCP_SCOPES_SUPPORTED,
 } from "./auth/options.js";
 import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
+import { registerLearnerGoogleRoutes } from "./learner-google-routes.js";
 import { assertLearnerSchool, authenticateLearner } from "./learners.js";
 import { createOpenApiDocument } from "./openapi.js";
 import { and, eq, or } from "drizzle-orm";
@@ -112,12 +112,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     }),
   );
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
-  app.all("/api/learner-auth/*", (req, res) => {
-    req.url = req.url.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
-    if (req.originalUrl)
-      req.originalUrl = req.originalUrl.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
-    return authNodeHandler(req, res);
-  });
+  registerLearnerGoogleRoutes(app, deps);
   app.use(
     createOAuthPagesRouter({
       appName: "CourseLit",
@@ -429,8 +424,10 @@ export function createExpressApp(deps: DispatchDeps): Express {
     deleteMedia: forward,
     listMediaReferences: forward,
     grantLearnerMembership: forward,
-    learnerSignUp: forward,
-    learnerSignIn: forward,
+    learnerRequestEmailCode: forward,
+    learnerVerifyEmailCode: forward,
+    learnerStartGoogleSignIn: forward,
+    consumeSchoolAuthTicket: forward,
     learnerSignOut: forward,
     learnerMe: forward,
     createLearnerMembership: forward,

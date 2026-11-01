@@ -47,8 +47,11 @@ import {
   evaluateQuizBodySchema,
   filterPreviewBodySchema,
   finalizeMediaUploadBodySchema,
-  learnerAuthBodySchema,
+  consumeSchoolAuthTicketBodySchema,
   learnerAvatarMediaAuthorizationBodySchema,
+  learnerEmailCodeBodySchema,
+  learnerStartGoogleBodySchema,
+  learnerVerifyEmailCodeBodySchema,
   learnerAvatarMediaFinalizeBodySchema,
   learnerCommunityMediaAuthorizationBodySchema,
   learnerCommunityMediaListQuerySchema,
@@ -253,7 +256,6 @@ import {
   authenticateLearner,
   clearLearnerSessionCookieHeader,
   completeLesson,
-  consumeSchoolAuthTicket,
   ensureLearnerProductMembershipForPublicSignup,
   getLearnerLessonMedia,
   grantLearnerMembership,
@@ -262,12 +264,16 @@ import {
   learnerSessionCookieHeader,
   listLearnerProducts,
   listLearnerProgress,
-  signInLearner,
-  signInLearnerWithIdentity,
+  readLoginNonceCookie,
   signOutLearner,
-  signUpLearner,
   updateLearnerProfile,
 } from "./learners.js";
+import {
+  consumeSchoolAuthTicket,
+  requestLearnerEmailCode,
+  startLearnerGoogleSignIn,
+  verifyLearnerEmailCode,
+} from "./learner-sign-in.js";
 import { createCourseLitMcp } from "./mcp.js";
 import {
   authorizeLearnerAvatarUpload,
@@ -631,86 +637,21 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
-    let learnerAuth = await authenticateLearner(deps.db, request.headers, deps.clock);
-    let bridgedLearnerToken: string | null = null;
-    if (learnerAuth.kind !== "authenticated" && path.startsWith("/v1/learner/")) {
-      const rawCookie = request.headers.cookie ?? request.headers.Cookie;
-      const cookieHeader = Array.isArray(rawCookie) ? rawCookie.join("; ") : rawCookie;
-      const hasAdminSessionCookie =
-        typeof cookieHeader === "string" &&
-        cookieHeader.split(";").some((part) => {
-          const name = part.trim().split("=", 1)[0];
-          return (
-            name === ADMIN_SESSION_COOKIE_NAME ||
-            name?.startsWith(`${ADMIN_SESSION_COOKIE_NAME}.`) ||
-            name?.startsWith(`__Secure-${ADMIN_SESSION_COOKIE_NAME}`)
-          );
-        });
-      if (hasAdminSessionCookie) {
-        const globalIdentity = await authenticateHttpRequest(
-          requestHeaders(request),
-          deps,
-        );
-        if (globalIdentity.kind === "authenticated") {
-          // The storefront server names the school (resolved from the
-          // website host) in x-school-id; the API never guesses one.
-          const schoolPublicId = headerSchoolId(request.headers);
-          if (!schoolPublicId) {
-            learnerAuth = {
-              kind: "rejected",
-              error: createPlatformError("tenant_required"),
-            };
-          }
-          if (schoolPublicId) {
-            const users = await deps.db
-              .select({
-                id: schema.user.id,
-                email: schema.user.email,
-                name: schema.user.name,
-                image: schema.user.image,
-              })
-              .from(schema.user)
-              .where(eq(schema.user.id, globalIdentity.principalId))
-              .limit(1);
-            const user = users[0];
-            if (user) {
-              const bridged = await signInLearnerWithIdentity(
-                deps.db,
-                {
-                  userId: user.id,
-                  email: user.email,
-                  name: user.name,
-                  image: user.image,
-                  schoolPublicId,
-                },
-                deps.clock,
-                requestIdFrom(request, deps),
-              );
-              if (bridged.ok) {
-                learnerAuth = { kind: "authenticated", value: bridged.session };
-                bridgedLearnerToken = bridged.token;
-              } else {
-                learnerAuth = { kind: "rejected", error: bridged.error };
-              }
-            } else {
-              learnerAuth = {
-                kind: "rejected",
-                error: createPlatformError("unauthenticated"),
-              };
-            }
-          }
-        }
-      }
-    }
+    const learnerAuth = await authenticateLearner(deps.db, request.headers, deps.clock);
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
-      const body = (request.body ?? {}) as { ticket?: string };
-      if (!body.ticket || typeof body.ticket !== "string") {
+      const parsed = consumeSchoolAuthTicketBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const consumed = await consumeSchoolAuthTicket(deps.db, {
-        ticket: body.ticket,
-        clock: deps.clock,
-      });
+      const consumed = await consumeSchoolAuthTicket(
+        deps.db,
+        {
+          ticket: parsed.data.ticket,
+          nonce: readLoginNonceCookie(request.headers),
+          schoolPublicId: headerSchoolId(request.headers),
+        },
+        deps.clock,
+      );
       if (!consumed.ok) {
         return errorResponse(consumed.error);
       }
@@ -967,67 +908,64 @@ export async function dispatch(
       return errorResponse(createPlatformError("not_found"));
     }
 
-    if (request.method === "POST" && path === "/v1/learner/auth/sign-up") {
-      const parsed = learnerAuthBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success || typeof parsed.data.name !== "string") {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      // The school is named explicitly in the body; never inferred from the host.
-      const schoolPublicId = parsed.data.schoolId;
-      const requestId = requestIdFrom(request, deps);
-      const result = await signUpLearner(
-        deps.db,
-        {
-          email: parsed.data.email,
-          password: parsed.data.password,
-          name: parsed.data.name,
-          schoolPublicId,
-        },
-        deps.clock,
-        requestId,
-      );
-      if (!result.ok) return errorResponse(result.error);
-      emitSchoolTelemetry(deps, request, {
-        requestId,
-        schoolId: result.value.schoolId,
-        principalId: result.value.id,
-      });
-      return {
-        status: 201,
-        body: result.value,
-        headers: { "Set-Cookie": learnerSessionCookieHeader(result.token) },
-      };
-    }
-    if (request.method === "POST" && path === "/v1/learner/auth/sign-in") {
-      const parsed = learnerAuthBodySchema.safeParse(request.body ?? {});
+    if (request.method === "POST" && path === "/v1/learner/auth/email-code") {
+      const parsed = learnerEmailCodeBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      // The school is named explicitly in the body; never inferred from the host.
-      const schoolPublicId = parsed.data.schoolId;
-      const requestId = requestIdFrom(request, deps);
-      const result = await signInLearner(
+      const schoolPublicId = headerSchoolId(request.headers);
+      if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const result = await requestLearnerEmailCode(
         deps.db,
-        {
-          email: parsed.data.email,
-          password: parsed.data.password,
-          identityLinkToken: parsed.data.identityLinkToken,
-          schoolPublicId,
-        },
+        { schoolPublicId, email: parsed.data.email },
         deps.clock,
-        requestId,
+      );
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
+    }
+    if (request.method === "POST" && path === "/v1/learner/auth/email-code/verify") {
+      const parsed = learnerVerifyEmailCodeBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const schoolPublicId = headerSchoolId(request.headers);
+      if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const requestId = requestIdFrom(request, deps);
+      const result = await verifyLearnerEmailCode(
+        deps.db,
+        { schoolPublicId, email: parsed.data.email, code: parsed.data.code },
+        deps.clock,
       );
       if (!result.ok) return errorResponse(result.error);
       emitSchoolTelemetry(deps, request, {
         requestId,
-        schoolId: result.value.schoolId,
-        principalId: result.value.id,
+        schoolId: result.value.dto.schoolId,
+        principalId: result.value.dto.id,
       });
       return {
         status: 200,
-        body: result.value,
-        headers: { "Set-Cookie": learnerSessionCookieHeader(result.token) },
+        body: result.value.dto,
+        headers: { "Set-Cookie": learnerSessionCookieHeader(result.value.token) },
       };
+    }
+    if (request.method === "POST" && path === "/v1/learner/auth/google") {
+      const parsed = learnerStartGoogleBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const schoolPublicId = headerSchoolId(request.headers);
+      if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const result = await startLearnerGoogleSignIn(
+        deps.db,
+        {
+          schoolPublicId,
+          host: parsed.data.host,
+          nonce: parsed.data.nonce,
+          next: parsed.data.next,
+          publicApiUrl: deps.auth.publicApiUrl,
+        },
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
     if (request.method === "POST" && path === "/v1/learner/auth/sign-out") {
       if (learnerAuth.kind === "authenticated") {
@@ -1195,13 +1133,6 @@ export async function dispatch(
         return {
           status: 200,
           body: learnerMe(learnerAuth.value, profile),
-          ...(bridgedLearnerToken
-            ? {
-                headers: {
-                  "Set-Cookie": learnerSessionCookieHeader(bridgedLearnerToken),
-                },
-              }
-            : {}),
         };
       }
       if (request.method === "PATCH" && path === "/v1/learner/me") {
@@ -1221,13 +1152,6 @@ export async function dispatch(
           ? {
               status: 200,
               body: result.value,
-              ...(bridgedLearnerToken
-                ? {
-                    headers: {
-                      "Set-Cookie": learnerSessionCookieHeader(bridgedLearnerToken),
-                    },
-                  }
-                : {}),
             }
           : errorResponse(result.error);
       }

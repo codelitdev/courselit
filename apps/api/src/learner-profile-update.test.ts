@@ -3,11 +3,8 @@ import { and, eq, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { processNextIntegrationJob } from "./integration-provisioning.js";
-import {
-  authenticateLearner,
-  signUpLearner,
-  updateLearnerProfile,
-} from "./learners.js";
+import { authenticateLearner, updateLearnerProfile } from "./learners.js";
+import { signUpLearner } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import type { SendLitContact } from "./sendlit-client.js";

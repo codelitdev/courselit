@@ -1709,12 +1709,20 @@ export const certificateVerificationSchema = certificateSchema.extend({
 /** Every public route names its school in the path; the API never selects a
  * school from the request host. */
 export const publicSchoolPathParams = z.object({ schoolId: z.string().min(1).max(64) });
-export const learnerAuthBodySchema = z.object({
+export const learnerEmailCodeBodySchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8).max(200),
-  name: z.string().min(1).max(200).optional(),
-  identityLinkToken: z.string().min(1).max(200).optional(),
-  schoolId: z.string().min(1),
+});
+export const learnerVerifyEmailCodeBodySchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d{6}$/),
+});
+export const learnerStartGoogleBodySchema = z.object({
+  host: z.string().min(1).max(260),
+  nonce: z.string().min(32).max(200),
+  next: z.string().max(1000).optional(),
+});
+export const consumeSchoolAuthTicketBodySchema = z.object({
+  ticket: z.string().min(1).max(200),
 });
 export const learnerIdentityLinkSchema = z.object({
   token: z.string().min(1),
@@ -3698,29 +3706,52 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
-  learnerSignUp: {
+  learnerRequestEmailCode: {
     method: "POST",
-    path: "/v1/learner/auth/sign-up",
-    body: learnerAuthBodySchema.extend({
-      name: z.string().min(1).max(200),
-    }),
+    path: "/v1/learner/auth/email-code",
+    summary: "Email a learner a sign-in code for this school",
+    body: learnerEmailCodeBodySchema,
     responses: {
-      201: learnerSchema,
+      204: z.undefined(),
       400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      409: platformErrorSchema,
+      404: platformErrorSchema,
+      429: platformErrorSchema,
     },
   },
-  learnerSignIn: {
+  learnerVerifyEmailCode: {
     method: "POST",
-    path: "/v1/learner/auth/sign-in",
-    body: learnerAuthBodySchema,
+    path: "/v1/learner/auth/email-code/verify",
+    summary: "Sign a learner in to this school with an emailed code",
+    body: learnerVerifyEmailCodeBodySchema,
     responses: {
       200: learnerSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  learnerStartGoogleSignIn: {
+    method: "POST",
+    path: "/v1/learner/auth/google",
+    summary: "Start Google sign-in for a school website",
+    body: learnerStartGoogleBodySchema,
+    responses: {
+      200: z.object({ url: z.string().url() }),
+      400: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  consumeSchoolAuthTicket: {
+    method: "POST",
+    path: "/v1/auth/tickets/consume",
+    summary: "Swap a sign-in ticket for a school session",
+    body: consumeSchoolAuthTicketBodySchema,
+    responses: {
+      200: learnerSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
     },
   },
   learnerSignOut: {

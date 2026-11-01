@@ -224,7 +224,6 @@ describe("routes outside the contract", () => {
     // Handled before authentication, or by their own protocol.
     const outside = new Set([
       "/api/school/select",
-      "/v1/auth/tickets/consume",
       "/v1/public/x(/.+)",
       "/v1/storefront/webhooks/stripe",
       "/v1/storefront/webhooks/lemonsqueezy",

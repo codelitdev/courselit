@@ -93,7 +93,11 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (!path) throw new Error("OpenAPI route is missing its path");
 
   if (path === "/health" || path === "/ready") return "System";
-  if (isPathOrChild(path, "/v1/learner") || path === "/v1/memberships") {
+  if (
+    isPathOrChild(path, "/v1/learner") ||
+    path === "/v1/memberships" ||
+    path === "/v1/auth/tickets/consume"
+  ) {
     return "Learners";
   }
   if (

@@ -34,7 +34,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { signOutLearner } from "@/lib/learner-sign-in";
 import { requestJson } from "@/lib/request-json";
 import { useSchoolBrand, useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
@@ -207,13 +207,7 @@ export function LearnerSidebar({
                 <LearnerDropdownMenuSeparator />
                 <LearnerDropdownMenuItem
                   onClick={async () => {
-                    await Promise.allSettled([
-                      authClient.signOut(),
-                      fetch("/api/v1/learner/auth/sign-out", {
-                        method: "POST",
-                        credentials: "include",
-                      }),
-                    ]);
+                    await signOutLearner();
                     window.location.href = "/";
                   }}
                 >

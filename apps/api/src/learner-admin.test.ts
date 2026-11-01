@@ -2,9 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { createPublicId, uuidv7 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
+import { requestLearnerEmailCode } from "./learner-sign-in.js";
 
 describe.serial("admin learner management", () => {
   it("ports product customer invitations as an admin enrollment grant", async () => {
@@ -172,7 +173,7 @@ describe.serial("admin learner management", () => {
     await runtime.close();
   });
 
-  it("re-establishes a learner session after reactivation with a stale session cookie", async () => {
+  it("lets a reactivated learner sign in again", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
@@ -181,30 +182,28 @@ describe.serial("admin learner management", () => {
       "x-school-id": world.schoolA.publicId,
     };
     const email = "reactivation-learner@example.com";
+    const signInWithCode = async () => {
+      let code = "";
+      const sent = await requestLearnerEmailCode(
+        runtime.db,
+        { schoolPublicId: world.schoolA.publicId, email },
+        clock,
+        async (message) => {
+          code = message.otp;
+        },
+      );
+      expect(sent.ok).toBe(true);
+      return dispatch(runtime, {
+        method: "POST",
+        path: "/v1/learner/auth/email-code/verify",
+        headers: { "x-school-id": world.schoolA.publicId },
+        body: { email, code },
+      });
+    };
 
-    const otp = await runtime.auth.auth.api.createVerificationOTP({
-      body: { email, type: "sign-in" },
-    });
-    const betterAuthSignIn = await runtime.auth.auth.api.signInEmailOTP({
-      body: { email, otp, name: "Reactivation Learner" },
-      asResponse: true,
-    });
-    expect(betterAuthSignIn.status).toBe(200);
-    const betterAuthCookie = betterAuthSignIn.headers
-      .get("set-cookie")
-      ?.split(";", 1)[0];
-    expect(betterAuthCookie).toBeTruthy();
-
-    const firstMe = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/learner/me",
-      headers: {
-        cookie: betterAuthCookie!,
-        "x-school-id": world.schoolA.publicId,
-      },
-    });
-    expect(firstMe.status).toBe(200);
-    const learnerCookie = firstMe.headers?.["Set-Cookie"]?.split(";", 1)[0];
+    const firstSignIn = await signInWithCode();
+    expect(firstSignIn.status).toBe(200);
+    const learnerCookie = firstSignIn.headers?.["Set-Cookie"]?.split(";", 1)[0];
     expect(learnerCookie).toBeTruthy();
 
     const roster = await dispatch(runtime, {
@@ -217,7 +216,6 @@ describe.serial("admin learner management", () => {
     ).items.find((item) => item.email === email)?.id;
     expect(learnerId).toBeTruthy();
 
-    const learnerCookies = `${learnerCookie}; ${betterAuthCookie}`;
     const deactivated = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/contacts/${learnerId}`,
@@ -229,10 +227,7 @@ describe.serial("admin learner management", () => {
     const blocked = await dispatch(runtime, {
       method: "GET",
       path: "/v1/learner/me",
-      headers: {
-        cookie: learnerCookies,
-        "x-school-id": world.schoolA.publicId,
-      },
+      headers: { cookie: learnerCookie!, "x-school-id": world.schoolA.publicId },
     });
     expect(blocked.status).toBe(401);
 
@@ -244,13 +239,16 @@ describe.serial("admin learner management", () => {
     });
     expect(reactivated.status).toBe(200);
 
+    // The clock is frozen, so clear the first code instead of waiting out the
+    // resend cooldown.
+    await runtime.db.delete(schema.schoolLoginCodes);
+    const secondSignIn = await signInWithCode();
+    expect(secondSignIn.status).toBe(200);
+    const restoredCookie = secondSignIn.headers?.["Set-Cookie"]?.split(";", 1)[0];
     const restoredMe = await dispatch(runtime, {
       method: "GET",
       path: "/v1/learner/me",
-      headers: {
-        cookie: learnerCookies,
-        "x-school-id": world.schoolA.publicId,
-      },
+      headers: { cookie: restoredCookie!, "x-school-id": world.schoolA.publicId },
     });
     expect(restoredMe.status).toBe(200);
     expect(restoredMe.body).toMatchObject({ email });

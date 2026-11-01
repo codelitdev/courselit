@@ -766,6 +766,7 @@ CREATE TABLE "school_accounts" (
 CREATE TABLE "school_auth_tickets" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"ticket_digest" text NOT NULL,
+	"nonce_digest" text NOT NULL,
 	"school_id" uuid NOT NULL,
 	"school_account_id" uuid NOT NULL,
 	"user_id" text NOT NULL,
@@ -774,6 +775,30 @@ CREATE TABLE "school_auth_tickets" (
 	"consumed_at" timestamp with time zone,
 	"created_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "school_auth_tickets_ticket_digest_unique" UNIQUE("ticket_digest")
+);
+--> statement-breakpoint
+CREATE TABLE "school_login_codes" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"email" text NOT NULL,
+	"code_digest" text NOT NULL,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"consumed_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_login_requests" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"request_digest" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"nonce_digest" text NOT NULL,
+	"return_origin" text NOT NULL,
+	"next_path" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"consumed_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "school_login_requests_request_digest_unique" UNIQUE("request_digest")
 );
 --> statement-breakpoint
 CREATE TABLE "school_hosts" (
@@ -1394,6 +1419,8 @@ ALTER TABLE "school_accounts" ADD CONSTRAINT "school_accounts_user_id_user_id_fk
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_login_codes" ADD CONSTRAINT "school_login_codes_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_login_requests" ADD CONSTRAINT "school_login_requests_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_hosts" ADD CONSTRAINT "school_hosts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1582,4 +1609,5 @@ ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_d
 ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_membership_id_learner_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."learner_memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "section_drip_email_deliveries_uidx" ON "section_drip_email_deliveries" USING btree ("section_id","membership_id");
+CREATE UNIQUE INDEX "section_drip_email_deliveries_uidx" ON "section_drip_email_deliveries" USING btree ("section_id","membership_id");--> statement-breakpoint
+CREATE INDEX "school_login_codes_school_email_idx" ON "school_login_codes" USING btree ("school_id","email","created_at");

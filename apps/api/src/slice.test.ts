@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { contract } from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./dispatch.js";
+import { dispatch } from "./test-learner-auth.js";
 import { LEARNER_SESSION_COOKIE } from "./learners.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";

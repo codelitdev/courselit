@@ -11,7 +11,11 @@ import {
   LearnerLabel,
   LearnerText2,
 } from "@/components/themed-page-builder";
-import { authClient } from "@/lib/auth-client";
+import {
+  requestEmailCode,
+  signInWithGoogle,
+  verifyEmailCode,
+} from "@/lib/learner-sign-in";
 import {
   clearLearnerIdentityLink,
   learnerHeaders,
@@ -43,7 +47,12 @@ export function PublicLoginBlock() {
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     return fragment.get("identityLink") ?? query.get("identityLink") ?? "";
   });
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("error") === "google"
+      ? "Google sign-in didn't finish. Please try again."
+      : null;
+  });
   const [loading, setLoading] = useState(false);
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
 
@@ -63,12 +72,7 @@ export function PublicLoginBlock() {
     setError(null);
     setLoading(true);
     try {
-      const res = await authClient.emailOtp.sendVerificationOtp({
-        email,
-        type: "sign-in",
-      });
-      if (res.error)
-        throw new Error(res.error.message || "Unable to send a sign-in code.");
+      await requestEmailCode(email);
       setOtpStep("otp");
     } catch (caught) {
       setError(
@@ -84,8 +88,7 @@ export function PublicLoginBlock() {
     setError(null);
     setLoading(true);
     try {
-      const res = await authClient.signIn.emailOtp({ email, otp });
-      if (res.error) throw new Error(res.error.message || "Invalid or expired code.");
+      await verifyEmailCode(email, otp);
       const meHeaders = learnerHeaders();
       if (identityLinkToken) meHeaders.set("x-learner-identity-link", identityLinkToken);
       const meRes = await fetch("/api/v1/learner/me", {
@@ -113,26 +116,11 @@ export function PublicLoginBlock() {
     }
   }
 
-  async function handleGoogleSignIn() {
+  function handleGoogleSignIn() {
     setError(null);
     setLoading(true);
-    try {
-      const callbackURL = identityLinkToken
-        ? `${destinationAfterLogin()}${destinationAfterLogin().includes("?") ? "&" : "?"}identityLink=${encodeURIComponent(identityLinkToken)}`
-        : destinationAfterLogin();
-      if (identityLinkToken) writeLearnerIdentityLink(identityLinkToken);
-      const res = await authClient.signIn.social({
-        provider: "google",
-        callbackURL,
-      });
-      if (res?.error) {
-        throw new Error(res.error.message || "Unable to sign in with Google.");
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Unable to sign in with Google.");
-    } finally {
-      setLoading(false);
-    }
+    if (identityLinkToken) writeLearnerIdentityLink(identityLinkToken);
+    signInWithGoogle(destinationAfterLogin());
   }
 
   const showEmail = loginMethods.includes("email");

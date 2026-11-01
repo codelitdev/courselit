@@ -333,9 +333,11 @@ export const OPERATION_POLICIES = {
   subscribeNewsletter: publicOp(),
 
   // Storefront application endpoints
-  learnerSignUp: learnerOp(),
   createLearnerMembership: learnerOp(),
-  learnerSignIn: learnerOp(),
+  learnerRequestEmailCode: learnerOp(),
+  learnerVerifyEmailCode: learnerOp(),
+  learnerStartGoogleSignIn: learnerOp(),
+  consumeSchoolAuthTicket: learnerOp(),
   learnerSignOut: learnerOp(),
   learnerMe: learnerOp(),
   learnerCheckout: learnerOp(),
