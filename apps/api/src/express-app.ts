@@ -11,6 +11,7 @@ import { toNodeHandler } from "better-auth/node";
 import express, { type Express, type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
+import { captchaSettings } from "./captcha.js";
 import swaggerUi from "swagger-ui-express";
 import {
   AUTH_BASE_PATH,
@@ -113,6 +114,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
   );
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
   registerLearnerGoogleRoutes(app, deps);
+  const captcha = captchaSettings();
   app.use(
     createOAuthPagesRouter({
       appName: "CourseLit",
@@ -123,6 +125,9 @@ export function createExpressApp(deps: DispatchDeps): Express {
       faviconUrl: new URL("/icon.svg", deps.auth.webOrigin).toString(),
       primaryColor: "oklch(0.6 0.14 30)",
       loginMethods: [{ type: "email-otp" }],
+      ...(captcha
+        ? { captcha: { provider: "cloudflare-turnstile", siteKey: captcha.siteKey } }
+        : {}),
     }),
   );
   // Swagger typings can resolve a separate Express type version, so
@@ -375,6 +380,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     health: forward,
     ready: forward,
     resolvePublicHost: forward,
+    getCaptchaConfig: forward,
     getPublicProduct: forward,
     getPublicLoginMethods: forward,
     signUpForLeadMagnet: forward,

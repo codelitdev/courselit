@@ -59,7 +59,7 @@
         "@better-fetch/fetch": "1.3.2",
         "@codelitdev/billing": "0.5.0",
         "@codelitdev/mcp-server-kit": "0.5.0",
-        "@codelitdev/oauth-server-kit": "0.5.0",
+        "@codelitdev/oauth-server-kit": "0.8.0",
         "@codelitdev/observability": "0.5.0",
         "@codelitdev/platform": "0.5.0",
         "@codelitdev/platform-conformance": "0.5.0",
@@ -286,7 +286,7 @@
 
     "@codelitdev/mcp-server-kit": ["@codelitdev/mcp-server-kit@0.5.0", "", { "dependencies": { "@modelcontextprotocol/server": "^2.4.0", "zod": "^3.25.76", "zod-to-json-schema": "^3.25.2" }, "peerDependencies": { "@codelitdev/platform": ">=0.5.0" } }, "sha512-OuVZu/dWkETrnN3yfNHsgHBN7YN+0LPzIZopDdIiOjjgYnCBwXPpdJgx1Lpoj8PSDkyzyY6BXIYrwHkgbcEHrw=="],
 
-    "@codelitdev/oauth-server-kit": ["@codelitdev/oauth-server-kit@0.5.0", "", { "peerDependencies": { "@better-auth/oauth-provider": "^1.7.2", "better-auth": "^1.7.2", "express": "^4.21.2" } }, "sha512-HgDLJJZ179dMEU18SlFNu1Mk95YzG02zeBzrcv6i7WmK5DGYEMWk78zJ7+M02Fj4aGG/pnFbljnscQOO9BXqcA=="],
+    "@codelitdev/oauth-server-kit": ["@codelitdev/oauth-server-kit@0.8.0", "", { "peerDependencies": { "@better-auth/oauth-provider": "^1.7.2", "better-auth": "^1.7.2", "express": "^4.21.2" } }, "sha512-hEVG5G0tAacDHv44evzKPM+AJQmu2bND2AtspAJFlRuE9QLJteu/1N7aLgGcPlDdA1+YI5+s0J0fbXpBT8rPsQ=="],
 
     "@codelitdev/observability": ["@codelitdev/observability@0.5.0", "", { "dependencies": { "pino": "^9.6.0" }, "peerDependencies": { "express": "^4.21.2", "posthog-js": "^1.200.0", "posthog-node": "^4.0.0" }, "optionalPeers": ["express", "posthog-js", "posthog-node"] }, "sha512-rQcB9fkaustBImNc3u7MSE4eCufD+DyLA02u2jLqoWcrq2cjrmTjbWrJ4AV4gdhtMGuiLjM0R6vdF9PWsTB7aQ=="],
 

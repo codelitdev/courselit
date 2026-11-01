@@ -211,6 +211,7 @@ import {
   createContact,
   updateContactSegment,
 } from "./contacts.js";
+import { publicCaptchaConfig, verifyCaptcha } from "./captcha.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { createLearnerDownloadLink } from "./downloads.js";
@@ -503,6 +504,9 @@ export async function dispatch(
     // The only host -> school mapping. Every other route names its school
     // explicitly (path, learner session, or admin x-school-id); the request
     // Host / X-Forwarded-Host never selects a tenant.
+    if (request.method === "GET" && path === "/v1/public/captcha") {
+      return { status: 200, body: publicCaptchaConfig() };
+    }
     if (request.method === "GET" && path === "/v1/public/resolve-host") {
       const school = await resolveSchoolByHost(deps.db, query.get("host") ?? "");
       return school
@@ -849,6 +853,8 @@ export async function dispatch(
           if (!parsed.success) {
             return errorResponse(createPlatformError("validation_failed"));
           }
+          const human = await verifyCaptcha(request.headers);
+          if (!human.ok) return errorResponse(human.error);
           const result = await signUpForLeadMagnet(
             deps.db,
             {
@@ -870,6 +876,8 @@ export async function dispatch(
           if (!parsed.success) {
             return errorResponse(createPlatformError("validation_failed"));
           }
+          const human = await verifyCaptcha(request.headers);
+          if (!human.ok) return errorResponse(human.error);
           const result = await subscribeNewsletter(deps.db, {
             schoolId: school.id,
             email: parsed.data.email,
@@ -915,6 +923,8 @@ export async function dispatch(
       }
       const schoolPublicId = headerSchoolId(request.headers);
       if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const human = await verifyCaptcha(request.headers);
+      if (!human.ok) return errorResponse(human.error);
       const result = await requestLearnerEmailCode(
         deps.db,
         { schoolPublicId, email: parsed.data.email },

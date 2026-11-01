@@ -1,11 +1,12 @@
 import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
 import { cimd } from "@better-auth/cimd";
-import { emailOTP } from "better-auth/plugins";
+import { captcha, emailOTP } from "better-auth/plugins";
 import { jwt } from "better-auth/plugins/jwt";
 import { oauthProvider } from "@better-auth/oauth-provider";
 import type { BetterAuthOptions } from "better-auth";
 import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
+import { CAPTCHA_AUTH_ENDPOINTS, captchaSettings } from "../captcha.js";
 import { fetchClientMetadataResource } from "./cimd-fetch.js";
 
 export const AUTH_COOKIE_PREFIX = "courselit";
@@ -56,6 +57,7 @@ export function buildBetterAuthOptions(input: {
   const hasPlatformGoogle = Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
   );
+  const turnstile = captchaSettings();
   return {
     secret: input.secret,
     baseURL: input.publicApiUrl,
@@ -140,6 +142,15 @@ export function buildBetterAuthOptions(input: {
       : {}),
     ...(input.database ? { database: input.database } : {}),
     plugins: [
+      ...(turnstile
+        ? [
+            captcha({
+              provider: "cloudflare-turnstile",
+              secretKey: turnstile.secretKey,
+              endpoints: CAPTCHA_AUTH_ENDPOINTS,
+            }),
+          ]
+        : []),
       jwt(),
       emailOTP({
         overrideDefaultEmailVerification: true,

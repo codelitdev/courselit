@@ -1,3 +1,4 @@
+import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
 import { learnerHeaders } from "@/lib/school";
 
 // Learners sign in to this school only. Email codes and Google both end in a
@@ -7,7 +8,12 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
   const body = (await response.json().catch(() => null)) as {
     code?: string;
     message?: string;
+    details?: { reason?: string };
   } | null;
+  const reason = body?.details?.reason;
+  if (reason === "captcha_required" || reason === "captcha_failed") {
+    return CAPTCHA_ERROR_MESSAGE;
+  }
   if (body?.code === "rate_limited") {
     return "Please wait a moment before asking for another code.";
   }
@@ -16,9 +22,10 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
 
 /** Email a six-digit sign-in code for this school. */
 export async function requestEmailCode(email: string): Promise<void> {
+  const captcha = await captchaHeaders("login");
   const response = await fetch("/api/v1/learner/auth/email-code", {
     method: "POST",
-    headers: learnerHeaders({ "content-type": "application/json" }),
+    headers: learnerHeaders({ "content-type": "application/json", ...captcha }),
     credentials: "include",
     body: JSON.stringify({ email }),
   });

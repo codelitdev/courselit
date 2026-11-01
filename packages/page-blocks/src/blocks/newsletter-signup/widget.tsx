@@ -20,6 +20,7 @@ import {
 } from "./constants";
 import { publicApiPath } from "../shared/utils";
 import type { NewsletterSignupSettings } from "./settings";
+import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "../../captcha";
 
 function sectionTheme(theme: ThemeStyle, settings: NewsletterSignupSettings) {
   const resolved: ThemeStyle = JSON.parse(JSON.stringify(theme));
@@ -56,15 +57,22 @@ export default function NewsletterSignupWidget({
       const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(await captchaHeaders("newsletter")),
+        },
         body: JSON.stringify({ name, email }),
       });
       if (!response.ok) throw new Error("newsletter_signup_failed");
       setSubmitted(true);
       setName("");
       setEmail("");
-    } catch {
-      setMessage(settings.failureMessage || DEFAULT_NEWSLETTER_FAILURE);
+    } catch (caught) {
+      setMessage(
+        caught instanceof Error && caught.message === CAPTCHA_ERROR_MESSAGE
+          ? CAPTCHA_ERROR_MESSAGE
+          : settings.failureMessage || DEFAULT_NEWSLETTER_FAILURE,
+      );
     } finally {
       setSubmitting(false);
     }

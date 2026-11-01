@@ -2734,6 +2734,18 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  getCaptchaConfig: {
+    method: "GET",
+    path: "/v1/public/captcha",
+    responses: {
+      200: z.object({
+        provider: z.literal("turnstile").nullable(),
+        siteKey: z.string().nullable(),
+      }),
+    },
+    summary:
+      "Site key for the captcha that public forms send in the x-captcha-response header; null when captcha is off",
+  },
   resolvePublicHost: {
     method: "GET",
     path: "/v1/public/resolve-host",

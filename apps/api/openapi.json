@@ -25320,6 +25320,45 @@
         "security": []
       }
     },
+    "/v1/public/captcha": {
+      "get": {
+        "summary": "Site key for the captcha that public forms send in the x-captcha-response header; null when captcha is off",
+        "tags": [
+          "Public Website"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "turnstile"
+                      ],
+                      "nullable": true
+                    },
+                    "siteKey": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "provider",
+                    "siteKey"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
     "/v1/public/resolve-host": {
       "get": {
         "summary": "Resolve a school website host (verified custom domain or platform subdomain) to its school",

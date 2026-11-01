@@ -129,6 +129,17 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "public.captcha.config",
+    rest: { operationId: "getCaptchaConfig" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "The captcha site key is for browsers rendering public forms; agents authenticate with credentials instead.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "public.products.get",
     rest: { operationId: "getPublicProduct" },
     parity: "exempt",

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@codelitdev/design-system";
+import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
 import { type FormEvent, useState } from "react";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
 
@@ -13,13 +14,27 @@ export default function SignInPage() {
   async function sendCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    let captcha: Record<string, string>;
+    try {
+      captcha = await captchaHeaders("login");
+    } catch {
+      setError(CAPTCHA_ERROR_MESSAGE);
+      return;
+    }
     const response = await fetch("/api/auth/email-otp/send-verification-otp", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...captcha },
       body: JSON.stringify({ email, type: "sign-in" }),
     });
     if (!response.ok) {
-      setError("Unable to send a sign-in code.");
+      const body = (await response.json().catch(() => null)) as {
+        code?: string;
+      } | null;
+      setError(
+        body?.code === "VERIFICATION_FAILED" || body?.code === "MISSING_RESPONSE"
+          ? CAPTCHA_ERROR_MESSAGE
+          : "Unable to send a sign-in code.",
+      );
       return;
     }
     setSent(true);

@@ -314,6 +314,7 @@ export const OPERATION_POLICIES = {
 
   // Public catalog & storefront
   resolvePublicHost: publicOp(),
+  getCaptchaConfig: publicOp(),
   getPublicProduct: publicOp(),
   getPublicLessonMedia: publicOp(),
   getPublicLoginMethods: publicOp(),

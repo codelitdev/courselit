@@ -25,6 +25,7 @@ import {
   sectionTheme,
 } from "../shared/utils";
 import type { BannerSettings } from "./settings";
+import { captchaHeaders } from "../../captcha";
 
 function resourceForBanner(
   data: NonNullable<ReturnType<typeof salesData>>,
@@ -123,7 +124,10 @@ export default function BannerWidget({
       const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(await captchaHeaders("lead-magnet")),
+        },
         body: JSON.stringify({ productId: resource?.id, email: email.trim() }),
       });
       if (!response.ok) throw new Error("Unable to sign you up. Check your email and try again.");
