@@ -318,6 +318,20 @@ export const updateStorefrontPlanBodySchema = z
 export const communityPaymentPlanSchema = storefrontPlanSchema
   .omit({ productId: true })
   .extend({ communityId: z.string() });
+/**
+ * Public-safe summary of a product included with a community plan. Only
+ * published products are listed, so drafts never leak to storefront visitors.
+ */
+export const publicIncludedProductSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["course", "download"]),
+  slug: z.string(),
+  title: z.string(),
+  featuredImage: mediaRefSchema.nullable(),
+});
+export const publicCommunityPaymentPlanSchema = communityPaymentPlanSchema.extend({
+  includedProductSummaries: z.array(publicIncludedProductSchema),
+});
 export const createCommunityPaymentPlanBodySchema = createStorefrontPlanBodySchema;
 export const updateCommunityPaymentPlanBodySchema = updateStorefrontPlanBodySchema;
 
@@ -815,9 +829,6 @@ export const mediaReferenceSchema = z.object({
   resourceId: z.string().trim().min(1).max(255),
   parentResourceId: z.string().trim().min(1).max(255).nullable().optional(),
 });
-export const reconcileMediaReferencesBodySchema = z.object({
-  references: z.array(mediaReferenceSchema).max(100),
-});
 export const createSchoolHostResponseSchema = z.object({
   host: schoolHostSchema,
   verification: z.object({
@@ -1084,6 +1095,42 @@ export const communityMediaSchema = z.object({
 
 const communityMediaIdsSchema = z.array(z.string().min(1).max(255)).max(10).optional();
 
+/** GIF URLs a community post may embed: HTTPS links on a GIPHY media host. */
+const GIF_MEDIA_HOST = /^(?:[a-z0-9-]+\.)*giphy\.com$/i;
+export function isAllowedGifUrl(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  return url.protocol === "https:" && GIF_MEDIA_HOST.test(url.hostname);
+}
+/** An external GIF picked from GIF search. It never becomes a media-library item. */
+export const communityGifUrlSchema = z
+  .string()
+  .max(2_000)
+  .url()
+  .refine(isAllowedGifUrl, { message: "Only GIPHY GIF links are allowed." });
+const communityGifUrlsSchema = z.array(communityGifUrlSchema).max(10).optional();
+
+export const learnerGifSearchQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+});
+export const gifSchema = z.object({
+  id: z.string(),
+  url: z.string().url(),
+  previewUrl: z.string().url(),
+  title: z.string(),
+  width: z.number().int().positive().nullable(),
+  height: z.number().int().positive().nullable(),
+});
+export const learnerGifSearchResponseSchema = z.object({
+  /** False when no GIF provider key is set; clients should hide the GIF picker. */
+  configured: z.boolean(),
+  items: z.array(gifSchema),
+});
+
 export const communityReactionSchema = z.object({
   emoji: z.string(),
   count: z.number().int().nonnegative(),
@@ -1100,6 +1147,7 @@ export const communityPostSchema = z.object({
   content: z.string(),
   category: z.string(),
   media: z.array(communityMediaSchema),
+  gifUrls: z.array(z.string().url()),
   reactions: z.array(communityReactionSchema),
   commentsCount: z.number().int().nonnegative(),
   subscribed: z.boolean(),
@@ -1179,6 +1227,7 @@ export const communityReportContentSchema = z.object({
   id: z.string(),
   content: z.string(),
   media: z.array(communityMediaSchema),
+  gifUrls: z.array(z.string().url()),
   authorId: z.string().nullable(),
   authorKind: z.enum(["learner", "admin"]).nullable(),
   author: communityActorSchema.nullable(),
@@ -1250,6 +1299,7 @@ export const createSpacePostBodySchema = z.object({
   title: z.string().trim().min(1).max(300),
   content: z.string().trim().min(1).max(20_000),
   mediaIds: z.array(z.string().min(1)).max(10).optional(),
+  gifUrls: communityGifUrlsSchema,
 });
 
 export const communityMembershipListQuerySchema = communityListQuerySchema.extend({
@@ -1267,6 +1317,7 @@ export const createCommunityPostBodySchema = z.object({
   content: z.string().trim().min(1).max(20_000),
   category: z.string().trim().min(1).max(100).default("General"),
   mediaIds: communityMediaIdsSchema,
+  gifUrls: communityGifUrlsSchema,
 });
 
 export const updateCommunityPostBodySchema = createCommunityPostBodySchema
@@ -1520,6 +1571,13 @@ export const listContactsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   rowsPerPage: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+export const createContactBodySchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(1).max(200).optional(),
+  subscribedToUpdates: z.boolean().default(true),
+});
+export type CreateContactBody = z.infer<typeof createContactBodySchema>;
 
 export const updateContactBodySchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
@@ -2443,6 +2501,18 @@ export const contract = c.router({
       401: platformErrorSchema,
     },
   },
+  searchLearnerGifs: {
+    method: "GET",
+    path: "/v1/learner/gifs",
+    query: learnerGifSearchQuerySchema,
+    summary: "Search GIFs for a community post; lists trending GIFs without a query",
+    responses: {
+      200: learnerGifSearchResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      502: platformErrorSchema,
+    },
+  },
   toggleLearnerCommunityReaction: {
     method: "POST",
     path: "/v1/learner/communities/:communityId/reactions",
@@ -2722,7 +2792,7 @@ export const contract = c.router({
     path: "/v1/public/:schoolId/communities/:communityId/plans",
     pathParams: publicSchoolPathParams.extend({ communityId: z.string() }),
     responses: {
-      200: z.object({ items: z.array(communityPaymentPlanSchema) }),
+      200: z.object({ items: z.array(publicCommunityPaymentPlanSchema) }),
       403: platformErrorSchema,
       404: platformErrorSchema,
     },
@@ -2782,6 +2852,20 @@ export const contract = c.router({
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  createContact: {
+    method: "POST",
+    path: "/v1/contacts",
+    body: createContactBodySchema,
+    responses: {
+      200: contactSchema,
+      201: contactSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
@@ -3465,6 +3549,30 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
+  getSectionDripEmail: {
+    method: "GET",
+    path: "/v1/sections/:sectionId/drip-email",
+    pathParams: z.object({ sectionId: z.string() }),
+    responses: {
+      200: sectionDripEmailSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateSectionDripEmail: {
+    method: "PUT",
+    path: "/v1/sections/:sectionId/drip-email",
+    pathParams: z.object({ sectionId: z.string() }),
+    body: updateSectionDripEmailBodySchema,
+    responses: {
+      200: sectionDripEmailSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
   deleteSection: {
     method: "DELETE",
     path: "/v1/sections/:sectionId",
@@ -3569,19 +3677,6 @@ export const contract = c.router({
     pathParams: z.object({ mediaId: z.string() }),
     responses: {
       200: z.object({ items: z.array(mediaReferenceSchema) }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
-  reconcileMediaReferences: {
-    method: "PUT",
-    path: "/v1/media/:mediaId/references",
-    pathParams: z.object({ mediaId: z.string() }),
-    body: reconcileMediaReferencesBodySchema,
-    responses: {
-      200: z.object({ items: z.array(mediaReferenceSchema) }),
-      400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,

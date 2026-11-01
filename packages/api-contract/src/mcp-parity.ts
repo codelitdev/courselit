@@ -42,6 +42,7 @@ const communityParityExemptions = [
   ["getLearnerSpacePost", "learner.spaces.posts.get"],
   ["authorizeLearnerAvatarMediaUpload", "learner.avatars.authorize"],
   ["finalizeLearnerAvatarMediaUpload", "learner.avatars.finalize"],
+  ["searchLearnerGifs", "learner.gifs.search"],
 ] as const;
 
 /**
@@ -331,13 +332,6 @@ const mcpParityOverrides = [
     risk: "read",
     rest: { operationId: "listMediaReferences" },
     mcp: { tool: "media.references.list" },
-    parity: "required",
-  },
-  {
-    capability: "media.references.reconcile",
-    risk: "write",
-    rest: { operationId: "reconcileMediaReferences" },
-    mcp: { tool: "media.references.reconcile" },
     parity: "required",
   },
   {

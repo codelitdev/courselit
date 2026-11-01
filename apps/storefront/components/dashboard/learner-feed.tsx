@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useLearnerSession } from "@/components/communities/learner-community";
+import { LearnerPostGifs, withGif } from "@/components/communities/learner-gif-picker";
 import { LearnerPostComposerDialog } from "@/components/communities/learner-post-composer-dialog";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import {
@@ -88,6 +89,7 @@ const feedPostSchema = z.object({
       }),
     )
     .optional(),
+  gifUrls: z.array(z.string()).optional(),
   reactions: z.array(reactionSchema).optional(),
   commentsCount: z.number().int().nonnegative().optional(),
   subscribed: z.boolean().optional(),
@@ -218,6 +220,15 @@ function PostContent({ value, className }: { value: string; className?: string }
 }
 
 function PostMedia({ post }: { post: FeedPost }) {
+  return (
+    <>
+      <PostAttachments post={post} />
+      <LearnerPostGifs urls={post.gifUrls ?? []} />
+    </>
+  );
+}
+
+function PostAttachments({ post }: { post: FeedPost }) {
   if (!post.media?.length) return null;
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -459,6 +470,7 @@ export function LearnerFeed({
   const [content, setContent] = useState("");
   const [postMedia, setPostMedia] = useState<LearnerCommunityMedia[]>([]);
   const postMediaRef = useRef<LearnerCommunityMedia[]>([]);
+  const [postGifs, setPostGifs] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [feedRevision, setFeedRevision] = useState(0);
 
@@ -607,6 +619,7 @@ export function LearnerFeed({
             title: title.trim(),
             content: content.trim(),
             mediaIds: postMediaRef.current.map((media) => media.id),
+            gifUrls: postGifs,
           }),
         },
       );
@@ -617,6 +630,7 @@ export function LearnerFeed({
       setContent("");
       postMediaRef.current = [];
       setPostMedia([]);
+      setPostGifs([]);
       setComposeOpen(false);
       toast.success("Post published.");
     } catch (caught) {
@@ -765,6 +779,7 @@ export function LearnerFeed({
             setContent("");
             postMediaRef.current = [];
             setPostMedia([]);
+            setPostGifs([]);
           }
         }}
         learnerName={learner?.name || learner?.email || "Learner"}
@@ -781,6 +796,11 @@ export function LearnerFeed({
         mediaAdapters={mediaAdapters}
         onMediaSelected={selectPostMedia}
         onMediaRemove={removePostMedia}
+        gifUrls={postGifs}
+        onGifSelect={(url) => setPostGifs((current) => withGif(current, url))}
+        onGifRemove={(url) =>
+          setPostGifs((current) => current.filter((item) => item !== url))
+        }
         canSubmit={Boolean(composeSpaceId && title.trim() && contentHasText(content))}
         submitting={publishing}
         onSubmit={publishPost}

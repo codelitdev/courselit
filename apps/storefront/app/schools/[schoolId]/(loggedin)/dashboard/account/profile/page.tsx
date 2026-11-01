@@ -15,6 +15,7 @@ import {
   LearnerAvatar,
   LearnerAvatarFallback,
   LearnerAvatarImage,
+  LearnerCheckbox,
   LearnerHeader1,
   LearnerHeader2,
   LearnerInput,
@@ -35,6 +36,7 @@ type LearnerProfile = {
   avatarMediaId: string | null;
   image: string | null;
   bio: string;
+  emailUpdatesEnabled: boolean;
 };
 
 const PROFILE_PHOTO_ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -58,6 +60,9 @@ export default function AccountPage() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [emailUpdatesEnabled, setEmailUpdatesEnabled] = useState(false);
+  const [savingEmailPreference, setSavingEmailPreference] = useState(false);
+  const [emailPreferenceError, setEmailPreferenceError] = useState<string | null>(null);
   const mediaAdapters = useLearnerProfileMediaUploader();
 
   useEffect(() => {
@@ -66,13 +71,16 @@ export default function AccountPage() {
     setBio(learner.bio);
     setAvatarMediaId(learner.avatarMediaId);
     setAvatarSrc(learner.image);
+    setEmailUpdatesEnabled(learner.emailUpdatesEnabled);
     setProfile({
       name: learner.name,
       avatarMediaId: learner.avatarMediaId,
       image: learner.image,
       bio: learner.bio,
+      emailUpdatesEnabled: learner.emailUpdatesEnabled,
     });
     setNameError(null);
+    setEmailPreferenceError(null);
     setProfileSaved(false);
   }, [learner]);
 
@@ -166,6 +174,39 @@ export default function AccountPage() {
     }
   }
 
+  async function saveEmailPreference(next: boolean) {
+    const nextName = (profile?.name ?? name).trim();
+    if (!nextName) {
+      setEmailPreferenceError("Enter your name before changing email preferences.");
+      return;
+    }
+
+    setEmailUpdatesEnabled(next);
+    setSavingEmailPreference(true);
+    setEmailPreferenceError(null);
+    try {
+      const updated = await requestJson<LearnerProfile>("/api/v1/learner/me", {
+        method: "PATCH",
+        body: JSON.stringify({ name: nextName, emailUpdatesEnabled: next }),
+      });
+      setEmailUpdatesEnabled(updated.emailUpdatesEnabled);
+      setProfile((current) =>
+        current
+          ? { ...current, emailUpdatesEnabled: updated.emailUpdatesEnabled }
+          : updated,
+      );
+    } catch (error) {
+      setEmailUpdatesEnabled(!next);
+      setEmailPreferenceError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update your email preferences.",
+      );
+    } finally {
+      setSavingEmailPreference(false);
+    }
+  }
+
   async function signOut() {
     setSigningOut(true);
     await Promise.allSettled([
@@ -195,6 +236,7 @@ export default function AccountPage() {
     avatarMediaId,
     image: avatarSrc,
     bio,
+    emailUpdatesEnabled,
   };
   const hasChanges =
     currentProfile.name !== name ||
@@ -344,6 +386,33 @@ export default function AccountPage() {
             </PageCardContent>
           </PageCard>
         </div>
+
+        <PageCard aria-labelledby="email-preferences-title">
+          <PageCardContent className="grid gap-5">
+            <div>
+              <LearnerText2 className="text-muted-foreground">Email</LearnerText2>
+              <LearnerHeader2 id="email-preferences-title">
+                Email preferences
+              </LearnerHeader2>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <LearnerLabel htmlFor="email-updates-enabled">
+                Receive newsletter and marketing emails
+              </LearnerLabel>
+              <LearnerCheckbox
+                id="email-updates-enabled"
+                checked={emailUpdatesEnabled}
+                disabled={savingEmailPreference}
+                onCheckedChange={(value) => void saveEmailPreference(value === true)}
+              />
+            </div>
+            {emailPreferenceError ? (
+              <LearnerText2 className="text-destructive">
+                {emailPreferenceError}
+              </LearnerText2>
+            ) : null}
+          </PageCardContent>
+        </PageCard>
 
         <PageCard aria-labelledby="account-actions-title">
           <PageCardContent className="grid gap-5">

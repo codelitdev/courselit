@@ -7,7 +7,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import type { MediaRef } from "@courselit/api-contract";
+import { isAllowedGifUrl, type MediaRef } from "@courselit/api-contract";
 import {
   and,
   asc,
@@ -137,6 +137,7 @@ export type CommunityPostDto = {
   content: string;
   category: string;
   media: CommunityMediaDto[];
+  gifUrls: string[];
   reactions: CommunityReactionDto[];
   commentsCount: number;
   subscribed: boolean;
@@ -220,6 +221,7 @@ export type CommunityReportContentDto = {
   id: string;
   content: string;
   media: CommunityMediaDto[];
+  gifUrls: string[];
   authorId: string | null;
   authorKind: "learner" | "admin" | null;
   author: CommunityActorDto | null;
@@ -662,6 +664,18 @@ async function clearCommunityMediaReferences(
     );
 }
 
+/** Reads stored GIF links, dropping anything that is not an allowed GIF URL. */
+export function communityGifUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value.filter(
+        (item): item is string => typeof item === "string" && isAllowedGifUrl(item),
+      ),
+    ),
+  ].slice(0, 10);
+}
+
 function postToDto(
   row: typeof schema.communityPosts.$inferSelect,
   learnerPublicId?: string | null,
@@ -682,6 +696,7 @@ function postToDto(
     content: row.content,
     category: row.category,
     media,
+    gifUrls: communityGifUrls(row.gifUrls),
     reactions,
     commentsCount,
     subscribed,
@@ -831,6 +846,7 @@ async function reportContentMap(
       id: row.publicId,
       content: row.content,
       media: media.get(row.id) ?? [],
+      gifUrls: "gifUrls" in row ? communityGifUrls(row.gifUrls) : [],
       authorId: row.schoolAccountId
         ? (authorIds.get(row.schoolAccountId) ?? null)
         : null,
@@ -3378,6 +3394,7 @@ export async function createPost(
     content: string;
     category: string;
     mediaIds?: readonly string[];
+    gifUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<CommunityPostDto>> {
@@ -3414,6 +3431,7 @@ export async function createPost(
     title,
     content: input.content,
     category,
+    gifUrls: communityGifUrls(input.gifUrls ?? []),
     pinned: false,
     spaceId: null,
     deletedAt: null,
@@ -3551,6 +3569,7 @@ export async function updatePost(
     category?: string;
     pinned?: boolean;
     mediaIds?: readonly string[];
+    gifUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<CommunityPostDto>> {
@@ -3573,6 +3592,10 @@ export async function updatePost(
     content: input.content ?? existing.content,
     category: input.category?.trim() || existing.category,
     pinned: input.pinned ?? existing.pinned,
+    gifUrls:
+      input.gifUrls === undefined
+        ? communityGifUrls(existing.gifUrls)
+        : communityGifUrls(input.gifUrls),
     updatedAt: now,
   };
   const community = await db

@@ -15,12 +15,17 @@ import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import { activeProductMembership, upsertLearnerMembership } from "./learner-memberships.js";
 import { queueAccessGrantedEmail, queueLeadMagnetEmail } from "./school-emails.js";
-import { type LearnerProfileFields } from "./learner-profile.js";
+import { type LearnerProfileFields, readLearnerProfile } from "./learner-profile.js";
+import { type SendLitConfig, sendLitConfig } from "./sendlit-client.js";
 import type { MediaLitClient } from "./media.js";
 import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import { type MediaRef } from "@courselit/api-contract";
-import { queueSendLitContactSync, subscribeNewsletter } from "./contacts.js";
+import {
+  queueSendLitContactSync,
+  setContactMarketingSubscription,
+  subscribeNewsletter,
+} from "./contacts.js";
 import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import type { AppDb } from "./types.js";
 
@@ -1727,7 +1732,7 @@ export async function updateLearnerProfile(
   },
   clock: Clock,
   requestId: string,
-  _sendLit?: import("./sendlit-client.js").SendLitConfig,
+  sendLit?: SendLitConfig,
 ): Promise<{ ok: true; value: LearnerDto } | { ok: false; error: PlatformError }> {
   const name = input.name.trim();
   if (!name || name.length > 200) {
@@ -1737,8 +1742,24 @@ export async function updateLearnerProfile(
     return { ok: false, error: createPlatformError("validation_failed") };
   }
 
+  // Apply the marketing choice first through the same path admins use, so the
+  // mailing service stays in sync and a failure leaves the profile untouched.
+  let emailUpdatesEnabled: boolean | undefined;
+  if (input.emailUpdatesEnabled !== undefined) {
+    const marketing = await setContactMarketingSubscription(db, {
+      schoolId: session.school.id,
+      account: session.schoolAccount,
+      subscribed: input.emailUpdatesEnabled,
+      reason: "learner.profile_updated",
+      clock,
+      config: sendLit,
+    });
+    if (!marketing.ok) return marketing;
+    emailUpdatesEnabled = marketing.value.subscribed;
+  }
+
   const now = clock.now();
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
       updatedAt: now,
     };
@@ -1773,7 +1794,6 @@ export async function updateLearnerProfile(
     await queueSendLitContactSync(tx as unknown as AppDb, {
       schoolId: session.school.id,
       schoolAccountId: account.id,
-      ensureSubscribed: input.emailUpdatesEnabled,
       reason: "learner.profile_updated",
       clock,
     });
@@ -1789,14 +1809,32 @@ export async function updateLearnerProfile(
       createdAt: now,
     });
 
-    return {
-      ok: true as const,
-      value: toLearnerDto(account, session.school.publicId, {
-        bio: account.bio,
-        avatarMediaId: account.avatar?.mediaId ?? null,
-        image: account.avatar?.url ?? null,
-        emailUpdatesEnabled: input.emailUpdatesEnabled ?? true,
-      }),
-    };
+    return { ok: true as const, value: account };
   });
+  if (!result.ok) return result;
+  const account = result.value;
+
+  if (emailUpdatesEnabled === undefined) {
+    // Unchanged here; report the learner's current subscription.
+    try {
+      emailUpdatesEnabled = (
+        await readLearnerProfile(db, sendLit ?? sendLitConfig(), {
+          schoolId: session.school.id,
+          email: account.email,
+        })
+      ).emailUpdatesEnabled;
+    } catch {
+      emailUpdatesEnabled = true;
+    }
+  }
+
+  return {
+    ok: true,
+    value: toLearnerDto(account, session.school.publicId, {
+      bio: account.bio,
+      avatarMediaId: account.avatar?.mediaId ?? null,
+      image: account.avatar?.url ?? null,
+      emailUpdatesEnabled,
+    }),
+  };
 }

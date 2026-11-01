@@ -407,6 +407,7 @@ CREATE TABLE "community_posts" (
 	"content" text DEFAULT '' NOT NULL,
 	"category" text DEFAULT 'General' NOT NULL,
 	"space_id" uuid,
+	"gif_urls" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"pinned" boolean DEFAULT false NOT NULL,
 	"deleted_at" timestamp with time zone,
 	"created_at" timestamp with time zone NOT NULL,

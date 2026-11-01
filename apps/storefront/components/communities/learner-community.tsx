@@ -77,6 +77,12 @@ import {
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import { requestJson } from "@/lib/request-json";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
+import {
+  LearnerGifPicker,
+  LearnerPostGifs,
+  MAX_POST_GIFS,
+  withGif,
+} from "./learner-gif-picker";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
@@ -858,7 +864,9 @@ export function LearnerCommunity({
     Record<string, number>
   >({});
   const [postMedia, setPostMedia] = useState<LearnerCommunityMedia[]>([]);
+  const [postGifs, setPostGifs] = useState<string[]>([]);
   const [postEditMedia, setPostEditMedia] = useState<MediaAttachment[]>([]);
+  const [postEditGifs, setPostEditGifs] = useState<string[]>([]);
   const [commentMedia, setCommentMedia] = useState<
     Record<string, LearnerCommunityMedia[]>
   >({});
@@ -1288,12 +1296,14 @@ export function LearnerCommunity({
           body: JSON.stringify({
             ...draft,
             mediaIds: postMediaRef.current.map((media) => media.id),
+            gifUrls: postGifs,
           }),
         },
       );
       postDraftRef.current = { ...draft, title: "", content: "" };
       setPostDraft(postDraftRef.current);
       updatePostMedia([]);
+      setPostGifs([]);
       setPostDialogOpen(false);
       toast.success("Post published.");
       await load();
@@ -1664,6 +1674,7 @@ export function LearnerCommunity({
     postEditDraftRef.current = draft;
     postEditMediaIdsRef.current = post.media.map((media) => media.id);
     setPostEditMedia(post.media.map(communityMediaToAttachment));
+    setPostEditGifs(post.gifUrls);
     setPostEditDraft(draft);
     setEditingPostId(post.id);
   }
@@ -1679,6 +1690,7 @@ export function LearnerCommunity({
           body: JSON.stringify({
             ...draft,
             mediaIds: postEditMediaIdsRef.current,
+            gifUrls: postEditGifs,
           }),
         },
       );
@@ -1693,6 +1705,7 @@ export function LearnerCommunity({
       });
       setEditingPostId(null);
       setPostEditMedia([]);
+      setPostEditGifs([]);
       postEditMediaIdsRef.current = [];
     } catch (caught) {
       setError(
@@ -1918,6 +1931,15 @@ export function LearnerCommunity({
                       postMediaRef.current.filter((media) => media.id !== id),
                     )
                   }
+                  gifUrls={postGifs}
+                  onGifSelect={(url) =>
+                    setPostGifs((current) => withGif(current, url))
+                  }
+                  onGifRemove={(url) =>
+                    setPostGifs((current) =>
+                      current.filter((item) => item !== url),
+                    )
+                  }
                   canSubmit={Boolean(
                     postDraft.title.trim() &&
                       communityDescriptionHasContent(postDraft.content),
@@ -2104,6 +2126,14 @@ export function LearnerCommunity({
                             items={postEditMedia}
                             onRemove={removePostEditMedia}
                           />
+                          <LearnerPostGifs
+                            urls={postEditGifs}
+                            onRemove={(url) =>
+                              setPostEditGifs((current) =>
+                                current.filter((item) => item !== url),
+                              )
+                            }
+                          />
                           <MediaUploadDialog<LearnerCommunityMedia>
                             {...mediaAdapters}
                             title="Attach media"
@@ -2117,6 +2147,14 @@ export function LearnerCommunity({
                               <Paperclip className="size-4" /> Attach media
                             </Button>
                           </MediaUploadDialog>
+                          <LearnerGifPicker
+                            variant="outline"
+                            label="Add GIF"
+                            disabled={postEditGifs.length >= MAX_POST_GIFS}
+                            onSelect={(url) =>
+                              setPostEditGifs((current) => withGif(current, url))
+                            }
+                          />
                         </div>
                       ) : (
                         <LearnerHeader3>{post.title}</LearnerHeader3>
@@ -2137,9 +2175,12 @@ export function LearnerCommunity({
                         />
                       )}
                       {editingPostId === post.id ? null : (
-                        <MediaAttachments
-                          items={post.media.map(communityMediaToAttachment)}
-                        />
+                        <>
+                          <MediaAttachments
+                            items={post.media.map(communityMediaToAttachment)}
+                          />
+                          <LearnerPostGifs urls={post.gifUrls} />
+                        </>
                       )}
                       <div className="flex flex-wrap items-center gap-2 border-t pt-4">
                         <CommunityReactionsBar

@@ -10,6 +10,7 @@ import {
 import type { MediaRef } from "@courselit/api-contract";
 import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
+  communityGifUrls,
   type CommunityLearnerViewer,
   createReport,
   type LearnerSpaceFeedPostDto,
@@ -758,7 +759,12 @@ export async function createLearnerSpacePost(
   db: AppDb,
   viewer: CommunityLearnerViewer,
   spacePublicId: string,
-  input: { title: string; content: string; mediaIds?: readonly string[] },
+  input: {
+    title: string;
+    content: string;
+    mediaIds?: readonly string[];
+    gifUrls?: readonly string[];
+  },
   clock: Clock,
 ): Promise<Result<{ id: string; spaceId: string; title: string; content: string }>> {
   const space = await loadSpace(db, viewer.schoolId, spacePublicId);
@@ -801,6 +807,7 @@ export async function createLearnerSpacePost(
     title,
     content: input.content,
     category: space.name,
+    gifUrls: communityGifUrls(input.gifUrls ?? []),
     pinned: false,
     deletedAt: null,
     createdAt: now,

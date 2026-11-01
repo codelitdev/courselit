@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { type Clock, uuidv7 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
+import { communityGifUrls } from "../communities.js";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 
@@ -597,6 +598,8 @@ export async function importLegacyCommunities(
     }
     const refs: Array<{ mediaId: string; sourceId: string }> = [];
     for (const item of record.media) {
+      // GIFs are external links kept on the post (see `legacyGifUrls`), not media.
+      if (asRecord(item)?.type === "gif") continue;
       const sourceId = idValue(item) ?? sourceIdFor(asRecord(item), "mediaId", "_id", "id");
       if (!sourceId) {
         addRejection(rejection("media", resourcePublicId, "media_requires_medialit", { reason: "media_id_missing" }));
@@ -620,6 +623,17 @@ export async function importLegacyCommunities(
     }
     return refs;
   };
+
+  /** Legacy posts store picked GIFs as `{ type: "gif", url }` media items. */
+  const legacyGifUrls = (record: JsonRecord) =>
+    communityGifUrls(
+      Array.isArray(record.media)
+        ? record.media.flatMap((item) => {
+            const media = asRecord(item);
+            return media?.type === "gif" ? [media.url] : [];
+          })
+        : [],
+    );
 
   const persistCommunityMedia = async (
     refs: Array<{ mediaId: string; sourceId: string }>,
@@ -954,6 +968,7 @@ export async function importLegacyCommunities(
         title: stringValue(record.title) ?? "",
         content: contentValue(record.content),
         category: stringValue(record.category) ?? "General",
+        gifUrls: legacyGifUrls(record),
         pinned: booleanValue(record.pinned, false),
         deletedAt: record.deleted === true ? timestamps.updatedAt : null,
         createdAt: timestamps.createdAt,

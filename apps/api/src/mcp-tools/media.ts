@@ -1,12 +1,9 @@
-import { reconcileMediaReferencesBodySchema } from "@courselit/api-contract";
 import { z } from "zod";
-import type { MediaResourceType } from "../media.js";
 import {
   deleteMedia,
   getMedia,
   listMedia,
   listMediaReferences,
-  reconcileMediaReferences,
   updateMedia,
 } from "../media.js";
 import type { McpToolModule } from "./context.js";
@@ -87,34 +84,6 @@ export const mediaTools: McpToolModule = (deps) => [
         deps.db,
         context,
         (args as { mediaId: string }).mediaId,
-      );
-      if (!result.ok) return { error: result.error };
-      return { items: result.value };
-    },
-  },
-  {
-    name: "media.references.reconcile",
-    description: "Replace the complete reference set for a media asset",
-    risk: "write",
-    inputSchema: z.object({
-      mediaId: z.string(),
-      ...reconcileMediaReferencesBodySchema.shape,
-    }),
-    async handler({ context, args }) {
-      const parsed = args as {
-        mediaId: string;
-        references: Array<{
-          resourceType: MediaResourceType;
-          resourceId: string;
-          parentResourceId?: string | null;
-        }>;
-      };
-      const result = await reconcileMediaReferences(
-        deps.db,
-        context,
-        parsed.mediaId,
-        parsed.references,
-        deps.clock,
       );
       if (!result.ok) return { error: result.error };
       return { items: result.value };

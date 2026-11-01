@@ -10,6 +10,7 @@ import {
   type Contact,
   type ContactFilterSet,
   type ContactSegment,
+  type CreateContactBody,
   type MediaRef,
   type UpdateContactBody,
   type UpdateContactMarketingBody,
@@ -58,8 +59,37 @@ function getSchoolId(ctx: AdminContactContext): string | null {
 export type SyncSendLitContactPayload = {
   schoolAccountId: string;
   ensureSubscribed?: boolean;
+  /** Explicit marketing subscription the contact must end up with. */
+  subscribed?: boolean;
   reason?: string;
 };
+
+function mergeContactSyncPayload(
+  existing: Record<string, unknown>,
+  input: {
+    schoolAccountId: string;
+    ensureSubscribed?: boolean;
+    subscribed?: boolean;
+    reason?: string;
+  },
+): Record<string, unknown> {
+  const next: Record<string, unknown> = {
+    ...existing,
+    schoolAccountId: input.schoolAccountId,
+    reason: input.reason ?? existing.reason,
+  };
+  if (typeof input.subscribed === "boolean") {
+    // The latest explicit choice wins over earlier queued intents.
+    next.subscribed = input.subscribed;
+    next.ensureSubscribed = input.subscribed;
+  } else {
+    next.ensureSubscribed = Boolean(existing.ensureSubscribed || input.ensureSubscribed);
+    if (input.ensureSubscribed && existing.subscribed === false) {
+      next.subscribed = true;
+    }
+  }
+  return next;
+}
 
 export type EraseSendLitContactPayload = {
   schoolAccountId: string;
@@ -69,7 +99,8 @@ export type EraseSendLitContactPayload = {
 /**
  * Coalescing outbox enqueue helper for SendLit contact sync.
  * If a pending job for the same contact already exists, increments revision
- * and updates ensureSubscribed if requested.
+ * and merges the requested subscription intent (an explicit `subscribed`
+ * wins over `ensureSubscribed`).
  */
 export async function queueSendLitContactSync(
   db: AppDb,
@@ -77,6 +108,7 @@ export async function queueSendLitContactSync(
     schoolId: string;
     schoolAccountId: string;
     ensureSubscribed?: boolean;
+    subscribed?: boolean;
     reason?: string;
     clock: Clock;
   },
@@ -102,19 +134,11 @@ export async function queueSendLitContactSync(
 
   if (existing[0]) {
     const existingPayload = (existing[0].payload ?? {}) as Record<string, unknown>;
-    const mergedEnsureSubscribed = Boolean(
-      existingPayload.ensureSubscribed || input.ensureSubscribed,
-    );
     await db
       .update(schema.integrationOutboxJobs)
       .set({
         revision: existing[0].revision + 1,
-        payload: {
-          ...existingPayload,
-          schoolAccountId: input.schoolAccountId,
-          ensureSubscribed: mergedEnsureSubscribed,
-          reason: input.reason ?? existingPayload.reason,
-        },
+        payload: mergeContactSyncPayload(existingPayload, input),
         nextAttemptAt: now,
         updatedAt: now,
       })
@@ -129,6 +153,9 @@ export async function queueSendLitContactSync(
         payload: {
           schoolAccountId: input.schoolAccountId,
           ensureSubscribed: input.ensureSubscribed,
+          ...(typeof input.subscribed === "boolean"
+            ? { subscribed: input.subscribed }
+            : {}),
           reason: input.reason,
         },
         status: "pending",
@@ -163,14 +190,7 @@ export async function queueSendLitContactSync(
           .update(schema.integrationOutboxJobs)
           .set({
             revision: conflict[0].revision + 1,
-            payload: {
-              ...existingPayload,
-              schoolAccountId: input.schoolAccountId,
-              ensureSubscribed: Boolean(
-                existingPayload.ensureSubscribed || input.ensureSubscribed,
-              ),
-              reason: input.reason ?? existingPayload.reason,
-            },
+            payload: mergeContactSyncPayload(existingPayload, input),
             nextAttemptAt: now,
             updatedAt: now,
           })
@@ -586,6 +606,135 @@ export async function getContact(
 }
 
 /**
+ * Admin contact creation. Mirrors the legacy `POST /api/user` upsert: a new
+ * email creates the canonical user identity (when missing) and a
+ * newsletter-only school account, queues the mailing sync and returns 201.
+ * An email the school already knows returns that contact unchanged with 200.
+ */
+export async function createContact(
+  db: AppDb,
+  ctx: AdminContactContext,
+  body: CreateContactBody,
+  clock: Clock,
+): Promise<
+  | { ok: true; value: { contact: Contact; created: boolean } }
+  | { ok: false; error: PlatformError }
+> {
+  const schoolId = getSchoolId(ctx);
+  if (!schoolId) {
+    return { ok: false, error: createPlatformError("tenant_forbidden") };
+  }
+
+  const email = normalizeEmail(body.email);
+  const [existing] = await db
+    .select()
+    .from(schema.schoolAccounts)
+    .where(
+      and(
+        eq(schema.schoolAccounts.schoolId, schoolId),
+        eq(schema.schoolAccounts.email, email),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    if (existing.status === "deletion_pending") {
+      return {
+        ok: false,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "contact_deletion_pending" },
+        }),
+      };
+    }
+    return {
+      ok: true,
+      value: { contact: toContactDto(existing, ctx.publicSchoolId), created: false },
+    };
+  }
+
+  const now = clock.now();
+  const name = body.name?.trim() || email.split("@", 1)[0] || "Subscriber";
+  let [user] = await db
+    .select()
+    .from(schema.user)
+    .where(eq(schema.user.email, email))
+    .limit(1);
+  if (!user) {
+    [user] = await db
+      .insert(schema.user)
+      .values({
+        id: uuidv7(clock),
+        name,
+        email,
+        emailVerified: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+  }
+
+  const [account] = await db
+    .insert(schema.schoolAccounts)
+    .values({
+      id: uuidv7(clock),
+      publicId: createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock),
+      schoolId,
+      userId: user!.id,
+      email,
+      displayName: name,
+      bio: "",
+      avatar: null,
+      status: "active",
+      learnerRegisteredAt: null,
+      contactActivatedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  await queueSendLitContactSync(db, {
+    schoolId,
+    schoolAccountId: account!.id,
+    ensureSubscribed: body.subscribedToUpdates,
+    reason: "admin_created",
+    clock,
+  });
+
+  await recordActivity(
+    db,
+    {
+      schoolId,
+      actorId: ctx.principalId,
+      type: ActivityType.USER_CREATED,
+      entityId: account!.publicId,
+      metadata: { email: account!.email, source: "admin" },
+    },
+    clock,
+  );
+
+  await db.insert(schema.auditEvents).values({
+    id: uuidv7(clock),
+    schoolId,
+    actorId: ctx.principalId,
+    action: "contact.created",
+    resourceType: "contact",
+    resourceId: account!.publicId,
+    requestId: ctx.requestId,
+    createdAt: now,
+  });
+
+  return {
+    ok: true,
+    value: {
+      contact: toContactDto(account!, ctx.publicSchoolId, {
+        subscribed: body.subscribedToUpdates,
+        tags: [],
+      }),
+      created: true,
+    },
+  };
+}
+
+/**
  * Update contact core profile (name, bio, avatar, status).
  */
 export async function updateContact(
@@ -695,17 +844,48 @@ export async function updateContactMarketing(
     return { ok: false, error: createPlatformError("not_found") };
   }
 
-  const teamApiKey = await getSendLitTeamApiKey(db, schoolId);
-  const cfg = options.config ?? sendLitConfig();
+  return setContactMarketingSubscription(db, {
+    schoolId,
+    account,
+    subscribed: body.subscribed,
+    tags: body.tags,
+    clock,
+    config: options.config,
+  });
+}
 
-  if (teamApiKey && cfg.server && account.sendlitContactId) {
+/**
+ * Applies a contact's marketing subscription (and optionally tags) to the
+ * school's mailing service. Updates the remote contact directly when it is
+ * already linked; otherwise queues a contact sync carrying the explicit
+ * subscription so the mailing service converges on it.
+ */
+export async function setContactMarketingSubscription(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    account: Pick<typeof schema.schoolAccounts.$inferSelect, "id" | "sendlitContactId">;
+    subscribed?: boolean;
+    tags?: string[];
+    reason?: string;
+    clock: Clock;
+    config?: SendLitConfig;
+  },
+): Promise<
+  | { ok: true; value: { subscribed: boolean; tags: string[] } }
+  | { ok: false; error: PlatformError }
+> {
+  const teamApiKey = await getSendLitTeamApiKey(db, input.schoolId);
+  const cfg = input.config ?? sendLitConfig();
+
+  if (teamApiKey && cfg.server && input.account.sendlitContactId) {
     try {
       const updated = await updateSendLitContact(
         teamApiKey,
-        account.sendlitContactId,
+        input.account.sendlitContactId,
         {
-          subscribed: body.subscribed,
-          tags: body.tags,
+          subscribed: input.subscribed,
+          tags: input.tags,
         },
         { config: cfg },
       );
@@ -717,27 +897,27 @@ export async function updateContactMarketing(
         },
       };
     } catch (err) {
-      if (err instanceof SendLitApiError && err.status === 404) {
-        // Enqueue sync
-      } else {
+      if (!(err instanceof SendLitApiError && err.status === 404)) {
         return { ok: false, error: createPlatformError("internal_error") };
       }
+      // The linked contact is gone; fall through and let the sync recreate it.
     }
   }
 
-  // Fallback / if not synced yet: queue sync job
+  // Not linked yet (or mailing service unavailable): queue a contact sync.
   await queueSendLitContactSync(db, {
-    schoolId,
-    schoolAccountId: account.id,
-    ensureSubscribed: body.subscribed,
-    clock,
+    schoolId: input.schoolId,
+    schoolAccountId: input.account.id,
+    subscribed: input.subscribed,
+    reason: input.reason,
+    clock: input.clock,
   });
 
   return {
     ok: true,
     value: {
-      subscribed: body.subscribed ?? false,
-      tags: body.tags ?? [],
+      subscribed: input.subscribed ?? false,
+      tags: input.tags ?? [],
     },
   };
 }

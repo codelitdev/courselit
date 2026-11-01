@@ -212,14 +212,23 @@ describe("routes outside the contract", () => {
     for (const match of source.matchAll(/path === "(\/(?:v1|api)\/[^"]+)"/g)) {
       paths.add(match[1]!);
     }
-    for (const match of source.matchAll(/\/\^((?:\\\/[^/$]+)+)\$\/\.exec\(path\)/g)) {
-      paths.add(match[1]!.replace(/\\\//g, "/").replace(/\(\[\^\/\]\+\)/g, "x"));
+    // Every `/^\/v1\/...$/.exec(path)` route, with each `([^/]+)` segment
+    // filled in and each `(a|b)` alternation expanded.
+    for (const match of source.matchAll(/\/\^(\\\/(?:v1|api)[^\n]*?)\$\/\.exec\(path\)/g)) {
+      const route = match[1]!.replace(/\(\[\^\/\]\+\)/g, "x").replace(/\\\//g, "/");
+      const alternation = /\(([a-z-]+(?:\|[a-z-]+)+)\)/.exec(route);
+      for (const option of alternation ? alternation[1]!.split("|") : [null]) {
+        paths.add(option === null ? route : route.replace(alternation![0], option));
+      }
     }
     // Handled before authentication, or by their own protocol.
     const outside = new Set([
       "/api/school/select",
       "/v1/auth/tickets/consume",
-      "/v1/storefront/webhooks/(stripe|lemonsqueezy|razorpay)",
+      "/v1/public/x(/.+)",
+      "/v1/storefront/webhooks/stripe",
+      "/v1/storefront/webhooks/lemonsqueezy",
+      "/v1/storefront/webhooks/razorpay",
     ]);
     const unknown = [...paths]
       .filter((path) => !outside.has(path))
@@ -228,7 +237,7 @@ describe("routes outside the contract", () => {
           (method) => resolveOperationId(method, path) === null,
         ),
       );
-    expect(paths.size).toBeGreaterThan(50);
+    expect(paths.size).toBeGreaterThan(140);
     expect(unknown).toEqual([]);
   });
 });

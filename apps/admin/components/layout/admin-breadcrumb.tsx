@@ -1,8 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Fragment } from "react";
+import {
+  type BreadcrumbItem as BreadcrumbItemType,
+  useBreadcrumbItems,
+} from "@/components/layout/breadcrumb-context";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,10 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  type BreadcrumbItem as BreadcrumbItemType,
-  useBreadcrumbItems,
-} from "@/components/layout/breadcrumb-context";
 
 export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (!pathname || pathname === "/" || pathname === "") {
@@ -36,18 +36,13 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return [{ label: "Products" }];
   }
   if (clean === "/products/new") {
-    return [
-      { label: "Products", href: "/products" },
-      { label: "New Product" },
-    ];
+    return [{ label: "Products", href: "/products" }, { label: "New Product" }];
   }
   if (clean.startsWith("/products/")) {
     const parts = clean.split("/").filter(Boolean);
     const productId = parts[1];
     const productRoot = `/products/${productId}`;
-    const crumbs: BreadcrumbItemType[] = [
-      { label: "Products", href: "/products" },
-    ];
+    const crumbs: BreadcrumbItemType[] = [{ label: "Products", href: "/products" }];
 
     if (parts.length === 2) {
       crumbs.push({ label: "Product" });
@@ -91,7 +86,6 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
         return crumbs;
       }
       crumbs.push({ label: "Settings", href: manageRoot });
-
     }
     return crumbs;
   }
@@ -110,22 +104,13 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return [{ label: "Community", href: "/community" }];
   }
   if (clean === "/community/memberships" || clean === "/community/manage/memberships") {
-    return [
-      { label: "Community", href: "/community" },
-      { label: "Members" },
-    ];
+    return [{ label: "Community", href: "/community" }, { label: "Members" }];
   }
   if (clean === "/community/setup") {
-    return [
-      { label: "Community", href: "/community" },
-      { label: "Set up" },
-    ];
+    return [{ label: "Community", href: "/community" }, { label: "Set up" }];
   }
   if (clean === "/community/reports" || clean === "/community/manage/reports") {
-    return [
-      { label: "Community", href: "/community" },
-      { label: "Reports" },
-    ];
+    return [{ label: "Community", href: "/community" }, { label: "Reports" }];
   }
 
   // Contacts
@@ -133,15 +118,16 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return [{ label: "Contacts" }];
   }
   if (clean.startsWith("/contacts/")) {
-    return [
-      { label: "Contacts", href: "/contacts" },
-      { label: "Contact Details" },
-    ];
+    return [{ label: "Contacts", href: "/contacts" }, { label: "Contact Details" }];
   }
 
   // Certificates
   if (clean.startsWith("/certificates")) {
     return [{ label: "Certificates" }];
+  }
+
+  if (clean === "/support") {
+    return [{ label: "Support" }];
   }
 
   // Media
@@ -154,16 +140,10 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return [{ label: "Website", href: "/website/pages" }];
   }
   if (clean === "/website/pages") {
-    return [
-      { label: "Website", href: "/website/pages" },
-      { label: "Pages" },
-    ];
+    return [{ label: "Website", href: "/website/pages" }, { label: "Pages" }];
   }
   if (clean === "/website/blogs") {
-    return [
-      { label: "Website", href: "/website/pages" },
-      { label: "Blogs" },
-    ];
+    return [{ label: "Website", href: "/website/pages" }, { label: "Blogs" }];
   }
   if (
     clean === "/website/settings/branding" ||
@@ -176,10 +156,7 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     ];
   }
   if (clean === "/website/settings") {
-    return [
-      { label: "Website", href: "/website/pages" },
-      { label: "Settings" },
-    ];
+    return [{ label: "Website", href: "/website/pages" }, { label: "Settings" }];
   }
   if (clean === "/mails") {
     return [{ label: "Mails" }];
@@ -195,10 +172,7 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       sequences: "Sequences",
       templates: "Templates",
     };
-    return [
-      { label: "Mails", href: "/mails/broadcasts" },
-      { label: tabLabels[tab] },
-    ];
+    return [{ label: "Mails", href: "/mails/broadcasts" }, { label: tabLabels[tab] }];
   }
   if (/^\/mails\/sequences\/[^/]+\/edit$/.test(clean)) {
     return [
@@ -208,10 +182,7 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     ];
   }
   if (clean === "/mails/settings") {
-    return [
-      { label: "Mails", href: "/mails/broadcasts" },
-      { label: "Settings" },
-    ];
+    return [{ label: "Mails", href: "/mails/broadcasts" }, { label: "Settings" }];
   }
   if (clean === "/settings") {
     return [{ label: "Settings" }];
@@ -229,16 +200,10 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       "api-keys": "API keys",
     };
     const tab = clean.split("/")[2];
-    return [
-      { label: "Settings", href: "/settings" },
-      { label: tabLabels[tab] },
-    ];
+    return [{ label: "Settings", href: "/settings" }, { label: tabLabels[tab] }];
   }
   if (clean.startsWith("/settings/")) {
-    return [
-      { label: "Settings", href: "/settings" },
-      { label: "Configuration" },
-    ];
+    return [{ label: "Settings", href: "/settings" }, { label: "Configuration" }];
   }
 
   // Schools
@@ -294,20 +259,18 @@ export function AdminBreadcrumb() {
           const isLast = index === items.length - 1;
           return (
             <Fragment key={`${item.label}-${index}`}>
-              <BreadcrumbItem
-                className={isLast ? undefined : "hidden md:inline-flex"}
-              >
+              <BreadcrumbItem className={isLast ? undefined : "hidden md:inline-flex"}>
                 {isLast || !item.href ? (
-                  <BreadcrumbPage className="max-w-[200px] truncate">{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="max-w-[200px] truncate">
+                    {item.label}
+                  </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild className="max-w-[200px] truncate">
                     <Link href={item.href}>{item.label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
-              {!isLast && (
-                <BreadcrumbSeparator className="hidden md:inline-flex" />
-              )}
+              {!isLast && <BreadcrumbSeparator className="hidden md:inline-flex" />}
             </Fragment>
           );
         })}

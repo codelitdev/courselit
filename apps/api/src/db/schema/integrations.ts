@@ -42,6 +42,8 @@ export type IntegrationJobType = (typeof integrationJobTypes)[number];
 export type SyncSendLitContactPayload = {
   schoolAccountId: string;
   ensureSubscribed?: boolean;
+  /** Explicit marketing subscription the contact must end up with. */
+  subscribed?: boolean;
   reason?: string;
 };
 

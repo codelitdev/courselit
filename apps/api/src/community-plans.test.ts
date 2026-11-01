@@ -179,4 +179,76 @@ describe.serial("community payment plans", () => {
 
     await runtime.close();
   });
+
+  it("lists the published products included with each public community plan", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-05T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const headers = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const [community] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+
+    const draft = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { title: "Draft bonus", kind: "download" },
+    });
+    expect(draft.status).toBe(201);
+    const draftId = (draft.body as { id: string }).id;
+    await runtime.db
+      .update(schema.products)
+      .set({ status: "published" })
+      .where(eq(schema.products.publicId, world.noteA.publicId));
+
+    const plan = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/communities/${community!.publicId}/plans`,
+      headers,
+      body: {
+        name: "All access",
+        type: "onetime",
+        oneTimeAmount: 50,
+        includedProducts: [world.noteA.publicId, draftId],
+      },
+    });
+    expect(plan.status).toBe(201);
+
+    const publicPlans = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/public/${world.schoolA.publicId}/communities/${community!.publicId}/plans`,
+      headers: {},
+    });
+    expect(publicPlans.status).toBe(200);
+    const items = (
+      publicPlans.body as {
+        items: Array<{
+          name: string;
+          includedProducts: string[];
+          includedProductSummaries: Array<Record<string, unknown>>;
+        }>;
+      }
+    ).items;
+    const allAccess = items.find((item) => item.name === "All access");
+    expect(allAccess?.includedProducts).toEqual([world.noteA.publicId]);
+    expect(allAccess?.includedProductSummaries).toEqual([
+      {
+        id: world.noteA.publicId,
+        kind: "course",
+        slug: "seed-product",
+        title: "Seed product",
+        featuredImage: null,
+      },
+    ]);
+    for (const item of items.filter((candidate) => candidate !== allAccess)) {
+      expect(item.includedProductSummaries).toEqual([]);
+    }
+
+    await runtime.close();
+  });
 });

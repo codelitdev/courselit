@@ -252,23 +252,21 @@ describe.serial("media library", () => {
       schoolId: world.schoolA.publicId,
     });
 
-    const references = await dispatch(runtime, {
+    // References follow saved content; there is no way to write them directly.
+    const manual = await dispatch(runtime, {
       method: "PUT",
       path: `/v1/media/${media.id}/references`,
       headers,
-      body: {
-        references: [
-          {
-            resourceType: "product_artwork",
-            resourceId: world.noteA.publicId,
-          },
-        ],
-      },
+      body: { references: [] },
     });
-    expect(references.status).toBe(200);
-    expect(references.body).toMatchObject({
-      items: [{ resourceType: "product_artwork", resourceId: world.noteA.publicId }],
+    expect(manual.status).toBe(403);
+    const reattached = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${world.noteA.publicId}`,
+      headers,
+      body: { featuredImage: { mediaId: media.id, url: canonicalUrl } },
     });
+    expect(reattached.status).toBe(200);
 
     const fetched = await dispatch(runtime, {
       method: "GET",

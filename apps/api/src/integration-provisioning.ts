@@ -212,6 +212,7 @@ async function syncSendLitContactJob(
     schoolAccountId?: string;
     email?: string;
     ensureSubscribed?: boolean;
+    subscribed?: boolean;
     reason?: string;
   };
 
@@ -385,7 +386,9 @@ async function syncSendLitContactJob(
       customFields: mergedCustomFields,
     };
 
-    if (payload.ensureSubscribed === true) {
+    if (typeof payload.subscribed === "boolean") {
+      updateBody.subscribed = payload.subscribed;
+    } else if (payload.ensureSubscribed === true) {
       updateBody.subscribed = true;
     }
 

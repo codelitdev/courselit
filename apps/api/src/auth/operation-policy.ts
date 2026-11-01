@@ -187,6 +187,8 @@ export const OPERATION_POLICIES = {
   listSections: schoolOp(["products:read"]),
   createSection: schoolOp(["products:write"]),
   updateSection: schoolOp(["products:write"]),
+  getSectionDripEmail: schoolOp(["products:read"]),
+  updateSectionDripEmail: schoolOp(["products:write"]),
   deleteSection: schoolOp(["products:write"]),
   reorderSections: schoolOp(["products:write"]),
   createLesson: schoolOp(["products:write"]),
@@ -206,6 +208,7 @@ export const OPERATION_POLICIES = {
   // Contacts admin
   listContacts: schoolOp(["contacts:read"]),
   getContact: schoolOp(["contacts:read"]),
+  createContact: schoolOp(["contacts:write"]),
   updateContact: schoolOp(["contacts:write"]),
   updateContactMarketing: schoolOp(["contacts:write"]),
   deleteContact: schoolOp(["contacts:delete"]),
@@ -286,7 +289,6 @@ export const OPERATION_POLICIES = {
   authorizeMediaUpload: schoolOp(["media:write"]),
   finalizeMediaUpload: schoolOp(["media:write"]),
   listMediaReferences: schoolOp(["media:read"]),
-  reconcileMediaReferences: schoolOp(["media:write"]),
   searchUnsplash: schoolOp(["media:read"]),
 
   // Certificates admin
@@ -369,6 +371,7 @@ export const OPERATION_POLICIES = {
   toggleLearnerCommunityPostSubscription: learnerOp(),
   createLearnerCommunityReport: learnerOp(),
   listLearnerCommunityMedia: learnerOp(),
+  searchLearnerGifs: learnerOp(),
   authorizeLearnerCommunityMediaUpload: learnerOp(),
   finalizeLearnerCommunityMediaUpload: learnerOp(),
   listLearnerNotifications: learnerOp(),

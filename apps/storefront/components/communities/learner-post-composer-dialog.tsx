@@ -25,6 +25,7 @@ import {
   LearnerSelectValue,
 } from "@/components/themed-page-builder";
 import type { LearnerCommunityMedia } from "@/lib/community-media-uploader";
+import { LearnerGifPicker, LearnerPostGifs, MAX_POST_GIFS } from "./learner-gif-picker";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
 type Destination = { id: string; name: string };
@@ -47,6 +48,10 @@ export type LearnerPostComposerDialogProps = {
   mediaAdapters: MediaUploaderAdapters<LearnerCommunityMedia>;
   onMediaSelected: (selected: SelectedMedia<LearnerCommunityMedia>) => void;
   onMediaRemove: (id: string) => void;
+  /** GIFs picked from GIF search. The GIF button shows only when `onGifSelect` is set. */
+  gifUrls?: string[];
+  onGifSelect?: (url: string) => void;
+  onGifRemove?: (url: string) => void;
   canSubmit: boolean;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -81,6 +86,9 @@ export function LearnerPostComposerDialog({
   mediaAdapters,
   onMediaSelected,
   onMediaRemove,
+  gifUrls = [],
+  onGifSelect,
+  onGifRemove,
   canSubmit,
   submitting,
   onSubmit,
@@ -143,6 +151,8 @@ export function LearnerPostComposerDialog({
             </ul>
           ) : null}
 
+          <LearnerPostGifs urls={gifUrls} onRemove={onGifRemove} />
+
           <div className="flex flex-wrap items-center gap-2 pt-4">
             <MediaUploadDialog<LearnerCommunityMedia>
               {...mediaAdapters}
@@ -188,6 +198,12 @@ export function LearnerPostComposerDialog({
                 <ImageIcon className="size-5" aria-hidden="true" />
               </Button>
             </MediaUploadDialog>
+            {onGifSelect ? (
+              <LearnerGifPicker
+                onSelect={onGifSelect}
+                disabled={gifUrls.length >= MAX_POST_GIFS}
+              />
+            ) : null}
             <LearnerSelect
               value={destinationId || undefined}
               onValueChange={onDestinationChange}

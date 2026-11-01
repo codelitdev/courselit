@@ -3779,6 +3779,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "gif_urls": {
+          "name": "gif_urls",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
         "pinned": {
           "name": "pinned",
           "type": "boolean",

@@ -52,6 +52,7 @@ import {
   learnerAvatarMediaFinalizeBodySchema,
   learnerCommunityMediaAuthorizationBodySchema,
   learnerCommunityMediaListQuerySchema,
+  learnerGifSearchQuerySchema,
   leaveCommunityBodySchema,
   listContactsQuerySchema,
   listProductsQuerySchema,
@@ -63,7 +64,6 @@ import {
   orderSpacesBodySchema,
   processScormPackageBodySchema,
   productAnalyticsRangeSchema,
-  reconcileMediaReferencesBodySchema,
   reorderLessonsBodySchema,
   reorderSectionsBodySchema,
   scormRuntimeUpdateBodySchema,
@@ -79,6 +79,7 @@ import {
   updateCommunityReportBodySchema,
   updateContactBodySchema,
   updateContactMarketingBodySchema,
+  createContactBodySchema,
   updateContactSegmentBodySchema,
   createMailSequenceBodySchema,
   createMailSequenceEmailBodySchema,
@@ -204,6 +205,7 @@ import {
   subscribeNewsletter,
   updateContact,
   updateContactMarketing,
+  createContact,
   updateContactSegment,
 } from "./contacts.js";
 import * as schema from "./db/schema/index.js";
@@ -279,7 +281,6 @@ import {
   listLearnerCommunityMedia,
   listMedia,
   listMediaReferences,
-  reconcileMediaReferences,
   updateMedia,
 } from "./media.js";
 import {
@@ -1164,6 +1165,22 @@ export async function dispatch(
         return result.ok
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
+      }
+      if (request.method === "GET" && path === "/v1/learner/gifs") {
+        const parsed = learnerGifSearchQuerySchema.safeParse({
+          q: query.get("q") ?? undefined,
+        });
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        try {
+          return { status: 200, body: await deps.gifs.search(parsed.data.q) };
+        } catch {
+          return {
+            status: 502,
+            body: { code: "internal_error", message: "Unable to search GIFs." },
+          };
+        }
       }
       if (request.method === "GET" && path === "/v1/learner/me") {
         let profile = undefined;
@@ -3667,6 +3684,34 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
+    if (request.method === "POST" && path === "/v1/contacts") {
+      if (!context.permissions.has("contacts:write")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const parsed = createContactBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await createContact(
+        deps.db,
+        {
+          schoolId: context.tenantId,
+          publicSchoolId: school.value.publicId,
+          principalId: context.principalId,
+          requestId: context.requestId,
+          permissions: context.permissions,
+        },
+        parsed.data,
+        deps.clock,
+      );
+      return result.ok
+        ? {
+            status: result.value.created ? 201 : 200,
+            body: result.value.contact,
+          }
+        : errorResponse(result.error);
+    }
+
     if (request.method === "GET" && path === "/v1/contacts") {
       if (!context.permissions.has("contacts:read")) {
         return errorResponse(createPlatformError("forbidden"));
@@ -4205,7 +4250,7 @@ export async function dispatch(
         ? { status: 200, body: result.value }
         : errorResponse(result.error);
     }
-    if (sectionDripEmailMatch && (request.method === "PUT" || request.method === "PATCH")) {
+    if (sectionDripEmailMatch && request.method === "PUT") {
       const parsed = updateSectionDripEmailBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
@@ -4337,22 +4382,6 @@ export async function dispatch(
         deps.db,
         context,
         decodeURIComponent(mediaReferencesMatch[1]!),
-      );
-      return result.ok
-        ? { status: 200, body: { items: result.value } }
-        : errorResponse(result.error);
-    }
-    if (request.method === "PUT" && mediaReferencesMatch) {
-      const parsed = reconcileMediaReferencesBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        return errorResponse(createPlatformError("validation_failed"));
-      }
-      const result = await reconcileMediaReferences(
-        deps.db,
-        context,
-        decodeURIComponent(mediaReferencesMatch[1]!),
-        parsed.data.references,
-        deps.clock,
       );
       return result.ok
         ? { status: 200, body: { items: result.value } }

@@ -6,8 +6,10 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import type { MediaRef } from "@courselit/api-contract";
 import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { productFeaturedImageFor } from "./products.js";
 import {
   kindForSourceType,
   type PlanInput,
@@ -41,6 +43,18 @@ export type CommunityPlanDto = {
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PublicIncludedProductDto = {
+  id: string;
+  kind: "course" | "download";
+  slug: string;
+  title: string;
+  featuredImage: MediaRef | null;
+};
+
+export type PublicCommunityPlanDto = CommunityPlanDto & {
+  includedProductSummaries: PublicIncludedProductDto[];
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
@@ -190,7 +204,7 @@ export async function listPublicCommunityPlans(
   db: AppDb,
   school: { schoolId: string; publicId: string },
   communityPublicId: string,
-): Promise<Result<CommunityPlanDto[]>> {
+): Promise<Result<PublicCommunityPlanDto[]>> {
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
   const schoolRow = await loadSchool(db, school.schoolId);
   if (!community || community.deletedAt || !schoolRow) {
@@ -208,17 +222,59 @@ export async function listPublicCommunityPlans(
       ),
     )
     .orderBy(asc(schema.storefrontPlans.createdAt));
+  const summaries = await publishedIncludedProducts(
+    db,
+    school.schoolId,
+    rows.flatMap((row) => row.includedProducts),
+  );
   return {
     ok: true,
-    value: rows.map((row) =>
-      communityPlanToDto(
-        row,
-        school.publicId,
-        community.publicId,
-        normalizeCurrency(schoolRow.currency),
-      ),
-    ),
+    value: rows.map((row) => {
+      const includedProductSummaries = [...new Set(row.includedProducts)]
+        .map((id) => summaries.get(id))
+        .filter((product): product is PublicIncludedProductDto => Boolean(product));
+      return {
+        ...communityPlanToDto(
+          row,
+          school.publicId,
+          community.publicId,
+          normalizeCurrency(schoolRow.currency),
+        ),
+        // Public visitors only see the published products a plan grants.
+        includedProducts: includedProductSummaries.map((product) => product.id),
+        includedProductSummaries,
+      };
+    }),
   };
+}
+
+async function publishedIncludedProducts(
+  db: AppDb,
+  schoolId: string,
+  publicIds: string[],
+): Promise<Map<string, PublicIncludedProductDto>> {
+  const ids = [...new Set(publicIds)];
+  if (ids.length === 0) return new Map();
+  const rows = await db
+    .select()
+    .from(schema.products)
+    .where(
+      and(
+        eq(schema.products.schoolId, schoolId),
+        inArray(schema.products.publicId, ids),
+        eq(schema.products.status, "published"),
+      ),
+    );
+  const summaries = await Promise.all(
+    rows.map(async (row) => ({
+      id: row.publicId,
+      kind: row.kind,
+      slug: row.slug,
+      title: row.title,
+      featuredImage: await productFeaturedImageFor(db, row),
+    })),
+  );
+  return new Map(summaries.map((product) => [product.id, product]));
 }
 
 export async function createCommunityPlan(

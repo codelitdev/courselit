@@ -2,6 +2,7 @@ import type { Observability } from "@codelitdev/observability";
 import type { Clock } from "@codelitdev/platform";
 import type { AuthRuntime } from "./auth/authenticate.js";
 import type { BillingBundle } from "./billing.js";
+import type { GifClient } from "./gifs.js";
 import type { MediaLitClient } from "./media.js";
 import type { PaymentProvider } from "./payments.js";
 import type { DnsResolver } from "./school-hosts.js";
@@ -14,6 +15,7 @@ export type DispatchDeps = AuthRuntime & {
   billingMode: "cloud" | "oss";
   mediaLit: MediaLitClient;
   unsplash: UnsplashClient;
+  gifs: GifClient;
   serviceName: string;
   databaseReady: boolean;
   observability?: Observability;

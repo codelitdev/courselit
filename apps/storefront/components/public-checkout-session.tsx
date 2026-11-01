@@ -11,11 +11,13 @@ import {
   PageCardContent,
   Text2,
 } from "@frontlit/page-builder/primitives";
+import { Package } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckoutLoginForm } from "@/components/checkout-login-form";
 import { CourseLitLoading } from "@/components/course-lit-loader";
 import {
+  LearnerBadge,
   LearnerCardImage,
   LearnerLabel,
   LearnerOptionLabel,
@@ -75,6 +77,12 @@ type Plan = {
   billingInterval: "month" | "year" | null;
   installmentCount: number | null;
   isDefault?: boolean;
+  includedProductSummaries?: IncludedProduct[];
+};
+
+type IncludedProduct = {
+  id: string;
+  title: string;
 };
 
 type CheckoutData = RazorpayCheckoutData & {
@@ -226,6 +234,28 @@ function CheckoutStatusView({
         </Button>
       ) : null}
     </div>
+  );
+}
+
+function IncludedProducts({ products }: { products?: IncludedProduct[] }) {
+  const theme = useSchoolThemeStyle();
+  if (!products?.length) return null;
+  return (
+    <span className="mt-2 flex flex-col gap-2">
+      <span className="flex items-center gap-2">
+        <Package aria-hidden className="size-4 text-muted-foreground" />
+        <Text2 theme={theme} component="span">
+          {products.length} {products.length === 1 ? "product" : "products"} included
+        </Text2>
+      </span>
+      <span className="flex flex-wrap gap-2">
+        {products.map((product) => (
+          <LearnerBadge key={product.id} variant="secondary">
+            {product.title}
+          </LearnerBadge>
+        ))}
+      </span>
+    </span>
   );
 }
 
@@ -643,6 +673,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
                       <Text2 theme={theme} component="span" className="font-semibold">
                         {formatPlanPrice(plan)}
                       </Text2>
+                      <IncludedProducts products={plan.includedProductSummaries} />
                     </LearnerOptionLabel>
                   </div>
                 );

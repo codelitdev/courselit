@@ -97,6 +97,7 @@ export type Report = {
     id: string;
     content: string;
     media: CommunityMedia[];
+    gifUrls?: string[];
     author: CommunityActor | null;
   } | null;
   reason: string;
@@ -213,6 +214,28 @@ export function CommunityPostContent({
     <TextRenderer json={richText} className={cn("text-sm leading-6", className)} />
   ) : (
     <p className={cn("whitespace-pre-wrap text-sm leading-6", className)}>{value}</p>
+  );
+}
+
+/** GIFs a learner picked from GIF search; external links, not media-library items. */
+export function CommunityGifPreview({ urls }: { urls: readonly string[] | undefined }) {
+  if (!urls?.length) return null;
+
+  return (
+    <ul className="mt-3 flex list-none flex-wrap gap-3 p-0" aria-label="Post GIFs">
+      {urls.map((url) => (
+        <li key={url} className="overflow-hidden rounded-md border bg-muted/20">
+          <Image
+            src={url}
+            alt="GIF"
+            width={320}
+            height={192}
+            unoptimized
+            className="h-48 w-auto object-cover"
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 

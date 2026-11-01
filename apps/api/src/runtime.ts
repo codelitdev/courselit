@@ -26,6 +26,7 @@ import { migrationsFolder } from "./db/migrate.js";
 import * as billingSchema from "./db/schema/billing.generated.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
+import { createGifClientFromEnv, DisabledGifClient, type GifClient } from "./gifs.js";
 import { type MediaLitClient, MemoryMediaLitClient } from "./media.js";
 import { createMediaLitClientFromEnv } from "./media-lit-client.js";
 import type { PaymentProvider } from "./payments.js";
@@ -56,6 +57,7 @@ export async function createPgliteRuntime(options: {
   billingMode?: "cloud" | "oss";
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
+  gifs?: GifClient;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const { PGlite } = await import("@electric-sql/pglite");
@@ -142,6 +144,7 @@ export async function createPgliteRuntime(options: {
     billingMode,
     mediaLit: options.mediaLit ?? new MemoryMediaLitClient(() => clock.now()),
     unsplash: options.unsplash ?? createUnsplashClientFromEnv(),
+    gifs: options.gifs ?? new DisabledGifClient(),
     serviceName: options.serviceName ?? "courselit-api",
     databaseReady: true,
     logger: options.logger ?? observability.logger,
@@ -177,6 +180,7 @@ export async function createPostgresRuntime(options: {
   authSecret: string;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
+  gifs?: GifClient;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const client = new Pool({ connectionString: options.databaseUrl });
@@ -238,6 +242,7 @@ export async function createPostgresRuntime(options: {
     billingMode,
     mediaLit: options.mediaLit ?? createMediaLitClientFromEnv(),
     unsplash: options.unsplash ?? createUnsplashClientFromEnv(),
+    gifs: options.gifs ?? createGifClientFromEnv(),
     serviceName: options.serviceName ?? "courselit-api",
     databaseReady: true,
     logger: options.logger ?? observability.logger,

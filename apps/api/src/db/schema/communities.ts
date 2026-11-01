@@ -67,6 +67,8 @@ export const communityPosts = pgTable(
     content: text("content").notNull().default(""),
     category: text("category").notNull().default("General"),
     spaceId: uuid("space_id"),
+    /** External GIF links picked from GIF search; never media-library items. */
+    gifUrls: jsonb("gif_urls").$type<string[]>().notNull().default([]),
     pinned: boolean("pinned").notNull().default(false),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

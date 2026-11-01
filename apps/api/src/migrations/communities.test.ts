@@ -145,6 +145,13 @@ describe.serial("legacy community migration", () => {
             title: "Question",
             content: "How do I get started?",
             category: "Questions",
+            media: [
+              {
+                type: "gif",
+                title: "GIF",
+                url: "https://media1.giphy.com/media/legacy/200.gif",
+              },
+            ],
           },
         ],
         comments: [
@@ -218,6 +225,13 @@ describe.serial("legacy community migration", () => {
     )[0]!;
     expect(community).toMatchObject({ schoolId: school.id, slug: "creators" });
     expect(JSON.parse(community.categories)).toEqual(["General", "Questions"]);
+    const [questionPost] = await runtime.db
+      .select()
+      .from(schema.communityPosts)
+      .where(eq(schema.communityPosts.publicId, "legacy-community-post-2"));
+    expect(questionPost?.gifUrls).toEqual([
+      "https://media1.giphy.com/media/legacy/200.gif",
+    ]);
     const comments = await runtime.db
       .select()
       .from(schema.communityComments)
