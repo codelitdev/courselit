@@ -204,7 +204,9 @@ export default function BannerWidget({
         </div>
       ) : productPlans.length > 0 ? (
         <div className="flex w-full flex-col gap-3">
-          <Caption theme={resolvedTheme}>Buy this course</Caption>
+          <Caption theme={resolvedTheme}>
+            {resource.kind === "download" ? "Get this download" : "Buy this course"}
+          </Caption>
           {productPlans.map((plan) => (
             <PageCard
               theme={resolvedTheme}

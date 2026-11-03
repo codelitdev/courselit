@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar";
 import { signOutLearner } from "@/lib/learner-sign-in";
 import { requestJson } from "@/lib/request-json";
+import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { useSchoolBrand, useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
 
@@ -86,15 +87,20 @@ export function LearnerSidebar({
   useEffect(() => {
     if (!user) return;
     let active = true;
-    void requestJson<{ items: LearnerSpace[] }>("/api/v1/learner/spaces")
-      .then((body) => {
-        if (active) setSpaces(body.items);
-      })
-      .catch(() => {
-        // The sidebar should remain usable when the spaces request fails.
-      });
+    const load = () =>
+      void requestJson<{ items: LearnerSpace[] }>("/api/v1/learner/spaces")
+        .then((body) => {
+          if (active) setSpaces(body.items);
+        })
+        .catch(() => {
+          // The sidebar should remain usable when the spaces request fails.
+        });
+    load();
+    // Joining or leaving a community changes which spaces the learner can open.
+    window.addEventListener(LEARNER_ACCESS_CHANGED, load);
     return () => {
       active = false;
+      window.removeEventListener(LEARNER_ACCESS_CHANGED, load);
     };
   }, [user]);
 

@@ -32,6 +32,7 @@ import {
   LearnerCardContent as PageCardContent,
 } from "@/components/themed-page-builder";
 import { toast } from "@/components/themed-sonner";
+import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 
 type LearnerCommunityMembership = z.infer<typeof learnerCommunityMembershipSchema>;
 
@@ -141,6 +142,7 @@ export function LearnerCommunityMemberships() {
       );
       // Spaces and posts this community unlocked are no longer available.
       router.refresh();
+      window.dispatchEvent(new Event(LEARNER_ACCESS_CHANGED));
     } catch {
       toast.error(
         `Unable to leave ${community.name}. Your membership and billing are unchanged. Try again, or contact the school if this keeps happening.`,
