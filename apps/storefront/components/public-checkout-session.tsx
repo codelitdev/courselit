@@ -733,7 +733,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             onClick={() => void continueCheckout()}
             className="w-fit"
           >
-            {busy ? "Please wait…" : "Complete Purchase"}
+            {busy
+              ? "Please wait…"
+              : needsJoiningReason
+                ? "Request to join"
+                : "Complete Purchase"}
           </Button>
         </section>
       </main>

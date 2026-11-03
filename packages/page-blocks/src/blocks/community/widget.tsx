@@ -18,7 +18,7 @@ import {
 import { TextRenderer } from "@frontlit/text-editor";
 import { ArrowRight, Lock, MessagesSquare, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { CourseLitPlan } from "../shared/types";
+import { planCopy } from "./plan-copy";
 import {
   descriptionContent,
   publicApiPath,
@@ -26,56 +26,6 @@ import {
   sectionTheme,
 } from "../shared/utils";
 import type { CommunitySettings } from "./settings";
-
-function money(plan: CourseLitPlan) {
-  const amount = plan.amountMinor / 100;
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
-}
-
-/** Price, its unit, a one-line summary and the join caption for a plan. */
-function planCopy(plan: CourseLitPlan) {
-  const price = money(plan);
-  switch (plan.type) {
-    case "free":
-      return {
-        price: "Free",
-        unit: "",
-        detail: plan.description || "No payment needed",
-        join: "Join for free",
-        note: null,
-      };
-    case "onetime":
-      return {
-        price,
-        unit: "one time",
-        detail: plan.description || "Pay once, keep access",
-        join: `Join for ${price}`,
-        note: "One payment. No subscription.",
-      };
-    case "emi":
-      return {
-        price,
-        unit: `× ${plan.installmentCount ?? 0} payments`,
-        detail: plan.description || "Spread the cost over monthly payments",
-        join: `Join for ${price} a month`,
-        note: `${plan.installmentCount ?? 0} monthly payments, then it's yours.`,
-      };
-    default: {
-      const yearly = plan.billingInterval === "year";
-      return {
-        price,
-        unit: yearly ? "per year" : "per month",
-        detail: plan.description || "Cancel any time",
-        join: `Join for ${price} a ${yearly ? "year" : "month"}`,
-        note: `Billed ${yearly ? "yearly" : "monthly"}. Cancel any time.`,
-      };
-    }
-  }
-}
 
 export default function CommunityWidget({
   settings,
@@ -133,13 +83,15 @@ export default function CommunityWidget({
     );
   }
 
+  // Free communities that screen new members only take requests.
+  const needsApproval = community.autoAcceptMembers === false;
   const title = settings.title?.trim() || community.name;
   const description = settings.description ?? descriptionContent(community.description);
   const plans = [...community.plans].sort(
     (a, b) => Number(Boolean(b.isDefault)) - Number(Boolean(a.isDefault)),
   );
   const selected = plans.find((plan) => plan.id === selectedPlanId) ?? plans[0];
-  const selectedCopy = selected ? planCopy(selected) : null;
+  const selectedCopy = selected ? planCopy(selected, needsApproval) : null;
   const member = membershipStatus === "active";
   const waiting = membershipStatus === "pending";
   const alignment =
@@ -196,7 +148,7 @@ export default function CommunityWidget({
           className="flex w-full flex-col gap-3 text-left"
         >
           {plans.map((plan) => {
-            const details = planCopy(plan);
+            const details = planCopy(plan, needsApproval);
             const inputId = `community-plan-${plan.id}`;
             return (
               <Label theme={resolvedTheme} key={plan.id} htmlFor={inputId} className="block w-full cursor-pointer">

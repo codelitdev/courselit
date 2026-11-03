@@ -81,12 +81,30 @@ const CODE_BY_STATUS: Record<number, Parameters<typeof createPlatformError>[0]> 
   403: "forbidden",
   404: "not_found",
   409: "conflict",
+  422: "validation_failed",
   429: "rate_limited",
 };
+
+/** Raised when email is about to go out before the school has set a postal
+ * address, which email providers require in every message. */
+class MailingAddressRequiredError extends Error {
+  constructor() {
+    super("mailing_address_required");
+  }
+}
+
+const MAILING_ADDRESS_REQUIRED =
+  "Add your mailing address in Mails → Settings before sending email.";
 
 // Creators see the service's own explanation for request errors, and a
 // neutral message otherwise; the raw error stays in `cause` for logs.
 function mapSendLitError(error: unknown): PlatformError {
+  if (error instanceof MailingAddressRequiredError) {
+    return createPlatformError("conflict", {
+      safeDetails: { reason: MAILING_ADDRESS_REQUIRED },
+      cause: error,
+    });
+  }
   if (error instanceof SendLitApiError && error.status && CODE_BY_STATUS[error.status]) {
     return createPlatformError(CODE_BY_STATUS[error.status]!, {
       safeDetails: { reason: error.detail ?? "The mailing service rejected the request." },
@@ -855,8 +873,13 @@ export async function startSequence(
     db,
     schoolId,
     clock,
-    async (auth, cfg) =>
-      fromSendLitTrigger(await startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg })),
+    async (auth, cfg) => {
+      const settings = await getSendLitGeneralSettings(auth.teamApiKey, { config: cfg });
+      if (!settings.mailingAddress?.trim()) throw new MailingAddressRequiredError();
+      return fromSendLitTrigger(
+        await startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+      );
+    },
     config,
   );
 }

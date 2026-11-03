@@ -201,6 +201,13 @@ function getSequenceStatusError(message: string, action: "activate" | "pause") {
         "Publish at least one email before activating this sequence.",
     };
   }
+  if (/mailing address/i.test(message)) {
+    return {
+      title: "Add your mailing address first",
+      description:
+        "Email providers require a postal address in every message. Add yours in Mails → Settings, then try again.",
+    };
+  }
   return {
     title: `Unable to ${action} sequence`,
     description: `We couldn't ${action} this sequence. Please try again.`,

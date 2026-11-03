@@ -40,6 +40,8 @@ export type CourseLitCommunityPreview = {
   description: string;
   featuredImage: MediaRef | null;
   membersCount: number;
+  /** False when staff approve each request to join. */
+  autoAcceptMembers?: boolean;
   plans: CourseLitPlan[];
   membership?: { status?: string } | null;
 };

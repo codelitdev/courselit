@@ -25,6 +25,7 @@ import { ActivityType, recordActivity } from "./activities.js";
 import {
   activateCommunityPlan,
   revokeCommunityMembershipAccess,
+  grantIncludedProducts,
 } from "./community-commerce.js";
 import {
   activeCommunitySubscriptions,
@@ -2957,6 +2958,34 @@ export async function updateMembership(
             clock,
           });
         }
+      }
+    }
+    if (
+      next.status === "active" &&
+      existing.status !== "active" &&
+      existing.paymentPlanId &&
+      existing.schoolAccountId
+    ) {
+      // Approving a request is what lets the member in, so the products
+      // bundled into their plan are granted now.
+      const [plan] = await tx
+        .select()
+        .from(schema.storefrontPlans)
+        .where(
+          and(
+            eq(schema.storefrontPlans.schoolId, school.schoolId),
+            eq(schema.storefrontPlans.publicId, existing.paymentPlanId),
+          ),
+        )
+        .limit(1);
+      if (plan) {
+        await grantIncludedProducts(
+          txDb,
+          { schoolId: school.schoolId, schoolAccountId: existing.schoolAccountId },
+          plan,
+          { id: existing.id, sessionId: existing.sessionId },
+          clock,
+        );
       }
     }
     await markCommunitySubscriptionsCancelled(txDb, subscriptions, now);

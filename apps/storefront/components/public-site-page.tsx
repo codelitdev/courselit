@@ -20,7 +20,6 @@ export type PublicSystemRoute =
   | "products"
   | "communities"
   | "community"
-  | "join"
   | "product"
   | "lesson"
   | "checkout"
@@ -31,27 +30,9 @@ export function publicSystemRouteForSlug(
 ): PublicSystemRoute | undefined {
   return pageSlug === "blog" ||
     pageSlug === "products" ||
-    pageSlug === "communities" ||
-    pageSlug === "join"
+    pageSlug === "communities"
     ? pageSlug
     : undefined;
-}
-
-function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
-  const header = chrome.find((instance) => instance.name === "header");
-  const footer = chrome.find((instance) => instance.name === "footer");
-  return [
-    ...(header ? [header] : []),
-    {
-      widgetId: "join-community",
-      name: "courselit-community",
-      deletable: false,
-      moveable: false,
-      shared: false,
-      settings: { textPosition: "left", textAlignment: "left" },
-    },
-    ...(footer ? [footer] : []),
-  ];
 }
 
 export async function loadPublicPage(pageSlug: string, schoolId: string) {
@@ -116,14 +97,11 @@ export async function PublicSitePage({
         : [];
   const siteCommunity =
     salesCommunity ??
-    (salesProduct?.includedWithCommunity ||
-    systemRoute === "join" ||
-    pageSlug === "join"
+    (salesProduct?.includedWithCommunity
       ? await getPublicCommunity(schoolId, "community")
       : pageSlug && systemRoute !== "products" && systemRoute !== "blog"
         ? await getPublicCommunity(schoolId, "community")
         : null);
-  if (systemRoute === "join" && !siteCommunity) notFound();
   const siteCommunityPlans = siteCommunity
     ? await getPublicCommunityPlans(schoolId, siteCommunity.id)
     : [];
@@ -178,8 +156,7 @@ export async function PublicSitePage({
             (instance) => instance.name === "header" || instance.name === "footer",
           )
         : (resolvedPage?.layout ?? []);
-  const baseLayout: WidgetInstance[] =
-    systemRoute === "join" ? composeJoinLayout(chromeLayout) : chromeLayout;
+  const baseLayout: WidgetInstance[] = chromeLayout;
   const renderLayout = baseLayout.map((instance) => {
     const isLegacySalesSlot =
       instance.name === "data-slot" &&
@@ -262,7 +239,7 @@ export async function PublicSitePage({
       pageData={pageData}
       dataSlots={dataSlots}
     >
-      {systemRoute && systemRoute !== "join" && (!isSalesPage || !page) ? (
+      {systemRoute && (!isSalesPage || !page) ? (
         <SitePageSection>{systemContent}</SitePageSection>
       ) : undefined}
     </SitePageRenderer>

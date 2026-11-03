@@ -349,26 +349,49 @@ export async function activateCommunityPlan(
       clock,
     );
   }
-  if (status !== "active" || plan.includedProducts.length === 0) return learnerMembership;
-  const products = await includedProducts(tx, context.schoolId, plan.includedProducts);
-  for (const product of products) {
-    await upsertLearnerMembership(
+  if (status === "active") {
+    await grantIncludedProducts(
       tx,
-      {
-        schoolId: context.schoolId,
-        learnerId: context.learnerId,
-        entityType: "product",
-        entityId: product.publicId,
-        paymentPlanId: plan.publicId,
-        status: "active",
-        sessionId: learnerMembership.sessionId,
-        isIncludedInPlan: true,
-        parentMembershipId: learnerMembership.id,
-      },
+      { schoolId: context.schoolId, schoolAccountId: context.schoolAccountId ?? context.learnerId },
+      plan,
+      learnerMembership,
       clock,
     );
   }
   return learnerMembership;
+}
+
+/**
+ * Gives an active community member the products bundled into their plan. Runs
+ * whenever a membership becomes active: on joining, and when staff approve a
+ * request, so approval-only communities hand out the bundle too.
+ */
+export async function grantIncludedProducts(
+  tx: AppDb,
+  member: { schoolId: string; schoolAccountId: string },
+  plan: { publicId: string; includedProducts: string[] },
+  parent: { id: string; sessionId: string | null },
+  clock: Clock,
+) {
+  if (plan.includedProducts.length === 0) return;
+  const products = await includedProducts(tx, member.schoolId, plan.includedProducts);
+  for (const product of products) {
+    await upsertLearnerMembership(
+      tx,
+      {
+        schoolId: member.schoolId,
+        schoolAccountId: member.schoolAccountId,
+        entityType: "product",
+        entityId: product.publicId,
+        paymentPlanId: plan.publicId,
+        status: "active",
+        sessionId: parent.sessionId,
+        isIncludedInPlan: true,
+        parentMembershipId: parent.id,
+      },
+      clock,
+    );
+  }
 }
 
 async function stageCommunityMembership(
