@@ -40,18 +40,6 @@ describe.serial("first vertical slice", () => {
       true,
     );
 
-    const missingPlan = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/schools",
-      headers: { cookie: world.owner.sessionCookie },
-      body: { name: "Unpaid School", subdomain: "unpaid-school" },
-    });
-    expect(missingPlan.status).toBe(400);
-    expect(missingPlan.body).toMatchObject({
-      code: "validation_failed",
-      details: { reason: "paid_plan_required" },
-    });
-
     const created = await dispatch(runtime, {
       method: "POST",
       path: "/v1/schools",
@@ -62,9 +50,6 @@ describe.serial("first vertical slice", () => {
       body: {
         name: "Slice School",
         subdomain: "slice-school",
-        plan: "pro",
-        interval: "month",
-        catalogRevision: catalogBody.catalogRevision,
       },
     });
     expect(created.status).toBe(201);
@@ -75,7 +60,6 @@ describe.serial("first vertical slice", () => {
       status: string;
       locale: string;
       currency: string;
-      checkoutUrl?: string;
     };
     expect(school).toMatchObject({
       name: "Slice School",
@@ -84,7 +68,7 @@ describe.serial("first vertical slice", () => {
       locale: "en",
       currency: "USD",
     });
-    expect(school.checkoutUrl).toMatch(/^https?:\/\//);
+    expect((created.body as { checkoutUrl?: string }).checkoutUrl).toBeUndefined();
 
     const invited = await dispatch(runtime, {
       method: "POST",

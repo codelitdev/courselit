@@ -1,6 +1,6 @@
 "use client";
 
-import { publicApiPath, useSchoolId } from "@/components/school-context";
+import { publicApiPath, useLegalPages, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import {
   Button,
@@ -260,6 +260,7 @@ function IncludedProducts({ products }: { products?: IncludedProduct[] }) {
 }
 
 export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
+  const legalPages = useLegalPages();
   const theme = useSchoolThemeStyle();
   const schoolId = useSchoolId();
   const [session, setSession] = useState<CheckoutSession | null>(null);
@@ -634,13 +635,15 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
               onComplete={setLearner}
             />
           )}
-          <Text2 theme={theme} className="text-muted-foreground">
-            By submitting, you accept the{" "}
-            <Link href="/terms" className="underline">
-              Terms
-            </Link>
-            .
-          </Text2>
+          {legalPages.terms ? (
+            <Text2 theme={theme} className="text-muted-foreground">
+              By submitting, you accept the{" "}
+              <Link href="/terms" className="underline">
+                Terms
+              </Link>
+              .
+            </Text2>
+          ) : null}
         </section>
 
         <section className="flex flex-col gap-4">

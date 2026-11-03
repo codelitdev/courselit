@@ -32,6 +32,7 @@ type School = {
   id: string;
   subdomain?: string;
   storefrontHost?: string | null;
+  storefrontOrigin?: string | null;
   selected?: boolean;
 };
 
@@ -75,7 +76,7 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
     : excerptSaveError;
   const liveBlogUrl =
     blog && blog.status !== "draft" && school
-      ? storefrontUrl(`/blog/${encodeURIComponent(blog.slug)}`, school.storefrontHost)
+      ? storefrontUrl(`/blog/${encodeURIComponent(blog.slug)}`, school.storefrontOrigin)
       : null;
 
   useSetBreadcrumb([

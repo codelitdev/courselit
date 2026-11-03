@@ -4,7 +4,7 @@ import { Building2, Check, ExternalLink, Globe, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { CourseLitLoading } from "@/components/loading";
-import { CreateSchoolDialog } from "@/components/layout/create-school-dialog";
+import Link from "next/link";
 import { Button } from "@/components/ui/codelit/button";
 import { storefrontUrl } from "@/lib/storefront-url";
 
@@ -13,6 +13,7 @@ type SchoolItem = {
   name: string;
   subdomain: string;
   storefrontHost?: string | null;
+  storefrontOrigin?: string | null;
   status: string;
   locale: string;
   currency: string;
@@ -23,7 +24,6 @@ export default function SchoolsPage() {
   const [schools, setSchools] = useState<SchoolItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState<string | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   function loadSchools() {
     return fetch("/api/v1/schools", {
@@ -37,7 +37,6 @@ export default function SchoolsPage() {
       .then((body) => {
         const items = body.items ?? [];
         setSchools(items);
-        if (items.length === 0) setCreateDialogOpen(true);
       })
       .catch(() => {
         // If request failed (e.g. rate-limit or network), don't falsely open create dialog
@@ -77,12 +76,11 @@ export default function SchoolsPage() {
               Manage your schools and switch between them.
             </p>
           </div>
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-1.5"
-          >
-            <Plus className="size-4" />
-            New school
+          <Button asChild className="flex items-center gap-1.5">
+            <Link href="/onboarding/setup?new=1">
+              <Plus className="size-4" />
+              New school
+            </Link>
           </Button>
         </div>
 
@@ -98,16 +96,18 @@ export default function SchoolsPage() {
               You haven&apos;t created or joined any schools yet. Create your first
               school to get started.
             </p>
-            <Button onClick={() => setCreateDialogOpen(true)} className="mt-2">
-              <Plus className="size-4 mr-1.5" />
-              New school
+            <Button asChild className="mt-2">
+              <Link href="/onboarding/setup">
+                <Plus className="size-4 mr-1.5" />
+                New school
+              </Link>
             </Button>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {schools.map((school) => {
               const isSelected = Boolean(school.selected);
-              const publicSiteUrl = storefrontUrl("/", school.storefrontHost);
+              const publicSiteUrl = storefrontUrl("/", school.storefrontOrigin);
               return (
                 <div
                   key={school.id}
@@ -179,15 +179,6 @@ export default function SchoolsPage() {
             })}
           </div>
         )}
-
-        <CreateSchoolDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          onSuccess={() => {
-            void loadSchools();
-            window.location.reload();
-          }}
-        />
       </div>
     </AuthGate>
   );

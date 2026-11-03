@@ -25,9 +25,11 @@ export type School = {
   name: string;
   subdomain?: string;
   storefrontHost?: string | null;
+  storefrontOrigin?: string | null;
   status?: string;
   permissions?: readonly CourseLitPermission[];
   selected?: boolean;
+  isOwner?: boolean;
   website?: {
     logo: { url: string; thumbnailUrl?: string | null } | null;
   };
@@ -153,7 +155,7 @@ export function TeamSwitcher({
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="gap-2 p-2">
-              <Link href="/schools">
+              <Link href="/onboarding/setup?new=1">
                 <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                   <Plus className="size-4" />
                 </div>

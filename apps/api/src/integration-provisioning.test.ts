@@ -58,7 +58,12 @@ describe("CourseLit website provisioning", () => {
       "privacy",
       "terms",
     ]);
-    expect(pages.every((page) => page.publishedAt !== null)).toBe(true);
+    // Terms and Privacy start as unpublished drafts the creator writes later.
+    const publishedSlugs = pages
+      .filter((page) => page.publishedAt !== null)
+      .map((page) => page.slug)
+      .sort();
+    expect(publishedSlugs).toEqual(["", "community"]);
     expect(pages.find((page) => page.slug === "community")?.communityId).toBeTruthy();
 
     const jobs = await runtime.db

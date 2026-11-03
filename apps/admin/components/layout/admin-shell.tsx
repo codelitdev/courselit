@@ -19,8 +19,11 @@ import {
   readInvitationTokenFromHash,
 } from "@/lib/invitation-token";
 
+const RESUME_PROMPTED_KEY = "courselit.onboarding.resume-prompted";
+
 const SCHOOL_OPTIONAL_PREFIXES = [
   "/schools",
+  "/onboarding/setup",
   "/invitations/accept",
   "/team-invitations",
 ];
@@ -58,6 +61,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isFullScreenMailEditor =
     /^\/mails\/(?:editor\/[^/]+|templates\/[^/]+\/edit)\/?$/.test(pathname) ||
     /^\/products\/[^/]+\/content\/section\/[^/]+\/email\/?$/.test(pathname);
+  const isFullScreenSetupWizard = /^\/onboarding\/setup\/?$/.test(pathname);
   const isFullScreenTeamInvitation = /^\/team-invitations\/[^/]+\/?$/.test(
     pathname,
   );
@@ -111,6 +115,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     isFullScreenPageEditor ||
     isFullScreenBlogEditor ||
     isFullScreenMailEditor ||
+    isFullScreenSetupWizard ||
     isFullScreenTeamInvitation;
 
   useEffect(() => {
@@ -200,8 +205,49 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         setSchools(items);
         if (items.length === 0 && !schoolOptional) {
-          router.replace("/schools");
+          router.replace("/onboarding/setup");
           return;
+        }
+        // First load of a session: an owner with an unfinished setup is offered
+        // the Resume dialog. Team members never see the wizard.
+        const selectedSchool = items.find((item) => item.selected) ?? items[0];
+        const path = window.location.pathname;
+        const exempt =
+          path.startsWith("/onboarding") ||
+          path.startsWith("/schools") ||
+          path.startsWith("/invitations") ||
+          path.startsWith("/team-invitations");
+        if (selectedSchool?.isOwner === true && !exempt) {
+          let prompted = false;
+          try {
+            prompted = sessionStorage.getItem(RESUME_PROMPTED_KEY) === "1";
+          } catch {
+            prompted = true;
+          }
+          if (!prompted) {
+            try {
+              sessionStorage.setItem(RESUME_PROMPTED_KEY, "1");
+            } catch {
+              // Without sessionStorage the prompt is skipped to avoid nagging.
+            }
+            try {
+              const onboardingResponse = await fetch("/api/v1/school/onboarding", {
+                credentials: "include",
+                cache: "no-store",
+                headers: { "x-school-id": selectedSchool.id },
+              });
+              if (cancelled) return;
+              if (onboardingResponse.ok) {
+                const onboarding = (await onboardingResponse.json()) as { status?: string };
+                if (onboarding.status === "in_progress") {
+                  router.replace("/onboarding/setup?resume=1");
+                  return;
+                }
+              }
+            } catch {
+              // The onboarding check never blocks the admin from loading.
+            }
+          }
         }
         setCheckedScope(accessScope);
         setReady(true);

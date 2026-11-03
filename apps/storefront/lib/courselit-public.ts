@@ -1,3 +1,4 @@
+import type { CourseLitHomeOffer } from "@courselit/page-blocks";
 import type { MediaRef } from "@courselit/api-contract";
 import type { WidgetInstance } from "@frontlit/page-builder/models";
 import type { TextEditorContent } from "@frontlit/text-editor";
@@ -218,4 +219,45 @@ export async function getPublicCommunityPlans(
     `/communities/${encodeURIComponent(idOrSlug)}/plans`,
   );
   return result?.items ?? [];
+}
+
+type PublicOfferListItem = {
+  id: string;
+  slug?: string;
+  title?: string;
+  name?: string;
+  description: string;
+  kind?: "course" | "download";
+  featuredImage: MediaRef | null;
+  currency: string;
+  priceMinor: number | null;
+  membersCount?: number;
+};
+
+/** The school's published products and communities as homepage offers.
+ * Courses and downloads first, then the community. Failures read as "none". */
+export async function listPublicHomeOffers(
+  schoolId: string,
+): Promise<CourseLitHomeOffer[]> {
+  const [products, communities] = await Promise.all([
+    getFromApi<{ items?: PublicOfferListItem[] }>(schoolId, "/products?limit=6"),
+    getFromApi<{ items?: PublicOfferListItem[] }>(schoolId, "/communities?limit=3"),
+  ]);
+  const toOffer =
+    (kind: CourseLitHomeOffer["kind"]) =>
+    (item: PublicOfferListItem): CourseLitHomeOffer => ({
+      id: item.id,
+      slug: item.slug ?? "",
+      kind: kind === "community" ? "community" : (item.kind ?? "course"),
+      title: (item.title ?? item.name ?? "").trim(),
+      description: item.description ?? "",
+      featuredImage: item.featuredImage ?? null,
+      priceMinor: item.priceMinor,
+      currency: item.currency,
+      ...(item.membersCount !== undefined ? { membersCount: item.membersCount } : {}),
+    });
+  return [
+    ...(products?.items ?? []).map(toOffer("course")),
+    ...(communities?.items ?? []).map(toOffer("community")),
+  ].filter((offer) => offer.title);
 }

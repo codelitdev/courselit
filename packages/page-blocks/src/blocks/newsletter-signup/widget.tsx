@@ -14,7 +14,6 @@ import { type FormEvent, useId, useState } from "react";
 import {
   DEFAULT_NEWSLETTER_BUTTON,
   DEFAULT_NEWSLETTER_FAILURE,
-  DEFAULT_NEWSLETTER_SUBTITLE,
   DEFAULT_NEWSLETTER_SUCCESS,
   DEFAULT_NEWSLETTER_TITLE,
 } from "./constants";
@@ -92,11 +91,16 @@ export default function NewsletterSignupWidget({
       >
         <div className="flex flex-col gap-2">
           <Header1 theme={resolvedTheme}>
-            {settings.title || DEFAULT_NEWSLETTER_TITLE}
+            {settings.title ||
+              (pageData.siteTitle?.trim()
+                ? `Get updates from ${pageData.siteTitle.trim()}`
+                : DEFAULT_NEWSLETTER_TITLE)}
           </Header1>
-          <Subheader1 theme={resolvedTheme} component="span">
-            {settings.subtitle || DEFAULT_NEWSLETTER_SUBTITLE}
-          </Subheader1>
+          {settings.subtitle ? (
+            <Subheader1 theme={resolvedTheme} component="span">
+              {settings.subtitle}
+            </Subheader1>
+          ) : null}
         </div>
         {submitted ? (
           <Text2 theme={resolvedTheme} role="status" aria-live="polite">

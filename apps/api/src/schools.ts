@@ -9,6 +9,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
+import { insertSchoolOnboarding } from "./onboarding.js";
 import {
   OWNER_PERMISSIONS,
   parsePermissions,
@@ -33,6 +34,8 @@ export type SchoolDto = {
   name: string;
   subdomain: string;
   storefrontHost: string | null;
+  /** Where the storefront is reached, e.g. `https://school.example.com`. */
+  storefrontOrigin: string | null;
   status: "active" | "read_only" | "maintenance" | "migrating" | "deleted";
   locale: string;
   currency: string;
@@ -57,6 +60,15 @@ export function defaultStorefrontHost(subdomain: string): string | null {
   return domain ? `${subdomain}.${domain}` : null;
 }
 
+/** The storefront origin for a host. Local setups serve the storefront on a
+ * non-standard port, set with `STOREFRONT_PORT`. */
+export function storefrontOriginForHost(host: string | null): string | null {
+  if (!host) return null;
+  const port = process.env.STOREFRONT_PORT?.trim();
+  const scheme = /(^|\.)localhost$/.test(host) ? "http" : "https";
+  return `${scheme}://${host}${port ? `:${port}` : ""}`;
+}
+
 export function toSchoolDto(
   row: typeof schema.schools.$inferSelect,
   selected?: boolean,
@@ -69,6 +81,7 @@ export function toSchoolDto(
     name: row.name,
     subdomain: row.subdomain,
     storefrontHost,
+    storefrontOrigin: storefrontOriginForHost(storefrontHost),
     status: row.status,
     locale: row.locale,
     currency: row.currency,
@@ -126,6 +139,7 @@ export async function createSchool(
 
   await db.transaction(async (tx) => {
     await tx.insert(schema.schools).values(row);
+    await insertSchoolOnboarding(tx as AppDb, schoolId, now);
     await tx.insert(schema.schoolHosts).values({
       id: uuidv7(clock),
       schoolId,

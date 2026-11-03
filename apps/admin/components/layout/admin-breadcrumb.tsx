@@ -184,6 +184,9 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (clean === "/mails/settings") {
     return [{ label: "Mails", href: "/mails/broadcasts" }, { label: "Settings" }];
   }
+  if (clean === "/onboarding") {
+    return [{ label: "Onboarding" }];
+  }
   if (clean === "/settings") {
     return [{ label: "Settings" }];
   }
@@ -191,13 +194,15 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     clean === "/settings/payment" ||
     clean === "/settings/team" ||
     clean === "/settings/notifications" ||
-    clean === "/settings/api-keys"
+    clean === "/settings/api-keys" ||
+    clean === "/settings/ai-assistants"
   ) {
     const tabLabels: Record<string, string> = {
       payment: "Payments",
       team: "Team",
       notifications: "Notifications",
       "api-keys": "API keys",
+      "ai-assistants": "AI assistants",
     };
     const tab = clean.split("/")[2];
     return [{ label: "Settings", href: "/settings" }, { label: tabLabels[tab] }];

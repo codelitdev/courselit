@@ -10,7 +10,7 @@ import {
   Text2,
 } from "@frontlit/page-builder/primitives";
 import Link from "next/link";
-import { CourseLitLogo } from "@/components/layout/courselit-logo";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import {
   LearnerAvatar,
   LearnerAvatarFallback,
@@ -56,16 +56,17 @@ export function PublicBlogFeed({
                 isLink
                 className="h-full transition-transform hover:-translate-y-1"
               >
-                <PageCardImage
-                  theme={theme}
-                  src={featuredImageUrl(post) ?? "/courselit_backdrop_square.webp"}
-                  alt={
-                    post.featuredImage?.alt ??
-                    (featuredImageUrl(post) ? (post.title ?? post.slug) : "CourseLit")
-                  }
-                  className="aspect-video object-cover"
-                  style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
-                />
+                {featuredImageUrl(post) ? (
+                  <PageCardImage
+                    theme={theme}
+                    src={featuredImageUrl(post)!}
+                    alt={post.featuredImage?.alt ?? (post.title ?? post.slug)}
+                    className="aspect-video object-cover"
+                    style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+                  />
+                ) : (
+                  <ImagePlaceholder className="aspect-video w-full" />
+                )}
                 <PageCardContent theme={theme} className="flex h-full flex-col gap-3">
                   <Header4 theme={theme}>{post.title ?? post.slug}</Header4>
                   {post.excerpt ? <Text2 theme={theme}>{post.excerpt}</Text2> : null}
@@ -78,12 +79,12 @@ export function PublicBlogFeed({
                         />
                       ) : (
                         <LearnerAvatarFallback>
-                          <CourseLitLogo className="size-5" />
+                          {(post.author?.name.trim() || schoolTitle?.trim() || "").charAt(0).toUpperCase()}
                         </LearnerAvatarFallback>
                       )}
                     </LearnerAvatar>
                     <Subheader1 theme={theme} component="span">
-                      {post.author?.name.trim() || schoolTitle?.trim() || "CourseLit"}
+                      {post.author?.name.trim() || schoolTitle?.trim() || ""}
                     </Subheader1>
                   </div>
                   {post.publishedAt ? (

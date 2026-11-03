@@ -64,3 +64,20 @@ export type BannerResource = {
   includedWithCommunity?: boolean;
   community?: { id: string; plans: CourseLitPlan[] } | null;
 };
+
+/** One published offer (product or community) shown on the default homepage. */
+export type CourseLitHomeOffer = {
+  id: string;
+  slug: string;
+  kind: "course" | "download" | "community";
+  title: string;
+  description: string;
+  featuredImage: MediaRef | null;
+  /** Null means free access. */
+  priceMinor: number | null;
+  currency: string;
+  membersCount?: number;
+};
+
+/** Real school data for homepage blocks; set by the storefront on the homepage only. */
+export type CourseLitHomeData = { offers: CourseLitHomeOffer[] };

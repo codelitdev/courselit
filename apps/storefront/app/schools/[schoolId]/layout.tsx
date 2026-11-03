@@ -1,9 +1,9 @@
 import { type ReactNode, Suspense } from "react";
 import { CodeInjector } from "../../../components/code-injector";
-import { SchoolProvider } from "../../../components/school-context";
+import { LegalPagesProvider, SchoolProvider } from "../../../components/school-context";
 import { SchoolThemeProvider } from "../../../components/school-theme-provider";
 import { LearnerTooltipProvider } from "../../../components/themed-page-builder";
-import { getSettings } from "../../../lib/courselit-public";
+import { getPageBySlug, getSettings } from "../../../lib/courselit-public";
 
 export async function generateMetadata({
   params,
@@ -75,16 +75,22 @@ async function ConfiguredStorefront({
   schoolId: string;
   children: ReactNode;
 }) {
-  const settings = await getSettings(schoolId);
+  const [settings, termsPage, privacyPage] = await Promise.all([
+    getSettings(schoolId),
+    getPageBySlug(schoolId, "terms"),
+    getPageBySlug(schoolId, "privacy"),
+  ]);
+  // No logo means no logo: the school's name stands alone.
   const siteLogoUrl =
     typeof settings?.logo?.url === "string" && settings.logo.url.trim()
       ? settings.logo.url.trim()
-      : "/icon.svg";
-  const siteLogoAlt =
-    settings?.logo?.alt || settings?.title?.trim() || "CourseLit";
+      : null;
+  const siteLogoAlt = settings?.logo?.alt || settings?.title?.trim() || "";
 
   return (
-    <>
+    <LegalPagesProvider
+      value={{ terms: Boolean(termsPage), privacy: Boolean(privacyPage) }}
+    >
       <StorefrontProviders
         title={settings?.title}
         subtitle={settings?.subtitle}
@@ -99,7 +105,7 @@ async function ConfiguredStorefront({
         head={settings?.codeInjectionHead}
         body={settings?.codeInjectionBody}
       />
-    </>
+    </LegalPagesProvider>
   );
 }
 

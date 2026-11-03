@@ -29,3 +29,23 @@ export function useSchoolId(): string {
 export function publicApiPath(schoolId: string, suffix: string): string {
   return `/api/v1/public/${encodeURIComponent(schoolId)}${suffix}`;
 }
+
+export type LegalPages = { terms: boolean; privacy: boolean };
+
+const LegalPagesContext = createContext<LegalPages>({ terms: false, privacy: false });
+
+/** Which legal pages the school has published. Checkout and sign-in link to
+ * Terms only once the page is published. */
+export function LegalPagesProvider({
+  value,
+  children,
+}: {
+  value: LegalPages;
+  children: ReactNode;
+}) {
+  return <LegalPagesContext.Provider value={value}>{children}</LegalPagesContext.Provider>;
+}
+
+export function useLegalPages(): LegalPages {
+  return useContext(LegalPagesContext);
+}

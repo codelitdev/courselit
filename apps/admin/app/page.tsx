@@ -22,6 +22,8 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "../components/ui/chart";
+import { OnboardingVisibilityMenu } from "../components/onboarding/checklist/onboarding-menu";
+import { useOnboarding } from "../components/onboarding/checklist/use-onboarding";
 import { storefrontUrl } from "../lib/storefront-url";
 
 type OverviewRange = "7d" | "30d" | "90d" | "1y";
@@ -59,11 +61,12 @@ export default function HomePage() {
   const schools = shell?.schools ?? [];
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<SchoolOverview | null>(null);
+  const onboarding = useOnboarding();
   const [overviewRange, setOverviewRange] = useState<OverviewRange>("7d");
 
   const selected = schools.find((school) => school.selected) ?? schools[0] ?? null;
   const selectedSchoolId = selected?.id;
-  const visitSiteUrl = selected ? storefrontUrl("/", selected.storefrontHost) : null;
+  const visitSiteUrl = selected ? storefrontUrl("/", selected.storefrontOrigin) : null;
 
   useEffect(() => {
     if (!selectedSchoolId) {
@@ -109,6 +112,9 @@ export default function HomePage() {
                       Visit site
                     </a>
                   </Button>
+                ) : null}
+                {onboarding.isOwner && onboarding.state?.checklistHidden ? (
+                  <OnboardingVisibilityMenu mode="show" />
                 ) : null}
                 <Select
                   value={overviewRange}

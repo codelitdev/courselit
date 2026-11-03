@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
-import { listSchoolsForUser, resolveSchoolByHost } from "./schools.js";
+import { listSchoolsForUser, resolveSchoolByHost, storefrontOriginForHost } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { customDomainConfig, type DnsResolver } from "./school-hosts.js";
 
@@ -26,11 +26,30 @@ function stubDns(runtime: Awaited<ReturnType<typeof createPgliteRuntime>>) {
   return records;
 }
 
+describe("storefront origin", () => {
+  it("uses http for localhost, https elsewhere, and the configured local port", () => {
+    const originalPort = process.env.STOREFRONT_PORT;
+    try {
+      delete process.env.STOREFRONT_PORT;
+      expect(storefrontOriginForHost("hathi.localhost")).toBe("http://hathi.localhost");
+      expect(storefrontOriginForHost("learn.example.net")).toBe("https://learn.example.net");
+      expect(storefrontOriginForHost(null)).toBeNull();
+      process.env.STOREFRONT_PORT = "3002";
+      expect(storefrontOriginForHost("hathi.localhost")).toBe("http://hathi.localhost:3002");
+    } finally {
+      if (originalPort === undefined) delete process.env.STOREFRONT_PORT;
+      else process.env.STOREFRONT_PORT = originalPort;
+    }
+  });
+});
+
 describe.serial("school custom host lifecycle", () => {
   it("returns runtime storefront hosts and prefers a verified custom host", async () => {
     const originalNodeEnv = process.env.NODE_ENV;
     const originalPlatformDomain = process.env.PLATFORM_SITE_DOMAIN;
+    const originalPort = process.env.STOREFRONT_PORT;
     process.env.NODE_ENV = "test";
+    delete process.env.STOREFRONT_PORT;
     process.env.PLATFORM_SITE_DOMAIN = "schools.example.test";
 
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
@@ -65,12 +84,16 @@ describe.serial("school custom host lifecycle", () => {
       expect(
         updatedSchools.find((school) => school.id === world.schoolA.publicId)?.storefrontHost,
       ).toBe("learn.school-a.example.net");
+      expect(
+        updatedSchools.find((school) => school.id === world.schoolA.publicId)?.storefrontOrigin,
+      ).toBe("https://learn.school-a.example.net");
     } finally {
       await runtime.close();
       if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = originalNodeEnv;
       if (originalPlatformDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
       else process.env.PLATFORM_SITE_DOMAIN = originalPlatformDomain;
+      if (originalPort !== undefined) process.env.STOREFRONT_PORT = originalPort;
     }
   });
 

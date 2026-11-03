@@ -1,6 +1,7 @@
 "use client";
 
 import type { learnerCommunityMembershipSchema } from "@courselit/api-contract";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import { Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -200,15 +201,19 @@ export function LearnerCommunityMemberships() {
               return (
                 <PageCard key={community.id}>
                   <PageCardContent className="flex flex-wrap items-center gap-4">
-                    <LearnerCardImage
-                      src={
-                        community.featuredImage?.thumbnailUrl ??
-                        community.featuredImage?.url ??
-                        "/courselit_backdrop_square.webp"
-                      }
-                      alt={community.featuredImage?.alt || community.name}
-                      className="size-16 shrink-0 object-cover"
-                    />
+                    {community.featuredImage?.thumbnailUrl ||
+                    community.featuredImage?.url ? (
+                      <LearnerCardImage
+                        src={
+                          (community.featuredImage.thumbnailUrl ??
+                            community.featuredImage.url)!
+                        }
+                        alt={community.featuredImage.alt || community.name}
+                        className="size-16 shrink-0 object-cover"
+                      />
+                    ) : (
+                      <ImagePlaceholder className="size-16 shrink-0" />
+                    )}
                     <div className="grid min-w-0 flex-1 gap-1">
                       <LearnerHeader2 className="truncate">
                         {community.name}

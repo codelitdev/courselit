@@ -6,7 +6,7 @@ import type {
   LearnerMembershipStatus,
 } from "./learner-memberships.js";
 import { MailEventName } from "./mail-triggers.js";
-import { defaultStorefrontHost } from "./schools.js";
+import { defaultStorefrontHost, storefrontOriginForHost } from "./schools.js";
 import type { AppDb } from "./types.js";
 
 export type TrackSendLitEventPayload = {
@@ -34,18 +34,16 @@ export async function schoolSiteUrl(
     )
     .orderBy(desc(schema.schoolHosts.isPrimary))
     .limit(1);
-  // Local setups serve the storefront on a non-standard port.
-  const port = process.env.STOREFRONT_PORT?.trim();
-  const suffix = port ? `:${port}` : "";
-  if (customHost) return `https://${customHost.hostname}${suffix}`;
+  if (customHost) return storefrontOriginForHost(customHost.hostname);
   const [school] = await db
     .select({ subdomain: schema.schools.subdomain })
     .from(schema.schools)
     .where(eq(schema.schools.id, schoolId))
     .limit(1);
   if (!school) return null;
-  const host = defaultStorefrontHost(school.subdomain) ?? `${school.subdomain}.courselit.app`;
-  return `${/(^|\.)localhost$/.test(host) ? "http" : "https"}://${host}${suffix}`;
+  return storefrontOriginForHost(
+    defaultStorefrontHost(school.subdomain) ?? `${school.subdomain}.courselit.app`,
+  );
 }
 
 async function queueSendLitEvent(

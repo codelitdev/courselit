@@ -195,8 +195,8 @@ export function CommunityAdmin() {
   const canEditWebsite = hasSchoolPermission(school, "storefront:write");
   const host = school?.storefrontHost?.trim();
   const address = `${host || "[your-school]"}/join`;
-  const salesPageUrl = storefrontUrl("/join", school?.storefrontHost);
-  const communityUrl = storefrontUrl("/dashboard", school?.storefrontHost);
+  const salesPageUrl = storefrontUrl("/join", school?.storefrontOrigin);
+  const communityUrl = storefrontUrl("/dashboard", school?.storefrontOrigin);
   const salesPageEditorHref =
     community?.salesPage?.pageId && canEditWebsite
       ? `/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent("/community")}&resourceType=community&resourceId=${encodeURIComponent(community.id)}`

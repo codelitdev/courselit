@@ -36,6 +36,10 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-ink: var(--success-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -61,6 +65,9 @@
 }
 
 :root {
+  /* Text-safe tints of the brand and success colours, used by Onboarding. */
+  --primary-ink: color-mix(in oklch, var(--primary) 78%, var(--foreground));
+  --success-ink: color-mix(in oklch, var(--success) 74%, var(--foreground));
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);

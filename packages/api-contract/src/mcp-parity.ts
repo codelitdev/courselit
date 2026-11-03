@@ -535,6 +535,72 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "school.subdomain.check",
+    rest: { operationId: "checkSchoolSubdomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Address availability is part of the browser sign-up flow and has no MCP equivalent.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.billing.checkout",
+    rest: { operationId: "startSchoolBillingCheckout" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Starting a CourseLit plan checkout is a browser billing flow and stays off MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.onboarding.get",
+    rest: { operationId: "getSchoolOnboarding" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Setup wizard progress is browser-session state and has no MCP equivalent.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.onboarding.update",
+    rest: { operationId: "updateSchoolOnboarding" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Setup wizard progress is browser-session state and has no MCP equivalent.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "ai-connection.list",
+    rest: { operationId: "listAiConnections" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Managing the user's own AI assistant credentials stays REST-only to avoid exposing credential management over MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "ai-connection.disconnect",
+    rest: { operationId: "disconnectAiConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Managing the user's own AI assistant credentials stays REST-only to avoid exposing credential management over MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "preview.read",
     rest: { operationId: "readPreviewProduct" },
     parity: "exempt",

@@ -112,6 +112,9 @@ export const OPERATION_POLICIES = {
   listSchools: accountOp(["session", "oauth"]),
   createSchool: accountOp(["session"]),
   selectSchool: accountOp(["session"]),
+  checkSchoolSubdomain: accountOp(["session"]),
+  listAiConnections: accountOp(["session"]),
+  disconnectAiConnection: accountOp(["session"]),
   getEntitlement: accountOp(["session", "oauth"]),
   getBillingCatalog: accountOp(["session", "oauth"]),
   previewTeamInvitation: accountOp(["session"]),
@@ -300,6 +303,12 @@ export const OPERATION_POLICIES = {
   updateCertificateTemplate: schoolOp(["certificates:write"]),
   getProductCertificateTemplate: schoolOp(["certificates:read"]),
   upsertProductCertificateTemplate: schoolOp(["certificates:write"]),
+
+  // Setup wizard and onboarding checklist: school owner, browser session only.
+  // Starting the CourseLit plan checkout is a billing action, so also owner only.
+  startSchoolBillingCheckout: schoolOwnerOp(["session"]),
+  getSchoolOnboarding: schoolOwnerOp(["session"]),
+  updateSchoolOnboarding: schoolOwnerOp(["session"]),
 
   // API key management: school owner, browser session only. A key can never
   // list, mint, or revoke keys.

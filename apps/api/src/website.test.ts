@@ -67,7 +67,7 @@ async function pageBySlug(runtime: Runtime, world: World, slug: string) {
 
 describe.serial("school website", () => {
   it("lists ordinary pages and keeps sales pages with their resource", async () => {
-    const { runtime, world, admin } = await setup();
+    const { runtime, world, admin, publicGet } = await setup();
     try {
       const listed = await admin("GET", "/v1/school/website/pages");
       expect(listed.status).toBe(200);
@@ -75,6 +75,32 @@ describe.serial("school website", () => {
         .map((page) => page.slug)
         .sort();
       expect(slugs).toEqual(["", "privacy", "terms"]);
+
+      // Real content only: the homepage is data-driven blocks with no baked-in
+      // copy, and the legal pages start as unpublished drafts.
+      const byslug = Object.fromEntries(
+        (listed.body as { items: Array<{ slug: string; status: string }> }).items.map(
+          (page) => [page.slug, page.status],
+        ),
+      );
+      expect(byslug[""]).toBe("published");
+      expect(byslug["terms"]).toBe("draft");
+      expect(byslug["privacy"]).toBe("draft");
+      const homeBody = (
+        await admin("GET", `/v1/school/website/pages/${await pageBySlug(runtime, world, "")}`)
+      ).body as PageBody;
+      expect(homeBody.layout.map((widget) => widget.name)).toEqual([
+        "header",
+        "courselit-home-hero",
+        "courselit-home-offers",
+        "newsletter-signup",
+        "footer",
+      ]);
+      const homeJson = JSON.stringify(homeBody.layout);
+      for (const old of ["Ask user to take action", "Eye Catching", "7OP2bU9RWVE", "CourseLit"]) {
+        expect(homeJson).not.toContain(old);
+      }
+      expect((await publicGet("/v1/public/site/pages?slug=terms")).status).toBe(404);
 
       const salesPage = await admin(
         "GET",
@@ -163,7 +189,7 @@ describe.serial("school website", () => {
       const home = (await admin("GET", `/v1/school/website/pages/${homeId}`))
         .body as PageBody;
       expect(home.draftLayout[0]!.settings?.logoText).toBe("Acme");
-      expect(home.layout[0]!.settings?.logoText).toBe("CourseLit");
+      expect(home.layout[0]!.settings?.logoText).toBeUndefined();
       expect(home.status).toBe("published");
 
       const publishPermissionDenied = await dispatch(runtime, {

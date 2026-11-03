@@ -1,13 +1,7 @@
-/** Build a public storefront URL using the school's API-resolved runtime host. */
-export function storefrontUrl(path: string, storefrontHost?: string | null): string | null {
-  const host = storefrontHost?.trim().toLowerCase().replace(/\.$/, "");
-  if (!host) return null;
-  const isLocalHost =
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host === "127.0.0.1" ||
-    /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host);
-  const origin = `${isLocalHost ? "http" : "https"}://${host}${isLocalHost ? ":3001" : ""}`;
+/** Build a public storefront URL from the school's API-provided storefront origin. */
+export function storefrontUrl(path: string, storefrontOrigin?: string | null): string | null {
+  const origin = storefrontOrigin?.trim();
+  if (!origin) return null;
   try {
     return new URL(path, origin).toString();
   } catch {

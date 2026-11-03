@@ -102,6 +102,7 @@ export type School = {
   name: string;
   subdomain?: string;
   storefrontHost?: string | null;
+  storefrontOrigin?: string | null;
   currency: string;
   permissions?: readonly CourseLitPermission[] | readonly string[];
   selected?: boolean;

@@ -14,12 +14,14 @@ import {
   Palette,
   RotateCcw,
   Save,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
@@ -55,7 +57,7 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "api-keys"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "api-keys", "ai-assistants"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
 const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
@@ -398,6 +400,18 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                     ...(isOwner
                       ? [{ value: "api-keys", label: "API keys", icon: <Key className="size-4" /> }]
                       : []),
+                    {
+                      value: "ai-assistants",
+                      label: (
+                        <span className="inline-flex items-center gap-2">
+                          AI assistants
+                          <span className="rounded-full bg-[var(--primary-soft)] px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none text-primary">
+                            New
+                          </span>
+                        </span>
+                      ),
+                      icon: <Sparkles className="size-4" />,
+                    },
                   ]
             }
           >
@@ -694,6 +708,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           {mode === "general" && selectedTab === "api-keys" && isOwner ? (
             <div className="w-full pt-4">
               <ApiKeySettings schoolId={schoolId} />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="ai-assistants" className="w-full">
+          {mode === "general" && selectedTab === "ai-assistants" ? (
+            <div className="w-full pt-4">
+              <AiAssistantSettings />
             </div>
           ) : null}
           </PlatformTabsContent>

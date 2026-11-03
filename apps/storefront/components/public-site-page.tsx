@@ -12,6 +12,7 @@ import {
   getPublicProductDetail,
   getPublicProductPlans,
   getSettings,
+  listPublicHomeOffers,
   listPublicArticles,
 } from "@/lib/courselit-public";
 
@@ -74,12 +75,22 @@ export async function PublicSitePage({
   const resolvedPage = page ?? fallbackPage;
   if (!resolvedPage && !allowEmpty) notFound();
 
+  // No logo means no logo: never fall back to the CourseLit mark.
   const siteLogoUrl =
     typeof settings?.logo?.url === "string" && settings.logo.url.trim()
       ? settings.logo.url.trim()
-      : "/icon.svg";
-  const siteLogoAlt =
-    settings?.logo?.alt || settings?.title?.trim() || "CourseLit";
+      : null;
+  const siteLogoAlt = settings?.logo?.alt || settings?.title?.trim() || null;
+  const isHome = !pageSlug && !systemRoute && !isSalesPage;
+  const [homeOffers, termsPage, privacyPage, articles] = await Promise.all([
+    isHome ? listPublicHomeOffers(schoolId) : Promise.resolve([]),
+    getPageBySlug(schoolId, "terms"),
+    getPageBySlug(schoolId, "privacy"),
+    listPublicArticles(schoolId),
+  ]);
+  const hasOffers = isHome
+    ? homeOffers.length > 0
+    : (await listPublicHomeOffers(schoolId)).length > 0;
 
   const salesProduct =
     salesResource?.resourceType === "product"
@@ -114,6 +125,7 @@ export async function PublicSitePage({
     siteSubtitle: settings?.subtitle ?? null,
     siteLogoUrl,
     siteLogoAlt,
+    ...(isHome ? { courseLitHome: { offers: homeOffers } } : {}),
     ...(salesProduct && salesResource?.resourceType === "product"
       ? {
           courseLitSalesData: {
@@ -157,7 +169,49 @@ export async function PublicSitePage({
           )
         : (resolvedPage?.layout ?? []);
   const baseLayout: WidgetInstance[] = chromeLayout;
-  const renderLayout = baseLayout.map((instance) => {
+  const publishedLegal: Record<string, boolean> = {
+    "/terms": Boolean(termsPage),
+    "/privacy": Boolean(privacyPage),
+  };
+  const year = new Date().getFullYear();
+  const schoolName = settings?.title?.trim() || "";
+  const renderLayout = baseLayout.map((rawInstance) => {
+    let instance = rawInstance;
+    if (instance.name === "footer") {
+      const columns = (
+        (instance.settings?.columns as
+          | Array<{ links: Array<{ href: string }> }>
+          | undefined) ?? []
+      )
+        .map((column) => ({
+          ...column,
+          links: column.links.filter(
+            (link) => publishedLegal[link.href] ?? (link.href !== "/blog" || articles.total > 0),
+          ),
+        }))
+        .filter((column) => column.links.length > 0);
+      instance = {
+        ...instance,
+        settings: {
+          ...instance.settings,
+          columns,
+          ...(!instance.settings?.copyrightText && schoolName
+            ? { copyrightText: `© ${year} ${schoolName}` }
+            : {}),
+        },
+      };
+    } else if (instance.name === "header") {
+      const links = (
+        (instance.settings?.links as Array<{ href: string }> | undefined) ?? []
+      ).filter((link) =>
+        link.href === "/products"
+          ? hasOffers
+          : link.href === "/blog"
+            ? articles.total > 0
+            : true,
+      );
+      instance = { ...instance, settings: { ...instance.settings, links } };
+    }
     const isLegacySalesSlot =
       instance.name === "data-slot" &&
       instance.settings?.slot === "courselit.sales-page-content";
@@ -195,7 +249,6 @@ export async function PublicSitePage({
   });
   let systemContent = providedSystemContent ?? null;
   if (providedSystemContent === undefined && systemRoute === "blog") {
-    const articles = await listPublicArticles(schoolId);
     systemContent = (
       <PublicBlogFeed
         items={articles.items}
@@ -218,7 +271,6 @@ export async function PublicSitePage({
           {
             "frontlit.content-feed": async ({ instance }) => {
               if (instance.settings?.source !== "articles") return null;
-              const articles = await listPublicArticles(schoolId);
               return (
                 <PublicBlogFeed
                   items={articles.items}

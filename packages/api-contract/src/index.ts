@@ -507,6 +507,7 @@ export const schoolSchema = z.object({
   name: z.string(),
   subdomain: z.string(),
   storefrontHost: z.string().nullable(),
+  storefrontOrigin: z.string().nullable(),
   status: z.enum(["active", "read_only", "maintenance", "migrating", "deleted"]),
   locale: z.string(),
   currency: z.string(),
@@ -1813,9 +1814,90 @@ export const createSchoolBodySchema = z.object({
     .length(3)
     .transform((value) => value.toUpperCase())
     .default("USD"),
-  plan: z.enum(["oss", "pro", "business"]).optional(),
-  interval: z.enum(["month", "year"]).optional(),
-  catalogRevision: z.number().int().positive().optional(),
+});
+
+/** Checks whether a school address (subdomain) is free before it is taken. */
+export const schoolSubdomainAvailabilityQuerySchema = z.object({
+  subdomain: z.string().trim().max(63),
+});
+export const schoolSubdomainAvailabilitySchema = z.object({
+  subdomain: z.string(),
+  available: z.boolean(),
+  /** Why it is unavailable: not a valid address, or already in use. */
+  reason: z.enum(["invalid", "taken"]).nullable(),
+  /** Free alternatives, only when `reason` is `taken`. */
+  suggestions: z.array(z.string()),
+});
+
+/** Hosted only: starts the CourseLit plan checkout for an existing school. */
+export const startSchoolBillingCheckoutBodySchema = z.object({
+  plan: z.enum(["pro", "business"]),
+  interval: z.enum(["month", "year"]),
+  catalogRevision: z.number().int().positive(),
+});
+export const startSchoolBillingCheckoutResponseSchema = z.object({
+  checkoutUrl: z.string(),
+});
+
+export const onboardingStepSchema = z.enum([
+  "school",
+  "offer",
+  "build",
+  "brand",
+  "email",
+  "plan",
+  "live",
+]);
+export const onboardingChecklistKeySchema = z.enum([
+  "pay",
+  "mail",
+  "legal",
+  "home",
+  "domain",
+  "ai",
+  "learners",
+  "welcome",
+  "course",
+  "team",
+]);
+export const schoolOnboardingSchema = z.object({
+  status: z.enum(["in_progress", "complete"]),
+  /** The step to resume the setup wizard at. */
+  step: onboardingStepSchema,
+  /** Wizard-owned JSON (the offer being built, brand choices, skipped steps). */
+  draft: z.record(z.string(), z.unknown()),
+  checklistHidden: z.boolean(),
+  /** Each item is true only when the work is actually done. */
+  checklist: z.array(
+    z.object({ key: onboardingChecklistKeySchema, done: z.boolean() }),
+  ),
+  /** Hosted only: whether the school still needs a CourseLit plan to go live. */
+  billing: z.object({ required: z.boolean(), entitled: z.boolean() }),
+  updatedAt: z.string(),
+});
+export const updateSchoolOnboardingBodySchema = z
+  .object({
+    status: z.enum(["in_progress", "complete"]).optional(),
+    step: onboardingStepSchema.optional(),
+    /** Shallow-merged into the stored draft. */
+    draft: z.record(z.string(), z.unknown()).optional(),
+    checklistHidden: z.boolean().optional(),
+    /** Marks a checklist item done that cannot be derived from data. */
+    markDone: z.array(onboardingChecklistKeySchema).optional(),
+  })
+  .strict();
+
+/** An AI assistant (an OAuth client) the signed-in user connected over MCP. */
+export const aiConnectionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  connectedAt: z.string(),
+  lastUsedAt: z.string().nullable(),
+});
+export const listAiConnectionsResponseSchema = z.object({
+  /** The address to add to the assistant. */
+  mcpUrl: z.string(),
+  items: z.array(aiConnectionSchema),
 });
 
 export const billingOfferSchema = z.object({
@@ -4588,6 +4670,71 @@ export const contract = c.router({
       409: platformErrorSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
+    },
+  },
+  checkSchoolSubdomain: {
+    method: "GET",
+    path: "/v1/schools/subdomain-availability",
+    summary: "Check whether a school address is free",
+    query: schoolSubdomainAvailabilityQuerySchema,
+    responses: {
+      200: schoolSubdomainAvailabilitySchema,
+      401: platformErrorSchema,
+    },
+  },
+  startSchoolBillingCheckout: {
+    method: "POST",
+    path: "/v1/school/billing/checkout",
+    summary: "Start the CourseLit plan checkout for the school (hosted only)",
+    body: startSchoolBillingCheckoutBodySchema,
+    responses: {
+      200: startSchoolBillingCheckoutResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  getSchoolOnboarding: {
+    method: "GET",
+    path: "/v1/school/onboarding",
+    summary: "Get the school's setup wizard state and onboarding checklist",
+    responses: {
+      200: schoolOnboardingSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  updateSchoolOnboarding: {
+    method: "PATCH",
+    path: "/v1/school/onboarding",
+    summary: "Save setup wizard progress or change the onboarding checklist",
+    body: updateSchoolOnboardingBodySchema,
+    responses: {
+      200: schoolOnboardingSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  listAiConnections: {
+    method: "GET",
+    path: "/v1/ai-connections",
+    summary: "List the AI assistants the signed-in user connected over MCP",
+    responses: {
+      200: listAiConnectionsResponseSchema,
+      401: platformErrorSchema,
+    },
+  },
+  disconnectAiConnection: {
+    method: "DELETE",
+    path: "/v1/ai-connections/:connectionId",
+    summary: "Disconnect an AI assistant and revoke its tokens",
+    pathParams: z.object({ connectionId: z.string().min(1) }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      404: platformErrorSchema,
     },
   },
   selectSchool: {

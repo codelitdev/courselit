@@ -34,6 +34,9 @@ import {
   createPreviewGrantBodySchema,
   createProductBodySchema,
   createSchoolBodySchema,
+  schoolSubdomainAvailabilityQuerySchema,
+  startSchoolBillingCheckoutBodySchema,
+  updateSchoolOnboardingBodySchema,
   createSchoolHostBodySchema,
   createSchoolWebsiteBlogBodySchema,
   createSchoolWebsitePageBodySchema,
@@ -328,6 +331,13 @@ import {
 import { evaluateQuizLesson } from "./quiz.js";
 import { readPublicBillingCatalog, startSchoolCheckout } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
+import {
+  checkSchoolSubdomain,
+  disconnectAiConnection,
+  listAiConnections,
+  readSchoolOnboarding,
+  updateSchoolOnboarding,
+} from "./onboarding.js";
 import {
   createSchoolCustomHost,
   deleteSchoolCustomHost,
@@ -2047,24 +2057,6 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const plan = parsed.data.plan;
-      const interval = parsed.data.interval;
-      const catalogRevision = parsed.data.catalogRevision;
-      if (deps.billingMode !== "oss") {
-        if (plan !== "pro" && plan !== "business") {
-          return errorResponse(
-            createPlatformError("validation_failed", {
-              safeDetails: { reason: "paid_plan_required" },
-            }),
-          );
-        }
-        if (interval !== "month" && interval !== "year") {
-          return errorResponse(createPlatformError("validation_failed"));
-        }
-        if (typeof catalogRevision !== "number") {
-          return errorResponse(createPlatformError("validation_failed"));
-        }
-      }
       const requestId = requestIdFrom(request, deps);
       const result = await createSchool(
         deps.db,
@@ -2096,41 +2088,37 @@ export async function dispatch(
           });
         });
       }
-      if (deps.billingMode === "oss") {
-        return { status: 201, body: result.value };
-      }
-      if (
-        (plan !== "pro" && plan !== "business") ||
-        (interval !== "month" && interval !== "year") ||
-        typeof catalogRevision !== "number"
-      ) {
-        return errorResponse(createPlatformError("internal_error"));
-      }
-      const created = await deps.db
-        .select({ id: schema.schools.id })
-        .from(schema.schools)
-        .where(eq(schema.schools.publicId, result.value.id))
-        .limit(1);
-      const internalId = created[0]?.id;
-      if (!internalId) {
-        return errorResponse(createPlatformError("internal_error"));
-      }
-      const checkout = await startSchoolCheckout({
-        db: deps.db,
-        billing: deps.billing,
-        clock: deps.clock,
-        principalId: auth.principalId,
-        schoolInternalId: internalId,
-        plan,
-        interval,
-        catalogRevision,
-        returnUrl: `${deps.auth.webOrigin.replace(/\/$/, "")}/`,
+      return { status: 201, body: result.value };
+    }
+    if (request.method === "GET" && path === "/v1/schools/subdomain-availability") {
+      const parsed = schoolSubdomainAvailabilityQuerySchema.safeParse({
+        subdomain: query.get("subdomain") ?? "",
       });
-      if (!checkout.ok) return errorResponse(checkout.error);
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
       return {
-        status: 201,
-        body: { ...result.value, checkoutUrl: checkout.checkoutUrl },
+        status: 200,
+        body: await checkSchoolSubdomain(deps.db, parsed.data.subdomain),
       };
+    }
+    if (request.method === "GET" && path === "/v1/ai-connections") {
+      return {
+        status: 200,
+        body: {
+          mcpUrl: deps.auth.mcpResource,
+          items: await listAiConnections(deps.db, auth.principalId, deps.clock),
+        },
+      };
+    }
+    const aiConnectionMatch = /^\/v1\/ai-connections\/([^/]+)$/.exec(path);
+    if (request.method === "DELETE" && aiConnectionMatch) {
+      const result = await disconnectAiConnection(
+        deps.db,
+        auth.principalId,
+        decodeURIComponent(aiConnectionMatch[1]!),
+      );
+      return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
     if (request.method === "POST" && path === "/v1/invitations/accept") {
       const input = request.body as { token?: unknown; email?: unknown } | undefined;
@@ -5055,6 +5043,72 @@ export async function dispatch(
       );
       if (!result.ok) return errorResponse(result.error);
       return { status: 201, body: result.value };
+    }
+
+    if (request.method === "POST" && path === "/v1/school/billing/checkout") {
+      if (deps.billingMode === "oss") {
+        return errorResponse(
+          createPlatformError("validation_failed", {
+            safeDetails: { reason: "billing_not_available" },
+          }),
+        );
+      }
+      const parsed = startSchoolBillingCheckoutBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const checkout = await startSchoolCheckout({
+        db: deps.db,
+        billing: deps.billing,
+        clock: deps.clock,
+        principalId: auth.principalId,
+        schoolInternalId: context.tenantId!,
+        plan: parsed.data.plan,
+        interval: parsed.data.interval,
+        catalogRevision: parsed.data.catalogRevision,
+        returnUrl: `${deps.auth.webOrigin.replace(/\/$/, "")}/onboarding/setup?checkout=return`,
+      });
+      return checkout.ok
+        ? { status: 200, body: { checkoutUrl: checkout.checkoutUrl } }
+        : errorResponse(checkout.error);
+    }
+    if (path === "/v1/school/onboarding") {
+      const billing = {
+        required: deps.billingMode === "cloud",
+        entitled:
+          deps.billingMode !== "cloud" ||
+          (await deps.billing.billing.commercialState(context.tenantId!))
+            .activePaidPlan !== null,
+      };
+      if (request.method === "GET") {
+        return {
+          status: 200,
+          body: await readSchoolOnboarding(
+            deps.db,
+            { schoolId: context.tenantId!, principalId: auth.principalId, billing },
+            deps.clock,
+          ),
+        };
+      }
+      if (request.method === "PATCH") {
+        const parsed = updateSchoolOnboardingBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        return {
+          status: 200,
+          body: await updateSchoolOnboarding(
+            deps.db,
+            {
+              schoolId: context.tenantId!,
+              principalId: auth.principalId,
+              billing,
+              patch: parsed.data,
+            },
+            deps.clock,
+          ),
+        };
+      }
     }
 
     if (request.method === "GET" && path === "/v1/billing/entitlement") {

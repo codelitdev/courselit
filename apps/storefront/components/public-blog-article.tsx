@@ -2,7 +2,6 @@
 
 import { Caption, Header1, Subheader1, Text2 } from "@frontlit/page-builder/primitives";
 import { TextRenderer } from "@frontlit/text-editor";
-import { CourseLitLogo } from "@/components/layout/courselit-logo";
 import { TableOfContents } from "@/components/table-of-contents";
 import {
   LearnerAvatar,
@@ -22,7 +21,7 @@ export function PublicBlogArticle({ article }: { article: PublicArticle }) {
   const imageAlt = featuredImage?.alt ?? article.title ?? article.slug;
   const title = article.title ?? article.slug;
   const author = article.author;
-  const authorName = author?.name.trim() || schoolTitle?.trim() || "CourseLit";
+  const authorName = author?.name.trim() || schoolTitle?.trim() || "";
   const createdAt = article.createdAt ?? article.publishedAt;
   const tags = Array.isArray(article.meta?.tags)
     ? [
@@ -55,7 +54,7 @@ export function PublicBlogArticle({ article }: { article: PublicArticle }) {
             <LearnerAvatarImage src={author.imageUrl} alt={authorName} />
           ) : (
             <LearnerAvatarFallback>
-              <CourseLitLogo className="size-6" />
+              {authorName.charAt(0).toUpperCase()}
             </LearnerAvatarFallback>
           )}
         </LearnerAvatar>

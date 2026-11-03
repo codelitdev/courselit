@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { MediaRef } from "@courselit/api-contract";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import {
   LearnerBadge,
   LearnerCaption,
@@ -9,8 +10,6 @@ import {
   LearnerCardImage,
   LearnerHeader4,
 } from "@/components/themed-page-builder";
-
-const DEFAULT_CARD_IMAGE = "/courselit_backdrop_square.webp";
 
 type CatalogImage = MediaRef | null;
 
@@ -46,11 +45,15 @@ export function PublicCatalogCard({
         isLink
         className="h-full overflow-hidden transition-transform group-hover:-translate-y-1"
       >
-        <LearnerCardImage
-          src={image?.thumbnailUrl ?? image?.url ?? DEFAULT_CARD_IMAGE}
-          alt={image?.alt || title}
-          className="aspect-[16/9] w-full object-cover"
-        />
+        {image?.thumbnailUrl || image?.url ? (
+          <LearnerCardImage
+            src={(image.thumbnailUrl ?? image.url)!}
+            alt={image.alt || title}
+            className="aspect-[16/9] w-full object-cover"
+          />
+        ) : (
+          <ImagePlaceholder className="aspect-[16/9] w-full" />
+        )}
         <LearnerCardContent className="flex h-full flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <LearnerHeader4>{title}</LearnerHeader4>

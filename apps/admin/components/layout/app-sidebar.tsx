@@ -15,6 +15,7 @@ import {
 import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import { type NavItem, NavMain } from "@/components/layout/nav-main";
 import { type CurrentAccount, NavUser } from "@/components/layout/nav-user";
+import { OnboardingNavItem } from "@/components/onboarding/checklist/onboarding-nav-item";
 import { type School, TeamSwitcher } from "@/components/layout/team-switcher";
 import {
   Sidebar,
@@ -160,7 +161,8 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain label="Create" items={createNav} />
+        <OnboardingNavItem />
+        <NavMain items={createNav} />
         <div className="mt-auto">
           <NavMain items={secondaryNav} />
         </div>

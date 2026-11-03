@@ -30,7 +30,7 @@ describe("admin and learner surfaces", () => {
     const adminNotificationsBell = read(
       "admin/components/notifications/notifications-bell.tsx",
     );
-    const createSchool = read("admin/components/layout/create-school-form.tsx");
+    const onboardingApi = read("admin/components/onboarding/wizard/api.ts");
     const products = read("admin/app/products/page.tsx");
     const resources = read("admin/components/resources.tsx");
     const productWorkspace = read("admin/components/products/product-workspace.tsx");
@@ -128,8 +128,7 @@ describe("admin and learner surfaces", () => {
       "$",
       "{encodeURIComponent(community.id)}",
     ].join("");
-    const adminSurface = `${schools}\n${createSchool}`;
-    expect(home).not.toContain("Create a school to get started");
+        expect(home).not.toContain("Create a school to get started");
     expect(home).not.toContain("CreateSchoolDialog");
     expect(account).toContain("@frontlit/media-uploader");
     expect(account).toContain('purpose: "learner_avatar"');
@@ -178,9 +177,9 @@ describe("admin and learner surfaces", () => {
     expect(brandingSettings).toContain('"/api/v1/school/website/branding"');
     expect(codeInjectionSettings).toContain('"/api/v1/school/code-injection"');
     expect(settings).toContain('"branding",');
-    expect(settings).toContain('"payment", "team", "notifications", "api-keys"] as const');
+    expect(settings).toContain('"payment", "team", "notifications", "api-keys", "ai-assistants"] as const');
     expect(settings).toContain('value="notifications"');
-    expect(settings).toContain('"api-keys"] as const');
+    expect(settings).toContain('"ai-assistants"] as const');
     expect(settings).toContain('value="team"');
     expect(settings).toContain('value="api-keys"');
     expect(settings).toContain('value="payment"');
@@ -192,11 +191,10 @@ describe("admin and learner surfaces", () => {
     expect(settings).toContain("Currency saved.");
     expect(settings).toContain("/api/v1/school/payment-settings");
     expect(settings).not.toContain("/api/v1/settings/payment");
-    expect(shell).toContain('router.replace("/schools")');
-    expect(adminSurface).toContain('name="subdomain"');
-    expect(createSchool).toContain("/api/v1/billing/catalog");
-    expect(createSchool).toContain("Continue to checkout");
-    expect(createSchool).toContain("Create school");
+    expect(shell).toContain('router.replace("/onboarding/setup")');
+    expect(onboardingApi).toContain("/api/v1/billing/catalog");
+    expect(onboardingApi).toContain("/api/v1/schools/subdomain-availability");
+    expect(onboardingApi).toContain("/api/v1/school/billing/checkout");
     expect(home).not.toContain("/api/v1/invitations");
     expect(products).toContain("Products");
     expect(products).toContain("<FeaturedCard");
@@ -266,7 +264,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(productWorkspace).toContain("Invite a customer");
     expect(productWorkspace).toContain("storefrontUrl");
-    expect(productWorkspace).toContain("storefrontHost");
+    expect(productWorkspace).toContain("storefrontOrigin");
     expect(productWorkspace).toContain(publicProductPath);
     expect(productWorkspace).toContain("Edit page");
     expect(productWorkspace).toContain(
@@ -274,7 +272,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain('aria-label="Share product"');
-    expect(productWorkspace).toContain("school?.storefrontHost");
+    expect(productWorkspace).toContain("school?.storefrontOrigin");
     expect(productWorkspace).toContain("Enable a discussion space for this course");
     expect(productWorkspace).toContain("Lead Magnet");
     expect(productWorkspace).toContain("Danger zone");

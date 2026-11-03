@@ -17,6 +17,7 @@ export type School = {
   name: string;
   subdomain?: string;
   storefrontHost?: string | null;
+  storefrontOrigin?: string | null;
   currency: string;
   permissions?: readonly string[];
   selected?: boolean;

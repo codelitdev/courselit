@@ -1,6 +1,5 @@
 "use client";
 
-import { CourseLitLogo } from "@/components/layout/courselit-logo";
 import { LearnerCardImage } from "@/components/themed-page-builder";
 import { cn } from "@/lib/utils";
 import { useSchoolBrand, useSchoolThemeStyle } from "@/lib/school-theme-context";
@@ -23,9 +22,6 @@ export function LearnerSchoolLogo({ className }: { className?: string }) {
     );
   }
 
-  return (
-    <span className={wrapperClassName}>
-      <CourseLitLogo className="size-full" />
-    </span>
-  );
+  // No logo uploaded: show nothing rather than CourseLit artwork.
+  return null;
 }

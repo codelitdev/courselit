@@ -796,7 +796,7 @@ export function ProductWorkspace({
       );
       const previewUrl = storefrontUrl(
         `/courses/${encodeURIComponent(productId)}#preview=${encodeURIComponent(grant.token)}`,
-        school?.storefrontHost,
+        school?.storefrontOrigin,
       );
       if (!previewUrl) {
         setNotice(
@@ -850,7 +850,7 @@ export function ProductWorkspace({
   async function shareProduct() {
     if (!product) return;
     const publicProductPath = product.slug ? `/p/${encodeURIComponent(product.slug)}` : `/product/${encodeURIComponent(product.id)}`;
-    const url = storefrontUrl(publicProductPath, school?.storefrontHost);
+    const url = storefrontUrl(publicProductPath, school?.storefrontOrigin);
     if (!url) {
       setError("Unable to build the public product URL.");
       return;

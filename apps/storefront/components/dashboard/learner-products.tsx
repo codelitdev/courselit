@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { requestJson } from "@/components/communities/learner-community";
 import { CourseLitLoading } from "@/components/course-lit-loader";
 import { courseViewerHref } from "@/components/layout/course-viewer-sidebar";
-import { CourseLitLogo } from "@/components/layout/courselit-logo";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import {
   LearnerAlertDialog,
   LearnerAlertDialogAction,
@@ -207,9 +207,7 @@ function LearnerProductCard({ product }: { product: LearnerProduct }) {
             className="h-48 object-cover"
           />
         ) : (
-          <div className="flex h-48 items-center justify-center bg-muted text-muted-foreground/40">
-            <CourseLitLogo className="size-20" />
-          </div>
+          <ImagePlaceholder className="h-48 w-full" />
         )}
       <LearnerCardContent className="grid gap-3">
         <LearnerHeader2 className="truncate group-hover:text-primary">

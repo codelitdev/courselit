@@ -4,7 +4,12 @@ import type {
   WidgetDefaultSettings,
 } from "@frontlit/page-builder/models";
 import type { TextEditorContent } from "@frontlit/text-editor";
-import type { CourseLitPlan, CourseLitSalesPageData } from "./types";
+import type {
+  CourseLitHomeData,
+  CourseLitHomeOffer,
+  CourseLitPlan,
+  CourseLitSalesPageData,
+} from "./types";
 
 export function salesData(pageData: PageData): CourseLitSalesPageData | null {
   const value = pageData.courseLitSalesData;
@@ -73,4 +78,30 @@ export function pageSchoolId(pageData: PageData): string | null {
 export function publicApiPath(pageData: PageData, suffix: string): string | null {
   const schoolId = pageSchoolId(pageData);
   return schoolId ? `/api/v1/public/${encodeURIComponent(schoolId)}${suffix}` : null;
+}
+
+export function homeData(pageData: PageData): CourseLitHomeData | null {
+  const value = pageData.courseLitHome as Partial<CourseLitHomeData> | undefined;
+  if (!value || !Array.isArray(value.offers)) return null;
+  return value as CourseLitHomeData;
+}
+
+export function offerPriceLabel(offer: CourseLitHomeOffer): string {
+  if (!offer.priceMinor) return "Free";
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: offer.currency,
+  }).format(offer.priceMinor / 100);
+}
+
+export function offerHref(offer: CourseLitHomeOffer): string {
+  return `/p/${encodeURIComponent(offer.slug || offer.id)}`;
+}
+
+export function offerKindLabel(offer: CourseLitHomeOffer): string {
+  return offer.kind === "course"
+    ? "Course"
+    : offer.kind === "community"
+      ? "Community"
+      : "Digital download";
 }

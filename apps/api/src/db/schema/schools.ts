@@ -33,6 +33,29 @@ export const schools = pgTable("schools", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 });
 
+/** Setup wizard progress and onboarding checklist state, one row per school. */
+export const schoolOnboarding = pgTable("school_onboarding", {
+  schoolId: uuid("school_id")
+    .primaryKey()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  status: text("status")
+    .$type<"in_progress" | "complete">()
+    .notNull()
+    .default("in_progress"),
+  step: text("step").notNull().default("school"),
+  draft: jsonb("draft")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  checklistHidden: boolean("checklist_hidden").notNull().default(false),
+  manualDone: text("manual_done")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
 export const schoolHosts = pgTable(
   "school_hosts",
   {

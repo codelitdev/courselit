@@ -58,21 +58,6 @@ export type WebsiteContentStatus = "draft" | "published" | "published_with_chang
 // Default content
 // ---------------------------------------------------------------------------
 
-function richTextDocument(
-  text: string,
-  marks?: Array<{ type: string }>,
-): Record<string, unknown> {
-  return {
-    type: "doc",
-    content: [
-      {
-        type: "paragraph",
-        content: [{ type: "text", text, ...(marks ? { marks } : {}) }],
-      },
-    ],
-  };
-}
-
 const bodyWidget = (
   widgetId: string,
   name: string,
@@ -97,8 +82,7 @@ export const DEFAULT_SHARED_WIDGETS: SharedWidgetsRow = {
       // Without an explicit padding the header inherits the theme's
       // section padding and renders much taller than a nav bar.
       verticalPadding: "py-4",
-      logoText: "CourseLit",
-      logoImage: "/icon.svg",
+      // Logo and name come from the school's branding at render time.
       ctaLabel: "Join",
       ctaHref: "/join",
       links: [
@@ -114,9 +98,7 @@ export const DEFAULT_SHARED_WIDGETS: SharedWidgetsRow = {
     moveable: false,
     shared: true,
     settings: {
-      logoText: "CourseLit",
-      tagline: "Build, Sell & Market Your Courses And Digital Downloads",
-      copyrightText: "© CourseLit. All rights reserved.",
+      // Name, tagline and copyright come from the school at render time.
       columns: [
         {
           id: "courselit-footer-resources",
@@ -140,106 +122,15 @@ export const DEFAULT_SHARED_WIDGETS: SharedWidgetsRow = {
   },
 };
 
+/** Data-driven blocks only: the storefront fills them from the school's name,
+ * tagline, logo and published offers, and each one hides itself when it has
+ * nothing to show. No copy is baked in here. */
 export const HOME_PAGE_TEMPLATE: readonly WebsiteWidgetRow[] = [
-  bodyWidget("courselit-home-intro", "rich-text", {
-    text: {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            {
-              type: "text",
-              text: "This is the default page created for you by CourseLit. Customize this further from the ",
-            },
-            {
-              type: "text",
-              marks: [{ type: "bold" }],
-              text: "Website → Pages → Homepage → Edit",
-            },
-            { type: "text", text: "." },
-          ],
-        },
-      ],
-    },
-    alignment: "left",
-    verticalPadding: "py-1",
-  }),
-  bodyWidget("courselit-home-hero", "hero", {
-    title: "Your Eye Catching Hero Statement Goes Here",
-    description: {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "You can write " },
-            {
-              type: "text",
-              marks: [{ type: "bold" }, { type: "underline" }],
-              text: "rich text",
-            },
-            {
-              type: "text",
-              text: " here and also show images/videos/youtube videos alongside text, as shown here.",
-            },
-          ],
-        },
-      ],
-    },
-    buttonAction: "/products",
-    buttonCaption: "Ask user to take action",
-    secondaryButtonCaption: "",
-    secondaryButtonAction: "",
-    youtubeLink: "https://www.youtube.com/watch?v=7OP2bU9RWVE",
-    alignment: "right",
-    contentAlignment: "left",
-    mediaRadius: 2,
-    layout: "normal",
-  }),
-  bodyWidget("courselit-home-features", "grid", {
-    title: "Showcase your features",
-    description: richTextDocument(
-      "Use this optional text to tell visitors what makes your school special.",
-    ),
-    headerAlignment: "center",
-    items: [1, 2, 3].map((number) => ({
-      title: `Feature ${number}`,
-      description:
-        "Describe a benefit of your courses, community, or learning experience.",
-      buttonCaption: `Explore feature ${number}`,
-      buttonAction: "/products",
-    })),
-    columns: 3,
-  }),
-  bodyWidget("courselit-home-faq", "faq", {
-    title: "Frequently Asked Questions",
-    headerAlignment: "center",
-    verticalPadding: "py-8",
-    layout: "list",
-    items: [1, 2, 3].map((number) => ({
-      id: `courselit-home-faq-${number}`,
-      question: `Question ${number}`,
-      answer: "Add a clear answer to a common question your visitors may have.",
-    })),
-  }),
+  bodyWidget("courselit-home-hero", "courselit-home-hero"),
+  bodyWidget("courselit-home-offers", "courselit-home-offers"),
   bodyWidget("courselit-home-newsletter", "newsletter-signup", {
-    title: "Sign up for my newsletter",
-    subtitle: "Get the latest articles, news, and updates.",
     btnText: "Subscribe",
     alignment: "left",
-  }),
-  bodyWidget("courselit-home-more-title", "rich-text", {
-    text: richTextDocument("There's more!", [{ type: "bold" }]),
-    alignment: "center",
-    verticalPadding: "py-0",
-  }),
-  bodyWidget("courselit-home-more-copy", "rich-text", {
-    text: richTextDocument(
-      "There are many more blocks for you to use in the page builder. Start building!",
-    ),
-    alignment: "center",
-    verticalPadding: "py-1",
   }),
 ];
 
@@ -249,10 +140,25 @@ const SYSTEM_PAGES: ReadonlyArray<{
   name: string;
   title: string;
   body: readonly WebsiteWidgetRow[];
+  /** Legal pages start as unpublished drafts; the site links to them only
+   * once the school publishes them. */
+  published: boolean;
 }> = [
-  { slug: "", name: "Homepage", title: "", body: HOME_PAGE_TEMPLATE },
-  { slug: "terms", name: "Terms of Service", title: "Terms of Service", body: [] },
-  { slug: "privacy", name: "Privacy policy", title: "Privacy policy", body: [] },
+  { slug: "", name: "Homepage", title: "", body: HOME_PAGE_TEMPLATE, published: true },
+  {
+    slug: "terms",
+    name: "Terms of Service",
+    title: "Terms of Service",
+    body: [],
+    published: false,
+  },
+  {
+    slug: "privacy",
+    name: "Privacy policy",
+    title: "Privacy policy",
+    body: [],
+    published: false,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -580,8 +486,15 @@ export async function provisionWebsite(
   clock: Clock,
 ): Promise<void> {
   const now = clock.now();
+  // Like main, the site title starts out as the school's name.
+  const [school] = await db
+    .select({ name: schema.schools.name })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, input.schoolId))
+    .limit(1);
   await db.insert(schema.websiteSettings).values({
     schoolId: input.schoolId,
+    title: school?.name ?? null,
     sharedWidgets: DEFAULT_SHARED_WIDGETS,
     draftSharedWidgets: DEFAULT_SHARED_WIDGETS,
     createdAt: now,
@@ -600,7 +513,7 @@ export async function provisionWebsite(
         layout,
         title: page.title,
         description: "",
-        publishedAt: now,
+        publishedAt: page.published ? now : null,
         draftLayout: layout,
         draftTitle: page.title,
         draftDescription: "",

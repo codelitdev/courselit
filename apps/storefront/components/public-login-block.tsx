@@ -1,6 +1,6 @@
 "use client";
 
-import { publicApiPath, useSchoolId } from "@/components/school-context";
+import { publicApiPath, useLegalPages, useSchoolId } from "@/components/school-context";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
@@ -38,6 +38,7 @@ function destinationAfterLogin() {
 export function PublicLoginBlock() {
   const theme = useSchoolThemeStyle();
   const schoolId = useSchoolId();
+  const legalPages = useLegalPages();
   const [otpStep, setOtpStep] = useState<OtpStep>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -238,13 +239,15 @@ export function PublicLoginBlock() {
         </LearnerText2>
       ) : null}
 
-      <LearnerText2 className="text-center text-xs text-muted-foreground">
-        By continuing, you agree to the{" "}
-        <Link href="/terms" className="underline">
-          Terms
-        </Link>
-        .
-      </LearnerText2>
+      {legalPages.terms ? (
+        <LearnerText2 className="text-center text-xs text-muted-foreground">
+          By continuing, you agree to the{" "}
+          <Link href="/terms" className="underline">
+            Terms
+          </Link>
+          .
+        </LearnerText2>
+      ) : null}
     </div>
   );
 }
