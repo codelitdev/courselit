@@ -88,11 +88,52 @@ export const publicProductListItemSchema = productSchema.extend({
   priceMinor: z.number().int().nonnegative().nullable(),
 });
 
+/**
+ * A learner's recurring payment for a product. `cancelling` means renewal
+ * stopped and access lasts until `accessUntil` (null when the provider did
+ * not report a date: until the end of the billing period). `completed` is a
+ * paid-off installment plan, which keeps access for good.
+ */
+export const productSubscriptionSchema = z.object({
+  id: z.string(),
+  planKind: z.enum(["subscription", "installment"]),
+  status: z.enum(["active", "cancelling", "past_due", "cancelled", "expired", "completed"]),
+  provider: z.string().nullable(),
+  currentPeriodEnd: z.string().nullable(),
+  accessUntil: z.string().nullable(),
+  installmentCount: z.number().int().positive().nullable(),
+  installmentsPaid: z.number().int().nonnegative().nullable(),
+  /** Learners may stop a subscription; installment plans cannot be stopped. */
+  learnerCanCancel: z.boolean(),
+});
+export type ProductSubscription = z.infer<typeof productSubscriptionSchema>;
+
 export const learnerProductSchema = productSchema.extend({
   totalLessons: z.number().int().nonnegative(),
   completedLessonsCount: z.number().int().nonnegative(),
   certificateId: z.string().nullable(),
   downloaded: z.boolean(),
+  subscription: productSubscriptionSchema.nullable(),
+});
+
+/** One payment a learner made to this school, for a product or community. */
+export const learnerPurchaseSchema = z.object({
+  /** Invoice id. */
+  id: z.string(),
+  /** Order (checkout) number, shared by every payment of one purchase. */
+  orderId: z.string(),
+  paymentId: z.string(),
+  resourceType: z.enum(["product", "community"]),
+  resourceId: z.string(),
+  title: z.string(),
+  productKind: z.enum(["course", "download"]).nullable(),
+  productSlug: z.string().nullable(),
+  planName: z.string(),
+  planKind: z.enum(["free", "one_time", "subscription", "installment"]),
+  amountMinor: z.number().int().nonnegative(),
+  currency: z.string(),
+  status: z.enum(["paid", "refunded", "disputed", "failed"]),
+  purchasedAt: z.string(),
 });
 
 export const listProductsQuerySchema = z.object({
@@ -212,6 +253,7 @@ export const productCustomerSchema = z.object({
   ]),
   subscriptionMethod: z.string().nullable(),
   subscriptionId: z.string().nullable(),
+  subscription: productSubscriptionSchema.nullable(),
   signedUpAt: z.string(),
   lastActiveAt: z.string().nullable(),
   progress: z.object({
@@ -221,6 +263,15 @@ export const productCustomerSchema = z.object({
   }),
 });
 export type ProductCustomer = z.infer<typeof productCustomerSchema>;
+
+export const productCustomerAccessRemovedSchema = z.object({
+  customerId: z.string(),
+  membershipStatus: z.literal("expired"),
+  subscription: productSubscriptionSchema.nullable(),
+});
+export type ProductCustomerAccessRemoved = z.infer<
+  typeof productCustomerAccessRemovedSchema
+>;
 
 export const productCustomerProgressSchema = z.object({
   customer: z.object({
@@ -1035,6 +1086,19 @@ export const communitySchema = z.object({
   updatedAt: z.string(),
 });
 
+/**
+ * A community the learner belongs to, with the billing that is still running
+ * for it. `billing` is null for free and one-time memberships.
+ */
+export const learnerCommunityMembershipSchema = communitySchema.extend({
+  billing: z
+    .object({
+      kind: z.enum(["subscription", "installment"]),
+      planName: z.string(),
+    })
+    .nullable(),
+});
+
 export const publicCommunityListItemSchema = communitySchema.extend({
   currency: z.string(),
   priceMinor: z.number().int().nonnegative().nullable(),
@@ -1781,6 +1845,13 @@ const mailServiceListSchema = z.object({
   items: z.array(mailServiceObjectSchema),
   total: z.number().int().nonnegative(),
 });
+/** Who sends the school's email. Without a working mailing team, school
+ * email (receipts, notifications, access emails) goes out through the
+ * platform's default sender and marketing email is unavailable. */
+export const schoolEmailDeliverySchema = z.object({
+  sender: z.enum(["school", "platform"]),
+  integrationStatus: z.string().nullable(),
+});
 export const mailingSettingsSchema = z
   .object({
     mailingAddress: z.string().nullable(),
@@ -2191,7 +2262,7 @@ export const contract = c.router({
     query: communityListQuerySchema,
     responses: {
       200: z.object({
-        items: z.array(communitySchema),
+        items: z.array(learnerCommunityMembershipSchema),
         nextCursor: z.string().nullable(),
       }),
       401: platformErrorSchema,
@@ -2333,19 +2404,6 @@ export const contract = c.router({
         items: z.array(learnerFeedPostSchema),
         nextCursor: z.string().nullable(),
         banner: z.string(),
-      }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-  },
-  listAvailableLearnerCommunities: {
-    method: "GET",
-    path: "/v1/learner/communities/available",
-    query: communityListQuerySchema,
-    responses: {
-      200: z.object({
-        items: z.array(communitySchema),
-        nextCursor: z.string().nullable(),
       }),
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -2656,6 +2714,20 @@ export const contract = c.router({
       200: z.object({ items: z.array(learnerProductSchema) }),
       401: platformErrorSchema,
       403: platformErrorSchema,
+    },
+  },
+  cancelLearnerProductSubscription: {
+    method: "POST",
+    path: "/v1/learner/products/:productId/subscription/cancel",
+    pathParams: z.object({ productId: z.string() }),
+    body: z.object({}).default({}),
+    summary:
+      "Stop renewing the learner's subscription for a product. Access continues until the paid period ends.",
+    responses: {
+      200: productSubscriptionSchema,
+      401: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
     },
   },
   leaveLearnerCommunity: {
@@ -3352,6 +3424,36 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
+  cancelProductCustomerSubscription: {
+    method: "POST",
+    path: "/v1/products/:productId/customers/:customerId/subscription/cancel",
+    pathParams: z.object({ productId: z.string(), customerId: z.string() }),
+    body: z.object({}).default({}),
+    summary:
+      "Stop renewing a customer's subscription for a product. Access continues until the paid period ends.",
+    responses: {
+      200: productSubscriptionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  removeProductCustomerAccess: {
+    method: "POST",
+    path: "/v1/products/:productId/customers/:customerId/remove-access",
+    pathParams: z.object({ productId: z.string(), customerId: z.string() }),
+    body: z.object({}).default({}),
+    summary:
+      "Remove a customer's access to a product now, cancelling any subscription immediately.",
+    responses: {
+      200: productCustomerAccessRemovedSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
   getSchoolOverview: {
     method: "GET",
     path: "/v1/school/overview",
@@ -3916,6 +4018,16 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+    },
+  },
+  listLearnerPurchases: {
+    method: "GET",
+    path: "/v1/learner/purchases",
+    summary: "List the signed-in learner's purchases and receipts at this school",
+    responses: {
+      200: z.object({ items: z.array(learnerPurchaseSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
     },
   },
   listLearnerCertificates: {
@@ -4639,6 +4751,16 @@ export const contract = c.router({
     summary: "Get the school's mailing settings",
     responses: {
       200: mailingSettingsSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getSchoolEmailDelivery: {
+    method: "GET",
+    path: "/v1/school/mails/delivery",
+    summary: "Show whether the school's email goes out through its own mailing team",
+    responses: {
+      200: schoolEmailDeliverySchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
     },

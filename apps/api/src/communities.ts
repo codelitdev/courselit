@@ -26,6 +26,13 @@ import {
   activateCommunityPlan,
   revokeCommunityMembershipAccess,
 } from "./community-commerce.js";
+import {
+  activeCommunitySubscriptions,
+  cancelCommunitySubscriptionsAtProvider,
+  type LearnerCommunityBilling,
+  learnerCommunityBillingMap,
+  markCommunitySubscriptionsCancelled,
+} from "./community-billing.js";
 import { ensureLearnerAccountByEmail } from "./learners.js";
 import { queueCommunityInviteEmail } from "./school-emails.js";
 import { queueMembershipEvents, schoolSiteUrl } from "./membership-events.js";
@@ -46,7 +53,7 @@ import {
   createLearnerNotification,
   createSchoolAdminNotifications,
 } from "./notifications.js";
-import { getPaymentProvider, type PaymentProvider } from "./payments.js";
+import type { PaymentProvider } from "./payments.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
 import { accessibleSpaceIds } from "./space-access.js";
@@ -97,6 +104,10 @@ export type CommunityDto = {
   membership: CommunityMembershipDto | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type LearnerCommunityMembershipDto = CommunityDto & {
+  billing: LearnerCommunityBilling | null;
 };
 
 export type PublicCommunityListItemDto = CommunityDto & {
@@ -1389,11 +1400,18 @@ export async function listCommunities(
   };
 }
 
+/**
+ * The communities a learner is an active member of, with any billing still
+ * running for each. Offline communities are included so a learner can always
+ * leave, and stop paying for, a community they belong to.
+ */
 export async function listLearnerCommunities(
   db: AppDb,
   viewer: CommunityLearnerViewer,
   options: { cursor?: string; limit: number },
-): Promise<Result<{ items: CommunityDto[]; nextCursor: string | null }>> {
+): Promise<
+  Result<{ items: LearnerCommunityMembershipDto[]; nextCursor: string | null }>
+> {
   const cursor = decodeCommunityNameCursor(options.cursor);
   if (options.cursor && !cursor) {
     return { ok: false, error: createPlatformError("validation_failed") };
@@ -1403,8 +1421,8 @@ export async function listLearnerCommunities(
     eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
     eq(schema.learnerMemberships.entityType, "community"),
     eq(schema.learnerMemberships.isIncludedInPlan, false),
+    eq(schema.learnerMemberships.status, "active"),
     isNull(schema.communities.deletedAt),
-    eq(schema.communities.enabled, true),
   ];
   if (cursor) {
     conditions.push(
@@ -1446,11 +1464,16 @@ export async function listLearnerCommunities(
     viewer.schoolId,
     page.map((row) => row.community.id),
   );
+  const billing = await learnerCommunityBillingMap(db, {
+    schoolId: viewer.schoolId,
+    schoolAccountId: viewer.learnerId,
+    communityIds: page.map((row) => row.community.id),
+  });
   return {
     ok: true,
     value: {
-      items: page.map((row) =>
-        communityToDto(
+      items: page.map((row) => ({
+        ...communityToDto(
           row.community,
           viewer.schoolPublicId,
           membershipToDto(
@@ -1462,7 +1485,8 @@ export async function listLearnerCommunities(
           membersCount.get(row.community.id) ?? 0,
           postsCount.get(row.community.id) ?? 0,
         ),
-      ),
+        billing: billing.get(row.community.id) ?? null,
+      })),
       nextCursor:
         rows.length > options.limit && page.at(-1)
           ? encodeCommunityNameCursor(
@@ -1750,93 +1774,6 @@ export async function getPublicCommunity(
       membersCount,
       postsCount,
     ),
-  };
-}
-
-export async function listAvailableLearnerCommunities(
-  db: AppDb,
-  viewer: CommunityLearnerViewer,
-  options: { cursor?: string; limit: number },
-): Promise<Result<{ items: CommunityDto[]; nextCursor: string | null }>> {
-  const cursor = decodeCommunityNameCursor(options.cursor);
-  if (options.cursor && !cursor) {
-    return { ok: false, error: createPlatformError("validation_failed") };
-  }
-  const conditions = [
-    eq(schema.communities.schoolId, viewer.schoolId),
-    isNull(schema.communities.deletedAt),
-    eq(schema.communities.enabled, true),
-  ];
-  if (cursor) {
-    conditions.push(
-      or(
-        gt(schema.communities.name, cursor.name),
-        and(
-          eq(schema.communities.name, cursor.name),
-          gt(schema.communities.id, cursor.id),
-        ),
-      )!,
-    );
-  }
-  const rows = await db
-    .select({ community: schema.communities, membership: schema.learnerMemberships })
-    .from(schema.communities)
-    .leftJoin(
-      schema.learnerMemberships,
-      and(
-        eq(schema.learnerMemberships.entityType, "community"),
-        eq(schema.learnerMemberships.entityId, schema.communities.publicId),
-        eq(schema.learnerMemberships.schoolId, schema.communities.schoolId),
-        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
-        eq(schema.learnerMemberships.isIncludedInPlan, false),
-      ),
-    )
-    .where(and(...conditions))
-    .orderBy(asc(schema.communities.name), asc(schema.communities.id))
-    .limit(options.limit + 1);
-  const page = rows.slice(0, options.limit);
-  const featuredImage = await communityFeaturedImageMap(
-    db,
-    viewer.schoolId,
-    page.map((row) => row.community.id),
-  );
-  const membersCount = await activeCommunityMemberCountMap(
-    db,
-    viewer.schoolId,
-    page.map((row) => row.community.id),
-  );
-  const postsCount = await communityPostCountMap(
-    db,
-    viewer.schoolId,
-    page.map((row) => row.community.id),
-  );
-  return {
-    ok: true,
-    value: {
-      items: page.map((row) =>
-        communityToDto(
-          row.community,
-          viewer.schoolPublicId,
-          row.membership
-            ? membershipToDto(
-                row.membership,
-                viewer.learnerPublicId,
-                row.community.publicId,
-              )
-            : null,
-          featuredImage.get(row.community.id) ?? null,
-          membersCount.get(row.community.id) ?? 0,
-          postsCount.get(row.community.id) ?? 0,
-        ),
-      ),
-      nextCursor:
-        rows.length > options.limit && page.at(-1)
-          ? encodeCommunityNameCursor(
-              page.at(-1)!.community.name,
-              page.at(-1)!.community.id,
-            )
-          : null,
-    },
   };
 }
 
@@ -2449,17 +2386,47 @@ export async function deleteCommunity(
   context: AdminContext,
   publicId: string,
   clock: Clock,
+  paymentProviderOverride?: PaymentProvider,
 ): Promise<Result<{ id: string }>> {
   const school = communityContext(context);
   if (!school || !adminCan(context, "communities:write")) return forbidden();
   const existing = await loadCommunity(db, school.schoolId, publicId);
   if (!existing) return notFound();
+  // A deleted community gives no access, so nobody may keep paying for it.
+  const subscriptions = await activeCommunitySubscriptions(db, {
+    schoolId: school.schoolId,
+    communityId: existing.id,
+  });
+  const cancelled = await cancelCommunitySubscriptionsAtProvider(
+    db,
+    school.schoolId,
+    subscriptions,
+    paymentProviderOverride,
+  );
+  if (!cancelled.ok) return cancelled;
   const now = clock.now();
   await db.transaction(async (tx) => {
     await tx
       .update(schema.communities)
       .set({ deletedAt: now, updatedAt: now })
       .where(eq(schema.communities.id, existing.id));
+    await markCommunitySubscriptionsCancelled(
+      tx as unknown as AppDb,
+      subscriptions,
+      now,
+    );
+    for (const subscription of subscriptions) {
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: school.schoolId,
+        actorId: context.principalId,
+        action: "community.subscription_cancelled",
+        resourceType: "community_subscription",
+        resourceId: subscription.publicId,
+        requestId: context.requestId,
+        createdAt: now,
+      });
+    }
     await tx
       .delete(schema.mediaReferences)
       .where(
@@ -2554,50 +2521,18 @@ export async function leaveCommunity(
     }
   }
 
-  const subscriptions = await db
-    .select({ subscription: schema.communitySubscriptions })
-    .from(schema.communitySubscriptions)
-    .innerJoin(
-      schema.communityCheckoutAttempts,
-      eq(schema.communityCheckoutAttempts.id, schema.communitySubscriptions.checkoutId),
-    )
-    .where(
-      and(
-        eq(schema.communitySubscriptions.status, "active"),
-        eq(schema.communityCheckoutAttempts.schoolId, viewer.schoolId),
-        eq(schema.communityCheckoutAttempts.communityId, community.id),
-        eq(schema.communityCheckoutAttempts.schoolAccountId, viewer.learnerId),
-      ),
-    );
-  if (subscriptions.length > 0) {
-    const paymentProvider = await getPaymentProvider(
-      db,
-      viewer.schoolId,
-      paymentProviderOverride,
-    );
-    if (!paymentProvider?.cancelSubscription) {
-      return {
-        ok: false,
-        error: createPlatformError("conflict", {
-          safeDetails: { reason: "provider_unavailable" },
-        }),
-      };
-    }
-    try {
-      for (const row of subscriptions) {
-        await paymentProvider.cancelSubscription(
-          row.subscription.providerSubscriptionId,
-        );
-      }
-    } catch {
-      return {
-        ok: false,
-        error: createPlatformError("conflict", {
-          safeDetails: { reason: "provider_unavailable" },
-        }),
-      };
-    }
-  }
+  const subscriptions = await activeCommunitySubscriptions(db, {
+    schoolId: viewer.schoolId,
+    communityId: community.id,
+    schoolAccountId: viewer.learnerId,
+  });
+  const cancelled = await cancelCommunitySubscriptionsAtProvider(
+    db,
+    viewer.schoolId,
+    subscriptions,
+    paymentProviderOverride,
+  );
+  if (!cancelled.ok) return cancelled;
 
   const now = clock.now();
   await db.transaction(async (tx) => {
@@ -2611,17 +2546,11 @@ export async function leaveCommunity(
       clock,
       { cancelSubscription: false },
     );
-    if (subscriptions.length > 0) {
-      await tx
-        .update(schema.communitySubscriptions)
-        .set({ status: "cancelled", cancelAt: now, updatedAt: now })
-        .where(
-          inArray(
-            schema.communitySubscriptions.id,
-            subscriptions.map((row) => row.subscription.id),
-          ),
-        );
-    }
+    await markCommunitySubscriptionsCancelled(
+      tx as unknown as AppDb,
+      subscriptions,
+      now,
+    );
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: viewer.schoolId,
@@ -2856,12 +2785,14 @@ export async function updateMembership(
     rejectionReason?: string | null;
   },
   clock: Clock,
+  paymentProviderOverride?: PaymentProvider,
 ): Promise<Result<CommunityMembershipDto>> {
   const school = communityContext(context);
   if (!school || !adminCan(context, "communities:moderate")) return forbidden();
   const rows = await db
     .select({
       membership: schema.learnerMemberships,
+      communityId: schema.communities.id,
       communityPublicId: schema.communities.publicId,
       learnerPublicId: schema.schoolAccounts.publicId,
     })
@@ -2965,16 +2896,82 @@ export async function updateMembership(
       }),
     };
   }
+  // Removing, rejecting or un-approving a member ends their access, so any
+  // community billing they still have must stop too. The provider is called
+  // first: if it fails, nothing is changed and the member stays as they were.
+  const endsAccess = next.status !== "active";
+  const subscriptions =
+    endsAccess && existing.schoolAccountId
+      ? await activeCommunitySubscriptions(db, {
+          schoolId: school.schoolId,
+          communityId: rows[0]!.communityId,
+          schoolAccountId: existing.schoolAccountId,
+        })
+      : [];
+  const cancelled = await cancelCommunitySubscriptionsAtProvider(
+    db,
+    school.schoolId,
+    subscriptions,
+    paymentProviderOverride,
+  );
+  if (!cancelled.ok) return cancelled;
   const actors = await communityActorMap(db, [existing.schoolAccountId]);
-  await db
-    .update(schema.learnerMemberships)
-    .set(next)
-    .where(eq(schema.learnerMemberships.id, existing.id));
-  await queueMembershipEvents(db, {
-    membership: existing,
-    previousStatus: existing.status,
-    nextStatus: next.status,
-    clock,
+  await db.transaction(async (tx) => {
+    const txDb = tx as unknown as AppDb;
+    await tx
+      .update(schema.learnerMemberships)
+      .set(next)
+      .where(eq(schema.learnerMemberships.id, existing.id));
+    await queueMembershipEvents(txDb, {
+      membership: existing,
+      previousStatus: existing.status,
+      nextStatus: next.status,
+      clock,
+    });
+    if (endsAccess && existing.status === "active") {
+      // Products included in the member's community plan go with it.
+      const included = await tx
+        .select()
+        .from(schema.learnerMemberships)
+        .where(
+          and(
+            eq(schema.learnerMemberships.parentMembershipId, existing.id),
+            eq(schema.learnerMemberships.status, "active"),
+          ),
+        );
+      if (included.length > 0) {
+        await tx
+          .update(schema.learnerMemberships)
+          .set({ status: "expired", updatedAt: now })
+          .where(
+            inArray(
+              schema.learnerMemberships.id,
+              included.map((row) => row.id),
+            ),
+          );
+        for (const row of included) {
+          await queueMembershipEvents(txDb, {
+            membership: row,
+            previousStatus: row.status,
+            nextStatus: "expired",
+            clock,
+          });
+        }
+      }
+    }
+    await markCommunitySubscriptionsCancelled(txDb, subscriptions, now);
+    for (const subscription of subscriptions) {
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: school.schoolId,
+        actorId: context.principalId,
+        action: "community.subscription_cancelled",
+        resourceType: "community_subscription",
+        resourceId: subscription.publicId,
+        requestId: context.requestId,
+        createdAt: now,
+      });
+    }
   });
   if (
     next.status === "active" &&

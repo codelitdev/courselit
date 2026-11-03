@@ -27,6 +27,7 @@ import type { Email } from "@sendlit/email-editor";
 import { BUILTIN_SYSTEM_TEMPLATES } from "@/lib/system-email-templates";
 import { AuthGate } from "@/components/auth-gate";
 import { EmptyState } from "@/components/empty-state";
+import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@codelitdev/design-system";
 import { CourseLitLoading } from "@/components/loading";
@@ -894,6 +895,8 @@ export default function MailsPage() {
             </div>
           ) : undefined}
         />
+
+        <EmailDeliveryNotice schoolId={school?.id ?? null} />
 
         {error ? (
           <p className="text-sm text-destructive" role="alert">

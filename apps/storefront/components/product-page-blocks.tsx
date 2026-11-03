@@ -164,6 +164,7 @@ export function ProductPurchaseBlock({
   selectedPlanId,
   onSelectPlan,
   continueHref,
+  continueLabel = "Continue learning",
 }: {
   plans: ProductPlan[];
   theme: ThemeStyle;
@@ -172,11 +173,26 @@ export function ProductPurchaseBlock({
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
   continueHref?: string;
+  continueLabel?: string;
 }) {
   const selectedPlan =
     plans.find((plan) => plan.id === selectedPlanId) ??
     plans.find((plan) => plan.isDefault) ??
     plans[0];
+
+  // Buying again would only replace access the learner already has.
+  if (continueHref) {
+    return (
+      <div className="flex flex-col items-start gap-4">
+        <Text2 theme={theme}>You already have access.</Text2>
+        <Link href={continueHref}>
+          <Button theme={theme} type="button">
+            {continueLabel}
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (!selectedPlan) {
     return <Text2 theme={theme}>This product is not available for checkout yet.</Text2>;
@@ -219,13 +235,6 @@ export function ProductPurchaseBlock({
         <Text2 theme={theme} className="max-w-md text-muted-foreground">
           {selectedPlan.description}
         </Text2>
-      ) : null}
-      {continueHref ? (
-        <Link href={continueHref}>
-          <Text2 theme={theme} className="font-medium hover:underline">
-            Continue learning
-          </Text2>
-        </Link>
       ) : null}
     </div>
   );

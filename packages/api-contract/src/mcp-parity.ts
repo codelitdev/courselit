@@ -1,7 +1,6 @@
 const communityParityExemptions = [
   ["listLearnerCommunities", "learner.communities.list"],
   ["listLearnerFeed", "learner.communities.feed.list"],
-  ["listAvailableLearnerCommunities", "learner.communities.available.list"],
   ["getLearnerCommunity", "learner.communities.get"],
   ["listLearnerCommunityPosts", "learner.communities.posts.list"],
   ["createLearnerCommunityPost", "learner.communities.posts.create"],
@@ -381,6 +380,17 @@ const mcpParityOverrides = [
     exemption: {
       reason:
         "Learner session and certificate consumption endpoints are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.purchases.list",
+    rest: { operationId: "listLearnerPurchases" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "A learner's own purchase history is a learner-session browser surface and is not an MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -900,6 +910,17 @@ const mcpParityOverrides = [
     exemption: {
       reason:
         "Provider webhooks are machine-to-machine callbacks, not an MCP capability.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.products.subscription.cancel",
+    rest: { operationId: "cancelLearnerProductSubscription" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Learners cancel their own subscription from the browser with a learner session; school credentials cannot act as the learner.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },

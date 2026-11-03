@@ -26,6 +26,7 @@ import {
 } from "./sendlit-client.js";
 import type { TrackSendLitEventPayload } from "./membership-events.js";
 import type { SendSchoolEmailPayload } from "./school-emails.js";
+import { sendSystemMail } from "./system-mail.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -578,7 +579,7 @@ function backoffMs(attempts: number): number {
 async function claimNextJob(
   db: AppDb,
   now: Date,
-  allowedProviders: schema.IntegrationProvider[] = ["sendlit"],
+  allowedProviders: schema.OutboxProvider[] = ["sendlit"],
 ): Promise<IntegrationJob | null> {
   const [candidate] = await db
     .select()
@@ -655,7 +656,7 @@ async function failJob(
     message = "sendlit_quota_exceeded";
     actionRequired = true;
   }
-  if (job.type === "provision_sendlit") {
+  if (job.type === "provision_sendlit" && job.provider !== "system") {
     await updateIntegration(db, job.schoolId, job.provider, {
       status: actionRequired ? "action_required" : "pending",
       lastError: message,
@@ -726,6 +727,66 @@ export async function processNextIntegrationJob(
   return false;
 }
 
+/** How many times the platform sender retries one email before giving up. */
+const MAX_SYSTEM_EMAIL_ATTEMPTS = 8;
+
+/** Sends one queued school email through the platform's own sender. Schools
+ * without a mailing team still get their transactional email (receipts,
+ * access grants, notifications) delivered this way. Returns whether a job
+ * was processed. */
+export async function processNextSystemEmailJob(
+  db: AppDb,
+  clock: Clock,
+  logger: Logger,
+  send: typeof sendSystemMail = sendSystemMail,
+): Promise<boolean> {
+  const now = clock.now();
+  await db
+    .update(schema.integrationOutboxJobs)
+    .set({ status: "pending", nextAttemptAt: now, updatedAt: now })
+    .where(
+      and(
+        eq(schema.integrationOutboxJobs.provider, "system"),
+        eq(schema.integrationOutboxJobs.status, "processing"),
+        lt(
+          schema.integrationOutboxJobs.updatedAt,
+          new Date(now.getTime() - 15 * 60 * 1000),
+        ),
+      ),
+    );
+  const job = await claimNextJob(db, now, ["system"]);
+  if (!job) return false;
+  try {
+    const payload = job.payload as Partial<SendSchoolEmailPayload>;
+    if (job.type !== "send_system_email" || !payload.to || !payload.subject) {
+      throw new IntegrationActionRequiredError("Invalid email payload");
+    }
+    await send({
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text ?? "",
+      ...(payload.html ? { html: payload.html } : {}),
+    });
+    await finishJob(db, job, clock);
+  } catch (error) {
+    const actionRequired =
+      error instanceof IntegrationActionRequiredError ||
+      job.attempts + 1 >= MAX_SYSTEM_EMAIL_ATTEMPTS;
+    await failJob(db, job, clock, error, actionRequired);
+    logger.warn(
+      {
+        jobId: job.id,
+        schoolId: job.schoolId,
+        attempts: job.attempts + 1,
+        actionRequired,
+        error: safeError(error),
+      },
+      "System email job failed",
+    );
+  }
+  return true;
+}
+
 /** Starts the same small in-process retry loop used by the sister products. */
 export function startIntegrationWorker(
   db: AppDb,
@@ -757,6 +818,9 @@ export function startIntegrationWorker(
           options.sendLitOperations,
           sendLitConfig(),
         );
+      }
+      while (!stopped && (await processNextSystemEmailJob(db, clock, logger))) {
+        // Drain the platform sender's queue too.
       }
     } catch (error) {
       logger.error({ error: safeError(error) }, "Integration worker poll error");

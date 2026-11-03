@@ -10,7 +10,16 @@ import { CourseLitLoading } from "@/components/course-lit-loader";
 import { courseViewerHref } from "@/components/layout/course-viewer-sidebar";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
 import {
+  LearnerAlertDialog,
+  LearnerAlertDialogAction,
+  LearnerAlertDialogCancel,
+  LearnerAlertDialogContent,
+  LearnerAlertDialogDescription,
+  LearnerAlertDialogFooter,
+  LearnerAlertDialogHeader,
+  LearnerAlertDialogTitle,
   LearnerBadge,
+  LearnerButton,
   LearnerCard,
   LearnerCardContent,
   LearnerCardImage,
@@ -44,6 +53,133 @@ function descriptionText(value: string | null | undefined): string {
   };
   walk(document);
   return parts.join("").replace(/\s+/g, " ").trim();
+}
+
+type ProductSubscription = NonNullable<LearnerProduct["subscription"]>;
+
+function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function subscriptionSummary(subscription: ProductSubscription): string {
+  if (subscription.planKind === "installment") {
+    if (subscription.status === "completed") return "Installments paid in full — lifetime access";
+    const paid = `${subscription.installmentsPaid ?? 0} of ${subscription.installmentCount ?? 0} installments paid`;
+    return subscription.status === "past_due" ? `${paid} — payment overdue` : paid;
+  }
+  switch (subscription.status) {
+    case "active":
+      return subscription.currentPeriodEnd
+        ? `Subscription active — renews on ${formatDate(subscription.currentPeriodEnd)}`
+        : "Subscription active";
+    case "cancelling":
+      return subscription.accessUntil
+        ? `Cancelled — access until ${formatDate(subscription.accessUntil)}`
+        : "Cancelled — access until the end of the billing period";
+    case "past_due":
+      return "Subscription payment overdue";
+    default:
+      return "Subscription ended";
+  }
+}
+
+function ProductSubscriptionPanel({
+  product,
+  onChange,
+}: {
+  product: LearnerProduct;
+  onChange: (subscription: ProductSubscription) => void;
+}) {
+  const subscription = product.subscription;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!subscription) return null;
+
+  async function cancel() {
+    setCancelling(true);
+    setError(null);
+    try {
+      onChange(
+        await requestJson<ProductSubscription>(
+          `/api/v1/learner/products/${encodeURIComponent(product.id)}/subscription/cancel`,
+          { method: "POST", body: JSON.stringify({}) },
+        ),
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to cancel the subscription.",
+      );
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  return (
+    <LearnerCard>
+      <LearnerCardContent className="grid gap-3">
+        <LearnerText2 className="text-muted-foreground">
+          {subscriptionSummary(subscription)}
+        </LearnerText2>
+        {subscription.planKind === "installment" && subscription.status !== "completed" ? (
+          <LearnerText2 className="text-muted-foreground">
+            Installment plans can’t be cancelled — remaining installments are
+            charged automatically until the plan is paid in full.
+          </LearnerText2>
+        ) : null}
+        {subscription.learnerCanCancel ? (
+          <div>
+            <LearnerButton
+              variant="outline"
+              size="sm"
+              disabled={cancelling}
+              onClick={() => setConfirmOpen(true)}
+            >
+              {cancelling ? "Cancelling…" : "Cancel subscription"}
+            </LearnerButton>
+          </div>
+        ) : null}
+        {error ? (
+          <LearnerText2 className="text-destructive" role="alert">
+            {error}
+          </LearnerText2>
+        ) : null}
+      </LearnerCardContent>
+      <LearnerAlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <LearnerAlertDialogContent>
+          <LearnerAlertDialogHeader>
+            <LearnerAlertDialogTitle>Cancel subscription</LearnerAlertDialogTitle>
+            <LearnerAlertDialogDescription>
+              {`You won’t be charged again for ${product.title}. You keep access until ${
+                subscription.currentPeriodEnd
+                  ? formatDate(subscription.currentPeriodEnd)
+                  : "the end of the current billing period"
+              }, after which access ends.`}
+            </LearnerAlertDialogDescription>
+          </LearnerAlertDialogHeader>
+          <LearnerAlertDialogFooter>
+            <LearnerButton asChild variant="outline">
+              <LearnerAlertDialogCancel>Keep subscription</LearnerAlertDialogCancel>
+            </LearnerButton>
+            <LearnerButton asChild variant="destructive" disabled={cancelling}>
+              <LearnerAlertDialogAction
+                onClick={() => {
+                  setConfirmOpen(false);
+                  void cancel();
+                }}
+              >
+                Cancel subscription
+              </LearnerAlertDialogAction>
+            </LearnerButton>
+          </LearnerAlertDialogFooter>
+        </LearnerAlertDialogContent>
+      </LearnerAlertDialog>
+    </LearnerCard>
+  );
 }
 
 function LearnerProductCard({ product }: { product: LearnerProduct }) {
@@ -190,7 +326,19 @@ export function LearnerProducts() {
           aria-label="Your products"
         >
           {products.map((product) => (
-            <LearnerProductCard key={product.id} product={product} />
+            <div key={product.id} className="grid content-start gap-3">
+              <LearnerProductCard product={product} />
+              <ProductSubscriptionPanel
+                product={product}
+                onChange={(subscription) =>
+                  setProducts((current) =>
+                    current.map((item) =>
+                      item.id === product.id ? { ...item, subscription } : item,
+                    ),
+                  )
+                }
+              />
+            </div>
           ))}
         </section>
       )}

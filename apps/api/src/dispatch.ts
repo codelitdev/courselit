@@ -170,6 +170,7 @@ import {
   getPublicCommunity,
   inviteCommunityMember,
   leaveCommunity,
+  listLearnerCommunities,
   listComments,
   listMemberships,
   listPosts,
@@ -215,6 +216,8 @@ import { publicCaptchaConfig, verifyCaptcha } from "./captcha.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { createLearnerDownloadLink } from "./downloads.js";
+import { listLearnerPurchases } from "./learner-purchases.js";
+import { schoolEmailSender } from "./school-emails.js";
 import {
   createBlogPost,
   createWebsitePage,
@@ -310,6 +313,11 @@ import {
   getProductCustomerProgress,
   listProductCustomers,
 } from "./product-customers.js";
+import {
+  cancelLearnerProductSubscription,
+  cancelProductCustomerSubscription,
+  removeProductCustomerAccess,
+} from "./product-subscriptions.js";
 import {
   createProduct,
   deleteProduct,
@@ -1253,7 +1261,14 @@ export async function dispatch(
         if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
-        return errorResponse(createPlatformError("not_found"));
+        const result = await listLearnerCommunities(
+          deps.db,
+          learnerCommunityViewer,
+          parsed.data,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
       }
       if (request.method === "GET" && path === "/v1/learner/feed") {
         const parsed = communityListQuerySchema.safeParse({
@@ -1350,9 +1365,6 @@ export async function dispatch(
           ? { status: 201, body: result.value }
           : errorResponse(result.error);
       }
-      if (request.method === "GET" && path === "/v1/learner/communities/available") {
-        return errorResponse(createPlatformError("not_found"));
-      }
       if (request.method === "GET" && path === "/v1/learner/products") {
         return {
           status: 200,
@@ -1364,6 +1376,25 @@ export async function dispatch(
             }),
           },
         };
+      }
+      const learnerSubscriptionCancelMatch =
+        /^\/v1\/learner\/products\/([^/]+)\/subscription\/cancel$/.exec(path);
+      if (request.method === "POST" && learnerSubscriptionCancelMatch) {
+        const result = await cancelLearnerProductSubscription(
+          deps.db,
+          {
+            schoolId: learnerAuth.value.school.id,
+            learnerId: learnerAuth.value.learner.id,
+            learnerPublicId: learnerAuth.value.learner.publicId,
+            productPublicId: decodeURIComponent(learnerSubscriptionCancelMatch[1]!),
+            requestId,
+          },
+          deps.clock,
+          deps.paymentProvider,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
       }
       const learnerScormRuntimeMatch =
         /^\/v1\/learner\/products\/([^/]+)\/lessons\/([^/]+)\/scorm\/runtime$/.exec(
@@ -1740,6 +1771,17 @@ export async function dispatch(
         return result.ok
           ? { status: 201, body: result.value }
           : errorResponse(result.error);
+      }
+      if (request.method === "GET" && path === "/v1/learner/purchases") {
+        return {
+          status: 200,
+          body: {
+            items: await listLearnerPurchases(deps.db, {
+              schoolId: learnerAuth.value.school.id,
+              schoolAccountId: learnerAuth.value.learner.id,
+            }),
+          },
+        };
       }
       if (request.method === "GET" && path === "/v1/learner/certificates") {
         return {
@@ -2650,6 +2692,12 @@ export async function dispatch(
     // ---------------------------------------------------------------------------
     // Mailing, Tags, Segments, Subscribers, Sequences & Templates
     // ---------------------------------------------------------------------------
+    if (request.method === "GET" && path === "/v1/school/mails/delivery") {
+      return {
+        status: 200,
+        body: await schoolEmailSender(deps.db, context.tenantId!),
+      };
+    }
     if (path === "/v1/school/mails/settings") {
       if (request.method === "GET") {
         const result = await getMailingSettings(deps.db, context.tenantId!, deps.clock);
@@ -3269,6 +3317,7 @@ export async function dispatch(
         context,
         decodeURIComponent(communityMatch[1]!),
         deps.clock,
+        deps.paymentProvider,
       );
       return result.ok
         ? { status: 200, body: result.value }
@@ -3323,6 +3372,7 @@ export async function dispatch(
         decodeURIComponent(communityMembershipMatch[1]!),
         parsed.data,
         deps.clock,
+        deps.paymentProvider,
       );
       return result.ok
         ? { status: 200, body: result.value }
@@ -3790,6 +3840,7 @@ export async function dispatch(
           },
           contactId,
           deps.clock,
+          deps.paymentProvider,
         );
         return result.ok
           ? { status: 200, body: result.value }
@@ -4816,6 +4867,42 @@ export async function dispatch(
         productPublicId: decodeURIComponent(productCustomerProgressMatch[1]!),
         customerPublicId: decodeURIComponent(productCustomerProgressMatch[2]!),
       });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const productCustomerSubscriptionCancelMatch =
+      /^\/v1\/products\/([^/]+)\/customers\/([^/]+)\/subscription\/cancel$/.exec(path);
+    if (request.method === "POST" && productCustomerSubscriptionCancelMatch) {
+      const result = await cancelProductCustomerSubscription(
+        deps.db,
+        context,
+        {
+          productPublicId: decodeURIComponent(productCustomerSubscriptionCancelMatch[1]!),
+          customerPublicId: decodeURIComponent(productCustomerSubscriptionCancelMatch[2]!),
+        },
+        deps.clock,
+        deps.paymentProvider,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const productCustomerRemoveAccessMatch =
+      /^\/v1\/products\/([^/]+)\/customers\/([^/]+)\/remove-access$/.exec(path);
+    if (request.method === "POST" && productCustomerRemoveAccessMatch) {
+      const result = await removeProductCustomerAccess(
+        deps.db,
+        context,
+        {
+          productPublicId: decodeURIComponent(productCustomerRemoveAccessMatch[1]!),
+          customerPublicId: decodeURIComponent(productCustomerRemoveAccessMatch[2]!),
+        },
+        deps.clock,
+        deps.paymentProvider,
+      );
       return result.ok
         ? { status: 200, body: result.value }
         : errorResponse(result.error);

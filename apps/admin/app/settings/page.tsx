@@ -22,6 +22,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
+import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
@@ -644,7 +645,8 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
 
           <PlatformTabsContent value="delivery" className="w-full">
           {mode === "mails" && selectedTab === "delivery" ? (
-            <div className="pt-4">
+            <div className="space-y-4 pt-4">
+              <EmailDeliveryNotice schoolId={schoolId} />
               <form
                 className="space-y-4"
                 onSubmit={(event) => {

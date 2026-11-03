@@ -19,18 +19,14 @@ import {
   Film,
   Flag,
   Megaphone,
-  MessageCircle,
   Paperclip,
   Pencil,
   Pin,
   Reply,
   Send,
-  Share2,
   SmilePlus,
   Trash2,
-  Users,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { z } from "zod";
@@ -59,7 +55,6 @@ import {
   LearnerAvatarImage,
   LearnerCardImage,
   LearnerDropdownMenuItem,
-  LearnerHeader1,
   LearnerHeader2,
   LearnerHeader3,
   LearnerInput,
@@ -389,17 +384,6 @@ function LoadingState({
   );
 }
 
-function communityMembershipLabel(community: Community) {
-  const status = community.membership?.status;
-  if (status === "active") return "Member";
-  if (status === "pending") return "Pending approval";
-  if (status === "rejected") return "Membership rejected";
-  if (status === "payment_failed") return "Payment failed";
-  if (status === "expired") return "Membership expired";
-  if (status === "paused") return "Membership paused";
-  return "Join community";
-}
-
 function parseCommunityDescription(value: string): TextEditorContent | null {
   try {
     const parsed: unknown = JSON.parse(value);
@@ -454,268 +438,6 @@ function CommunityDescription({
     return <TextRenderer json={richText} theme={theme} className={className} />;
   }
   return <LearnerText2 className={className}>{value}</LearnerText2>;
-}
-
-function CommunityInfoCard({
-  community,
-  activeMember,
-  leaving,
-  onShare,
-  onLeave,
-}: {
-  community: Community;
-  activeMember: boolean;
-  leaving: boolean;
-  onShare: () => void;
-  onLeave: () => void;
-}) {
-  return (
-    <PageCard className="h-fit">
-      <PageCardContent className="grid gap-5">
-        <div className="flex items-start justify-between gap-3">
-          <LearnerHeader2 className="max-w-[18rem] leading-tight">
-            {community.name}
-          </LearnerHeader2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onShare}
-            aria-label="Share community"
-          >
-            <Share2 className="size-4" />
-          </Button>
-        </div>
-        <LearnerCardImage
-          src={
-            community.featuredImage?.thumbnailUrl ??
-            community.featuredImage?.url ??
-            "/courselit_backdrop_square.webp"
-          }
-          alt={community.featuredImage?.alt || community.name}
-          className="aspect-square w-full object-cover"
-        />
-        <LearnerText2>
-          {community.membersCount.toLocaleString()}{" "}
-          {community.membersCount === 1 ? "member" : "members"}
-        </LearnerText2>
-        {activeMember ? (
-          <div className="grid gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onLeave}
-              disabled={leaving}
-            >
-              {leaving ? "Leaving…" : "Leave community"}
-            </Button>
-          </div>
-        ) : null}
-      </PageCardContent>
-    </PageCard>
-  );
-}
-
-export function LearnerCommunities() {
-  const { learner, checking } = useLearnerSession("/communities");
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [joinedNextCursor, setJoinedNextCursor] = useState<string | null>(null);
-  const [availableNextCursor, setAvailableNextCursor] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadCommunityCollections = useCallback(
-    async (
-      joinedCursor?: string | null,
-      availableCursor?: string | null,
-      append = false,
-    ) => {
-      const [joined, available] = await Promise.all([
-        append && !joinedCursor
-          ? Promise.resolve({ items: [], nextCursor: null })
-          : requestJson<{ items: Community[]; nextCursor: string | null }>(
-              communityPagePath("/api/v1/learner/communities", joinedCursor),
-            ),
-        append && !availableCursor
-          ? Promise.resolve({ items: [], nextCursor: null })
-          : requestJson<{ items: Community[]; nextCursor: string | null }>(
-              communityPagePath(
-                "/api/v1/learner/communities/available",
-                availableCursor,
-              ),
-            ),
-      ]);
-      setCommunities((current) => {
-        const byId = new Map((append ? current : []).map((item) => [item.id, item]));
-        for (const item of available.items) byId.set(item.id, item);
-        for (const item of joined.items) byId.set(item.id, item);
-        return Array.from(byId.values());
-      });
-      setJoinedNextCursor(joined.nextCursor);
-      setAvailableNextCursor(available.nextCursor);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (!learner) return;
-    let active = true;
-    setLoading(true);
-    setError(null);
-    setCommunities([]);
-    setJoinedNextCursor(null);
-    setAvailableNextCursor(null);
-    void loadCommunityCollections()
-      .catch((caught) => {
-        if (active) {
-          setError(
-            caught instanceof Error ? caught.message : "Unable to load communities.",
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [learner, loadCommunityCollections]);
-
-  async function loadMoreCommunities() {
-    if ((!joinedNextCursor && !availableNextCursor) || loadingMore) return;
-    setLoadingMore(true);
-    setError(null);
-    try {
-      await loadCommunityCollections(joinedNextCursor, availableNextCursor, true);
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Unable to load more communities.",
-      );
-    } finally {
-      setLoadingMore(false);
-    }
-  }
-
-  if (checking) {
-    return <LoadingState label="Loading your community…" headerTitle="Communities" />;
-  }
-  if (!learner) return null;
-
-  return (
-    <LearnerShell user={learner}>
-      <main className="grid gap-7">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <LearnerText2 className="text-muted-foreground">Community</LearnerText2>
-            <LearnerHeader1>Communities</LearnerHeader1>
-            <LearnerText2 className="mt-2 text-muted-foreground">
-              Learn together, ask questions, and share progress.
-            </LearnerText2>
-          </div>
-        </header>
-        {error ? (
-          <LearnerText2 className="text-destructive" role="alert">
-            {error}
-          </LearnerText2>
-        ) : null}
-        {loading ? (
-          <CourseLitLoading label="Loading communities…" />
-        ) : null}
-        {!loading && communities.length === 0 ? (
-          <PageCard>
-            <PageCardContent className="grid justify-items-start gap-3">
-              <Users className="size-8 text-muted-foreground" />
-              <LearnerHeader2>No communities yet</LearnerHeader2>
-              <LearnerText2 className="text-muted-foreground">
-                Your school has not opened a community yet.
-              </LearnerText2>
-            </PageCardContent>
-          </PageCard>
-        ) : null}
-        {!loading && communities.length > 0 ? (
-          <section
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-            aria-label="Communities"
-          >
-            {communities.map((community) => (
-              <Link key={community.id} href="/join" className="group block">
-                <PageCard
-                  isLink
-                  className="flex flex-col gap-4 transition-colors hover:border-primary/60"
-                >
-                  {community.featuredImage ? (
-                    <LearnerCardImage
-                      src={
-                        community.featuredImage.thumbnailUrl ??
-                        community.featuredImage.url
-                      }
-                      alt={community.featuredImage.alt || community.name}
-                      className="aspect-video w-full rounded-md border object-cover"
-                    />
-                  ) : null}
-                  <PageCardContent className="flex flex-col gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <LearnerHeader2 className="group-hover:text-primary">
-                          {community.name}
-                        </LearnerHeader2>
-                        <CommunityDescription
-                          value={community.description || "Join the conversation."}
-                          className="mt-1 line-clamp-3 text-sm text-muted-foreground"
-                        />
-                      </div>
-                      <MessageCircle className="size-5 shrink-0 text-primary" />
-                    </div>
-                    <div className="mt-auto flex flex-wrap gap-2">
-                      {community.categories.slice(0, 3).map((category) => (
-                        <LearnerText2
-                          key={category}
-                          component="span"
-                          className="rounded-full border px-2 py-1 text-muted-foreground"
-                        >
-                          {category}
-                        </LearnerText2>
-                      ))}
-                      <LearnerText2
-                        component="span"
-                        className="ml-auto rounded-full bg-muted px-2 py-1 text-muted-foreground"
-                      >
-                        {communityMembershipLabel(community)}
-                      </LearnerText2>
-                      <LearnerText2
-                        component="span"
-                        className="rounded-full bg-muted px-2 py-1 text-muted-foreground"
-                      >
-                        {community.membersCount.toLocaleString()} members
-                      </LearnerText2>
-                    </div>
-                  </PageCardContent>
-                </PageCard>
-              </Link>
-            ))}
-          </section>
-        ) : null}
-        {!loading && (joinedNextCursor || availableNextCursor) ? (
-          <div className="mt-6 flex justify-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void loadMoreCommunities()}
-              disabled={loadingMore}
-              aria-label={loadingMore ? "Loading communities" : "Load more communities"}
-            >
-              {loadingMore ? (
-                <CourseLitLoadingIcon size={14} />
-              ) : (
-                "Load more communities"
-              )}
-            </Button>
-          </div>
-        ) : null}
-      </main>
-    </LearnerShell>
-  );
 }
 
 export function LearnerSpacePost({
@@ -879,7 +601,6 @@ export function LearnerCommunity({
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [joiningReason, setJoiningReason] = useState("");
   const joiningReasonRef = useRef("");
-  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<
     | { kind: "post"; id: string }
     | { kind: "comment"; id: string; postId: string }
@@ -902,7 +623,6 @@ export function LearnerCommunity({
   >(null);
   const [busy, setBusy] = useState(false);
   const [joining, setJoining] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(
@@ -1235,50 +955,6 @@ export function LearnerCommunity({
     setJoinDialogOpen(false);
     if (!joinPlan) return;
     void checkout(joinPlan, joiningReasonRef.current.trim());
-  }
-
-  async function leave() {
-    if (!community || !hasCommunityMembership || leaving) return;
-    setLeaving(true);
-    setError(null);
-    try {
-      await requestJson<{ left: boolean }>(
-        `/api/v1/learner/communities/${encodeURIComponent(community.id)}/leave`,
-        { method: "POST" },
-      );
-      setCommunity((current) => (current ? { ...current, membership: null } : current));
-      setPosts([]);
-      setPostsNextCursor(null);
-      setPostsPage(1);
-      setPostPages([]);
-      setPostPageCursors({});
-      setComments({});
-      setCommentNextCursors({});
-      setExpandedPostId(null);
-      toast.success("You left the community.");
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Unable to leave this community.",
-      );
-    } finally {
-      setLeaving(false);
-    }
-  }
-
-  function requestLeave() {
-    if (!community || !hasCommunityMembership || leaving) return;
-    setLeaveDialogOpen(true);
-  }
-
-  async function shareCommunity() {
-    if (!community) return;
-    const url = `${window.location.origin}${postId ? postDetailPath(postId) : spaceFeedPath}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Community link copied to clipboard.");
-    } catch {
-      toast.info("Copy this community link", { description: url, duration: 10_000 });
-    }
   }
 
   async function createPost(event: React.FormEvent<HTMLFormElement>) {
@@ -1804,17 +1480,6 @@ export function LearnerCommunity({
           postId ? "mx-auto w-full max-w-4xl lg:grid-cols-1" : "lg:grid-cols-3"
         }`}
       >
-        {!postId && community ? (
-          <aside className="order-last self-start lg:col-start-3 lg:row-start-1 lg:order-none">
-            <CommunityInfoCard
-              community={community}
-              activeMember={Boolean(hasCommunityMembership)}
-              leaving={leaving}
-              onShare={() => void shareCommunity()}
-              onLeave={requestLeave}
-            />
-          </aside>
-        ) : null}
         <div
           className={`grid min-w-0 content-start gap-6 self-start lg:col-start-1 lg:row-start-1 ${
             postId ? "lg:col-span-1" : "lg:col-span-2"
@@ -2355,32 +2020,6 @@ export function LearnerCommunity({
             </div>
           ) : null}
         </div>
-        <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Leave community</AlertDialogTitle>
-              <AlertDialogDescription>
-                You’ll lose access to this community’s content, discussions, and
-                included products. Any ongoing subscription will also be canceled.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <Button asChild variant="outline">
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-              </Button>
-              <Button asChild variant="destructive" disabled={leaving}>
-                <AlertDialogAction
-                  onClick={() => {
-                    setLeaveDialogOpen(false);
-                    void leave();
-                  }}
-                >
-                  {leaving ? "Leaving…" : "Leave community"}
-                </AlertDialogAction>
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
         <AlertDialog
           open={Boolean(deleteTarget)}
           onOpenChange={(open) => {

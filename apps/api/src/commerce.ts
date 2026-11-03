@@ -6,7 +6,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, eq, isNull, lt, or } from "drizzle-orm";
+import { and, asc, eq, isNull, lt, or } from "drizzle-orm";
 import {
   processCommunityPaymentEvent,
   startLearnerCommunityCheckout,
@@ -23,10 +23,10 @@ import {
 } from "./payments.js";
 import {
   findLearnerMembership,
-  type LearnerMembershipRow,
   upsertLearnerMembership,
   revokeLearnerMembership,
 } from "./learner-memberships.js";
+import { notifyPaymentSucceeded } from "./purchase-notifications.js";
 import { amountMinorForPlan, sourceTypeForKind } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
@@ -123,31 +123,28 @@ function checkoutToDto(
   } satisfies StorefrontCheckoutDto;
 }
 
-function completedMembershipCheckoutDto(
-  context: CheckoutContext,
-  product: typeof schema.products.$inferSelect,
-  plan: typeof schema.storefrontPlans.$inferSelect,
-  school: typeof schema.schools.$inferSelect,
-  membership: LearnerMembershipRow,
-): StorefrontCheckoutDto {
-  const provider = membership.subscriptionMethod;
-  return {
-    id: membership.publicId,
-    schoolId: context.publicSchoolId,
-    productId: product.publicId,
-    planId: plan.publicId,
-    provider:
-      provider === "stripe" || provider === "lemonsqueezy" || provider === "razorpay"
-        ? provider
-        : "free",
-    status: "paid",
-    currency: school.currency.toUpperCase(),
-    amountMinor: amountMinorForPlan(plan),
-    checkoutUrl: null,
-    checkoutData: null,
-    createdAt: serializeDate(membership.createdAt),
-    updatedAt: serializeDate(membership.updatedAt),
-  };
+/** Whether the learner can already open the product, directly or through a
+ * community plan that includes it. */
+async function hasActiveProductAccess(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+  productPublicId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: schema.learnerMemberships.id })
+    .from(schema.learnerMemberships)
+    .where(
+      and(
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.schoolAccountId, schoolAccountId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, productPublicId),
+        eq(schema.learnerMemberships.status, "active"),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
 }
 
 async function loadCheckoutPlan(db: AppDb, schoolId: string, planPublicId: string) {
@@ -762,45 +759,32 @@ export async function startLearnerCheckout(
   if (existingMembership?.status === "rejected") {
     return error("conflict", { reason: "membership_rejected" });
   }
+  // A learner who already has access never starts another checkout: staging
+  // one would set their membership to pending and lock them out until (or
+  // unless) they paid again. Only a subscription the provider reports as
+  // lapsed counts as no longer having access.
   if (existingMembership?.status === "active") {
-    if (selected.plan.kind === "free") {
-      return {
-        ok: true,
-        value: completedMembershipCheckoutDto(
-          context,
-          selected.product,
-          selected.plan,
-          selected.school,
-          existingMembership,
-        ),
-      };
+    const subscriptionLapsed =
+      Boolean(existingMembership.subscriptionId) &&
+      Boolean(paymentProvider?.validateSubscription) &&
+      !(await paymentProvider!.validateSubscription!(existingMembership.subscriptionId!));
+    if (!subscriptionLapsed) {
+      return error("conflict", { reason: "already_member" });
     }
-    if (
-      (selected.plan.kind === "subscription" || selected.plan.kind === "installment") &&
-      existingMembership.subscriptionId &&
-      paymentProvider?.validateSubscription &&
-      (await paymentProvider.validateSubscription(existingMembership.subscriptionId))
-    ) {
-      return {
-        ok: true,
-        value: completedMembershipCheckoutDto(
-          context,
-          selected.product,
-          selected.plan,
-          selected.school,
-          existingMembership,
-        ),
-      };
-    }
-    if (
-      (selected.plan.kind === "subscription" || selected.plan.kind === "installment") &&
-      existingMembership.subscriptionId
-    ) {
-      await db
-        .update(schema.learnerMemberships)
-        .set({ status: "expired", updatedAt: clock.now() })
-        .where(eq(schema.learnerMemberships.id, existingMembership.id));
-    }
+    await db
+      .update(schema.learnerMemberships)
+      .set({ status: "expired", updatedAt: clock.now() })
+      .where(eq(schema.learnerMemberships.id, existingMembership.id));
+  } else if (
+    await hasActiveProductAccess(
+      db,
+      context.schoolId,
+      context.schoolAccountId ?? context.learnerId!,
+      selected.product.publicId,
+    )
+  ) {
+    // Access that came with a community plan counts too.
+    return error("conflict", { reason: "already_member" });
   }
   const now = clock.now();
   const accountId = context.schoolAccountId ?? context.learnerId!;
@@ -861,6 +845,11 @@ export async function startLearnerCheckout(
       selected.product,
       selected.plan,
       context,
+      clock,
+    );
+    await notifyPaymentSucceeded(
+      db,
+      { resourceType: "product", providerPaymentId: `free_${paid.publicId}` },
       clock,
     );
     return {
@@ -976,6 +965,35 @@ function integerValue(value: unknown): number | null {
   return null;
 }
 
+function dateValue(value: unknown): Date | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Whether every installment of an installment plan has been paid through
+ * this checkout. A paid-off plan grants lifetime access, so the provider
+ * ending its subscription afterwards must not revoke anything.
+ */
+export async function installmentPlanPaidOff(
+  db: AppDb,
+  checkoutId: string,
+  plan: Pick<typeof schema.storefrontPlans.$inferSelect, "kind" | "installmentCount">,
+): Promise<boolean> {
+  if (plan.kind !== "installment" || !plan.installmentCount) return false;
+  const paid = await db
+    .select({ id: schema.storefrontInvoices.id })
+    .from(schema.storefrontInvoices)
+    .where(
+      and(
+        eq(schema.storefrontInvoices.checkoutId, checkoutId),
+        eq(schema.storefrontInvoices.status, "paid"),
+      ),
+    );
+  return paid.length >= plan.installmentCount;
+}
+
 function metadataFrom(data: Record<string, unknown>): Record<string, string> {
   const raw = data.metadata ?? data.custom_data;
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
@@ -1015,6 +1033,36 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
   const providerCheckoutId = stringValue(
     data.checkout_id ?? data.checkout_session_id ?? data.session_id,
   );
+  const providerSubscriptionId = stringValue(data.subscription_id);
+  if (!providerCheckoutId && providerSubscriptionId) {
+    // Renewal events can lack checkout metadata; the subscription recorded
+    // from the first payment still points at its checkout.
+    const rows = await db
+      .select({
+        attempt: schema.storefrontCheckoutAttempts,
+        plan: schema.storefrontPlans,
+        product: schema.products,
+      })
+      .from(schema.storefrontSubscriptions)
+      .innerJoin(
+        schema.storefrontCheckoutAttempts,
+        eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId),
+      )
+      .innerJoin(
+        schema.storefrontPlans,
+        and(
+          eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+          eq(schema.storefrontPlans.entityType, "product"),
+        ),
+      )
+      .innerJoin(
+        schema.products,
+        eq(schema.products.id, schema.storefrontCheckoutAttempts.productId),
+      )
+      .where(eq(schema.storefrontSubscriptions.providerSubscriptionId, providerSubscriptionId))
+      .limit(1);
+    return rows[0] ?? null;
+  }
   if (!providerCheckoutId) return null;
   const rows = await db
     .select({
@@ -1081,6 +1129,40 @@ async function processPaymentEvent(
           .limit(1)
       )[0];
       if (!current) throw new Error("storefront_checkout_missing");
+      const providerInvoiceId = stringValue(data.invoice_id);
+      // One charge can be reported by several events with different payment
+      // ids (e.g. a checkout session and its first invoice); the provider
+      // invoice id ties them to the payment already recorded.
+      const existingPayment =
+        (
+          await tx
+            .select()
+            .from(schema.storefrontPayments)
+            .where(eq(schema.storefrontPayments.providerPaymentId, paymentId))
+            .limit(1)
+        )[0] ??
+        (providerInvoiceId
+          ? (
+              await tx
+                .select({ payment: schema.storefrontPayments })
+                .from(schema.storefrontInvoices)
+                .innerJoin(
+                  schema.storefrontPayments,
+                  eq(schema.storefrontPayments.id, schema.storefrontInvoices.paymentId),
+                )
+                .where(eq(schema.storefrontInvoices.providerInvoiceId, providerInvoiceId))
+                .limit(1)
+            )[0]?.payment
+          : undefined);
+      const isNewPayment = !existingPayment;
+      let payment = existingPayment;
+      if (payment && payment.checkoutId !== current.id)
+        throw new Error("payment_checkout_mismatch");
+      // A late duplicate of a charge that was refunded or disputed since must
+      // not restore access.
+      if (payment && (payment.status === "refunded" || payment.status === "disputed")) {
+        return;
+      }
       const membership = await upsertLearnerMembership(
         tx as unknown as AppDb,
         {
@@ -1100,16 +1182,6 @@ async function processPaymentEvent(
           .set({ membershipId: membership.id, updatedAt: now })
           .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
       }
-      const existingPayment = (
-        await tx
-          .select()
-          .from(schema.storefrontPayments)
-          .where(eq(schema.storefrontPayments.providerPaymentId, paymentId))
-          .limit(1)
-      )[0];
-      let payment = existingPayment;
-      if (payment && payment.checkoutId !== current.id)
-        throw new Error("payment_checkout_mismatch");
       if (!payment) {
         payment = {
           id: uuidv7(clock),
@@ -1195,24 +1267,38 @@ async function processPaymentEvent(
           })
           .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
       }
-      await recordActivity(tx as unknown as AppDb, {
-        schoolId: current.schoolId,
-        actorId: current.schoolAccountId,
-        type: ActivityType.PURCHASED,
-        entityId: eventCheckout.product.publicId,
-        metadata: {
-          amountMinor: amount,
-          currency,
-          purchaseId: current.publicId,
-        },
-      }, clock);
-      const subscriptionId = stringValue(data.subscription_id);
-      if (
-        subscriptionId &&
-        (eventCheckout.plan.kind === "subscription" ||
-          eventCheckout.plan.kind === "installment")
-      ) {
-        const subscription = (
+      if (isNewPayment) {
+        await recordActivity(tx as unknown as AppDb, {
+          schoolId: current.schoolId,
+          actorId: current.schoolAccountId,
+          type: ActivityType.PURCHASED,
+          entityId: eventCheckout.product.publicId,
+          metadata: {
+            amountMinor: amount,
+            currency,
+            purchaseId: current.publicId,
+          },
+        }, clock);
+      }
+      const recurringPlan =
+        eventCheckout.plan.kind === "subscription" ||
+        eventCheckout.plan.kind === "installment";
+      // Lemon Squeezy orders carry no subscription id; it may already be
+      // known from `subscription_created`.
+      const subscriptionId =
+        stringValue(data.subscription_id) ??
+        (recurringPlan
+          ? (
+              await tx
+                .select({ id: schema.storefrontSubscriptions.providerSubscriptionId })
+                .from(schema.storefrontSubscriptions)
+                .where(eq(schema.storefrontSubscriptions.checkoutId, current.id))
+                .limit(1)
+            )[0]?.id ?? null
+          : null);
+      let subscription: typeof schema.storefrontSubscriptions.$inferSelect | undefined;
+      if (subscriptionId && recurringPlan) {
+        subscription = (
           await tx
             .select()
             .from(schema.storefrontSubscriptions)
@@ -1221,18 +1307,26 @@ async function processPaymentEvent(
             )
             .limit(1)
         )[0];
+        const currentPeriodEnd = dateValue(data.current_period_end);
         if (!subscription) {
-          await tx.insert(schema.storefrontSubscriptions).values({
+          subscription = {
             id: uuidv7(clock),
             publicId: createPublicId("sub", clock),
             checkoutId: current.id,
             providerSubscriptionId: subscriptionId,
             status: "active",
-            currentPeriodEnd: null,
+            currentPeriodEnd,
             cancelAt: null,
+            cancelAtPeriodEnd: false,
             createdAt: now,
             updatedAt: now,
-          });
+          };
+          await tx.insert(schema.storefrontSubscriptions).values(subscription);
+        } else if (currentPeriodEnd) {
+          await tx
+            .update(schema.storefrontSubscriptions)
+            .set({ currentPeriodEnd, updatedAt: now })
+            .where(eq(schema.storefrontSubscriptions.id, subscription.id));
         }
         await tx
           .update(schema.learnerMemberships)
@@ -1245,33 +1339,24 @@ async function processPaymentEvent(
       }
       if (
         subscriptionId &&
+        subscription &&
+        subscription.status !== "cancelled" &&
+        subscription.status !== "expired" &&
         eventCheckout.plan.kind === "installment" &&
-        eventCheckout.plan.installmentCount
+        (await installmentPlanPaidOff(tx as unknown as AppDb, current.id, eventCheckout.plan))
       ) {
-        const paidInvoices = await tx
-          .select({ id: schema.storefrontInvoices.id })
-          .from(schema.storefrontInvoices)
-          .where(
-            and(
-              eq(schema.storefrontInvoices.membershipId, membership.id),
-              eq(schema.storefrontInvoices.status, "paid"),
-            ),
-          );
-        if (paidInvoices.length >= eventCheckout.plan.installmentCount) {
+        // The last installment is paid: stop the provider charging again.
+        // Razorpay ends the subscription itself after `total_count` charges.
+        if (data.subscription_completed !== true) {
           if (!paymentProvider?.cancelSubscription) {
             throw new Error("provider_unavailable");
           }
           await paymentProvider.cancelSubscription(subscriptionId);
-          await tx
-            .update(schema.storefrontSubscriptions)
-            .set({ status: "cancelled", cancelAt: now, updatedAt: now })
-            .where(
-              eq(
-                schema.storefrontSubscriptions.providerSubscriptionId,
-                subscriptionId,
-              ),
-            );
         }
+        await tx
+          .update(schema.storefrontSubscriptions)
+          .set({ status: "cancelled", cancelAt: now, updatedAt: now })
+          .where(eq(schema.storefrontSubscriptions.id, subscription.id));
       }
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),
@@ -1284,6 +1369,7 @@ async function processPaymentEvent(
         createdAt: now,
       });
     });
+    await notifyPaymentSucceeded(db, { resourceType: "product", providerPaymentId: paymentId }, clock);
     return "processed";
   }
   if (
@@ -1323,15 +1409,13 @@ async function processPaymentEvent(
     return "processed";
   }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
-    if (!paymentId) return "ignored";
-    const payment = (
-      await db
-        .select()
-        .from(schema.storefrontPayments)
-        .where(eq(schema.storefrontPayments.providerPaymentId, paymentId))
-        .limit(1)
-    )[0];
+    const payment = await findRefundedPayment(db, data);
     if (!payment) return "ignored";
+    const nextPaymentStatus =
+      eventType === "payment.refunded" ? "refunded" : "disputed";
+    // Providers report one refund through several events (e.g. Stripe
+    // `charge.refunded` and `charge.refund.updated`); handle it once.
+    if (payment.status === nextPaymentStatus) return "processed";
     const now = clock.now();
     await db.transaction(async (tx) => {
       const current = (
@@ -1342,8 +1426,24 @@ async function processPaymentEvent(
           .limit(1)
       )[0];
       if (!current) return;
-      const nextPaymentStatus =
-        eventType === "payment.refunded" ? "refunded" : "disputed";
+      // Stop future charges unless the subscription already ended.
+      const liveSubscription = (
+        await tx
+          .select()
+          .from(schema.storefrontSubscriptions)
+          .where(eq(schema.storefrontSubscriptions.checkoutId, current.id))
+          .limit(1)
+      )[0];
+      const cancelSubscription =
+        !!liveSubscription &&
+        liveSubscription.status !== "cancelled" &&
+        liveSubscription.status !== "expired";
+      if (liveSubscription && cancelSubscription) {
+        await tx
+          .update(schema.storefrontSubscriptions)
+          .set({ status: "cancelled", cancelAt: now, updatedAt: now })
+          .where(eq(schema.storefrontSubscriptions.id, liveSubscription.id));
+      }
       await tx
         .update(schema.storefrontPayments)
         .set({ status: nextPaymentStatus, updatedAt: now })
@@ -1367,7 +1467,7 @@ async function processPaymentEvent(
         current,
         clock,
         "expired",
-        { paymentProvider },
+        { paymentProvider, cancelSubscription },
       );
     });
     return "processed";
@@ -1386,7 +1486,7 @@ async function processPaymentEvent(
     )[0];
     if (!subscription && eventCheckout) {
       const now = clock.now();
-      await db.insert(schema.storefrontSubscriptions).values({
+      subscription = {
         id: uuidv7(clock),
         publicId: createPublicId("sub", clock),
         checkoutId: eventCheckout.attempt.id,
@@ -1394,55 +1494,148 @@ async function processPaymentEvent(
         status: "active",
         currentPeriodEnd: null,
         cancelAt: null,
+        cancelAtPeriodEnd: false,
         createdAt: now,
         updatedAt: now,
-      });
-      subscription = (
-        await db
-          .select()
-          .from(schema.storefrontSubscriptions)
-          .where(
-            eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
-          )
-          .limit(1)
-      )[0];
+      };
+      await db.insert(schema.storefrontSubscriptions).values(subscription);
     }
     if (!subscription) return "ignored";
+    const row = subscription;
     const now = clock.now();
-    const status =
-      eventType === "subscription.cancelled"
-        ? "cancelled"
-        : eventType === "subscription.expired"
-          ? "expired"
-          : eventType === "subscription.failed" || eventType === "subscription.past_due"
-            ? "past_due"
-            : "active";
+    const terminal = row.status === "cancelled" || row.status === "expired";
+    const currentPeriodEnd = dateValue(data.current_period_end) ?? row.currentPeriodEnd;
+    const update: Partial<typeof schema.storefrontSubscriptions.$inferInsert> =
+      eventType === "subscription.cancel_scheduled"
+        ? {
+            // Renewal stopped; access lasts until the paid period ends.
+            status: terminal ? row.status : "active",
+            cancelAtPeriodEnd: !terminal,
+            cancelAt: dateValue(data.cancel_at) ?? currentPeriodEnd ?? row.cancelAt,
+            currentPeriodEnd,
+          }
+        : eventType === "subscription.cancelled"
+          ? { status: "cancelled", cancelAtPeriodEnd: false, currentPeriodEnd }
+          : eventType === "subscription.expired"
+            ? { status: "expired", cancelAtPeriodEnd: false, currentPeriodEnd }
+            : eventType === "subscription.failed" || eventType === "subscription.past_due"
+              ? { status: terminal ? row.status : "past_due", currentPeriodEnd }
+              : terminal
+                ? { currentPeriodEnd }
+                : {
+                    status: "active",
+                    cancelAtPeriodEnd: false,
+                    cancelAt: null,
+                    currentPeriodEnd,
+                  };
+    const status = update.status ?? row.status;
     await db.transaction(async (tx) => {
       await tx
         .update(schema.storefrontSubscriptions)
-        .set({ status, updatedAt: now })
-        .where(eq(schema.storefrontSubscriptions.id, subscription.id));
-      if (status === "cancelled" || status === "expired" || status === "past_due") {
-        const current = (
+        .set({ ...update, updatedAt: now })
+        .where(eq(schema.storefrontSubscriptions.id, row.id));
+      const current = (
+        await tx
+          .select()
+          .from(schema.storefrontCheckoutAttempts)
+          .where(eq(schema.storefrontCheckoutAttempts.id, row.checkoutId))
+          .limit(1)
+      )[0];
+      if (!current) return;
+      if (current.membershipId) {
+        // Link the membership when the subscription is learnt from a
+        // subscription event rather than a payment (Lemon Squeezy orders).
+        await tx
+          .update(schema.learnerMemberships)
+          .set({ subscriptionId, subscriptionMethod: current.provider, updatedAt: now })
+          .where(
+            and(
+              eq(schema.learnerMemberships.id, current.membershipId),
+              isNull(schema.learnerMemberships.subscriptionId),
+            ),
+          );
+      }
+      if (
+        (status === "cancelled" || status === "expired" || status === "past_due") &&
+        status !== row.status
+      ) {
+        const plan = (
           await tx
             .select()
-            .from(schema.storefrontCheckoutAttempts)
-            .where(eq(schema.storefrontCheckoutAttempts.id, subscription.checkoutId))
+            .from(schema.storefrontPlans)
+            .where(eq(schema.storefrontPlans.id, current.planId))
             .limit(1)
         )[0];
-        if (current)
-          await revokeStorefrontAccess(
-            tx as unknown as AppDb,
-            current,
-            clock,
-            status === "past_due" ? "payment_failed" : "expired",
-            { cancelSubscription: false },
-          );
+        // A paid-off installment plan is lifetime access: the provider ending
+        // its (deliberately cancelled) subscription changes nothing.
+        if (plan && (await installmentPlanPaidOff(tx as unknown as AppDb, current.id, plan))) {
+          return;
+        }
+        await revokeStorefrontAccess(
+          tx as unknown as AppDb,
+          current,
+          clock,
+          status === "past_due" ? "payment_failed" : "expired",
+          { cancelSubscription: false },
+        );
       }
     });
     return "processed";
   }
   return "ignored";
+}
+
+/**
+ * Find the recorded payment a refund or dispute refers to. Providers do not
+ * always echo the id the payment was recorded under: a Stripe refund of a
+ * subscription's first charge carries the payment intent and the invoice,
+ * never the checkout session, and a Lemon Squeezy refund of an `initial`
+ * subscription invoice refers to the charge recorded from its order.
+ */
+async function findRefundedPayment(db: AppDb, data: Record<string, unknown>) {
+  const paymentId = stringValue(data.payment_id);
+  if (paymentId) {
+    const byId = (
+      await db
+        .select()
+        .from(schema.storefrontPayments)
+        .where(eq(schema.storefrontPayments.providerPaymentId, paymentId))
+        .limit(1)
+    )[0];
+    if (byId) return byId;
+  }
+  const invoiceId = stringValue(data.invoice_id);
+  if (invoiceId) {
+    const byInvoice = (
+      await db
+        .select({ payment: schema.storefrontPayments })
+        .from(schema.storefrontInvoices)
+        .innerJoin(
+          schema.storefrontPayments,
+          eq(schema.storefrontPayments.id, schema.storefrontInvoices.paymentId),
+        )
+        .where(eq(schema.storefrontInvoices.providerInvoiceId, invoiceId))
+        .limit(1)
+    )[0];
+    if (byInvoice) return byInvoice.payment;
+  }
+  const subscriptionId = stringValue(data.subscription_id);
+  if (data.initial_charge === true && subscriptionId) {
+    const first = (
+      await db
+        .select({ payment: schema.storefrontPayments })
+        .from(schema.storefrontSubscriptions)
+        .innerJoin(
+          schema.storefrontPayments,
+          eq(schema.storefrontPayments.checkoutId, schema.storefrontSubscriptions.checkoutId),
+        )
+        .where(eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId))
+        .orderBy(asc(schema.storefrontPayments.occurredAt), asc(schema.storefrontPayments.createdAt))
+        .limit(1)
+    )[0];
+    if (first) return first.payment;
+  }
+  return null;
 }
 
 function webhookMetadata(value: unknown): Record<string, string> {
@@ -1483,6 +1676,8 @@ async function webhookSchoolId(db: AppDb, rawBody: string): Promise<string | nul
     if (!value || typeof value !== "object" || Array.isArray(value)) return;
     for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
       if (["payment_id", "payment_intent", "order_id", "transaction_id", "subscription_id"].includes(key) && typeof item === "string") ids.add(item);
+      // Lemon Squeezy references other resources by numeric id.
+      if (key === "subscription_id" && typeof item === "number") ids.add(String(item));
       if (item && typeof item === "object") collectProviderIds(item);
     }
   };
@@ -1516,6 +1711,53 @@ async function webhookSchoolId(db: AppDb, rawBody: string): Promise<string | nul
       .where(eq(schema.communitySubscriptions.providerSubscriptionId, providerPaymentId))
       .limit(1);
     if (communitySubscription[0]) return communitySubscription[0].schoolId;
+    // A Razorpay order or subscription id is the checkout's provider id; events
+    // such as `payment.captured` carry only that, without notes.
+    const storefrontCheckout = await db
+      .select({ schoolId: schema.storefrontCheckoutAttempts.schoolId })
+      .from(schema.storefrontCheckoutAttempts)
+      .where(eq(schema.storefrontCheckoutAttempts.providerCheckoutId, providerPaymentId))
+      .limit(1);
+    if (storefrontCheckout[0]) return storefrontCheckout[0].schoolId;
+    const communityCheckout = await db
+      .select({ schoolId: schema.communityCheckoutAttempts.schoolId })
+      .from(schema.communityCheckoutAttempts)
+      .where(eq(schema.communityCheckoutAttempts.providerCheckoutId, providerPaymentId))
+      .limit(1);
+    if (communityCheckout[0]) return communityCheckout[0].schoolId;
+  }
+  // A Stripe charge for a subscription's first invoice carries neither
+  // metadata nor the id its payment was recorded under, only the invoice.
+  const invoiceIds = new Set<string>();
+  const collectInvoiceIds = (value: unknown) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return;
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      if ((key === "invoice" || key === "invoice_id") && typeof item === "string") invoiceIds.add(item);
+      if (item && typeof item === "object") collectInvoiceIds(item);
+    }
+  };
+  collectInvoiceIds(parsed);
+  for (const providerInvoiceId of invoiceIds) {
+    const storefrontInvoice = await db
+      .select({ schoolId: schema.storefrontCheckoutAttempts.schoolId })
+      .from(schema.storefrontInvoices)
+      .innerJoin(
+        schema.storefrontCheckoutAttempts,
+        eq(schema.storefrontCheckoutAttempts.id, schema.storefrontInvoices.checkoutId),
+      )
+      .where(eq(schema.storefrontInvoices.providerInvoiceId, providerInvoiceId))
+      .limit(1);
+    if (storefrontInvoice[0]) return storefrontInvoice[0].schoolId;
+    const communityInvoice = await db
+      .select({ schoolId: schema.communityCheckoutAttempts.schoolId })
+      .from(schema.communityInvoices)
+      .innerJoin(
+        schema.communityCheckoutAttempts,
+        eq(schema.communityCheckoutAttempts.id, schema.communityInvoices.checkoutId),
+      )
+      .where(eq(schema.communityInvoices.providerInvoiceId, providerInvoiceId))
+      .limit(1);
+    if (communityInvoice[0]) return communityInvoice[0].schoolId;
   }
   return null;
 }
@@ -1543,18 +1785,31 @@ export async function receivePaymentWebhook(
   } catch {
     return error("unauthenticated");
   }
-  const existing = await db.select({ id: schema.storefrontWebhookEvents.id }).from(schema.storefrontWebhookEvents).where(eq(schema.storefrontWebhookEvents.providerEventId, event.eventId)).limit(1);
-  if (existing[0]) return { ok: true, duplicate: true, status: "processed" };
+  const existing = await db.select({ id: schema.storefrontWebhookEvents.id, status: schema.storefrontWebhookEvents.status }).from(schema.storefrontWebhookEvents).where(eq(schema.storefrontWebhookEvents.providerEventId, event.eventId)).limit(1);
   const receivedAt = clock.now();
-  try {
-    await db.insert(schema.storefrontWebhookEvents).values({
-      id: uuidv7(clock), provider: providerName, providerEventId: event.eventId,
-      eventType: event.eventType, payload: rawBody, status: "received", error: null,
-      receivedAt, processedAt: null,
-    });
-  } catch (caught) {
-    if (String(caught).includes("storefront_webhook_events_provider_event_id_key")) return { ok: true, duplicate: true, status: "processed" };
-    throw caught;
+  // A provider redelivers an event we failed to process (e.g. the payment
+  // provider API was briefly down); process it again rather than swallowing
+  // it as a duplicate, or the learner pays and never gets access.
+  const retryingFailed = existing[0]?.status === "failed";
+  if (existing[0] && !retryingFailed) return { ok: true, duplicate: true, status: "processed" };
+  if (retryingFailed) {
+    const claimed = await db
+      .update(schema.storefrontWebhookEvents)
+      .set({ status: "received", error: null, receivedAt, processedAt: null })
+      .where(and(eq(schema.storefrontWebhookEvents.id, existing[0]!.id), eq(schema.storefrontWebhookEvents.status, "failed")))
+      .returning({ id: schema.storefrontWebhookEvents.id });
+    if (!claimed[0]) return { ok: true, duplicate: true, status: "processed" };
+  } else {
+    try {
+      await db.insert(schema.storefrontWebhookEvents).values({
+        id: uuidv7(clock), provider: providerName, providerEventId: event.eventId,
+        eventType: event.eventType, payload: rawBody, status: "received", error: null,
+        receivedAt, processedAt: null,
+      });
+    } catch (caught) {
+      if (String(caught).includes("storefront_webhook_events_provider_event_id_key")) return { ok: true, duplicate: true, status: "processed" };
+      throw caught;
+    }
   }
   try {
     const communityStatus = await processCommunityPaymentEvent(

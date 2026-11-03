@@ -86,8 +86,8 @@ describe("admin and learner surfaces", () => {
     );
     const learnerFeed = read("storefront/components/dashboard/learner-feed.tsx");
     const learnerProducts = read("storefront/components/dashboard/learner-products.tsx");
-    const learnerCommunities = read(
-      "storefront/app/schools/[schoolId]/communities/page.tsx",
+    const learnerCommunityMemberships = read(
+      "storefront/components/account/learner-community-memberships.tsx",
     );
     const publicCommunitiesCatalog = read(
       "storefront/components/public-communities-catalog.tsx",
@@ -449,7 +449,11 @@ describe("admin and learner surfaces", () => {
     expect(learnerSidebar).toContain('href="/dashboard/account/notifications"');
     expect(learnerSidebar).toContain('href="/dashboard/account/profile"');
     expect(learnerAccount).toContain('redirect("/dashboard/account/profile")');
-    expect(learnerCommunities).toContain("notFound()");
+    expect(learnerSidebar).toContain('href="/dashboard/account/communities"');
+    expect(learnerCommunityMemberships).toContain("/api/v1/learner/communities?");
+    expect(learnerCommunityMemberships).toContain("/leave");
+    expect(learnerCommunityMemberships).toContain("Leave community");
+    expect(learnerCommunityMemberships).toContain("LearnerAlertDialog");
     expect(publicCommunitiesCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicCommunitiesCatalog).toContain('publicApiPath(schoolId, "/communities');
     expect(learnerSpacePost).toContain("spaceId");
@@ -457,8 +461,6 @@ describe("admin and learner surfaces", () => {
     expect(learnerSpacePost).not.toContain("communityId");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/communities");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/community-posts/");
-    expect(learnerCommunityComponent).toContain("/leave");
-    expect(learnerCommunityComponent).toContain("Leave community");
     expect(learnerCommunityComponent).toContain("<LearnerPostComposerDialog");
     expect(learnerPostComposer).toContain('submitting ? "Posting…" : "Post"');
     expect(learnerCommunityComponent).toContain("Add a comment");
@@ -486,7 +488,7 @@ describe("admin and learner surfaces", () => {
     expect(learnerCommunityComponent).toContain("postId?: string");
     expect(learnerCommunityComponent).toContain("LearnerSpacePost");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/spaces/");
-    expect(learnerCommunityComponent).toContain("community.featuredImage");
+    expect(learnerCommunityMemberships).toContain("community.featuredImage");
     expect(learnerCommunityComponent).toContain("community.banner");
     expect(learnerCommunityComponent).toContain("communityDescriptionHasContent");
     expect(learnerCommunityComponent).toContain("Welcome banner");

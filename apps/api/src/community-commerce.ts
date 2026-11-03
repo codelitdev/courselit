@@ -6,7 +6,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
 import { communityPlanToDto } from "./community-plans.js";
 import * as schema from "./db/schema/index.js";
@@ -17,6 +17,7 @@ import {
   upsertLearnerMembership,
 } from "./learner-memberships.js";
 import { createSchoolAdminNotifications } from "./notifications.js";
+import { notifyPaymentSucceeded } from "./purchase-notifications.js";
 import {
   getPaymentProvider,
   type PaymentCheckoutResult,
@@ -670,6 +671,11 @@ export async function startLearnerCommunityCheckout(
       { ...context },
       clock,
     );
+    await notifyPaymentSucceeded(
+      db,
+      { resourceType: "community", providerPaymentId: `free_${paid.publicId}` },
+      clock,
+    );
     return {
       ok: true,
       value: checkoutToDto(
@@ -782,7 +788,8 @@ function integerValue(value: unknown): number | null {
 
 function dateValue(value: unknown): Date | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
-  const date = new Date(value);
+  // Raw provider timestamps (Stripe, Razorpay) are Unix seconds.
+  const date = new Date(typeof value === "number" && value < 1e12 ? value * 1000 : value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
@@ -832,6 +839,20 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
   const providerCheckoutId = stringValue(
     data.checkout_id ?? data.checkout_session_id ?? data.session_id,
   );
+  const providerSubscriptionId = stringValue(data.subscription_id);
+  if (!providerCheckoutId && providerSubscriptionId) {
+    // Renewal events can lack checkout metadata; the subscription recorded
+    // from the first payment still points at its checkout.
+    const subscription = await findCommunitySubscription(db, providerSubscriptionId);
+    return subscription
+      ? {
+          attempt: subscription.attempt,
+          community: subscription.community,
+          plan: subscription.plan,
+          school: subscription.school,
+        }
+      : null;
+  }
   if (!providerCheckoutId) return null;
   const rows = await db
     .select({
@@ -1006,30 +1027,102 @@ async function ensureCommunitySubscription(
       .limit(1)
   )[0];
   if (existing) {
+    // A payment never revives a subscription that already ended (e.g. a
+    // paid-off installment plan cancelled after its last charge).
+    const terminal = existing.status === "cancelled" || existing.status === "expired";
+    const next = {
+      status: terminal ? existing.status : ("active" as const),
+      currentPeriodEnd: currentPeriodEnd ?? existing.currentPeriodEnd,
+      cancelAt: cancelAt ?? existing.cancelAt,
+      membershipId: membershipId ?? existing.membershipId,
+      updatedAt: now,
+    };
     await tx
       .update(schema.communitySubscriptions)
-      .set({
-        status: "active",
-        currentPeriodEnd,
-        cancelAt,
-        ...(membershipId ? { membershipId } : {}),
-        updatedAt: now,
-      })
+      .set(next)
       .where(eq(schema.communitySubscriptions.id, existing.id));
-    return;
+    return { ...existing, ...next };
   }
-  await tx.insert(schema.communitySubscriptions).values({
+  const row = {
     id: uuidv7(clock),
     publicId: createPublicId("sub", clock),
     checkoutId,
     membershipId: membershipId ?? null,
     providerSubscriptionId,
-    status: "active",
+    status: "active" as const,
     currentPeriodEnd,
     cancelAt,
     createdAt: now,
     updatedAt: now,
-  });
+  };
+  await tx.insert(schema.communitySubscriptions).values(row);
+  return row;
+}
+
+/** Whether every installment of the plan has been paid through this checkout. */
+async function communityInstallmentPlanPaidOff(
+  db: AppDb,
+  checkoutId: string,
+  plan: Pick<typeof schema.storefrontPlans.$inferSelect, "kind" | "installmentCount">,
+): Promise<boolean> {
+  if (plan.kind !== "installment" || !plan.installmentCount) return false;
+  const paid = await db
+    .select({ id: schema.communityInvoices.id })
+    .from(schema.communityInvoices)
+    .where(
+      and(
+        eq(schema.communityInvoices.checkoutId, checkoutId),
+        eq(schema.communityInvoices.status, "paid"),
+      ),
+    );
+  return paid.length >= plan.installmentCount;
+}
+
+/** Find the recorded community payment a refund or dispute refers to. */
+async function findRefundedCommunityPayment(db: AppDb, data: Record<string, unknown>) {
+  const paymentId = stringValue(data.payment_id);
+  if (paymentId) {
+    const byId = (
+      await db
+        .select()
+        .from(schema.communityPayments)
+        .where(eq(schema.communityPayments.providerPaymentId, paymentId))
+        .limit(1)
+    )[0];
+    if (byId) return byId;
+  }
+  const invoiceId = stringValue(data.invoice_id);
+  if (invoiceId) {
+    const byInvoice = (
+      await db
+        .select({ payment: schema.communityPayments })
+        .from(schema.communityInvoices)
+        .innerJoin(
+          schema.communityPayments,
+          eq(schema.communityPayments.id, schema.communityInvoices.paymentId),
+        )
+        .where(eq(schema.communityInvoices.providerInvoiceId, invoiceId))
+        .limit(1)
+    )[0];
+    if (byInvoice) return byInvoice.payment;
+  }
+  const subscriptionId = stringValue(data.subscription_id);
+  if (data.initial_charge === true && subscriptionId) {
+    const first = (
+      await db
+        .select({ payment: schema.communityPayments })
+        .from(schema.communitySubscriptions)
+        .innerJoin(
+          schema.communityPayments,
+          eq(schema.communityPayments.checkoutId, schema.communitySubscriptions.checkoutId),
+        )
+        .where(eq(schema.communitySubscriptions.providerSubscriptionId, subscriptionId))
+        .orderBy(asc(schema.communityPayments.occurredAt), asc(schema.communityPayments.createdAt))
+        .limit(1)
+    )[0];
+    if (first) return first.payment;
+  }
+  return null;
 }
 
 /** Returns null when the event belongs to the product storefront. */
@@ -1069,6 +1162,38 @@ export async function processCommunityPaymentEvent(
             .limit(1)
         )[0];
         if (!current) throw new Error("community_checkout_missing");
+        const providerInvoiceId = stringValue(data.invoice_id);
+        // One charge can be reported by several events with different
+        // payment ids; the provider invoice id ties them together.
+        const existingPayment =
+          (
+            await tx
+              .select()
+              .from(schema.communityPayments)
+              .where(eq(schema.communityPayments.providerPaymentId, paymentId))
+              .limit(1)
+          )[0] ??
+          (providerInvoiceId
+            ? (
+                await tx
+                  .select({ payment: schema.communityPayments })
+                  .from(schema.communityInvoices)
+                  .innerJoin(
+                    schema.communityPayments,
+                    eq(schema.communityPayments.id, schema.communityInvoices.paymentId),
+                  )
+                  .where(eq(schema.communityInvoices.providerInvoiceId, providerInvoiceId))
+                  .limit(1)
+              )[0]?.payment
+            : undefined);
+        const isNewPayment = !existingPayment;
+        let payment = existingPayment;
+        if (payment && payment.checkoutId !== current.id)
+        throw new Error("payment_checkout_mismatch");
+        // A late duplicate of a refunded or disputed charge restores nothing.
+        if (payment && (payment.status === "refunded" || payment.status === "disputed")) {
+          return;
+        }
         const learnerMembership = await upsertLearnerMembership(
           tx as unknown as AppDb,
           {
@@ -1089,16 +1214,6 @@ export async function processCommunityPaymentEvent(
             .set({ membershipId: learnerMembership.id, updatedAt: now })
             .where(eq(schema.communityCheckoutAttempts.id, current.id));
         }
-        const existingPayment = (
-          await tx
-            .select()
-            .from(schema.communityPayments)
-            .where(eq(schema.communityPayments.providerPaymentId, paymentId))
-            .limit(1)
-        )[0];
-        let payment = existingPayment;
-        if (payment && payment.checkoutId !== current.id)
-        throw new Error("payment_checkout_mismatch");
         if (!payment) {
           payment = {
             id: uuidv7(clock),
@@ -1188,24 +1303,38 @@ export async function processCommunityPaymentEvent(
             .set({ status: "paid", updatedAt: now, completedAt: now })
             .where(eq(schema.communityCheckoutAttempts.id, current.id));
         }
-        await recordActivity(tx as unknown as AppDb, {
-          schoolId: current.schoolId,
-          actorId: current.schoolAccountId,
-          type: ActivityType.PURCHASED,
-          entityId: eventCheckout.community.publicId,
-          metadata: {
-            amountMinor: amount,
-            currency,
-            purchaseId: current.publicId,
-          },
-        }, clock);
-        const subscriptionId = stringValue(data.subscription_id);
-        if (
-          subscriptionId &&
-          (eventCheckout.plan.kind === "subscription" ||
-            eventCheckout.plan.kind === "installment")
-        ) {
-          await ensureCommunitySubscription(
+        if (isNewPayment) {
+          await recordActivity(tx as unknown as AppDb, {
+            schoolId: current.schoolId,
+            actorId: current.schoolAccountId,
+            type: ActivityType.PURCHASED,
+            entityId: eventCheckout.community.publicId,
+            metadata: {
+              amountMinor: amount,
+              currency,
+              purchaseId: current.publicId,
+            },
+          }, clock);
+        }
+        const recurringPlan =
+          eventCheckout.plan.kind === "subscription" ||
+          eventCheckout.plan.kind === "installment";
+        // Lemon Squeezy orders carry no subscription id; it may already be
+        // known from `subscription_created`.
+        const subscriptionId =
+          stringValue(data.subscription_id) ??
+          (recurringPlan
+            ? (
+                await tx
+                  .select({ id: schema.communitySubscriptions.providerSubscriptionId })
+                  .from(schema.communitySubscriptions)
+                  .where(eq(schema.communitySubscriptions.checkoutId, current.id))
+                  .limit(1)
+              )[0]?.id ?? null
+            : null);
+        let subscription: Awaited<ReturnType<typeof ensureCommunitySubscription>> | null = null;
+        if (subscriptionId && recurringPlan) {
+          subscription = await ensureCommunitySubscription(
             tx as unknown as AppDb,
             current.id,
             subscriptionId,
@@ -1224,33 +1353,32 @@ export async function processCommunityPaymentEvent(
         }
         if (
           subscriptionId &&
-          eventCheckout.plan.kind === "installment" &&
-          eventCheckout.plan.installmentCount
+          subscription &&
+          subscription.status !== "cancelled" &&
+          subscription.status !== "expired" &&
+          (await communityInstallmentPlanPaidOff(
+            tx as unknown as AppDb,
+            current.id,
+            eventCheckout.plan,
+          ))
         ) {
-          const paidInvoices = await tx
-            .select({ id: schema.communityInvoices.id })
-            .from(schema.communityInvoices)
-            .where(
-              and(
-                eq(schema.communityInvoices.membershipId, learnerMembership.id),
-                eq(schema.communityInvoices.status, "paid"),
-              ),
-            );
-          if (paidInvoices.length >= eventCheckout.plan.installmentCount) {
+          // The last installment is paid: stop the provider charging again.
+          // Razorpay ends the subscription itself after `total_count` charges.
+          if (data.subscription_completed !== true) {
             if (!paymentProvider?.cancelSubscription) {
               throw new Error("provider_unavailable");
             }
             await paymentProvider.cancelSubscription(subscriptionId);
-            await tx
-              .update(schema.communitySubscriptions)
-              .set({ status: "cancelled", cancelAt: now, updatedAt: now })
-              .where(
-                eq(
-                  schema.communitySubscriptions.providerSubscriptionId,
-                  subscriptionId,
-                ),
-              );
           }
+          await tx
+            .update(schema.communitySubscriptions)
+            .set({ status: "cancelled", cancelAt: now, updatedAt: now })
+            .where(
+              eq(
+                schema.communitySubscriptions.providerSubscriptionId,
+                subscriptionId,
+              ),
+            );
         }
         await tx.insert(schema.auditEvents).values({
           id: uuidv7(clock),
@@ -1263,6 +1391,7 @@ export async function processCommunityPaymentEvent(
           createdAt: now,
         });
       });
+      await notifyPaymentSucceeded(db, { resourceType: "community", providerPaymentId: paymentId }, clock);
       return "processed";
     }
     if (eventType === "payment.failed" || eventType === "payment.cancelled") {
@@ -1296,17 +1425,12 @@ export async function processCommunityPaymentEvent(
     }
   }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
-    if (!paymentId) return eventCheckout ? "ignored" : null;
-    const payment = (
-      await db
-        .select()
-        .from(schema.communityPayments)
-        .where(eq(schema.communityPayments.providerPaymentId, paymentId))
-        .limit(1)
-    )[0];
+    const payment = await findRefundedCommunityPayment(db, data);
     if (!payment) return eventCheckout ? "ignored" : null;
     const now = clock.now();
     const status = eventType === "payment.refunded" ? "refunded" : "disputed";
+    // One refund can arrive through several provider events; handle it once.
+    if (payment.status === status) return "processed";
     await db.transaction(async (tx) => {
       const current = (
         await tx
@@ -1316,6 +1440,24 @@ export async function processCommunityPaymentEvent(
           .limit(1)
       )[0];
       if (!current) return;
+      // Stop future charges unless the subscription already ended.
+      const liveSubscriptions = (
+        await tx
+          .select()
+          .from(schema.communitySubscriptions)
+          .where(eq(schema.communitySubscriptions.checkoutId, current.id))
+      ).filter((row) => row.status !== "cancelled" && row.status !== "expired");
+      if (liveSubscriptions.length > 0) {
+        await tx
+          .update(schema.communitySubscriptions)
+          .set({ status: "cancelled", cancelAt: now, updatedAt: now })
+          .where(
+            inArray(
+              schema.communitySubscriptions.id,
+              liveSubscriptions.map((row) => row.id),
+            ),
+          );
+      }
       await tx
         .update(schema.communityPayments)
         .set({ status, updatedAt: now })
@@ -1349,7 +1491,7 @@ export async function processCommunityPaymentEvent(
           )[0]!,
         clock,
         "expired",
-        { paymentProvider },
+        { paymentProvider, cancelSubscription: liveSubscriptions.length > 0 },
       );
     });
     return "processed";
@@ -1376,26 +1518,76 @@ export async function processCommunityPaymentEvent(
     }
     if (!subscription) return null;
     const now = clock.now();
+    const previousStatus = subscription.subscription.status;
+    // Ended subscriptions (learner left, refunded, paid-off installments)
+    // are never revived by a late or out-of-order provider event.
+    const terminal = previousStatus === "cancelled" || previousStatus === "expired";
     const status =
       eventType === "subscription.cancelled"
         ? "cancelled"
         : eventType === "subscription.expired"
           ? "expired"
-          : eventType === "subscription.failed" || eventType === "subscription.past_due"
-            ? "past_due"
-            : "active";
+          : terminal
+            ? previousStatus
+            : eventType === "subscription.failed" || eventType === "subscription.past_due"
+              ? "past_due"
+              : "active";
+    const currentPeriodEnd =
+      dateValue(data.current_period_end ?? data.next_billing_date ?? data.period_end) ??
+      subscription.subscription.currentPeriodEnd;
+    const cancelAt =
+      eventType === "subscription.cancel_scheduled"
+        ? dateValue(data.cancel_at) ?? currentPeriodEnd
+        : dateValue(data.cancel_at ?? data.cancelled_at);
     await db.transaction(async (tx) => {
       await tx
         .update(schema.communitySubscriptions)
         .set({
           status,
-          currentPeriodEnd: dateValue(
-            data.current_period_end ?? data.next_billing_date ?? data.period_end,
-          ),
-          cancelAt: dateValue(data.cancel_at ?? data.cancelled_at),
+          currentPeriodEnd,
+          cancelAt: cancelAt ?? (terminal ? subscription!.subscription.cancelAt : null),
           updatedAt: now,
         })
         .where(eq(schema.communitySubscriptions.id, subscription!.subscription.id));
+      const membershipId = subscription!.attempt.membershipId;
+      if (membershipId) {
+        // Link the membership when the subscription is learnt from a
+        // subscription event rather than a payment (Lemon Squeezy orders),
+        // so leaving the community cancels it.
+        await tx
+          .update(schema.learnerMemberships)
+          .set({
+            subscriptionId: providerSubscriptionId,
+            subscriptionMethod: subscription!.attempt.provider,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(schema.learnerMemberships.id, membershipId),
+              isNull(schema.learnerMemberships.subscriptionId),
+            ),
+          );
+        if (!subscription!.subscription.membershipId) {
+          await tx
+            .update(schema.communitySubscriptions)
+            .set({ membershipId })
+            .where(eq(schema.communitySubscriptions.id, subscription!.subscription.id));
+        }
+      }
+      // Renewal stopped but the paid period continues: nothing to change.
+      if (eventType === "subscription.cancel_scheduled") return;
+      if (status === previousStatus && status !== "active") return;
+      if (
+        status !== "active" &&
+        (await communityInstallmentPlanPaidOff(
+          tx as unknown as AppDb,
+          subscription!.attempt.id,
+          subscription!.plan,
+        ))
+      ) {
+        // A paid-off installment plan keeps its access for good.
+        return;
+      }
       if (status === "active") {
         await activateCommunityPlan(
           tx as unknown as AppDb,

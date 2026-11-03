@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type {
+  CancelSubscriptionOptions,
   NormalizedPaymentEvent,
   PaymentCheckoutInput,
   PaymentCheckoutResult,
@@ -22,8 +23,17 @@ export class MemoryPaymentProvider implements PaymentProvider {
     };
   }
 
-  async cancelSubscription(providerSubscriptionId: string): Promise<void> {
+  readonly cancellations: Array<{ id: string; atPeriodEnd: boolean }> = [];
+
+  async cancelSubscription(
+    providerSubscriptionId: string,
+    options: CancelSubscriptionOptions = {},
+  ): Promise<void> {
     this.cancelledSubscriptions.push(providerSubscriptionId);
+    this.cancellations.push({
+      id: providerSubscriptionId,
+      atPeriodEnd: options.atPeriodEnd === true,
+    });
   }
 
   async validateSubscription(): Promise<boolean> {

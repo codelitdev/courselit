@@ -460,12 +460,6 @@ describe.serial("school spaces and included products", () => {
       headers: {},
     });
     expect(publicList.status).toBe(404);
-    const available = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/learner/communities/available",
-      headers: learnerHeaders,
-    });
-    expect(available.status).toBe(404);
 
     const deleted = await dispatch(runtime, {
       method: "DELETE",

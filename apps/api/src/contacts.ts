@@ -18,11 +18,17 @@ import {
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
 import {
+  activeCommunitySubscriptions,
+  cancelCommunitySubscriptionsAtProvider,
+  markCommunitySubscriptionsCancelled,
+} from "./community-billing.js";
+import {
   fromSendLitFilter,
   toSendLitFilter,
 } from "./contact-filters.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
+import { getConfiguredPaymentProvider, type PaymentProvider } from "./payments.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import {
@@ -932,6 +938,7 @@ export async function deleteContact(
   ctx: AdminContactContext,
   contactId: string,
   clock: Clock,
+  paymentProviderOverride?: PaymentProvider,
 ): Promise<{ ok: true; value: { success: true } } | { ok: false; error: PlatformError }> {
   const schoolId = getSchoolId(ctx);
   if (!schoolId) {
@@ -975,6 +982,61 @@ export async function deleteContact(
     };
   }
 
+  // Stop community billing at the payment provider before anything changes,
+  // so a failed cancellation leaves the contact untouched.
+  const communitySubscriptions = await activeCommunitySubscriptions(db, {
+    schoolId,
+    schoolAccountId: account.id,
+  });
+  const cancelled = await cancelCommunitySubscriptionsAtProvider(
+    db,
+    schoolId,
+    communitySubscriptions,
+    paymentProviderOverride,
+  );
+  if (!cancelled.ok) return cancelled;
+  // Stop product subscriptions with the provider before changing anything,
+  // so a failed cancel never leaves a deleted contact still being billed.
+  const liveProductSubscriptions = await db
+    .select({
+      providerSubscriptionId: schema.storefrontSubscriptions.providerSubscriptionId,
+      provider: schema.storefrontCheckoutAttempts.provider,
+    })
+    .from(schema.storefrontSubscriptions)
+    .innerJoin(
+      schema.storefrontCheckoutAttempts,
+      eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId),
+    )
+    .where(
+      and(
+        eq(schema.storefrontCheckoutAttempts.schoolId, schoolId),
+        eq(schema.storefrontCheckoutAttempts.schoolAccountId, account.id),
+        inArray(schema.storefrontSubscriptions.status, ["active", "past_due"]),
+      ),
+    );
+  for (const subscription of liveProductSubscriptions) {
+    const provider =
+      subscription.provider === "free"
+        ? null
+        : await getConfiguredPaymentProvider(
+            db,
+            schoolId,
+            subscription.provider,
+            paymentProviderOverride,
+          );
+    try {
+      if (!provider?.cancelSubscription) throw new Error("provider_unavailable");
+      await provider.cancelSubscription(subscription.providerSubscriptionId);
+    } catch {
+      return {
+        ok: false,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "provider_unavailable" },
+        }),
+      };
+    }
+  }
+
   const now = clock.now();
 
   // Atomically update status to deletion_pending
@@ -1005,37 +1067,17 @@ export async function deleteContact(
     const checkoutIds = storefrontCheckouts.map((c) => c.id);
     await db
       .update(schema.storefrontSubscriptions)
-      .set({ status: "cancelled", updatedAt: now })
+      .set({ status: "cancelled", cancelAt: now, cancelAtPeriodEnd: false, updatedAt: now })
       .where(
         and(
           inArray(schema.storefrontSubscriptions.checkoutId, checkoutIds),
-          eq(schema.storefrontSubscriptions.status, "active"),
+          inArray(schema.storefrontSubscriptions.status, ["active", "past_due"]),
         ),
       );
   }
 
-  // Cancel any active community subscriptions
-  const communityCheckouts = await db
-    .select({ id: schema.communityCheckoutAttempts.id })
-    .from(schema.communityCheckoutAttempts)
-    .where(
-      and(
-        eq(schema.communityCheckoutAttempts.schoolId, schoolId),
-        eq(schema.communityCheckoutAttempts.schoolAccountId, account.id),
-      ),
-    );
-  if (communityCheckouts.length > 0) {
-    const commCheckoutIds = communityCheckouts.map((c) => c.id);
-    await db
-      .update(schema.communitySubscriptions)
-      .set({ status: "cancelled", updatedAt: now })
-      .where(
-        and(
-          inArray(schema.communitySubscriptions.checkoutId, commCheckoutIds),
-          eq(schema.communitySubscriptions.status, "active"),
-        ),
-      );
-  }
+  // Record the community subscriptions cancelled at the provider above
+  await markCommunitySubscriptionsCancelled(db, communitySubscriptions, now);
 
   await queueSendLitContactErase(db, {
     schoolId,

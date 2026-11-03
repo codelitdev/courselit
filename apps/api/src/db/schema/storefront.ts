@@ -289,6 +289,8 @@ export const storefrontSubscriptions = pgTable(
       .notNull(),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
     cancelAt: timestamp("cancel_at", { withTimezone: true }),
+    /** Renewal stopped; access continues until the paid period ends. */
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -312,4 +314,16 @@ export const storefrontWebhookEvents = pgTable("storefront_webhook_events", {
   error: text("error"),
   receivedAt: timestamp("received_at", { withTimezone: true }).notNull(),
   processedAt: timestamp("processed_at", { withTimezone: true }),
+});
+
+/** One row per payment whose receipt and sale alert were queued. Claiming the
+ * payment here keeps them to exactly one, however often a provider redelivers
+ * the webhook. Product and community payments both record here. */
+export const paymentNotifications = pgTable("payment_notifications", {
+  id: uuid("id").primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  paymentPublicId: text("payment_public_id").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });

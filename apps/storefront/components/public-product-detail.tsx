@@ -159,6 +159,9 @@ export function PublicProductDetail({ productId }: { productId: string }) {
                   ? `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`
                   : undefined
               }
+              continueLabel={
+                product.kind === "download" ? "Open your download" : "Continue learning"
+              }
             />
           </div>
         </div>

@@ -10553,6 +10553,26 @@
                           },
                           "updatedAt": {
                             "type": "string"
+                          },
+                          "billing": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "subscription",
+                                  "installment"
+                                ]
+                              },
+                              "planName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "planName"
+                            ],
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -10572,7 +10592,8 @@
                           "deletedAt",
                           "membership",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "billing"
                         ]
                       }
                     },
@@ -14646,421 +14667,6 @@
                     "items",
                     "nextCursor",
                     "banner"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "unauthenticated",
-                        "credential_ambiguous",
-                        "tenant_required",
-                        "tenant_forbidden",
-                        "forbidden",
-                        "not_found",
-                        "conflict",
-                        "validation_failed",
-                        "rate_limited",
-                        "internal_error"
-                      ]
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "string",
-                            "format": "null",
-                            "nullable": true
-                          }
-                        ],
-                        "nullable": true
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "unauthenticated",
-                        "credential_ambiguous",
-                        "tenant_required",
-                        "tenant_forbidden",
-                        "forbidden",
-                        "not_found",
-                        "conflict",
-                        "validation_failed",
-                        "rate_limited",
-                        "internal_error"
-                      ]
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "string",
-                            "format": "null",
-                            "nullable": true
-                          }
-                        ],
-                        "nullable": true
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/learner/communities/available": {
-      "get": {
-        "tags": [
-          "Learners"
-        ],
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 500
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "default": 25,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 50
-            }
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            }
-          },
-          {
-            "name": "spaceId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "200",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "items": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "schoolId": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "banner": {
-                            "type": "string"
-                          },
-                          "categories": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "autoAcceptMembers": {
-                            "type": "boolean"
-                          },
-                          "joiningReasonText": {
-                            "type": "string"
-                          },
-                          "enabled": {
-                            "type": "boolean"
-                          },
-                          "featuredImage": {
-                            "type": "object",
-                            "properties": {
-                              "mediaId": {
-                                "type": "string",
-                                "minLength": 1
-                              },
-                              "url": {
-                                "type": "string",
-                                "format": "uri"
-                              },
-                              "thumbnailUrl": {
-                                "type": "string",
-                                "format": "uri",
-                                "nullable": true
-                              },
-                              "alt": {
-                                "type": "string",
-                                "maxLength": 1000
-                              },
-                              "fileName": {
-                                "type": "string",
-                                "maxLength": 255
-                              },
-                              "mimeType": {
-                                "type": "string",
-                                "maxLength": 200
-                              },
-                              "byteSize": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "title": {
-                                "type": "string",
-                                "maxLength": 2000
-                              },
-                              "kind": {
-                                "type": "string",
-                                "enum": [
-                                  "image",
-                                  "video",
-                                  "audio",
-                                  "document",
-                                  "other"
-                                ]
-                              }
-                            },
-                            "required": [
-                              "url"
-                            ],
-                            "nullable": true
-                          },
-                          "membersCount": {
-                            "type": "integer",
-                            "minimum": 0
-                          },
-                          "postsCount": {
-                            "type": "integer",
-                            "minimum": 0
-                          },
-                          "deletedAt": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "membership": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "communityId": {
-                                "type": "string"
-                              },
-                              "learnerId": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "adminUserId": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "member": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
-                                  },
-                                  "kind": {
-                                    "type": "string",
-                                    "enum": [
-                                      "learner",
-                                      "admin"
-                                    ]
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "email": {
-                                    "type": "string",
-                                    "format": "email",
-                                    "nullable": true
-                                  },
-                                  "imageUrl": {
-                                    "type": "string",
-                                    "nullable": true
-                                  }
-                                },
-                                "required": [
-                                  "id",
-                                  "kind",
-                                  "name",
-                                  "email",
-                                  "imageUrl"
-                                ],
-                                "nullable": true
-                              },
-                              "status": {
-                                "type": "string",
-                                "enum": [
-                                  "active",
-                                  "payment_failed",
-                                  "expired",
-                                  "pending",
-                                  "rejected",
-                                  "paused"
-                                ]
-                              },
-                              "role": {
-                                "type": "string",
-                                "enum": [
-                                  "member",
-                                  "moderator",
-                                  "owner"
-                                ]
-                              },
-                              "joiningReason": {
-                                "type": "string"
-                              },
-                              "rejectionReason": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "paymentPlanId": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "createdAt": {
-                                "type": "string"
-                              },
-                              "updatedAt": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "id",
-                              "communityId",
-                              "learnerId",
-                              "adminUserId",
-                              "member",
-                              "status",
-                              "role",
-                              "joiningReason",
-                              "rejectionReason",
-                              "paymentPlanId",
-                              "createdAt",
-                              "updatedAt"
-                            ],
-                            "nullable": true
-                          },
-                          "createdAt": {
-                            "type": "string"
-                          },
-                          "updatedAt": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "schoolId",
-                          "name",
-                          "slug",
-                          "description",
-                          "banner",
-                          "categories",
-                          "autoAcceptMembers",
-                          "joiningReasonText",
-                          "enabled",
-                          "featuredImage",
-                          "membersCount",
-                          "postsCount",
-                          "deletedAt",
-                          "membership",
-                          "createdAt",
-                          "updatedAt"
-                        ]
-                      }
-                    },
-                    "nextCursor": {
-                      "type": "string",
-                      "nullable": true
-                    }
-                  },
-                  "required": [
-                    "items",
-                    "nextCursor"
                   ]
                 }
               }
@@ -22797,6 +22403,70 @@
                           },
                           "downloaded": {
                             "type": "boolean"
+                          },
+                          "subscription": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "planKind": {
+                                "type": "string",
+                                "enum": [
+                                  "subscription",
+                                  "installment"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "cancelling",
+                                  "past_due",
+                                  "cancelled",
+                                  "expired",
+                                  "completed"
+                                ]
+                              },
+                              "provider": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "currentPeriodEnd": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "accessUntil": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "installmentCount": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "exclusiveMinimum": 0,
+                                "nullable": true
+                              },
+                              "installmentsPaid": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "nullable": true
+                              },
+                              "learnerCanCancel": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "planKind",
+                              "status",
+                              "provider",
+                              "currentPeriodEnd",
+                              "accessUntil",
+                              "installmentCount",
+                              "installmentsPaid",
+                              "learnerCanCancel"
+                            ],
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -22820,7 +22490,8 @@
                           "totalLessons",
                           "completedLessonsCount",
                           "certificateId",
-                          "downloaded"
+                          "downloaded",
+                          "subscription"
                         ]
                       }
                     }
@@ -22890,6 +22561,277 @@
           },
           "403": {
             "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/learner/products/{productId}/subscription/cancel": {
+      "post": {
+        "summary": "Stop renewing the learner's subscription for a product. Access continues until the paid period ends.",
+        "tags": [
+          "Learners"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "planKind": {
+                      "type": "string",
+                      "enum": [
+                        "subscription",
+                        "installment"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "cancelling",
+                        "past_due",
+                        "cancelled",
+                        "expired",
+                        "completed"
+                      ]
+                    },
+                    "provider": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "currentPeriodEnd": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "accessUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "installmentCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": 0,
+                      "nullable": true
+                    },
+                    "installmentsPaid": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "nullable": true
+                    },
+                    "learnerCanCancel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "planKind",
+                    "status",
+                    "provider",
+                    "currentPeriodEnd",
+                    "accessUntil",
+                    "installmentCount",
+                    "installmentsPaid",
+                    "learnerCanCancel"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
             "content": {
               "application/json": {
                 "schema": {
@@ -43379,6 +43321,70 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "subscription": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "planKind": {
+                                "type": "string",
+                                "enum": [
+                                  "subscription",
+                                  "installment"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "cancelling",
+                                  "past_due",
+                                  "cancelled",
+                                  "expired",
+                                  "completed"
+                                ]
+                              },
+                              "provider": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "currentPeriodEnd": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "accessUntil": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "installmentCount": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "exclusiveMinimum": 0,
+                                "nullable": true
+                              },
+                              "installmentsPaid": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "nullable": true
+                              },
+                              "learnerCanCancel": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "planKind",
+                              "status",
+                              "provider",
+                              "currentPeriodEnd",
+                              "accessUntil",
+                              "installmentCount",
+                              "installmentsPaid",
+                              "learnerCanCancel"
+                            ],
+                            "nullable": true
+                          },
                           "signedUpAt": {
                             "type": "string"
                           },
@@ -43420,6 +43426,7 @@
                           "membershipStatus",
                           "subscriptionMethod",
                           "subscriptionId",
+                          "subscription",
                           "signedUpAt",
                           "lastActiveAt",
                           "progress"
@@ -43996,6 +44003,710 @@
           },
           "404": {
             "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/products/{productId}/customers/{customerId}/subscription/cancel": {
+      "post": {
+        "summary": "Stop renewing a customer's subscription for a product. Access continues until the paid period ends.",
+        "tags": [
+          "Products & Courses"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "planKind": {
+                      "type": "string",
+                      "enum": [
+                        "subscription",
+                        "installment"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "cancelling",
+                        "past_due",
+                        "cancelled",
+                        "expired",
+                        "completed"
+                      ]
+                    },
+                    "provider": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "currentPeriodEnd": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "accessUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "installmentCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": 0,
+                      "nullable": true
+                    },
+                    "installmentsPaid": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "nullable": true
+                    },
+                    "learnerCanCancel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "planKind",
+                    "status",
+                    "provider",
+                    "currentPeriodEnd",
+                    "accessUntil",
+                    "installmentCount",
+                    "installmentsPaid",
+                    "learnerCanCancel"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/products/{productId}/customers/{customerId}/remove-access": {
+      "post": {
+        "summary": "Remove a customer's access to a product now, cancelling any subscription immediately.",
+        "tags": [
+          "Products & Courses"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "customerId": {
+                      "type": "string"
+                    },
+                    "membershipStatus": {
+                      "type": "string",
+                      "enum": [
+                        "expired"
+                      ]
+                    },
+                    "subscription": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "planKind": {
+                          "type": "string",
+                          "enum": [
+                            "subscription",
+                            "installment"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "cancelling",
+                            "past_due",
+                            "cancelled",
+                            "expired",
+                            "completed"
+                          ]
+                        },
+                        "provider": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "currentPeriodEnd": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "accessUntil": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "installmentCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0,
+                          "nullable": true
+                        },
+                        "installmentsPaid": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "nullable": true
+                        },
+                        "learnerCanCancel": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "planKind",
+                        "status",
+                        "provider",
+                        "currentPeriodEnd",
+                        "accessUntil",
+                        "installmentCount",
+                        "installmentsPaid",
+                        "learnerCanCancel"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "customerId",
+                    "membershipStatus",
+                    "subscription"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
             "content": {
               "application/json": {
                 "schema": {
@@ -58150,6 +58861,234 @@
           },
           "404": {
             "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/learner/purchases": {
+      "get": {
+        "summary": "List the signed-in learner's purchases and receipts at this school",
+        "tags": [
+          "Learners"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "orderId": {
+                            "type": "string"
+                          },
+                          "paymentId": {
+                            "type": "string"
+                          },
+                          "resourceType": {
+                            "type": "string",
+                            "enum": [
+                              "product",
+                              "community"
+                            ]
+                          },
+                          "resourceId": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "productKind": {
+                            "type": "string",
+                            "enum": [
+                              "course",
+                              "download"
+                            ],
+                            "nullable": true
+                          },
+                          "productSlug": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "planName": {
+                            "type": "string"
+                          },
+                          "planKind": {
+                            "type": "string",
+                            "enum": [
+                              "free",
+                              "one_time",
+                              "subscription",
+                              "installment"
+                            ]
+                          },
+                          "amountMinor": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "paid",
+                              "refunded",
+                              "disputed",
+                              "failed"
+                            ]
+                          },
+                          "purchasedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "orderId",
+                          "paymentId",
+                          "resourceType",
+                          "resourceId",
+                          "title",
+                          "productKind",
+                          "productSlug",
+                          "planName",
+                          "planKind",
+                          "amountMinor",
+                          "currency",
+                          "status",
+                          "purchasedAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
             "content": {
               "application/json": {
                 "schema": {
@@ -77548,6 +78487,164 @@
                   "required": [
                     "code",
                     "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/school/mails/delivery": {
+      "get": {
+        "summary": "Show whether the school's email goes out through its own mailing team",
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sender": {
+                      "type": "string",
+                      "enum": [
+                        "school",
+                        "platform"
+                      ]
+                    },
+                    "integrationStatus": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "sender",
+                    "integrationStatus"
                   ]
                 }
               }

@@ -559,15 +559,26 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
     product?.autoAcceptMembers === false &&
     isFreePlan;
 
-  if (membershipStatus === "active" || membershipStatus === "rejected") {
+  // A checkout this session already started shows its own result, even once
+  // the purchase has made the learner a member.
+  const sessionStarted = Boolean(session.checkoutId) || session.status === "completed";
+  if (
+    !sessionStarted &&
+    (membershipStatus === "active" || membershipStatus === "rejected")
+  ) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 text-center">
         <Header1 theme={theme}>
-          {membershipStatus === "active" ? "Already owned" : "Access denied"}
+          {membershipStatus === "active" ? "You already have access" : "Access denied"}
         </Header1>
         <Text2 theme={theme}>
           {membershipStatus === "active"
-            ? "You already have access to this resource."
+            ? `You already have access to ${
+                product?.title ||
+                session.productTitle ||
+                session.communityName ||
+                `this ${session.resourceType}`
+              }, so there is nothing to buy.`
             : "You have been rejected and cannot proceed with checkout."}
         </Text2>
         {membershipStatus === "active" ? (
@@ -576,7 +587,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             type="button"
             onClick={() => void openResource(session, schoolId)}
           >
-            Go to the resource
+            {session.resourceType === "community"
+              ? "Go to the community"
+              : session.productKind === "download"
+                ? "Open your download"
+                : "Open the course"}
           </Button>
         ) : null}
       </div>

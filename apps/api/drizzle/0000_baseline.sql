@@ -161,6 +161,14 @@ CREATE TABLE "oauth_resource" (
 	CONSTRAINT "oauth_resource_identifier_unique" UNIQUE("identifier")
 );
 --> statement-breakpoint
+CREATE TABLE "payment_notifications" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"payment_public_id" text NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "payment_notifications_payment_public_id_unique" UNIQUE("payment_public_id")
+);
+--> statement-breakpoint
 CREATE TABLE "session" (
 	"id" text PRIMARY KEY NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
@@ -1016,6 +1024,7 @@ CREATE TABLE "storefront_subscriptions" (
 	"status" text NOT NULL,
 	"current_period_end" timestamp with time zone,
 	"cancel_at" timestamp with time zone,
+	"cancel_at_period_end" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "storefront_subscriptions_public_id_unique" UNIQUE("public_id")
@@ -1328,6 +1337,7 @@ ALTER TABLE "oauth_consent" ADD CONSTRAINT "oauth_consent_user_id_user_id_fk" FO
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_client_id_oauth_client_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_client"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_session_id_session_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."session"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payment_notifications" ADD CONSTRAINT "payment_notifications_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "certificate_templates" ADD CONSTRAINT "certificate_templates_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "certificate_templates" ADD CONSTRAINT "certificate_templates_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

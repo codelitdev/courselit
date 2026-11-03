@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLearnerSessionState } from "@/components/auth/learner-session";
 import { CourseSpaceDiscussion } from "@/components/course-space-discussion";
+import { DownloadProductAction } from "@/components/download-product-action";
 import type { CourseViewerProduct } from "@/components/layout/course-viewer-sidebar";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import {
@@ -204,37 +205,6 @@ export default function CoursePage() {
     }
   }
 
-  async function downloadProduct() {
-    setError(null);
-    if (!me) {
-      window.location.assign("/login");
-      return;
-    }
-    const response = await fetch(
-      `/api/v1/learner/products/${encodeURIComponent(productId)}/download`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
-        body: JSON.stringify({}),
-      },
-    );
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.assign("/login");
-        return;
-      }
-      setError("Unable to prepare the download.");
-      return;
-    }
-    const result = (await response.json()) as { token?: string };
-    if (!result.token) {
-      setError("Unable to prepare the download.");
-      return;
-    }
-    window.location.assign(`/api/v1/learner/downloads/${result.token}`);
-  }
-
   async function checkout(plan: Plan) {
     setError(null);
     const response = await fetch(publicApiPath(schoolId, "/checkout-sessions"), {
@@ -359,12 +329,10 @@ export default function CoursePage() {
             ) : null}
             {!previewToken ? (
               <>
-                {product?.kind === "download" && me ? (
-                  <Button type="button" onClick={() => void downloadProduct()}>
-                    Download files
-                  </Button>
+                {product?.kind === "download" && me && product.enrolled ? (
+                  <DownloadProductAction productId={productId} />
                 ) : null}
-                {(product?.plans ?? []).length ? (
+                {product?.enrolled ? null : (product?.plans ?? []).length ? (
                   <div className="grid gap-4">
                     <LearnerText2 className="text-muted-foreground">
                       Choose access

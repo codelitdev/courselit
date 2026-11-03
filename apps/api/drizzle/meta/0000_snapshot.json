@@ -8626,6 +8626,65 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.payment_notifications": {
+      "name": "payment_notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_public_id": {
+          "name": "payment_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "payment_notifications_school_id_schools_id_fk": {
+          "name": "payment_notifications_school_id_schools_id_fk",
+          "tableFrom": "payment_notifications",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "payment_notifications_payment_public_id_unique": {
+          "name": "payment_notifications_payment_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "payment_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.storefront_checkout_attempts": {
       "name": "storefront_checkout_attempts",
       "schema": "",
@@ -9731,6 +9790,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "cancel_at_period_end": {
+          "name": "cancel_at_period_end",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",

@@ -39,6 +39,7 @@ import {
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { CourseLitLoading } from "@/components/course-lit-loader";
+import { DownloadProductAction } from "@/components/download-product-action";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
@@ -289,7 +290,17 @@ function CourseOverview({
 
       <ProductDescription value={product.description} content={description} />
 
-      {product.enrolled || previewToken ? (
+      {product.kind === "download" && product.enrolled && !previewToken ? (
+        <div className="flex flex-col items-start gap-2">
+          <LearnerText2 className="text-muted-foreground">
+            You already have access to this download.
+          </LearnerText2>
+          <DownloadProductAction productId={product.id} />
+        </div>
+      ) : null}
+
+      {(product.enrolled || previewToken) &&
+      (product.kind !== "download" || firstLesson) ? (
         <div className="flex justify-end">
           <Link
             href={courseViewerHref(
@@ -370,6 +381,9 @@ function LessonPage({
       <LearnerCard>
         <LearnerCardContent className="grid gap-6">
           <LearnerHeader1>{lesson.title}</LearnerHeader1>
+          {product.kind === "download" && product.enrolled && !previewToken ? (
+            <DownloadProductAction productId={product.id} />
+          ) : null}
           {locked ? (
             <div className="flex flex-col items-start gap-4 py-12">
               <LockKeyhole className="size-8 text-muted-foreground" />
@@ -611,7 +625,9 @@ export function PublicCourseViewer({
   }, [learner, previewToken, productId]);
 
   useEffect(() => {
+    // Downloads open on their overview, which has the download button.
     if (!product || lessonId || product.lessons.length === 0) return;
+    if (product.kind === "download") return;
     const firstLesson = product.lessons[0];
     router.replace(
       courseViewerHref(
@@ -699,7 +715,7 @@ export function PublicCourseViewer({
     );
   }
 
-  if (!lessonId && product.lessons.length > 0) {
+  if (!lessonId && product.lessons.length > 0 && product.kind !== "download") {
     return (
       <main className="p-8">
         <CourseLitLoading label="Loading lesson…" />

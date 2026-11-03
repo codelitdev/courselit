@@ -19,8 +19,9 @@ import { type LearnerProfileFields, readLearnerProfile } from "./learner-profile
 import { type SendLitConfig, sendLitConfig } from "./sendlit-client.js";
 import type { MediaLitClient } from "./media.js";
 import { type ProductDto, productFeaturedImageFor } from "./products.js";
+import { productSubscriptionsForMemberships } from "./product-subscriptions.js";
 import { loadSchoolByPublicId } from "./schools.js";
-import { type MediaRef } from "@courselit/api-contract";
+import { type MediaRef, type ProductSubscription } from "@courselit/api-contract";
 import {
   queueSendLitContactSync,
   setContactMarketingSubscription,
@@ -95,6 +96,7 @@ export type LearnerProductDto = ProductDto & {
   completedLessonsCount: number;
   certificateId: string | null;
   downloaded: boolean;
+  subscription: ProductSubscription | null;
 };
 
 export type LearnerSession = {
@@ -334,6 +336,10 @@ export async function listLearnerProducts(
     memberships.push(row.membership);
     membershipsByProduct.set(row.product.id, memberships);
   }
+  const subscriptionsByMembership = await productSubscriptionsForMemberships(
+    db,
+    rows.map((row) => row.membership),
+  );
 
   return Promise.all(
     distinctRows.map(async ({ product }) => {
@@ -421,6 +427,10 @@ export async function listLearnerProducts(
         completedLessonsCount: completedLessons.length,
         certificateId: certificateRows[0]?.publicId ?? null,
         downloaded: downloadRows.length > 0,
+        subscription:
+          memberships
+            .map((membership) => subscriptionsByMembership.get(membership.id))
+            .find((subscription) => subscription !== undefined) ?? null,
       };
     }),
   );

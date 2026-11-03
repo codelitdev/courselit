@@ -13,6 +13,9 @@ import { schools } from "./schools.js";
 
 export const integrationProviders = ["sendlit", "medialit"] as const;
 export type IntegrationProvider = (typeof integrationProviders)[number];
+/** Outbox jobs also run for the platform's own sender ("system"), which
+ * delivers school email when the school has no mailing team. */
+export type OutboxProvider = IntegrationProvider | "system";
 
 export const integrationStatuses = [
   "pending",
@@ -36,6 +39,7 @@ export const integrationJobTypes = [
   "erase_sendlit_contact",
   "track_sendlit_event",
   "send_school_email",
+  "send_system_email",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
 
@@ -98,7 +102,7 @@ export const integrationOutboxJobs = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    provider: text("provider").$type<IntegrationProvider>().notNull(),
+    provider: text("provider").$type<OutboxProvider>().notNull(),
     type: text("type").$type<IntegrationJobType>().notNull(),
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
     status: text("status").$type<IntegrationJobStatus>().notNull().default("pending"),

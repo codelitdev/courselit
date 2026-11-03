@@ -186,7 +186,23 @@ export default function BannerWidget({
           <Users className="size-4" /> {resource.membersCount} members
         </Text2>
       ) : null}
-      {productPlans.length > 0 ? (
+      {resource.enrolled && !editing ? (
+        // Buying again would only replace access the learner already has.
+        <div className="flex flex-col gap-3">
+          <Text2 theme={resolvedTheme}>You already have access.</Text2>
+          <Button
+            theme={resolvedTheme}
+            type="button"
+            onClick={() =>
+              window.location.assign(
+                `/course/${encodeURIComponent(resource.slug)}/${encodeURIComponent(resource.id)}`,
+              )
+            }
+          >
+            {resource.kind === "download" ? "Open your download" : "Continue learning"}
+          </Button>
+        </div>
+      ) : productPlans.length > 0 ? (
         <div className="flex w-full flex-col gap-3">
           <Caption theme={resolvedTheme}>Buy this course</Caption>
           {productPlans.map((plan) => (
@@ -254,11 +270,9 @@ export default function BannerWidget({
                 >
                   {busyPlan === plan.id
                     ? "Please wait…"
-                    : resource.enrolled
-                      ? "Continue learning"
-                      : plan.type === "free"
-                        ? "Get for free"
-                        : "Buy now"}
+                    : plan.type === "free"
+                      ? "Get for free"
+                      : "Buy now"}
                 </Button>
               )}
             </PageCard>

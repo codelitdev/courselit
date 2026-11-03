@@ -63,10 +63,26 @@ export type NormalizedPaymentEvent = {
   data: Record<string, unknown>;
 };
 
+export type CancelSubscriptionOptions = {
+  /**
+   * Stop renewing but keep the subscription (and the learner's access) until
+   * the end of the period already paid for. Defaults to an immediate cancel.
+   */
+  atPeriodEnd?: boolean;
+};
+
+export type CancelSubscriptionResult = {
+  /** When the provider will end the subscription, if it reports it. */
+  endsAt: Date | null;
+};
+
 export type PaymentProvider = {
   name: PaymentProviderName;
   createCheckout(input: PaymentCheckoutInput): Promise<PaymentCheckoutResult>;
-  cancelSubscription?(providerSubscriptionId: string): Promise<void>;
+  cancelSubscription?(
+    providerSubscriptionId: string,
+    options?: CancelSubscriptionOptions,
+  ): Promise<CancelSubscriptionResult | void>;
   validateSubscription?(providerSubscriptionId: string): Promise<boolean>;
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, now: Date): void;
   parseWebhook(rawBody: string, headers: Record<string, string | undefined>): NormalizedPaymentEvent;
@@ -87,10 +103,32 @@ function stringValue(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+/** Provider ids may be JSON numbers (Lemon Squeezy attribute references). */
+function idString(value: unknown): string | null {
+  if (typeof value === "number" && Number.isSafeInteger(value)) return String(value);
+  return stringValue(value);
+}
+
 function integerValue(value: unknown): number | null {
   if (typeof value === "number" && Number.isSafeInteger(value)) return value;
   if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
   return null;
+}
+
+/** Provider timestamps arrive as Unix seconds (Stripe, Razorpay) or ISO strings. */
+function isoDate(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return new Date(value * 1000).toISOString();
+  }
+  if (typeof value === "string" && value.trim()) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+  return null;
+}
+
+function dateOrNull(value: string | null): Date | null {
+  return value ? new Date(value) : null;
 }
 
 function metadata(value: unknown): Record<string, string> {
@@ -144,7 +182,9 @@ class StripePayment implements PaymentProvider {
         success_url: input.returnUrl,
         cancel_url: input.returnUrl,
         customer_email: input.customer.email,
-        allow_promotion_codes: true,
+        // No `allow_promotion_codes`: a Stripe-side promo code changes the
+        // paid amount, and the webhook's strict amount check would then
+        // reject a payment the learner already made.
         "line_items[0][quantity]": 1,
         "line_items[0][price_data][currency]": input.currency.toLowerCase(),
         "line_items[0][price_data][unit_amount]": input.paymentPlan.amountMinor,
@@ -152,11 +192,25 @@ class StripePayment implements PaymentProvider {
         ...(recurring
           ? {
               "line_items[0][price_data][recurring][interval]": input.paymentPlan.billingInterval === "year" ? "year" : "month",
+              // Renewal invoices only carry the subscription's metadata, so
+              // the checkout identifiers must live on the subscription too.
+              ...Object.fromEntries(
+                Object.entries(input.metadata).map(([key, value]) => [
+                  `subscription_data[metadata][${key}]`,
+                  value,
+                ]),
+              ),
               ...(input.paymentPlan.installmentCount
                 ? { "subscription_data[metadata][courselit_installment_count]": input.paymentPlan.installmentCount }
                 : {}),
             }
-          : {}),
+          : Object.fromEntries(
+              // Refund and dispute events carry the charge, not the session.
+              Object.entries(input.metadata).map(([key, value]) => [
+                `payment_intent_data[metadata][${key}]`,
+                value,
+              ]),
+            )),
         ...Object.fromEntries(Object.entries(input.metadata).map(([key, value]) => [`metadata[${key}]`, value])),
       }),
     });
@@ -169,12 +223,26 @@ class StripePayment implements PaymentProvider {
     };
   }
 
-  async cancelSubscription(providerSubscriptionId: string): Promise<void> {
-    const response = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(providerSubscriptionId)}`, {
-      method: "DELETE",
-      headers: { authorization: basicAuth(required(this.settings.secretKey, "stripe_secret_key")) },
-    });
+  async cancelSubscription(
+    providerSubscriptionId: string,
+    options: CancelSubscriptionOptions = {},
+  ): Promise<CancelSubscriptionResult> {
+    const authorization = basicAuth(required(this.settings.secretKey, "stripe_secret_key"));
+    const url = `https://api.stripe.com/v1/subscriptions/${encodeURIComponent(providerSubscriptionId)}`;
+    const response = options.atPeriodEnd
+      ? await fetch(url, {
+          method: "POST",
+          headers: { authorization, "content-type": "application/x-www-form-urlencoded" },
+          body: form({ cancel_at_period_end: true }),
+        })
+      : await fetch(url, { method: "DELETE", headers: { authorization } });
     if (!response.ok) throw new Error(`stripe_subscription_cancel_failed_${response.status}`);
+    const body = objectValue(await response.json().catch(() => ({})));
+    return {
+      endsAt: options.atPeriodEnd
+        ? dateOrNull(isoDate(body.cancel_at) ?? stripePeriodEnd(body))
+        : null,
+    };
   }
 
   async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
@@ -211,32 +279,106 @@ class StripePayment implements PaymentProvider {
     const event = objectValue(JSON.parse(rawBody));
     const object = objectValue(objectValue(event.data).object);
     const eventName = required(event.type, "stripe_event_type");
+    const objectType = stringValue(object.object);
+    const isSubscriptionObject =
+      objectType === "subscription" || eventName.startsWith("customer.subscription.");
+    const isInvoiceObject = objectType === "invoice" || eventName.startsWith("invoice.");
+    // Invoices carry subscription metadata in `subscription_details` (and in
+    // `parent.subscription_details` from API version 2025-03-31 onwards).
+    const subscriptionDetails = {
+      ...objectValue(objectValue(object.parent).subscription_details),
+      ...objectValue(object.subscription_details),
+    };
     const objectMetadata = metadata(object.metadata);
-    const subscriptionMetadata = metadata(objectValue(object.subscription_details).metadata);
+    const subscriptionMetadata = metadata(subscriptionDetails.metadata);
+    const periodEnd = isSubscriptionObject ? stripePeriodEnd(object) : null;
+    const cancelAt = isSubscriptionObject
+      ? isoDate(object.cancel_at) ?? (object.cancel_at_period_end === true ? periodEnd : null)
+      : null;
     const data: Record<string, unknown> = {
       ...object,
       metadata: { ...subscriptionMetadata, ...objectMetadata },
       payment_id: stringValue(object.payment_intent) ?? stringValue(object.id),
-      subscription_id: stringValue(object.subscription) ?? stringValue(object.id),
+      subscription_id:
+        stringValue(object.subscription) ??
+        stringValue(subscriptionDetails.subscription) ??
+        (isSubscriptionObject ? stringValue(object.id) : null),
       amount: integerValue(object.amount_total) ?? integerValue(object.amount_paid) ?? integerValue(object.amount),
       currency: stringValue(object.currency)?.toUpperCase(),
-      invoice_id: stringValue(object.invoice) ?? stringValue(object.id),
+      // A subscription-mode checkout session and the first invoice share the
+      // invoice id; a charge carries it as `invoice` on older API versions.
+      invoice_id: isInvoiceObject ? stringValue(object.id) : stringValue(object.invoice),
+      current_period_end: periodEnd,
+      cancel_at: cancelAt,
     };
-    const eventType =
-      eventName === "checkout.session.completed" || eventName === "checkout.session.async_payment_succeeded" || eventName === "invoice.paid"
-        ? "payment.succeeded"
-        : eventName === "checkout.session.async_payment_failed" || eventName === "invoice.payment_failed"
-          ? "payment.failed"
-          : eventName === "charge.refunded" || eventName === "refund.created"
-            ? "payment.refunded"
-            : eventName === "charge.dispute.created"
-              ? "payment.disputed"
-              : eventName === "customer.subscription.deleted"
-                ? "subscription.cancelled"
-                : eventName.startsWith("customer.subscription.")
-                  ? "subscription.active"
-                  : "payment.ignored";
-    return { eventId: required(event.id ?? headers["stripe-event-id"], "stripe_event_id"), eventType, data };
+    return {
+      eventId: required(event.id ?? headers["stripe-event-id"], "stripe_event_id"),
+      eventType: stripeEventType(eventName, object),
+      data,
+    };
+  }
+}
+
+/** Current period end of a Stripe subscription across API versions. */
+function stripePeriodEnd(subscription: Record<string, unknown>): string | null {
+  const firstItem = objectValue(
+    (objectValue(subscription.items).data as unknown[] | undefined)?.[0],
+  );
+  return isoDate(subscription.current_period_end) ?? isoDate(firstItem.current_period_end);
+}
+
+/**
+ * Map a Stripe event to a normalised payment event. Each charge is counted
+ * once: the checkout session completion is the first payment of a
+ * subscription, so the `invoice.paid` for that same first invoice
+ * (`billing_reason: subscription_create`) is ignored and only renewals
+ * (`subscription_cycle`, etc.) count from `invoice.paid`.
+ */
+function stripeEventType(eventName: string, object: Record<string, unknown>): string {
+  switch (eventName) {
+    case "checkout.session.completed":
+      // Delayed payment methods complete the session before the money moves;
+      // `async_payment_succeeded` follows once it does.
+      return object.payment_status === "unpaid" ? "payment.processing" : "payment.succeeded";
+    case "checkout.session.async_payment_succeeded":
+      return "payment.succeeded";
+    case "invoice.paid":
+      return object.billing_reason === "subscription_create"
+        ? "payment.ignored"
+        : "payment.succeeded";
+    case "checkout.session.async_payment_failed":
+    case "invoice.payment_failed":
+      return "payment.failed";
+    case "charge.refunded":
+      // Partial refunds keep access; only a fully refunded charge revokes it.
+      return object.refunded === false ? "payment.ignored" : "payment.refunded";
+    case "charge.dispute.created":
+      return "payment.disputed";
+    case "customer.subscription.deleted":
+      return "subscription.cancelled";
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.paused":
+    case "customer.subscription.resumed":
+      switch (object.status) {
+        case "active":
+        case "trialing":
+          return object.cancel_at_period_end === true || object.cancel_at
+            ? "subscription.cancel_scheduled"
+            : "subscription.active";
+        case "past_due":
+        case "unpaid":
+        case "paused":
+          return "subscription.past_due";
+        case "canceled":
+          return "subscription.cancelled";
+        case "incomplete_expired":
+          return "subscription.expired";
+        default:
+          return "payment.ignored";
+      }
+    default:
+      return "payment.ignored";
   }
 }
 
@@ -296,7 +438,16 @@ class LemonSqueezyPayment implements PaymentProvider {
     };
   }
 
-  async cancelSubscription(providerSubscriptionId: string): Promise<void> {
+  /**
+   * Lemon Squeezy has no immediate cancel: `DELETE /v1/subscriptions/:id`
+   * always cancels at the end of the paid period. The subscription stays
+   * `cancelled` (still entitled) until `ends_at`, when Lemon Squeezy sends
+   * `subscription_expired`. `atPeriodEnd` is therefore always honoured.
+   */
+  async cancelSubscription(
+    providerSubscriptionId: string,
+    _options: CancelSubscriptionOptions = {},
+  ): Promise<CancelSubscriptionResult> {
     const response = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${encodeURIComponent(providerSubscriptionId)}`, {
       method: "DELETE",
       headers: {
@@ -306,6 +457,9 @@ class LemonSqueezyPayment implements PaymentProvider {
       },
     });
     if (!response.ok) throw new Error(`lemonsqueezy_subscription_cancel_failed_${response.status}`);
+    const body = objectValue(await response.json().catch(() => ({})));
+    const attributes = objectValue(objectValue(body.data).attributes);
+    return { endsAt: dateOrNull(isoDate(attributes.ends_at)) };
   }
 
   async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
@@ -338,29 +492,104 @@ class LemonSqueezyPayment implements PaymentProvider {
     const meta = objectValue(event.meta);
     const customData = metadata(meta.custom_data);
     const name = stringValue(meta.event_name) ?? stringValue(headers["x-event-name"]) ?? "unknown";
+    // JSON:API resource type: "orders", "subscriptions" or
+    // "subscription-invoices". Older payloads may omit it.
+    const resourceType =
+      stringValue(payload.type) ??
+      (name.startsWith("order_")
+        ? "orders"
+        : name.startsWith("subscription_payment_")
+          ? "subscription-invoices"
+          : name.startsWith("subscription_")
+            ? "subscriptions"
+            : null);
+    const resourceId = idString(payload.id);
+    const isSubscription = resourceType === "subscriptions";
     const data: Record<string, unknown> = {
       ...attributes,
       id: payload.id,
       metadata: customData,
       custom_data: customData,
-      payment_id: stringValue(payload.id) ?? stringValue(attributes.order_id) ?? stringValue(attributes.subscription_id),
+      // Orders and subscription invoices are charges; a subscription is not.
+      payment_id: isSubscription ? null : resourceId,
       checkout_id: stringValue(customData.courselit_checkout_id),
-      subscription_id: stringValue(attributes.subscription_id) ?? stringValue(payload.id),
-      invoice_id: stringValue(attributes.order_id),
+      // Orders carry no subscription id; the subscription is linked from
+      // `subscription_created` or the first renewal invoice.
+      subscription_id: idString(attributes.subscription_id) ?? (isSubscription ? resourceId : null),
+      invoice_id: isSubscription ? null : resourceId,
       amount: integerValue(attributes.total) ?? integerValue(attributes.total_usd) ?? integerValue(attributes.unit_price),
       currency: stringValue(attributes.currency)?.toUpperCase(),
+      current_period_end: isSubscription
+        ? isoDate(attributes.renews_at) ?? isoDate(attributes.ends_at)
+        : null,
+      cancel_at:
+        isSubscription && (attributes.cancelled === true || attributes.status === "cancelled")
+          ? isoDate(attributes.ends_at)
+          : null,
+      // The first charge of a subscription is both an order and an
+      // `initial` subscription invoice; refunds may reference either.
+      initial_charge: attributes.billing_reason === "initial",
     };
-    const eventType = name === "order_created" || name === "subscription_payment_success"
-      ? "payment.succeeded"
-      : name === "subscription_payment_failed"
-        ? "payment.failed"
-        : name === "subscription_cancelled" || name === "subscription_expired"
-          ? `subscription.${name === "subscription_cancelled" ? "cancelled" : "expired"}`
-          : name === "subscription_payment_refunded" || name === "order_refunded"
-            ? "payment.refunded"
-            : "payment.ignored";
     const fallbackId = createHash("sha256").update(rawBody).digest("hex");
-    return { eventId: stringValue(headers["x-event-id"]) ?? stringValue(meta.event_id) ?? fallbackId, eventType, data };
+    return {
+      eventId: stringValue(headers["x-event-id"]) ?? stringValue(meta.event_id) ?? fallbackId,
+      eventType: lemonSqueezyEventType(name, attributes),
+      data,
+    };
+  }
+}
+
+/**
+ * Map a Lemon Squeezy event to a normalised payment event. The first charge
+ * of a subscription arrives twice (`order_created` and an `initial`
+ * `subscription_payment_success`); only the order counts. A cancelled
+ * subscription stays entitled until `ends_at`, when `subscription_expired`
+ * ends access.
+ */
+function lemonSqueezyEventType(name: string, attributes: Record<string, unknown>): string {
+  switch (name) {
+    case "order_created":
+      return attributes.status === "pending"
+        ? "payment.processing"
+        : attributes.status === "failed"
+          ? "payment.failed"
+          : "payment.succeeded";
+    case "subscription_payment_success":
+    case "subscription_payment_recovered":
+      return attributes.billing_reason === "initial" ? "payment.ignored" : "payment.succeeded";
+    case "subscription_payment_failed":
+      return "payment.failed";
+    case "order_refunded":
+    case "subscription_payment_refunded":
+      return attributes.status === "partial_refund" ? "payment.ignored" : "payment.refunded";
+    case "subscription_cancelled":
+      return "subscription.cancel_scheduled";
+    case "subscription_expired":
+      return "subscription.expired";
+    case "subscription_created":
+    case "subscription_updated":
+    case "subscription_resumed":
+    case "subscription_paused":
+    case "subscription_unpaused":
+      switch (attributes.status) {
+        case "active":
+        case "on_trial":
+          return attributes.cancelled === true
+            ? "subscription.cancel_scheduled"
+            : "subscription.active";
+        case "cancelled":
+          return "subscription.cancel_scheduled";
+        case "past_due":
+        case "unpaid":
+        case "paused":
+          return "subscription.past_due";
+        case "expired":
+          return "subscription.expired";
+        default:
+          return "payment.ignored";
+      }
+    default:
+      return "payment.ignored";
   }
 }
 
@@ -379,11 +608,21 @@ class RazorpayPayment implements PaymentProvider {
     return jsonResponse(await response.json(), "razorpay");
   }
 
-  async cancelSubscription(providerSubscriptionId: string): Promise<void> {
-    await this.request(`/subscriptions/${encodeURIComponent(providerSubscriptionId)}/cancel`, {
+  /**
+   * `cancel_at_cycle_end: 1` keeps the subscription active until the current
+   * billing cycle ends; Razorpay sends `subscription.cancelled` at that point.
+   */
+  async cancelSubscription(
+    providerSubscriptionId: string,
+    options: CancelSubscriptionOptions = {},
+  ): Promise<CancelSubscriptionResult> {
+    const subscription = await this.request(`/subscriptions/${encodeURIComponent(providerSubscriptionId)}/cancel`, {
       method: "POST",
-      body: JSON.stringify({ cancel_at_cycle_end: 0 }),
+      body: JSON.stringify({ cancel_at_cycle_end: options.atPeriodEnd ? 1 : 0 }),
     });
+    return {
+      endsAt: options.atPeriodEnd ? dateOrNull(isoDate(subscription.current_end)) : null,
+    };
   }
 
   async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
@@ -449,28 +688,78 @@ class RazorpayPayment implements PaymentProvider {
     const source = Object.keys(order).length > 0 ? order : subscription;
     const notes = objectValue(source.notes);
     const name = required(event.event, "razorpay_event");
+    const refund = objectValue(objectValue(payload.refund).entity);
+    const dispute = objectValue(objectValue(payload.dispute).entity);
+    const hasSubscription = Object.keys(subscription).length > 0;
+    const remainingCount = integerValue(subscription.remaining_count);
     const data: Record<string, unknown> = {
       ...source,
       metadata: metadata(notes),
-      payment_id: stringValue(payment.id) ?? stringValue(source.id),
-      subscription_id: stringValue(subscription.id) ?? (Object.keys(subscription).length ? stringValue(source.id) : null),
+      // Every Razorpay charge, including the first one of a subscription,
+      // has one payment id; `order.paid` and `subscription.charged` for the
+      // same charge therefore collapse onto one recorded payment.
+      payment_id:
+        stringValue(payment.id) ??
+        stringValue(refund.payment_id) ??
+        stringValue(dispute.payment_id) ??
+        stringValue(source.id),
+      subscription_id: stringValue(subscription.id) ?? (hasSubscription ? stringValue(source.id) : null),
       checkout_id: stringValue(notes.courselit_checkout_id),
+      invoice_id: stringValue(payment.invoice_id),
       amount: integerValue(payment.amount) ?? integerValue(source.amount),
       currency: stringValue(payment.currency) ?? stringValue(source.currency),
+      current_period_end: hasSubscription ? isoDate(subscription.current_end) : null,
+      // `end_at` is the planned end after `total_count` charges, not a
+      // cancellation, so it is deliberately not reported as `cancel_at`.
+      cancel_at: null,
+      // Razorpay ends a subscription itself after `total_count` charges.
+      subscription_completed:
+        subscription.status === "completed" || remainingCount === 0,
     };
-    const eventType = name === "order.paid" || name === "subscription.charged"
-      ? "payment.succeeded"
-      : name.includes("failed")
-        ? "payment.failed"
-        : name.includes("cancelled") || name.includes("halted")
-          ? "subscription.cancelled"
-          : name.includes("refunded")
-            ? "payment.refunded"
-            : name.includes("disputed")
-              ? "payment.disputed"
-              : "payment.ignored";
     const fallbackId = createHash("sha256").update(rawBody).digest("hex");
-    return { eventId: stringValue(headers["x-razorpay-event-id"]) ?? stringValue(event.id) ?? fallbackId, eventType, data };
+    return {
+      eventId: stringValue(headers["x-razorpay-event-id"]) ?? stringValue(event.id) ?? fallbackId,
+      eventType: razorpayEventType(name, payment, refund),
+      data,
+    };
+  }
+}
+
+/**
+ * Map a Razorpay event to a normalised payment event. `subscription.charged`
+ * fires once per charge including the first; `order.paid` fires for one-time
+ * orders. `payment.captured` / `payment.authorized` are ignored so a charge is
+ * never counted from two events with different ids.
+ */
+function razorpayEventType(
+  name: string,
+  payment: Record<string, unknown>,
+  refund: Record<string, unknown>,
+): string {
+  switch (name) {
+    case "order.paid":
+    case "subscription.charged":
+      return "payment.succeeded";
+    case "payment.failed":
+      return "payment.failed";
+    case "refund.processed":
+    case "payment.refunded": {
+      const paymentAmount = integerValue(payment.amount);
+      const refundAmount = integerValue(refund.amount);
+      const partial =
+        payment.refund_status === "partial" ||
+        (paymentAmount !== null && refundAmount !== null && refundAmount < paymentAmount);
+      return partial ? "payment.ignored" : "payment.refunded";
+    }
+    case "payment.dispute.created":
+      return "payment.disputed";
+    case "subscription.cancelled":
+    case "subscription.halted":
+      return "subscription.cancelled";
+    case "subscription.completed":
+      return "subscription.expired";
+    default:
+      return "payment.ignored";
   }
 }
 

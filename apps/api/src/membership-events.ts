@@ -95,10 +95,8 @@ async function productEventProperties(
     productType: product.kind,
     ...(siteUrl
       ? {
-          productUrl:
-            product.kind === "course"
-              ? `${siteUrl}/dashboard/courses/${product.publicId}`
-              : `${siteUrl}/dashboard/products`,
+          // Courses and downloads share one page, which has the download button.
+          productUrl: `${siteUrl}/dashboard/courses/${product.publicId}`,
         }
       : {}),
   };

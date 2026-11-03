@@ -59,15 +59,16 @@ export function renderSchoolEmail(body: EmailBody): { html: string; text: string
   return { html, text };
 }
 
-export async function queueSchoolEmail(
+/** Who delivers a school's email: its own mailing team, or the platform's
+ * default sender when the school has no working mailing team. */
+export type SchoolEmailSender = "school" | "platform";
+
+export async function schoolEmailSender(
   db: AppDb,
   schoolId: string,
-  payload: SendSchoolEmailPayload,
-  clock: Clock,
-): Promise<boolean> {
-  // Schools without a mailing integration have no way to send email.
+): Promise<{ sender: SchoolEmailSender; integrationStatus: string | null }> {
   const [integration] = await db
-    .select({ id: schema.schoolIntegrations.id })
+    .select({ status: schema.schoolIntegrations.status })
     .from(schema.schoolIntegrations)
     .where(
       and(
@@ -76,14 +77,35 @@ export async function queueSchoolEmail(
       ),
     )
     .limit(1);
-  if (!integration) return false;
+  // A team still being provisioned will be ready shortly; its jobs wait.
+  // One that needs attention may never be, so its email goes out through the
+  // platform instead of piling up.
+  const usable =
+    integration &&
+    (integration.status === "ready" ||
+      integration.status === "pending" ||
+      integration.status === "provisioning");
+  return {
+    sender: usable ? "school" : "platform",
+    integrationStatus: integration?.status ?? null,
+  };
+}
 
+/** Queues one email for the worker. Email is never dropped: without a usable
+ * mailing team it goes out through the platform's default sender. */
+export async function queueSchoolEmail(
+  db: AppDb,
+  schoolId: string,
+  payload: SendSchoolEmailPayload,
+  clock: Clock,
+): Promise<SchoolEmailSender> {
+  const { sender } = await schoolEmailSender(db, schoolId);
   const now = clock.now();
   await db.insert(schema.integrationOutboxJobs).values({
     id: uuidv7(clock),
     schoolId,
-    provider: "sendlit",
-    type: "send_school_email",
+    provider: sender === "school" ? "sendlit" : "system",
+    type: sender === "school" ? "send_school_email" : "send_system_email",
     payload,
     status: "pending",
     attempts: 0,
@@ -92,7 +114,7 @@ export async function queueSchoolEmail(
     createdAt: now,
     updatedAt: now,
   });
-  return true;
+  return sender;
 }
 
 /** The admin app's origin, where staff notification links point. */

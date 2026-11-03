@@ -24,6 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
   community_reply: "New replies",
   community_membership_requested: "Community membership requests",
   community_joined: "New community members",
+  new_sale: "New sales",
 };
 
 /** Lets a team member choose which activity notifies them in the app and

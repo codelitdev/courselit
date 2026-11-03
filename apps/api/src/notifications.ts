@@ -30,6 +30,7 @@ export const STAFF_NOTIFICATION_TYPES = [
   "community_reply",
   "community_membership_requested",
   "community_joined",
+  "new_sale",
 ] as const;
 export type StaffNotificationType = (typeof STAFF_NOTIFICATION_TYPES)[number];
 

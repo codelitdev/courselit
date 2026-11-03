@@ -3,6 +3,7 @@ import type { ProductCustomer, ProductCustomerProgress } from "@courselit/api-co
 import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
+import { productSubscriptionsForMemberships } from "./product-subscriptions.js";
 import type { AppDb } from "./types.js";
 
 type Context = {
@@ -163,6 +164,10 @@ export async function listProductCustomers(
   const start = (input.page - 1) * input.limit;
   const page = filtered.slice(start, start + input.limit);
   const totalLessons = lessons.length;
+  const subscriptions = await productSubscriptionsForMemberships(
+    db,
+    page.map(({ selected }) => selected),
+  );
 
   return {
     ok: true,
@@ -188,6 +193,7 @@ export async function listProductCustomers(
           membershipStatus: selected.status,
           subscriptionMethod: selected.subscriptionMethod,
           subscriptionId: selected.subscriptionId,
+          subscription: subscriptions.get(selected.id) ?? null,
           signedUpAt: serializeDate(selected.createdAt),
           lastActiveAt: account.lastActiveAt ? serializeDate(account.lastActiveAt) : null,
           progress: {

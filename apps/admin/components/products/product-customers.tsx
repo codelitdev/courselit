@@ -5,11 +5,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
+  MoreHorizontal,
   Search,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { AuthGate } from "@/components/auth-gate";
 import { CourseLitInlineLoading, CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
@@ -19,12 +21,33 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/codelit/dropdown-menu";
 import { Input } from "@/components/ui/codelit/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ProductKind, School } from "./product-types";
+
+type CustomerSubscription = {
+  id: string;
+  planKind: "subscription" | "installment";
+  status: "active" | "cancelling" | "past_due" | "cancelled" | "expired" | "completed";
+  provider: string | null;
+  currentPeriodEnd: string | null;
+  accessUntil: string | null;
+  installmentCount: number | null;
+  installmentsPaid: number | null;
+  learnerCanCancel: boolean;
+};
+
+type CustomerAction = { kind: "cancel" | "remove"; customer: ProductCustomer };
 
 type ProductCustomer = {
   id: string;
@@ -42,6 +65,7 @@ type ProductCustomer = {
     | "paused";
   subscriptionMethod: string | null;
   subscriptionId: string | null;
+  subscription: CustomerSubscription | null;
   signedUpAt: string;
   lastActiveAt: string | null;
   progress: {
@@ -84,6 +108,41 @@ function statusLabel(status: ProductCustomer["membershipStatus"]) {
   return status.replaceAll("_", " ");
 }
 
+function subscriptionLabel(customer: ProductCustomer) {
+  const subscription = customer.subscription;
+  if (!subscription) return customer.subscriptionMethod ?? "—";
+  if (subscription.planKind === "installment") {
+    if (subscription.status === "completed") return "Installments paid";
+    if (subscription.status === "cancelling") {
+      return `Ends ${formatDate(subscription.accessUntil)}`;
+    }
+    return `${subscription.installmentsPaid ?? 0}/${subscription.installmentCount ?? 0} paid`;
+  }
+  switch (subscription.status) {
+    case "active":
+      return "Active";
+    case "cancelling":
+      return subscription.accessUntil
+        ? `Ends ${formatDate(subscription.accessUntil)}`
+        : "Ends at period end";
+    case "past_due":
+      return "Past due";
+    default:
+      return "Ended";
+  }
+}
+
+function canCancelSubscription(customer: ProductCustomer) {
+  return (
+    customer.subscription?.status === "active" ||
+    customer.subscription?.status === "past_due"
+  );
+}
+
+function canRemoveAccess(customer: ProductCustomer) {
+  return customer.membershipStatus !== "expired" && customer.membershipStatus !== "rejected";
+}
+
 function initials(customer: ProductCustomer) {
   return (customer.name.trim() || customer.email).slice(0, 1).toUpperCase();
 }
@@ -102,6 +161,68 @@ export function ProductCustomers({ productId }: { productId: string }) {
   const [progress, setProgress] = useState<ProductCustomerProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<CustomerAction | null>(null);
+  const [actionRunning, setActionRunning] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function runAction() {
+    if (!schoolId || !pendingAction) return;
+    const { kind, customer } = pendingAction;
+    setActionRunning(true);
+    setActionError(null);
+    try {
+      const response = await fetch(
+        `/api/v1/products/${encodeURIComponent(productId)}/customers/${encodeURIComponent(customer.id)}/${
+          kind === "cancel" ? "subscription/cancel" : "remove-access"
+        }`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "x-school-id": schoolId, "content-type": "application/json" },
+          body: "{}",
+        },
+      );
+      const body = (await response.json().catch(() => null)) as
+        | (CustomerSubscription & { message?: string })
+        | {
+            membershipStatus: "expired";
+            subscription: CustomerSubscription | null;
+            message?: string;
+          }
+        | null;
+      if (!response.ok || !body) {
+        throw new Error(
+          body?.message ??
+            (kind === "cancel"
+              ? "Unable to cancel the subscription."
+              : "Unable to remove access."),
+        );
+      }
+      setCustomers((current) =>
+        current.map((item) => {
+          if (item.id !== customer.id) return item;
+          if ("membershipStatus" in body) {
+            return {
+              ...item,
+              membershipStatus: body.membershipStatus,
+              subscription: body.subscription,
+            };
+          }
+          return { ...item, subscription: body as CustomerSubscription };
+        }),
+      );
+      toast.success(
+        kind === "cancel"
+          ? "Subscription will end at the close of the current billing period."
+          : "Access removed.",
+      );
+      setPendingAction(null);
+    } catch (caught) {
+      setActionError(caught instanceof Error ? caught.message : "Something went wrong.");
+    } finally {
+      setActionRunning(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -249,18 +370,19 @@ export function ProductCustomers({ productId }: { productId: string }) {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border bg-card">
-            <div className="min-w-[900px]">
-              <div className="grid grid-cols-[minmax(240px,2fr)_140px_minmax(180px,1.5fr)_140px_140px_140px] gap-4 border-b px-5 py-3 text-xs font-semibold text-muted-foreground">
+            <div className="min-w-[960px]">
+              <div className="grid grid-cols-[minmax(240px,2fr)_140px_minmax(180px,1.5fr)_140px_140px_140px_40px] gap-4 border-b px-5 py-3 text-xs font-semibold text-muted-foreground">
                 <span>Name</span>
                 <span>Status</span>
                 <span>Progress</span>
                 <span>Signed up</span>
                 <span>Last active</span>
                 <span>Subscription</span>
+                <span className="sr-only">Actions</span>
               </div>
               {customers.map((customer) => (
                 <div
-                  className="grid grid-cols-[minmax(240px,2fr)_140px_minmax(180px,1.5fr)_140px_140px_140px] items-center gap-4 border-b px-5 py-4 text-sm last:border-b-0"
+                  className="grid grid-cols-[minmax(240px,2fr)_140px_minmax(180px,1.5fr)_140px_140px_140px_40px] items-center gap-4 border-b px-5 py-4 text-sm last:border-b-0"
                   key={customer.id}
                 >
                   <Link
@@ -306,9 +428,50 @@ export function ProductCustomers({ productId }: { productId: string }) {
                   </div>
                   <span className="text-muted-foreground">{formatDate(customer.signedUpAt)}</span>
                   <span className="text-muted-foreground">{formatDate(customer.lastActiveAt)}</span>
-                  <span className="capitalize text-muted-foreground">
-                    {customer.subscriptionMethod ?? "—"}
+                  <span
+                    className="text-muted-foreground"
+                    title={customer.subscriptionMethod ?? undefined}
+                  >
+                    {subscriptionLabel(customer)}
                   </span>
+                  {canCancelSubscription(customer) || canRemoveAccess(customer) ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={`Actions for ${customer.name || customer.email}`}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canCancelSubscription(customer) ? (
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              setActionError(null);
+                              setPendingAction({ kind: "cancel", customer });
+                            }}
+                          >
+                            Cancel subscription
+                          </DropdownMenuItem>
+                        ) : null}
+                        {canRemoveAccess(customer) ? (
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => {
+                              setActionError(null);
+                              setPendingAction({ kind: "remove", customer });
+                            }}
+                          >
+                            Remove access
+                          </DropdownMenuItem>
+                        ) : null}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <span />
+                  )}
                 </div>
               ))}
             </div>
@@ -348,6 +511,60 @@ export function ProductCustomers({ productId }: { productId: string }) {
             </div>
           </div>
         ) : null}
+
+        <Dialog
+          open={pendingAction !== null}
+          onOpenChange={(open) => {
+            if (!open && !actionRunning) setPendingAction(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {pendingAction?.kind === "cancel" ? "Cancel subscription" : "Remove access"}
+              </DialogTitle>
+              <DialogDescription>
+                {pendingAction
+                  ? pendingAction.kind === "cancel"
+                    ? `${pendingAction.customer.name || pendingAction.customer.email} won’t be charged again and keeps access until the end of the current billing period.`
+                    : pendingAction.customer.subscription &&
+                        (pendingAction.customer.subscription.status === "active" ||
+                          pendingAction.customer.subscription.status === "cancelling" ||
+                          pendingAction.customer.subscription.status === "past_due")
+                      ? `${pendingAction.customer.name || pendingAction.customer.email} loses access now and their subscription is cancelled immediately. They won’t be refunded automatically.`
+                      : `${pendingAction.customer.name || pendingAction.customer.email} loses access to this product now.`
+                  : null}
+              </DialogDescription>
+            </DialogHeader>
+            {actionError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {actionError}
+              </p>
+            ) : null}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={actionRunning}
+                onClick={() => setPendingAction(null)}
+              >
+                Keep
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={actionRunning}
+                onClick={() => void runAction()}
+              >
+                {actionRunning
+                  ? "Working…"
+                  : pendingAction?.kind === "cancel"
+                    ? "Cancel subscription"
+                    : "Remove access"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={selectedCustomer !== null} onOpenChange={closeProgress}>
           <DialogContent className="max-w-lg">
