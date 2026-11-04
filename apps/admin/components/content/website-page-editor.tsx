@@ -187,7 +187,7 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
         );
         const activeThemeId = settings.themeId ?? "classic";
         const activeTheme = resolveEditorTheme(activeThemeId, savedThemes.items);
-        appliedThemeIdRef.current = settings.themeId;
+        appliedThemeIdRef.current = activeThemeId;
         appliedThemeSnapshotRef.current = activeTheme
           ? themeSnapshot(activeTheme)
           : null;
@@ -273,7 +273,16 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
     };
   }, [salesResourceId, salesResourceType]);
 
-  async function handleChange(state: PageBuilderState) {
+  // Saves run one at a time, in order. Overlapping requests could land out of
+  // order on a slow connection and leave an older theme or layout saved.
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  function handleChange(state: PageBuilderState): Promise<void> {
+    const next = saveQueueRef.current.then(() => saveState(state));
+    saveQueueRef.current = next.catch(() => undefined);
+    return next;
+  }
+
+  async function saveState(state: PageBuilderState) {
     setSaving(true);
     setError(null);
     try {

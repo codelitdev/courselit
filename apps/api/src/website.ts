@@ -33,6 +33,7 @@ const BUILT_IN_THEME_IDS = new Set([
   "midnight",
   "editorial",
   "neobrutalism",
+  "terminal",
 ]);
 
 /** Storefront routes that an ordinary page must never shadow. */
