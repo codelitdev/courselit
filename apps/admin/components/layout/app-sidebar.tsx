@@ -169,7 +169,10 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser account={account} />
+        <NavUser
+          account={account}
+          billingSchoolId={currentSchool?.isOwner ? currentSchool.id : null}
+        />
       </SidebarFooter>
 
       <SidebarRail />

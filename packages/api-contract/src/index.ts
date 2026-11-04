@@ -1839,6 +1839,29 @@ export const startSchoolBillingCheckoutResponseSchema = z.object({
   checkoutUrl: z.string(),
 });
 
+/** The school's CourseLit plan, for Settings > Plan. */
+export const schoolBillingPlanSchema = z.object({
+  /** False when this deployment has no hosted billing. */
+  billingAvailable: z.boolean(),
+  plan: z.enum(["pro", "business"]).nullable(),
+  interval: z.enum(["month", "year"]).nullable(),
+  status: z.string().nullable(),
+  amountMinor: z.number().int().nullable(),
+  currency: z.string().nullable(),
+  trialEndsAt: z.string().nullable(),
+  currentPeriodEndsAt: z.string().nullable(),
+  /** The plan stays active until this moment, even after cancelling. */
+  paidThroughAt: z.string().nullable(),
+  cancelAtPeriodEnd: z.boolean(),
+  pendingCheckout: z.boolean(),
+  pendingPlanChange: z.boolean(),
+  canCancel: z.boolean(),
+  canResume: z.boolean(),
+});
+export const schoolBillingActionResponseSchema = z.object({
+  plan: schoolBillingPlanSchema,
+});
+
 export const onboardingStepSchema = z.enum([
   "school",
   "offer",
@@ -4689,6 +4712,42 @@ export const contract = c.router({
     body: startSchoolBillingCheckoutBodySchema,
     responses: {
       200: startSchoolBillingCheckoutResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  getSchoolBillingPlan: {
+    method: "GET",
+    path: "/v1/school/billing",
+    summary: "Get the school's CourseLit plan",
+    responses: {
+      200: schoolBillingPlanSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  cancelSchoolBillingPlan: {
+    method: "POST",
+    path: "/v1/school/billing/cancel",
+    summary: "Cancel the school's CourseLit plan at the end of the paid period (hosted only)",
+    body: z.object({}).strict(),
+    responses: {
+      200: schoolBillingActionResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  resumeSchoolBillingPlan: {
+    method: "POST",
+    path: "/v1/school/billing/resume",
+    summary: "Resume a scheduled cancellation of the school's CourseLit plan (hosted only)",
+    body: z.object({}).strict(),
+    responses: {
+      200: schoolBillingActionResponseSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,

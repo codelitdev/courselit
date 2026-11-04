@@ -557,6 +557,39 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "school.billing.plan.get",
+    rest: { operationId: "getSchoolBillingPlan" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Viewing the CourseLit plan is a browser billing screen and stays off MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.billing.plan.cancel",
+    rest: { operationId: "cancelSchoolBillingPlan" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Cancelling a CourseLit plan needs a recent browser sign-in and stays off MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.billing.plan.resume",
+    rest: { operationId: "resumeSchoolBillingPlan" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Resuming a CourseLit plan needs a recent browser sign-in and stays off MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "school.onboarding.get",
     rest: { operationId: "getSchoolOnboarding" },
     parity: "exempt",

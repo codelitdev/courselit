@@ -2,6 +2,7 @@ import { createObservability, redactText } from "@codelitdev/observability";
 import { runPlatformConformance } from "@codelitdev/platform-conformance";
 import { contract } from "@courselit/api-contract";
 import { eq } from "drizzle-orm";
+import * as schema from "./db/schema/index.js";
 import { runBoundedMaintenance } from "./billing.js";
 import { mcpFor } from "./dispatch.js";
 import { createExpressApp } from "./express-app.js";
@@ -290,13 +291,21 @@ export function createCourseLitConformanceAdapter(
       },
       async fakeProviderWorks() {
         const now = runtime.clock.now();
-        const grant = runtime.billing.authorization.issue({
-          grantId: "conformance-checkout-grant",
+        const target = { kind: "school", id: world.schoolB.id };
+        const issued = await runtime.billing.grants.issue({
           actorId: world.owner.id,
+          sessionId: "conformance",
+          sessionCreatedAt: now,
           action: "checkout",
-          target: { kind: "school", id: world.schoolB.id },
-          issuedAt: now,
-          expiresAt: new Date(now.getTime() + 60_000),
+          target,
+        });
+        if (!issued.ok) return false;
+        const grant = runtime.billing.grants.grant({
+          token: issued.token,
+          actorId: world.owner.id,
+          sessionId: "conformance",
+          action: "checkout",
+          target,
         });
         const checkout = await runtime.billing.billing.startCheckout({
           grant,
@@ -321,12 +330,13 @@ export function createCourseLitConformanceAdapter(
         return processed >= 0;
       },
       async auditRecorded() {
-        return Boolean(
-          checkoutAuditEffectId &&
-            runtime.billing.audit.records.some(
-              (record) => record.effectId === checkoutAuditEffectId,
-            ),
-        );
+        if (!checkoutAuditEffectId) return false;
+        const rows = await runtime.db
+          .select({ id: schema.auditEvents.id })
+          .from(schema.auditEvents)
+          .where(eq(schema.auditEvents.resourceId, checkoutAuditEffectId))
+          .limit(1);
+        return rows.length > 0;
       },
     },
     async shutdown() {

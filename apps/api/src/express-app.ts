@@ -1,3 +1,4 @@
+import { billingWebhookPath, handleBillingWebhook } from "@codelitdev/platform/billing";
 import { createOAuthPagesRouter } from "@codelitdev/oauth-server-kit/express";
 import { createMcpOAuthDiscoveryRoutes } from "@codelitdev/oauth-server-kit/mcp";
 import {
@@ -167,6 +168,74 @@ export function createExpressApp(deps: DispatchDeps): Express {
         if (response.body === null || response.body === undefined) {
           res.status(response.status).end();
           return;
+        }
+        res.status(response.status).json(response.body);
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+  // Platform billing webhooks (school plans). The raw body is kept for signature
+  // verification; the event is stored, then projected in the background.
+  const webhookWindowMs = 60_000;
+  const webhookLimit = Number(process.env.BILLING_WEBHOOK_RATE_LIMIT_PER_MINUTE ?? 300);
+  let webhookWindow = { start: 0, requests: 0, rejected: 0, alerted: false };
+  app.post(
+    billingWebhookPath(":provider"),
+    (req, res, next) => {
+      const now = Date.now();
+      if (now - webhookWindow.start >= webhookWindowMs) {
+        webhookWindow = { start: now, requests: 0, rejected: 0, alerted: false };
+      }
+      webhookWindow.requests += 1;
+      if (webhookWindow.requests > webhookLimit) {
+        res.status(429).json({ error: "rate_limited" });
+        return;
+      }
+      next();
+    },
+    express.raw({ type: "application/json", limit: "256kb" }),
+    async (req, res, next) => {
+      try {
+        if (deps.billingMode !== "cloud" || req.params.provider !== "dodo") {
+          res.status(404).json({ error: "not_found" });
+          return;
+        }
+        let failure: unknown;
+        const response = await handleBillingWebhook({
+          billing: deps.billing.billing,
+          provider: "dodo",
+          rawBody: Buffer.isBuffer(req.body) && req.body.length > 0 ? req.body : undefined,
+          headers: req.headers,
+          workerId: `courselit-billing-webhook-${process.pid}`,
+          onError: (error) => {
+            failure = error;
+            // After the response, this is the background inbox drain: the worker retries it.
+            if (res.headersSent) {
+              deps.observability?.logger.warn(
+                { error: error instanceof Error ? error.message : String(error) },
+                "billing webhook inbox drain failed",
+              );
+            }
+          },
+        });
+        if (response.status === 400) {
+          // A rejected signature or body. A burst of these means someone is probing
+          // the endpoint, or the signing secret is wrong.
+          webhookWindow.rejected += 1;
+          if (webhookWindow.rejected >= 10 && !webhookWindow.alerted) {
+            webhookWindow.alerted = true;
+            deps.observability?.logger.error(
+              { rejected: webhookWindow.rejected },
+              "billing webhook signature failures are spiking",
+            );
+          }
+        } else if (response.status === 503 && failure !== undefined) {
+          deps.observability?.logger.error(
+            { error: failure instanceof Error ? failure.message : String(failure) },
+            "billing webhook could not be stored",
+          );
+          deps.observability?.captureException({ error: failure, source: "billing.webhook" });
         }
         res.status(response.status).json(response.body);
       } catch (error) {

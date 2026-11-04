@@ -329,7 +329,13 @@ import {
   updateProduct,
 } from "./products.js";
 import { evaluateQuizLesson } from "./quiz.js";
-import { readPublicBillingCatalog, startSchoolCheckout } from "./school-billing.js";
+import {
+  changeSchoolCancellation,
+  readBillingSession,
+  readPublicBillingCatalog,
+  readSchoolPlan,
+  startSchoolCheckout,
+} from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
 import {
   checkSchoolSubdomain,
@@ -5067,10 +5073,52 @@ export async function dispatch(
         interval: parsed.data.interval,
         catalogRevision: parsed.data.catalogRevision,
         returnUrl: `${deps.auth.webOrigin.replace(/\/$/, "")}/onboarding/setup?checkout=return`,
+        session: await readBillingSession(deps.auth, request.headers),
       });
       return checkout.ok
         ? { status: 200, body: { checkoutUrl: checkout.checkoutUrl } }
         : errorResponse(checkout.error);
+    }
+    if (request.method === "GET" && path === "/v1/school/billing") {
+      return {
+        status: 200,
+        body: await readSchoolPlan({
+          billing: deps.billing,
+          billingMode: deps.billingMode,
+          schoolInternalId: context.tenantId!,
+        }),
+      };
+    }
+    if (
+      request.method === "POST" &&
+      (path === "/v1/school/billing/cancel" || path === "/v1/school/billing/resume")
+    ) {
+      if (deps.billingMode === "oss") {
+        return errorResponse(
+          createPlatformError("validation_failed", {
+            safeDetails: { reason: "billing_not_available" },
+          }),
+        );
+      }
+      const changed = await changeSchoolCancellation({
+        db: deps.db,
+        billing: deps.billing,
+        principalId: auth.principalId,
+        schoolInternalId: context.tenantId!,
+        session: await readBillingSession(deps.auth, request.headers),
+        action: path.endsWith("/cancel") ? "cancel" : "resume",
+      });
+      if (!changed.ok) return errorResponse(changed.error);
+      return {
+        status: 200,
+        body: {
+          plan: await readSchoolPlan({
+            billing: deps.billing,
+            billingMode: deps.billingMode,
+            schoolInternalId: context.tenantId!,
+          }),
+        },
+      };
     }
     if (path === "/v1/school/onboarding") {
       const billing = {

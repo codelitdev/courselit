@@ -1,8 +1,9 @@
 "use client";
 
-import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
+import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +30,41 @@ function initialsFor(account: CurrentAccount | null) {
   return source.slice(0, 1).toUpperCase();
 }
 
-export function NavUser({ account }: { account: CurrentAccount | null }) {
+export function NavUser({
+  account,
+  billingSchoolId,
+}: {
+  account: CurrentAccount | null;
+  /** The current school when the person owns it; its plan is managed from this menu. */
+  billingSchoolId?: string | null;
+}) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  // Self-hosted schools have no CourseLit plan, so the menu item only appears on hosted ones.
+  const [hostedBilling, setHostedBilling] = useState(false);
+
+  useEffect(() => {
+    if (!billingSchoolId) {
+      setHostedBilling(false);
+      return;
+    }
+    let cancelled = false;
+    void fetch("/api/v1/school/billing", {
+      credentials: "include",
+      cache: "no-store",
+      headers: { "x-school-id": billingSchoolId },
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((plan: { billingAvailable?: boolean } | null) => {
+        if (!cancelled) setHostedBilling(plan?.billingAvailable === true);
+      })
+      .catch(() => {
+        if (!cancelled) setHostedBilling(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [billingSchoolId]);
 
   return (
     <SidebarMenu>
@@ -85,6 +118,14 @@ export function NavUser({ account }: { account: CurrentAccount | null }) {
                   Account
                 </Link>
               </DropdownMenuItem>
+              {hostedBilling ? (
+                <DropdownMenuItem asChild>
+                  <Link href="/account/billing">
+                    <CreditCard />
+                    Billing and plan
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

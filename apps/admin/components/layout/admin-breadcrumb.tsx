@@ -217,6 +217,9 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   }
 
   // Account
+  if (clean.startsWith("/account/billing")) {
+    return [{ label: "Account", href: "/account" }, { label: "Billing and plan" }];
+  }
   if (clean.startsWith("/account")) {
     return [{ label: "Account" }];
   }

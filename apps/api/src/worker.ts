@@ -1,5 +1,5 @@
 import { createObservability } from "@codelitdev/observability";
-import { runBoundedMaintenance } from "./billing.js";
+import { startBillingWorkers } from "@codelitdev/platform/billing";
 import { processDripEmails } from "./drip-emails.js";
 import { startIntegrationWorker } from "./integration-provisioning.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
@@ -53,8 +53,26 @@ const runtime = await createPostgresRuntime({
   observability,
 });
 try {
-  const processed = await runBoundedMaintenance(runtime.billing.billing);
-  observability.logger.info({ processed }, "billing maintenance complete");
+  // Catalog verification, webhook inbox, reconciliation, deadlines and retention.
+  // The first batch runs one interval after start, never at boot.
+  const billingWorkers =
+    runtime.billingMode === "cloud"
+      ? startBillingWorkers({
+          billing: runtime.billing.billing,
+          workerId: `courselit-billing-${process.env.HOSTNAME ?? "worker"}-${process.pid}`,
+          onError: (task, error) => {
+            observability.logger.error(
+              { billing_task: task, error: error instanceof Error ? error.message : String(error) },
+              "billing maintenance task failed",
+            );
+            observability.captureException({
+              error,
+              source: "worker.billing",
+              context: { task },
+            });
+          },
+        })
+      : null;
   const stopIntegrationWorker = startIntegrationWorker(
     runtime.db,
     runtime.clock,
@@ -78,7 +96,7 @@ try {
     const stop = () => {
       clearInterval(dripTimer);
       stopIntegrationWorker();
-      resolve();
+      void (billingWorkers?.stop() ?? Promise.resolve()).finally(resolve);
     };
     process.once("SIGTERM", stop);
     process.once("SIGINT", stop);

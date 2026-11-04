@@ -1,5 +1,4 @@
 import { createHash, randomBytes } from "node:crypto";
-import { grant as billingGrant } from "@codelitdev/billing/testing";
 import { verifyOAuthAccessToken } from "@codelitdev/oauth-server-kit";
 import { resolveBetterAuthSession } from "@codelitdev/oauth-server-kit/better-auth";
 import { type Clock, createPublicId, uuidv7 } from "@codelitdev/platform";
@@ -446,11 +445,22 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
   }
 
   await runtime.billing.billing.verifyRequestedCatalog();
-  const token = {
-    ...billingGrant("checkout", schoolAId, owner.id, now),
-    target: { kind: "school", id: schoolAId },
-  };
-  runtime.billing.authorization.issue(token);
+  const seedTarget = { kind: "school", id: schoolAId };
+  const issued = await runtime.billing.grants.issue({
+    actorId: owner.id,
+    sessionId: "seed",
+    sessionCreatedAt: now,
+    action: "checkout",
+    target: seedTarget,
+  });
+  if (!issued.ok) throw new Error("seed_billing_grant_failed");
+  const token = runtime.billing.grants.grant({
+    token: issued.token,
+    actorId: owner.id,
+    sessionId: "seed",
+    action: "checkout",
+    target: seedTarget,
+  });
   const checkout = await runtime.billing.billing.startCheckout({
     grant: token,
     entity: { kind: "school", id: schoolAId },
