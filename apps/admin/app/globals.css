@@ -100,6 +100,8 @@ body:has([data-full-screen-editor]) {
   overflow: hidden;
 }
 
+/* Layered so utility classes (for example a page-builder theme's input radius) win. */
+@layer base {
 /* Fallback styling for unstyled native inputs on legacy screens.
    Skip non-textual controls so packaged editors keep swatch/slider sizing. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
@@ -140,6 +142,7 @@ textarea:not([data-slot]):focus {
   outline: none;
   border-color: var(--ring);
   box-shadow: 0 0 0 3px var(--primary-soft);
+}
 }
 
 /* Retain utility classes used in forms and admin screens */
