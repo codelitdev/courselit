@@ -340,11 +340,13 @@ lookups continue to work for assets already referenced by school content.
 
 `/mcp` serves MCP 2026-07-28 statelessly through `@codelitdev/mcp-server-kit`; 2025-era clients use the SDK's stateless legacy mode. Every request authenticates with OAuth or a school API key and is bound to one school, exactly as REST resolves it.
 
-REST and MCP have parity. Tools come in three kinds:
+REST and MCP have parity, and every capability is a tool of its own. There are no generic `api.*` tools: clients such as ChatGPT want a named, typed tool per capability. Tools are named `snake_case(operationId)` (`listSections` is `list_sections`) and come in three kinds:
 
-- **Generic API tools.** `api.list_operations` and `api.describe_operation` let an agent find any school operation and read its parameters, body and response schema from the REST API's own OpenAPI document. `api.read` (GET), `api.write` (POST, PATCH, PUT) and `api.delete` (DELETE, with `confirm: true`) run the operation through the REST dispatcher with the caller's identity, so credential policy, school pinning, permissions, validation and errors are the REST API's own.
-- **Dedicated tools** for products, media and contacts call domain functions directly. `guardMcpTool` applies each one's operation policy (credential kind, permissions, owner-only) before the handler runs.
-- **Workflow tools** compose operations for a common agent task. `courses.outline.apply` adds sections and Markdown text lessons to a course in one call, skipping titles that already exist, so it is safe to retry.
+- **Generated tools** (`src/mcp-tools/operations.ts`) cover every contract operation without a hand-written tool. Path parameters, query parameters and body fields become one flat input, built from the contract's own schemas and normalised by `src/mcp-tools/schema.ts` so every node has a single type (ChatGPT refuses a tool list otherwise). A call runs through the REST dispatcher with the caller's identity, so credential policy, school pinning, permissions, validation and errors are the REST API's own. Each tool's description is written by hand in `operation-descriptions.ts`.
+- **Hand-written tools** for products, media and contacts call domain functions directly. `guardMcpTool` applies each one's operation policy (credential kind, permissions, owner-only) before the handler runs.
+- **Workflow tools** compose operations for a common agent task. `apply_course_outline` adds sections and Markdown text lessons to a course in one call, skipping titles that already exist, so it is safe to retry.
 
-`mcpParityManifest` in `@courselit/api-contract` is generated: a contract operation without an override is required over MCP through the `api.*` tool for its risk. The manifest's overrides name the dedicated tools and the exemptions: learner, public, webhook and session-only operations, preview-token reads, binary uploads and account-level reads. `src/mcp-api.test.ts` fails when an operation that OAuth or API keys can call over REST is neither on MCP nor in its reviewed exemption list.
+Deletions are `destructive` tools that need `confirm: true`. So are the operations in `MCP_HIGH_IMPACT_OPERATIONS` (publishing, emailing contacts, archiving plans, changing payment or access settings), so the model asks the user first.
+
+`mcpParityManifest` in `@courselit/api-contract` is generated: a contract operation without an override is required over MCP as its own tool, named by `mcpToolName`. The manifest's overrides name the exemptions: learner, public, webhook and session-only operations, preview-token reads, binary uploads and account-level reads. `src/mcp-api.test.ts` fails when an operation that OAuth or API keys can call over REST is neither on MCP nor in its reviewed exemption list.
 

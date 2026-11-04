@@ -12,7 +12,7 @@ import type { McpToolModule } from "./context.js";
 
 export const contactTools: McpToolModule = (deps) => [
   {
-    name: "contacts.list",
+    name: "list_contacts",
     description: "List contacts for the school",
     risk: "read",
     inputSchema: z.object({
@@ -36,7 +36,7 @@ export const contactTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "contacts.get",
+    name: "get_contact",
     description: "Read details of a single contact",
     risk: "read",
     inputSchema: z.object({ contactId: z.string() }),
@@ -52,7 +52,7 @@ export const contactTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "contacts.update",
+    name: "update_contact",
     description: "Update contact details (name, bio, avatar, status)",
     risk: "write",
     inputSchema: z.object({
@@ -76,7 +76,7 @@ export const contactTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "contacts.marketing.update",
+    name: "update_contact_marketing",
     description: "Update contact marketing state (subscribed, tags)",
     risk: "write",
     inputSchema: z.object({
@@ -103,7 +103,7 @@ export const contactTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "contacts.delete",
+    name: "delete_contact",
     description: "Delete a contact from the school",
     risk: "destructive",
     inputSchema: z.object({
@@ -122,7 +122,7 @@ export const contactTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "contacts.segments.list",
+    name: "list_contact_segments",
     description: "List contact segments for the school",
     risk: "read",
     inputSchema: z.object({}),

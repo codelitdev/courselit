@@ -816,7 +816,7 @@ describe.serial("first vertical slice", () => {
       now: new Date("2026-09-02T00:00:00.000Z"),
     });
     expect(issues).toEqual([]);
-    expect(mcp.listTools().some((tool) => tool.name === "products.get")).toBe(true);
+    expect(mcp.listTools().some((tool) => tool.name === "get_product")).toBe(true);
 
     const course = await dispatch(runtime, {
       method: "POST",
@@ -884,7 +884,7 @@ describe.serial("first vertical slice", () => {
         jsonrpc: "2.0",
         id: 1,
         method: "tools/call",
-        params: { name: "products.get", arguments: { productId } },
+        params: { name: "get_product", arguments: { productId } },
       },
     });
     expect(rest.status).toBe(200);

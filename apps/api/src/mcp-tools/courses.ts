@@ -53,9 +53,9 @@ function lessonDocument(
 
 export const courseTools: McpToolModule = (deps) => [
   {
-    name: "courses.outline.apply",
+    name: "apply_course_outline",
     description:
-      "Adds sections and text lessons to a course or download in one call, in the order given. A section or lesson whose title already exists (same section, case-insensitive) is kept as it is and not duplicated, so the call is safe to retry or to extend an outline. Lesson bodies are Markdown. New lessons are drafts unless status is published; the product's own status is unchanged. For video, audio, PDF, file, embed, quiz or SCORM lessons, use api.write with createLesson.",
+      "Adds sections and text lessons to a course or download in one call, in the order given. A section or lesson whose title already exists (same section, case-insensitive) is kept as it is and not duplicated, so the call is safe to retry or to extend an outline. Lesson bodies are Markdown. New lessons are drafts unless status is published; the product's own status is unchanged. For video, audio, PDF, file, embed, quiz or SCORM lessons, use create_lesson.",
     risk: "write",
     inputSchema: outlineInputSchema,
     async handler({ context, args }) {

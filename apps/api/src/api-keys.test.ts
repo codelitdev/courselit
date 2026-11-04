@@ -902,7 +902,7 @@ describe.serial("API keys over MCP", () => {
     const listed = await call(
       runtime,
       { "x-api-key": world.apiKeyA.raw, "x-school-id": world.schoolB.publicId },
-      "products.list",
+      "list_products",
     );
     expect(listed.status).toBe(200);
     const items = (
@@ -922,7 +922,7 @@ describe.serial("API keys over MCP", () => {
     const denied = await call(
       runtime,
       { "x-api-key": readOnly.key },
-      "products.delete",
+      "delete_product",
       {
         productId: world.noteA.publicId,
         confirm: true,
@@ -932,7 +932,7 @@ describe.serial("API keys over MCP", () => {
 
     // Tools without their own permission check are still gated by the
     // operation's required permissions.
-    for (const tool of ["contacts.list", "media.list"]) {
+    for (const tool of ["list_contacts", "list_media"]) {
       const withoutPermission = await call(
         runtime,
         { "x-api-key": readOnly.key },
@@ -944,7 +944,7 @@ describe.serial("API keys over MCP", () => {
     const bad = await call(
       runtime,
       { "x-api-key": `${readOnly.key}x` },
-      "products.list",
+      "list_products",
     );
     expect(bad.status).toBe(401);
     await runtime.close();

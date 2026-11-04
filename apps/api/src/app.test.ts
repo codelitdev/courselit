@@ -350,7 +350,7 @@ describe.serial("reference API adapters", () => {
         jsonrpc: "2.0",
         id: 1,
         method: "tools/call",
-        params: { name: "products.list", arguments: {} },
+        params: { name: "list_products", arguments: {} },
       },
     });
     expect(restList.status).toBe(200);
@@ -400,7 +400,7 @@ describe.serial("reference API adapters", () => {
         id: 2,
         method: "tools/call",
         params: {
-          name: "products.update",
+          name: "update_product",
           arguments: { productId: world.noteA.publicId, title: "hijack" },
         },
       },
@@ -419,7 +419,7 @@ describe.serial("reference API adapters", () => {
         id: 3,
         method: "tools/call",
         params: {
-          name: "products.delete",
+          name: "delete_product",
           arguments: { productId: world.noteA.publicId },
         },
       },
@@ -438,7 +438,7 @@ describe.serial("reference API adapters", () => {
         id: 4,
         method: "tools/call",
         params: {
-          name: "products.delete",
+          name: "delete_product",
           arguments: { productId: world.noteA.publicId, confirm: true },
         },
       },

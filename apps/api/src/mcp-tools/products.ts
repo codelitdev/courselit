@@ -15,7 +15,7 @@ import type { McpToolModule } from "./context.js";
 
 export const productTools: McpToolModule = (deps) => [
   {
-    name: "products.list",
+    name: "list_products",
     description: "List products for the selected school",
     risk: "read",
     inputSchema: z.object({}),
@@ -26,7 +26,7 @@ export const productTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "products.get",
+    name: "get_product",
     description: "Read a product and the lesson content the caller may see",
     risk: "read",
     inputSchema: z.object({ productId: z.string() }),
@@ -46,7 +46,7 @@ export const productTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "products.create",
+    name: "create_product",
     description: "Create a product",
     risk: "write",
     inputSchema: createProductBodySchema,
@@ -69,7 +69,7 @@ export const productTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "products.update",
+    name: "update_product",
     description: "Update a product",
     risk: "write",
     inputSchema: updateProductBodySchema.extend({
@@ -96,7 +96,7 @@ export const productTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "products.delete",
+    name: "delete_product",
     description: "Delete a product",
     risk: "destructive",
     inputSchema: z.object({

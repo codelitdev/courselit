@@ -46,8 +46,8 @@ const communityParityExemptions = [
 
 /**
  * Operations with a dedicated MCP tool, and operations kept off MCP with the
- * reason why. Every other contract operation is served by the generic
- * `api.*` tools (see `buildMcpParityManifest`).
+ * reason why. Every other contract operation gets a tool of its own (see
+ * `buildMcpParityManifest`).
  */
 const mcpParityOverrides = [
   ...communityParityExemptions.map(([operationId, capability]) => ({
@@ -282,76 +282,6 @@ const mcpParityOverrides = [
     },
   },
   {
-    capability: "products.list",
-    risk: "read",
-    rest: { operationId: "listProducts" },
-    mcp: { tool: "products.list" },
-    parity: "required",
-  },
-  {
-    capability: "products.get",
-    risk: "read",
-    rest: { operationId: "getProduct" },
-    mcp: { tool: "products.get" },
-    parity: "required",
-  },
-  {
-    capability: "products.create",
-    risk: "write",
-    rest: { operationId: "createProduct" },
-    mcp: { tool: "products.create" },
-    parity: "required",
-  },
-  {
-    capability: "products.update",
-    risk: "write",
-    rest: { operationId: "updateProduct" },
-    mcp: { tool: "products.update" },
-    parity: "required",
-  },
-  {
-    capability: "products.delete",
-    risk: "destructive",
-    rest: { operationId: "deleteProduct" },
-    mcp: { tool: "products.delete" },
-    parity: "required",
-  },
-  {
-    capability: "media.list",
-    risk: "read",
-    rest: { operationId: "listMedia" },
-    mcp: { tool: "media.list" },
-    parity: "required",
-  },
-  {
-    capability: "media.get",
-    risk: "read",
-    rest: { operationId: "getMedia" },
-    mcp: { tool: "media.get" },
-    parity: "required",
-  },
-  {
-    capability: "media.update",
-    risk: "write",
-    rest: { operationId: "updateMedia" },
-    mcp: { tool: "media.update" },
-    parity: "required",
-  },
-  {
-    capability: "media.references.list",
-    risk: "read",
-    rest: { operationId: "listMediaReferences" },
-    mcp: { tool: "media.references.list" },
-    parity: "required",
-  },
-  {
-    capability: "media.delete",
-    risk: "destructive",
-    rest: { operationId: "deleteMedia" },
-    mcp: { tool: "media.delete" },
-    parity: "required",
-  },
-  {
     capability: "media.uploadAuthorization",
     rest: { operationId: "authorizeMediaUpload" },
     parity: "exempt",
@@ -405,48 +335,6 @@ const mcpParityOverrides = [
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
-  },
-  {
-    capability: "contacts.list",
-    risk: "read",
-    rest: { operationId: "listContacts" },
-    mcp: { tool: "contacts.list" },
-    parity: "required",
-  },
-  {
-    capability: "contacts.get",
-    risk: "read",
-    rest: { operationId: "getContact" },
-    mcp: { tool: "contacts.get" },
-    parity: "required",
-  },
-  {
-    capability: "contacts.update",
-    risk: "write",
-    rest: { operationId: "updateContact" },
-    mcp: { tool: "contacts.update" },
-    parity: "required",
-  },
-  {
-    capability: "contacts.marketing.update",
-    risk: "write",
-    rest: { operationId: "updateContactMarketing" },
-    mcp: { tool: "contacts.marketing.update" },
-    parity: "required",
-  },
-  {
-    capability: "contacts.delete",
-    risk: "destructive",
-    rest: { operationId: "deleteContact" },
-    mcp: { tool: "contacts.delete" },
-    parity: "required",
-  },
-  {
-    capability: "contacts.segments.list",
-    risk: "read",
-    rest: { operationId: "listContactSegments" },
-    mcp: { tool: "contacts.segments.list" },
-    parity: "required",
   },
   {
     capability: "certificate.verify",
@@ -1028,18 +916,39 @@ const mcpParityOverrides = [
 
 type ParityRisk = "read" | "write" | "destructive";
 
-/** The generic MCP tool that serves each risk class of contract operation. */
-export const MCP_API_TOOLS = {
-  read: "api.read",
-  write: "api.write",
-  destructive: "api.delete",
-} as const satisfies Record<ParityRisk, string>;
+/**
+ * Operations that are not deletions but cannot be undone, publish to the
+ * public, email real people, or move money or access. Their MCP tools are
+ * `destructive`, so a client must pass `confirm: true`, which makes the model
+ * ask the user first.
+ */
+export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
+  "removeProductCustomerAccess",
+  "cancelProductCustomerSubscription",
+  "grantLearnerMembership",
+  "archivePlan",
+  "archiveCommunityPlan",
+  "publishSchoolWebsitePage",
+  "publishSchoolWebsiteBlog",
+  "discardSchoolWebsitePage",
+  "discardSchoolWebsiteBlog",
+  "startMailSequence",
+  "updateSchoolCodeInjection",
+  "updateSchoolPaymentSettings",
+]);
 
-/** GET reads, DELETE destroys, everything else writes. */
-export function mcpApiRisk(method: string): ParityRisk {
+/** `listWebsitePages` -> `list_website_pages`: one snake_case tool per operation. */
+export function mcpToolName(operationId: string): string {
+  return operationId.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+}
+
+/** GET reads, DELETE and high-impact operations are destructive, the rest write. */
+export function mcpOperationRisk(operationId: string, method: string): ParityRisk {
   const upper = method.toUpperCase();
   if (upper === "GET") return "read";
-  if (upper === "DELETE") return "destructive";
+  if (upper === "DELETE" || MCP_HIGH_IMPACT_OPERATIONS.has(operationId)) {
+    return "destructive";
+  }
   return "write";
 }
 
@@ -1061,8 +970,8 @@ export type McpParityManifestEntry =
 
 /**
  * REST and MCP have parity by default: a contract operation without an
- * override is required over MCP through the `api.*` tool for its risk. Keeping
- * an operation off MCP takes an explicit exemption with a reason.
+ * override is required over MCP as its own tool, named by `mcpToolName`.
+ * Keeping an operation off MCP takes an explicit exemption with a reason.
  */
 export function buildMcpParityManifest(
   routes: Record<string, { method: string }>,
@@ -1074,12 +983,11 @@ export function buildMcpParityManifest(
   const generic = Object.entries(routes)
     .filter(([operationId]) => !documented.has(operationId))
     .map(([operationId, route]): McpParityManifestEntry => {
-      const risk = mcpApiRisk(route.method);
       return {
         capability: operationId,
-        risk,
+        risk: mcpOperationRisk(operationId, route.method),
         rest: { operationId },
-        mcp: { tool: MCP_API_TOOLS[risk] },
+        mcp: { tool: mcpToolName(operationId) },
         parity: "required",
       };
     });

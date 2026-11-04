@@ -5228,9 +5228,10 @@ export const contract = c.router({
 export type Contract = typeof contract;
 export {
   buildMcpParityManifest,
-  MCP_API_TOOLS,
+  MCP_HIGH_IMPACT_OPERATIONS,
   type McpParityManifestEntry,
-  mcpApiRisk,
+  mcpOperationRisk,
+  mcpToolName,
 } from "./mcp-parity.js";
 
 export const mcpParityManifest = buildMcpParityManifest(contract);

@@ -15,6 +15,15 @@ type Principal = {
   oauthToken?: string;
 };
 
+/** The conformance suite's `notes.*` tools are our product tools. */
+const NOTE_TOOLS: Record<string, string> = {
+  "notes.list": "list_products",
+  "notes.get": "get_product",
+  "notes.create": "create_product",
+  "notes.update": "update_product",
+  "notes.delete": "delete_product",
+};
+
 export function createCourseLitConformanceAdapter(
   runtime: Runtime,
   world: SeededWorld,
@@ -147,7 +156,7 @@ export function createCourseLitConformanceAdapter(
           id: 1,
           method: "tools/call",
           params: {
-            name: input.tool.replace(/^notes\./, "products."),
+            name: NOTE_TOOLS[input.tool] ?? input.tool,
             arguments: args ?? {},
           },
         },

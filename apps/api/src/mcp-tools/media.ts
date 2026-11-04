@@ -10,7 +10,7 @@ import type { McpToolModule } from "./context.js";
 
 export const mediaTools: McpToolModule = (deps) => [
   {
-    name: "media.list",
+    name: "list_media",
     description: "List media-library assets for the selected school",
     risk: "read",
     inputSchema: z.object({
@@ -30,7 +30,7 @@ export const mediaTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "media.get",
+    name: "get_media",
     description: "Read media-library metadata",
     risk: "read",
     inputSchema: z.object({ mediaId: z.string() }),
@@ -46,7 +46,7 @@ export const mediaTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "media.update",
+    name: "update_media",
     description: "Update media-library metadata",
     risk: "write",
     inputSchema: z.object({
@@ -75,7 +75,7 @@ export const mediaTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "media.references.list",
+    name: "list_media_references",
     description: "List the resources using a media-library asset",
     risk: "read",
     inputSchema: z.object({ mediaId: z.string() }),
@@ -90,7 +90,7 @@ export const mediaTools: McpToolModule = (deps) => [
     },
   },
   {
-    name: "media.delete",
+    name: "delete_media",
     description: "Delete an unused media-library asset",
     risk: "destructive",
     inputSchema: z.object({ mediaId: z.string(), confirm: z.boolean().optional() }),

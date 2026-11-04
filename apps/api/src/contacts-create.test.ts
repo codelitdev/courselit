@@ -209,7 +209,7 @@ describe("createContact", () => {
     await runtime.close();
   });
 
-  it("is reachable over MCP through api.write", async () => {
+  it("is reachable over MCP as create_contact", async () => {
     const { runtime, world } = await setup();
     const res = await dispatch(runtime, {
       method: "POST",
@@ -223,11 +223,8 @@ describe("createContact", () => {
         id: 1,
         method: "tools/call",
         params: {
-          name: "api.write",
-          arguments: {
-            operationId: "createContact",
-            body: { email: "agent@example.com", name: "Agent Made" },
-          },
+          name: "create_contact",
+          arguments: { email: "agent@example.com", name: "Agent Made" },
         },
       },
     });
