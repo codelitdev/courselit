@@ -1,10 +1,13 @@
 @import "@codelitdev/design-system/styles.css";
-@import "@frontlit/page-builder/styles.css";
-@import "@frontlit/text-editor/styles.css";
-@import "@frontlit/media-uploader/styles.css";
+/* Tailwind comes before the page-builder stylesheets so its default theme does
+ * not override the tokens they map (for example --shadow-md), which would make
+ * page-builder themes such as Neo-Brutalism render with stock shadows. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@frontlit/page-builder/styles.css";
+@import "@frontlit/text-editor/styles.css";
+@import "@frontlit/media-uploader/styles.css";
 
 @source "../../../packages/components-library/src";
 @source "../../../packages/page-blocks/src";
