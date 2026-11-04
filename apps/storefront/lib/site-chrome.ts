@@ -1,5 +1,6 @@
 import type { WidgetInstance } from "@frontlit/page-builder/models";
 import type { CourseLitHomeOffer } from "@courselit/page-blocks";
+import { hasOwnCopyright, schoolCopyright } from "@courselit/page-blocks/copyright";
 
 type Link = { id: string; label: string; href: string };
 type Column = { id: string; title: string; links: Link[] };
@@ -52,12 +53,9 @@ export function chromeForSchool(
           ),
         }))
         .filter((column) => column.links.length > 0);
-      const copyrightText =
-        typeof settings.copyrightText === "string" && settings.copyrightText.trim()
-          ? settings.copyrightText
-          : name
-            ? `© ${new Date().getFullYear()} ${name}`
-            : undefined;
+      const copyrightText = hasOwnCopyright(settings.copyrightText)
+        ? settings.copyrightText
+        : schoolCopyright(name);
       return {
         ...instance,
         settings: {

@@ -1,3 +1,4 @@
+import { hasOwnCopyright, schoolCopyright } from "@courselit/page-blocks/copyright";
 import { loadDataSlots } from "@frontlit/page-builder/data-slots";
 import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
 import { notFound } from "next/navigation";
@@ -195,8 +196,9 @@ export async function PublicSitePage({
         settings: {
           ...instance.settings,
           columns,
-          ...(!instance.settings?.copyrightText && schoolName
-            ? { copyrightText: `© ${year} ${schoolName}` }
+          ...(!hasOwnCopyright(instance.settings?.copyrightText) &&
+          schoolCopyright(schoolName, year)
+            ? { copyrightText: schoolCopyright(schoolName, year) }
             : {}),
         },
       };

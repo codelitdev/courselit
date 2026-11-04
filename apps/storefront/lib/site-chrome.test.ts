@@ -59,6 +59,36 @@ describe("chromeForSchool", () => {
     expect(f!.settings!.copyrightText).toBe(`© ${new Date().getFullYear()} Acme`);
   });
 
+  it("does not show the page builder's placeholder copyright text", () => {
+    const [, f] = chromeForSchool(
+      [
+        header,
+        {
+          ...footer,
+          settings: {
+            ...footer.settings,
+            copyrightText: "© FrontLit. All rights reserved.",
+          },
+        },
+      ],
+      {
+        siteTitle: "Acme",
+        offers: [],
+        hasPosts: false,
+        legal: { terms: false, privacy: false },
+      },
+    );
+    expect(f!.settings!.copyrightText).toBe(`© ${new Date().getFullYear()} Acme`);
+  });
+
+  it("keeps copyright text the school wrote", () => {
+    const [, f] = chromeForSchool(
+      [header, { ...footer, settings: { ...footer.settings, copyrightText: "© Acme Ltd" } }],
+      { siteTitle: "Acme", offers: [], hasPosts: false, legal: { terms: false, privacy: false } },
+    );
+    expect(f!.settings!.copyrightText).toBe("© Acme Ltd");
+  });
+
   it("shows links once there is something behind them", () => {
     const [h, f] = chromeForSchool([header, footer], {
       siteTitle: "Acme",

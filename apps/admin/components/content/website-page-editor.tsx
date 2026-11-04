@@ -7,6 +7,10 @@ import {
   PRODUCT_CURRICULUM_BLOCK,
   registerCourseLitBlocks,
 } from "@courselit/page-blocks";
+import {
+  withoutDefaultCopyright,
+  withSchoolCopyright,
+} from "@courselit/page-blocks/copyright";
 import { COURSELIT_SYSTEM_THEMES } from "@courselit/page-blocks/theme";
 import { PageBuilder, type PageBuilderState } from "@frontlit/page-builder/builder";
 import type {
@@ -323,7 +327,10 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
         socialImage?: PageBuilderState["seo"]["socialImage"];
         robotsAllowed?: boolean;
       } = {
-        layout: state.layout as WebsiteWidget[],
+        layout: withoutDefaultCopyright(
+          state.layout,
+          siteBranding.title,
+        ) as WebsiteWidget[],
       };
       if (state.seo.title != null) pagePatch.title = state.seo.title;
       if (state.seo.description != null) pagePatch.description = state.seo.description;
@@ -489,13 +496,16 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
           <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
             <PageBuilder
               key={`${resetKey}-${salesPreview ? `ready-${salesPreview.resourceType}-${salesPreview.resourceType === "product" ? salesPreview.resource.kind : "community"}` : `pending-${salesResourceType ?? "none"}`}`}
-              initialLayout={normalizeSalesLayout(
-                page.draftLayout ?? page.layout,
-                salesPreview?.resourceType ?? salesResourceType,
-                page.salesResourceKind ??
-                  (salesPreview?.resourceType === "product"
-                    ? salesPreview.resource.kind
-                    : null),
+              initialLayout={withSchoolCopyright(
+                normalizeSalesLayout(
+                  page.draftLayout ?? page.layout,
+                  salesPreview?.resourceType ?? salesResourceType,
+                  page.salesResourceKind ??
+                    (salesPreview?.resourceType === "product"
+                      ? salesPreview.resource.kind
+                      : null),
+                ),
+                siteBranding.title,
               )}
               initialTheme={initialTheme}
               themes={{ system: COURSELIT_SYSTEM_THEMES, custom: customThemes ?? [] }}
