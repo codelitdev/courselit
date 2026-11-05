@@ -243,6 +243,17 @@ export function createExpressApp(deps: DispatchDeps): Express {
       }
     },
   );
+  // Service banner, so the bare host answers without credentials.
+  app.get("/", (_req, res) => {
+    res.json({
+      service: "CourseLit API",
+      status: "ok",
+      health: "/health",
+      openapi: "/openapi.json",
+      mcp: "/mcp",
+    });
+  });
+
   app.use(express.json({ limit: "32kb" }));
 
   // Binary download delivery is intentionally kept outside the generated

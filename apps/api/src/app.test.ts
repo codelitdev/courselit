@@ -641,6 +641,9 @@ describe.serial("reference API adapters", () => {
     const address = server.address();
     if (!address || typeof address === "string") throw new Error("listen_failed");
     const response = await fetch(`http://127.0.0.1:${address.port}/health`);
+    const banner = await fetch(`http://127.0.0.1:${address.port}/`);
+    expect(banner.status).toBe(200);
+    expect(await banner.json()).toMatchObject({ service: "CourseLit API", status: "ok" });
     expect(response.status).toBe(200);
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(response.headers.get("x-request-id")).toEqual(expect.any(String));
