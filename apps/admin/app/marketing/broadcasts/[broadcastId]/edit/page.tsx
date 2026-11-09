@@ -139,8 +139,8 @@ export default function BroadcastDetailsPage({
   const hasChanges = titleChanged || filterChanged;
 
   useSetBreadcrumb([
-    { label: "Mails", href: "/mails/broadcasts" },
-    { label: "Broadcasts", href: "/mails/broadcasts" },
+    { label: "Marketing", href: "/marketing/broadcasts" },
+    { label: "Broadcasts", href: "/marketing/broadcasts" },
     { label: title || "Broadcast" },
   ]);
 
@@ -411,7 +411,7 @@ export default function BroadcastDetailsPage({
 
   async function openEmailEditor() {
     if (hasChanges && !(await saveDetails())) return;
-    router.push(`/mails/editor/${encodeURIComponent(broadcastId)}`);
+    router.push(`/marketing/editor/${encodeURIComponent(broadcastId)}`);
   }
 
   const statusLabel = broadcast?.status === "completed"
@@ -664,7 +664,7 @@ export default function BroadcastDetailsPage({
                   </Button>
                   <Button asChild>
                     <Link
-                      href="/mails/settings"
+                      href="/marketing/settings"
                       onClick={() => setActiveDialog(null)}
                     >
                       Open mail settings

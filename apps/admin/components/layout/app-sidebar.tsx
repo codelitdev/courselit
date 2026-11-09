@@ -52,31 +52,32 @@ const CREATE_NAV: PermissionedNavItem[] = [
   },
   {
     href: "#",
-    label: "Mails",
+    label: "Marketing",
     icon: Mail,
     items: [
       {
-        href: "/mails/broadcasts",
+        href: "/marketing/broadcasts",
         label: "Broadcasts",
         requiredPermission: "contacts:read",
       },
       {
-        href: "/mails/sequences",
+        href: "/marketing/sequences",
         label: "Sequences",
         requiredPermission: "contacts:read",
       },
       {
-        href: "/mails/templates",
+        href: "/marketing/templates",
         label: "Templates",
         requiredPermission: "contacts:read",
       },
       {
-        href: "/mails/settings",
+        href: "/marketing/settings",
         label: "Settings",
         requiredPermission: "contacts:read",
       },
     ],
-  },  {
+  },
+  {
     href: "#",
     label: "Website",
     icon: Globe,

@@ -59,7 +59,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     pathname,
   );
   const isFullScreenMailEditor =
-    /^\/mails\/(?:editor\/[^/]+|templates\/[^/]+\/edit)\/?$/.test(pathname) ||
+    /^\/marketing\/(?:editor\/[^/]+|templates\/[^/]+\/edit)\/?$/.test(pathname) ||
     /^\/products\/[^/]+\/content\/section\/[^/]+\/email\/?$/.test(pathname);
   const isFullScreenSetupWizard = /^\/onboarding\/setup\/?$/.test(pathname);
   const isFullScreenTeamInvitation = /^\/team-invitations\/[^/]+\/?$/.test(

@@ -214,7 +214,7 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
           <h2 className="text-lg font-semibold text-destructive">Unable to open editor</h2>
           <p className="text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline">
-            <Link href="/mails/templates">
+            <Link href="/marketing/templates">
               <ArrowLeft className="mr-2 size-4" />
               Back to templates
             </Link>
@@ -229,7 +229,7 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-card px-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Button asChild variant="outline" size="sm" className="shrink-0">
-            <Link href="/mails/templates">
+            <Link href="/marketing/templates">
               <ArrowLeft className="mr-1.5 size-4" />
               Templates
             </Link>

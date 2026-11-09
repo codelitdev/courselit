@@ -367,7 +367,7 @@ export default function EmailBroadcastEditorPage({
       }
 
       setSendConfirmOpen(false);
-      router.push(`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`);
+      router.push(`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send broadcast.");
     } finally {
@@ -477,7 +477,7 @@ export default function EmailBroadcastEditorPage({
 
   async function returnToSequence() {
     if (isSequenceEmailEditor && (await save(true))) {
-      router.push(`/mails/sequences/${encodeURIComponent(broadcastId)}/edit`);
+      router.push(`/marketing/sequences/${encodeURIComponent(broadcastId)}/edit`);
     }
   }
 
@@ -501,8 +501,8 @@ export default function EmailBroadcastEditorPage({
             <Link
               href={
                 isSequenceEmailEditor
-                  ? `/mails/sequences/${encodeURIComponent(broadcastId)}/edit`
-                  : `/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`
+                  ? `/marketing/sequences/${encodeURIComponent(broadcastId)}/edit`
+                  : `/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`
               }
             >
               <ArrowLeft className="mr-2 size-4" />
@@ -533,7 +533,7 @@ export default function EmailBroadcastEditorPage({
             </Button>
           ) : (
             <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`}>
+              <Link href={`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`}>
                 <ArrowLeft className="mr-1.5 size-4" />
                 Broadcast
               </Link>

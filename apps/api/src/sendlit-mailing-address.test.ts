@@ -67,7 +67,7 @@ describe("starting a sequence", () => {
       if (!blocked.ok) {
         expect(blocked.error.code).toBe("conflict");
         expect(blocked.error.safeDetails).toMatchObject({
-          reason: "Add your mailing address in Mails → Settings before sending email.",
+          reason: "Add your mailing address in Marketing → Settings before sending email.",
         });
       }
       // Nothing was started while the address was missing.

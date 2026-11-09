@@ -43,7 +43,7 @@ export function OnboardingChecklist() {
       case "pay":
         return router.push("/settings?tab=payment");
       case "mail":
-        return router.push("/mails/settings");
+        return router.push("/marketing/settings");
       case "domain":
         return router.push("/website/settings?tab=domain");
       case "ai":
@@ -51,7 +51,7 @@ export function OnboardingChecklist() {
       case "learners":
         return router.push("/contacts");
       case "welcome":
-        return router.push("/mails/sequences");
+        return router.push("/marketing/sequences");
       case "course":
         return router.push("/products/new");
       case "team":

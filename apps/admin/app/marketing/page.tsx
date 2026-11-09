@@ -186,7 +186,7 @@ export default function MailsPage() {
     },
     sequences: {
       title: "Sequences",
-      description: "Automated email campaigns triggered by contact activity.",
+      description: "Emails that go out on their own when someone buys, joins or gets a tag.",
     },
     templates: {
       title: "Templates",
@@ -233,8 +233,8 @@ export default function MailsPage() {
   const canWriteMails = hasSchoolPermission(school, "contacts:write");
 
   useEffect(() => {
-    if (pathname === "/mails") {
-      router.replace("/mails/broadcasts", { scroll: false });
+    if (pathname === "/marketing") {
+      router.replace("/marketing/broadcasts", { scroll: false });
     }
   }, [pathname, router]);
 
@@ -457,7 +457,7 @@ export default function MailsPage() {
   }, []);
 
   useEffect(() => {
-    if (pathname === "/mails") return;
+    if (pathname === "/marketing") return;
 
     void fetch("/api/v1/schools", { credentials: "include", cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { items: [] }))
@@ -581,7 +581,7 @@ export default function MailsPage() {
       setNewBroadcastOpen(false);
 
       // Configure the broadcast audience before opening the content editor.
-      router.push(`/mails/broadcasts/${encodeURIComponent(sequenceId)}/edit`);
+      router.push(`/marketing/broadcasts/${encodeURIComponent(sequenceId)}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create broadcast.");
     } finally {
@@ -682,7 +682,7 @@ export default function MailsPage() {
           "Sequence was created, but it could not be found in the refreshed sequence list. Return to Sequences and try opening it from there.",
         );
       }
-      router.push(`/mails/sequences/${encodeURIComponent(newSequenceId)}/edit`);
+      router.push(`/marketing/sequences/${encodeURIComponent(newSequenceId)}/edit`);
     } catch (err) {
       setError(
         err instanceof Error
@@ -962,13 +962,13 @@ export default function MailsPage() {
                               className={`${MAIL_TABLE_ROW_CLASS} ${canWriteMails ? "cursor-pointer" : ""}`}
                               onClick={
                                 canWriteMails
-                                  ? () => router.push(`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`)
+                                  ? () => router.push(`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`)
                                   : undefined
                               }
                             >
                               <td className={`${MAIL_TABLE_CELL_CLASS} min-w-0`}>
                                 <Link
-                                  href={`/mails/broadcasts/${encodeURIComponent(broadcastId)}/edit`}
+                                  href={`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`}
                                   onClick={(event) => event.stopPropagation()}
                                   className="block max-w-[36rem] truncate font-medium hover:underline"
                                   title={b.title || "Untitled Broadcast"}
@@ -1090,12 +1090,12 @@ export default function MailsPage() {
                               key={seqId}
                               className={`${MAIL_TABLE_ROW_CLASS} cursor-pointer`}
                               onClick={() =>
-                                router.push(`/mails/sequences/${encodeURIComponent(seqId)}/edit`)
+                                router.push(`/marketing/sequences/${encodeURIComponent(seqId)}/edit`)
                               }
                             >
                               <td className={MAIL_TABLE_CELL_CLASS}>
                                 <Link
-                                  href={`/mails/sequences/${encodeURIComponent(seqId)}/edit`}
+                                  href={`/marketing/sequences/${encodeURIComponent(seqId)}/edit`}
                                   onClick={(event) => event.stopPropagation()}
                                   className="block max-w-[36rem] truncate font-medium hover:underline"
                                   title={seq.title || "Untitled Sequence"}
@@ -1197,7 +1197,7 @@ export default function MailsPage() {
                     {templates.map((tmpl) => (
                       <Card key={tmpl.id} className="relative">
                         <Link
-                          href={`/mails/templates/${encodeURIComponent(tmpl.id)}/edit`}
+                          href={`/marketing/templates/${encodeURIComponent(tmpl.id)}/edit`}
                           aria-label={`Edit email template ${tmpl.name}`}
                           className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />

@@ -20,7 +20,7 @@ describe("admin and learner surfaces", () => {
     const websitePageEditor = read("admin/app/website/pages/[pageId]/edit/page.tsx");
     const websiteBlogEditor = read("admin/app/website/blogs/[blogId]/edit/page.tsx");
     const websiteSettings = read("admin/app/website/settings/page.tsx");
-    const mailSettings = read("admin/app/mails/settings/page.tsx");
+    const mailSettings = read("admin/app/marketing/settings/page.tsx");
     const teamSettings = read("admin/components/settings/team-settings.tsx");
     const brandingSettings = read("admin/components/settings/branding-settings.tsx");
     const codeInjectionSettings = read(
@@ -58,8 +58,8 @@ describe("admin and learner surfaces", () => {
     );
     const communities = read("admin/app/communities/page.tsx");
     const communityPage = read("admin/app/community/layout.tsx");
-    const spacesPage = read("admin/app/spaces/page.tsx");
-    const spacesAdmin = read("admin/components/spaces/spaces-admin.tsx");
+    const communityAdmin = read("admin/components/communities/community-admin.tsx");
+    const spacesAdmin = read("admin/components/communities/community-spaces.tsx");
     const acceptInvitation = read("admin/app/invitations/accept/page.tsx");
     const teamInvitation = read("admin/app/team-invitations/[invitationId]/page.tsx");
     const teamInvitationLayout = read(
@@ -144,7 +144,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(sidebar).toContain('href: "/website/settings"');
     expect(sidebar).toContain('href: "/settings"');
-    expect(sidebar).toContain('href: "/mails/settings"');
+    expect(sidebar).toContain('href: "/marketing/settings"');
     expect(sidebar).not.toContain('{ href: "/settings?tab=mails", label: "Mails" }');
     expect(sidebar).toContain('href: "/media"');
     expect(sidebar).not.toContain('href: "/schools"');
@@ -361,7 +361,7 @@ describe("admin and learner surfaces", () => {
     expect(products).not.toContain('form.get("body")');
     expect(communities).toContain('redirect("/community")');
     expect(communityPage).toContain("CommunityAdmin");
-    expect(spacesPage).toContain("SpacesAdmin");
+    expect(communityAdmin).toContain("<CommunitySpaces />");
     expect(spacesAdmin).toContain("<Dialog");
     expect(spacesAdmin).toContain("open={creating || Boolean(editing)}");
     expect(spacesAdmin).toContain(
@@ -383,8 +383,9 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).not.toContain("New community");
     expect(sidebar).toContain('label: "Community"');
     expect(sidebar).toContain('href: "/community"');
-    expect(sidebar).toContain('label: "Spaces"');
-    expect(sidebar).toContain('href: "/spaces"');
+    expect(sidebar).not.toContain('label: "Spaces"');
+    expect(communityAdmin).toContain('href: "/community/spaces"');
+    expect(sidebar).not.toContain('href: "/spaces"');
     expect(sidebar).not.toContain('label: "Communities"');
     expect(communityWorkspace).toContain("/api/v1/communities");
     expect(communityWorkspace).toContain("/api/v1/community-memberships/");

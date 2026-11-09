@@ -94,7 +94,7 @@ class MailingAddressRequiredError extends Error {
 }
 
 const MAILING_ADDRESS_REQUIRED =
-  "Add your mailing address in Mails → Settings before sending email.";
+  "Add your mailing address in Marketing → Settings before sending email.";
 
 // Creators see the service's own explanation for request errors, and a
 // neutral message otherwise; the raw error stays in `cause` for logs.

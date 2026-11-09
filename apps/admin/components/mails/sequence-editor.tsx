@@ -205,7 +205,7 @@ function getSequenceStatusError(message: string, action: "activate" | "pause") {
     return {
       title: "Add your mailing address first",
       description:
-        "Email providers require a postal address in every message. Add yours in Mails → Settings, then try again.",
+        "Email providers require a postal address in every message. Add yours in Marketing → Settings, then try again.",
     };
   }
   return {
@@ -388,8 +388,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   }, [products, sequence?.triggerType]);
 
   useSetBreadcrumb([
-    { label: "Mails", href: "/mails/broadcasts" },
-    { label: "Sequences", href: "/mails/sequences" },
+    { label: "Marketing", href: "/marketing/broadcasts" },
+    { label: "Sequences", href: "/marketing/sequences" },
     { label: sequence?.title || "Sequence" },
   ]);
 
@@ -759,7 +759,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
     if (!(await saveChanges())) return;
     const query = new URLSearchParams({ emailId: selectedEmail.emailId });
     router.push(
-      `/mails/editor/${encodeURIComponent(sequenceId)}?${query.toString()}`,
+      `/marketing/editor/${encodeURIComponent(sequenceId)}?${query.toString()}`,
     );
   }
 
@@ -782,7 +782,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
             {error || "Sequence not found."}
           </p>
           <Button asChild variant="outline">
-            <Link href="/mails/sequences">
+            <Link href="/marketing/sequences">
               <ArrowLeft className="mr-2 size-4" />
               Back to sequences
             </Link>
@@ -1161,7 +1161,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
             </Button>
             <Button asChild>
               <Link
-                href="/mails/settings"
+                href="/marketing/settings"
                 onClick={() => setMailingAddressDialogOpen(false)}
               >
                 Open mail settings

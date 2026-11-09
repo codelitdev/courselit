@@ -158,13 +158,13 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (clean === "/website/settings") {
     return [{ label: "Website", href: "/website/pages" }, { label: "Settings" }];
   }
-  if (clean === "/mails") {
-    return [{ label: "Mails" }];
+  if (clean === "/marketing") {
+    return [{ label: "Marketing" }];
   }
   if (
-    clean === "/mails/broadcasts" ||
-    clean === "/mails/sequences" ||
-    clean === "/mails/templates"
+    clean === "/marketing/broadcasts" ||
+    clean === "/marketing/sequences" ||
+    clean === "/marketing/templates"
   ) {
     const tab = clean.split("/")[2];
     const tabLabels: Record<string, string> = {
@@ -172,17 +172,17 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       sequences: "Sequences",
       templates: "Templates",
     };
-    return [{ label: "Mails", href: "/mails/broadcasts" }, { label: tabLabels[tab] }];
+    return [{ label: "Marketing", href: "/marketing/broadcasts" }, { label: tabLabels[tab] }];
   }
-  if (/^\/mails\/sequences\/[^/]+\/edit$/.test(clean)) {
+  if (/^\/marketing\/sequences\/[^/]+\/edit$/.test(clean)) {
     return [
-      { label: "Mails", href: "/mails/broadcasts" },
-      { label: "Sequences", href: "/mails/sequences" },
+      { label: "Marketing", href: "/marketing/broadcasts" },
+      { label: "Sequences", href: "/marketing/sequences" },
       { label: "Sequence" },
     ];
   }
-  if (clean === "/mails/settings") {
-    return [{ label: "Mails", href: "/mails/broadcasts" }, { label: "Settings" }];
+  if (clean === "/marketing/settings") {
+    return [{ label: "Marketing", href: "/marketing/broadcasts" }, { label: "Settings" }];
   }
   if (clean === "/onboarding") {
     return [{ label: "Onboarding" }];
