@@ -500,4 +500,215 @@ describe.serial("school spaces and included products", () => {
 
     await runtime.close();
   });
+  it("shows spaces only while their community or product discussions are on, and protects course spaces", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-02T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
+    const world = await seedWorld(runtime, clock);
+    const adminHeaders = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const [community] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    expect(community?.enabled).toBe(false);
+
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers: adminHeaders,
+      body: { kind: "course", title: "Watercolours" },
+    });
+    expect(created.status).toBe(201);
+    const productId = (created.body as { id: string }).id;
+    const plan = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "One-off", kind: "one_time", oneTimeAmount: 2000 },
+    });
+    expect(plan.status).toBe(201);
+    const published = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      body: { discussions: true, status: "published" },
+    });
+    expect(published.status).toBe(200);
+
+    const adminSpaces = async () => {
+      const listed = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/spaces",
+        headers: adminHeaders,
+      });
+      expect(listed.status).toBe(200);
+      return (
+        listed.body as { items: Array<{ id: string; name: string; owner: unknown }> }
+      ).items;
+    };
+    const spaces = await adminSpaces();
+    const general = spaces.find((space) => space.name === "General")!;
+    const course = spaces.find((space) => space.name === "Watercolours")!;
+    expect(general.owner).toEqual({ type: "community", live: false });
+    expect(course.owner).toEqual({
+      type: "product",
+      live: true,
+      productId,
+      title: "Watercolours",
+    });
+
+    const learner = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-up",
+      headers: { "x-school-id": world.schoolA.publicId },
+      body: {
+        schoolId: world.schoolA.publicId,
+        email: "course-buyer@example.com",
+        password: "learner-password-1",
+        name: "Course Buyer",
+      },
+    });
+    expect(learner.status).toBe(201);
+    const learnerHeaders = {
+      cookie: learnerCookie(learner),
+      "x-school-id": world.schoolA.publicId,
+    };
+    const [account] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "course-buyer@example.com"));
+    for (const [id, entityType, entityId] of [
+      ["55555555-5555-4555-8555-555555555551", "product", productId],
+      ["55555555-5555-4555-8555-555555555552", "community", community!.publicId],
+    ] as const) {
+      await runtime.db.insert(schema.learnerMemberships).values({
+        id,
+        publicId: `lrm_${id.slice(-4)}`,
+        schoolId: world.schoolA.id,
+        schoolAccountId: account!.id,
+        entityType,
+        entityId,
+        paymentPlanId: null,
+        status: "active",
+        role: entityType === "community" ? "post" : null,
+        isIncludedInPlan: false,
+        parentMembershipId: null,
+        joiningReason: "",
+        createdAt: clock.now(),
+        updatedAt: clock.now(),
+      });
+    }
+    const learnerSpaceIds = async () => {
+      const listed = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/learner/spaces",
+        headers: learnerHeaders,
+      });
+      expect(listed.status).toBe(200);
+      return (listed.body as { items: Array<{ id: string }> }).items.map((item) => item.id);
+    };
+
+    // The community is not launched, so its General space stays hidden even
+    // from a member; the course's discussions are on.
+    expect(await learnerSpaceIds()).toEqual([course.id]);
+
+    const discussionsOff = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      body: { discussions: false },
+    });
+    expect(discussionsOff.status).toBe(200);
+    expect(await learnerSpaceIds()).toEqual([]);
+    const hiddenFeed = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/learner/feed?spaceId=${course.id}`,
+      headers: learnerHeaders,
+    });
+    expect(hiddenFeed.status).toBe(404);
+    expect((await adminSpaces()).find((space) => space.id === course.id)?.owner).toMatchObject({
+      live: false,
+    });
+
+    // Turning discussions back on brings back the same space.
+    const discussionsOn = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      body: { discussions: true },
+    });
+    expect(discussionsOn.status).toBe(200);
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, community!.id));
+    expect((await learnerSpaceIds()).sort()).toEqual([course.id, general.id].sort());
+
+    const deleteCourse = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/spaces/${course.id}`,
+      headers: adminHeaders,
+      body: {},
+    });
+    expect(deleteCourse.status).toBe(400);
+    expect(deleteCourse.body).toMatchObject({ details: { reason: "product_space" } });
+
+    const courseAccess = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/spaces/${course.id}`,
+      headers: adminHeaders,
+      body: { unlocks: [{ entityType: "community", planIds: [] }] },
+    });
+    expect(courseAccess.status).toBe(400);
+    expect(courseAccess.body).toMatchObject({ details: { reason: "product_space_access" } });
+
+    // A community space with posts can only hand them to another community space.
+    const extra = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/spaces",
+      headers: adminHeaders,
+      body: { name: "Show and tell", unlocks: [{ entityType: "community", planIds: [] }] },
+    });
+    expect(extra.status).toBe(201);
+    const extraId = (extra.body as { id: string }).id;
+    const posted = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${extraId}/posts`,
+      headers: learnerHeaders,
+      body: { title: "My first painting", content: "Feedback welcome" },
+    });
+    expect(posted.status).toBe(201);
+    const intoCourse = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/spaces/${extraId}`,
+      headers: adminHeaders,
+      body: { destinationSpaceId: course.id },
+    });
+    expect(intoCourse.status).toBe(400);
+    expect(intoCourse.body).toMatchObject({
+      details: { reason: "destination_product_space" },
+    });
+    const intoGeneral = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/spaces/${extraId}`,
+      headers: adminHeaders,
+      body: { destinationSpaceId: general.id },
+    });
+    expect(intoGeneral.status).toBe(200);
+
+    // General is now the only community space, so it cannot go either.
+    const lastCommunitySpace = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/spaces/${general.id}`,
+      headers: adminHeaders,
+      body: {},
+    });
+    expect(lastCommunitySpace.status).toBe(400);
+    expect(lastCommunitySpace.body).toMatchObject({ details: { reason: "last_space" } });
+  });
 });

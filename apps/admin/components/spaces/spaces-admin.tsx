@@ -48,7 +48,14 @@ type Space = {
   whoCanPost: "members" | "admin";
   position: number;
   unlocks: SpaceUnlock[];
+  /** Who the space belongs to and whether learners can see it right now. */
+  owner?:
+    | { type: "community"; live: boolean }
+    | { type: "product"; live: boolean; productId: string; title: string };
 };
+
+const isProductSpace = (space: Space | null | undefined) =>
+  space?.owner?.type === "product";
 
 type AccessPlan = {
   id: string;
@@ -164,6 +171,30 @@ function PlanOption({
 
 type AccessMode = "all_members" | "specific_members";
 
+function SpaceRow({
+  space,
+  summary,
+  children,
+}: {
+  space: Space;
+  summary: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <li className="flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
+      <div className="min-w-0">
+        <p className="font-medium">{space.name}</p>
+        <p className="text-sm text-muted-foreground">
+          {space.whoCanPost === "admin" ? "Admins post" : "Members post"}
+          {space.follow ? " · Auto-follow" : ""}
+          {summary}
+        </p>
+      </div>
+      {children ? <div className="flex shrink-0 gap-2">{children}</div> : null}
+    </li>
+  );
+}
+
 export function SpacesAdmin() {
   useSetBreadcrumb([{ label: "Spaces" }]);
   const [school, setSchool] = useState<School | null>(null);
@@ -192,6 +223,9 @@ export function SpacesAdmin() {
     Record<string, ProductUnlockDraft>
   >({});
 
+  const communitySpaces = spaces.filter((space) => !isProductSpace(space));
+  const productSpaces = spaces.filter(isProductSpace);
+  const communityLaunched = communitySpaces.some((space) => space.owner?.live);
   const canWrite = hasSchoolPermission(school, "communities:write");
   const canReadProducts = hasSchoolPermission(school, "products:read");
   const canReadProductPlans = hasSchoolPermission(school, "storefront:read");
@@ -413,7 +447,7 @@ export function SpacesAdmin() {
   }
 
   function startDelete(space: Space) {
-    const destination = spaces.find((item) => item.id !== space.id);
+    const destination = communitySpaces.find((item) => item.id !== space.id);
     setError(null);
     setDeleting(space);
     setDeleteDestinationId(destination?.id ?? "");
@@ -524,7 +558,7 @@ export function SpacesAdmin() {
         logo,
         follow,
         whoCanPost,
-        unlocks: unlocks(),
+        ...(isProductSpace(editing) ? {} : { unlocks: unlocks() }),
       };
       if (editing) {
         await request(`/api/v1/spaces/${encodeURIComponent(editing.id)}`, {
@@ -613,42 +647,98 @@ export function SpacesAdmin() {
             description="Spaces are created with the school. Reload if this is empty."
           />
         ) : (
-          <ul className="grid gap-3">
-            {spaces.map((space) => (
-              <li
-                key={space.id}
-                className="flex items-center justify-between rounded-xl border bg-card px-4 py-3"
-              >
+          <div className="space-y-8">
+            <section className="space-y-3">
+              <div>
+                <h2 className="font-semibold">Community</h2>
+                <p className="text-sm text-muted-foreground">
+                  Discussion areas for your community&apos;s members.
+                </p>
+              </div>
+              {communityLaunched ? null : (
+                <p className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                  Your community isn&apos;t launched, so members can&apos;t see these
+                  spaces yet. You can set them up now.{" "}
+                  <Link href="/community" className="font-medium text-foreground underline">
+                    Launch your community
+                  </Link>
+                </p>
+              )}
+              <ul className="grid gap-3">
+                {communitySpaces.map((space) => (
+                  <SpaceRow key={space.id} space={space} summary={accessSummary(space)}>
+                    {canWrite ? (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => startEdit(space)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => startDelete(space)}
+                          disabled={saving || communitySpaces.length < 2}
+                          title={
+                            communitySpaces.length < 2
+                              ? "Your community needs at least one space."
+                              : undefined
+                          }
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    ) : null}
+                  </SpaceRow>
+                ))}
+              </ul>
+            </section>
+            {productSpaces.length > 0 ? (
+              <section className="space-y-3">
                 <div>
-                  <p className="font-medium">{space.name}</p>
+                  <h2 className="font-semibold">Course discussions</h2>
                   <p className="text-sm text-muted-foreground">
-                    {space.whoCanPost === "admin" ? "Admins post" : "Members post"}
-                    {space.follow ? " · Auto-follow" : ""}
-                    {accessSummary(space)}
+                    Each course with discussions turned on has a space for its buyers.
+                    Turn discussions off in the course to hide its space; its posts are
+                    kept.
                   </p>
                 </div>
-                {canWrite ? (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => startEdit(space)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => startDelete(space)}
-                      disabled={saving || spaces.length < 2}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+                <ul className="grid gap-3">
+                  {productSpaces.map((space) => {
+                    const owner = space.owner as Extract<
+                      NonNullable<Space["owner"]>,
+                      { type: "product" }
+                    >;
+                    return (
+                      <SpaceRow
+                        key={space.id}
+                        space={space}
+                        summary={` · Buyers of ${owner.title}${owner.live ? "" : " · Discussions off"}`}
+                      >
+                        {canWrite ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => startEdit(space)}
+                          >
+                            Edit
+                          </Button>
+                        ) : null}
+                        <Button asChild variant="outline">
+                          <Link href={`/products/${encodeURIComponent(owner.productId)}/manage`}>
+                            <Package className="size-4" />
+                            Course settings
+                          </Link>
+                        </Button>
+                      </SpaceRow>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+          </div>
         )}
         <Dialog
           open={creating || Boolean(editing)}
@@ -725,260 +815,270 @@ export function SpacesAdmin() {
                     onCheckedChange={setFollow}
                   />
                 </div>
-                <div className="space-y-3">
+                {editing?.owner?.type === "product" ? (
                   <div className="space-y-1.5">
-                    <Label htmlFor="space-access">Access</Label>
-                    <Select
-                      value={accessMode}
-                      onValueChange={(value) => setAccessMode(value as AccessMode)}
-                    >
-                      <SelectTrigger id="space-access">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all_members">
-                          All community members
-                        </SelectItem>
-                        <SelectItem value="specific_members">
-                          Selected plans or products
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label>Access</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Buyers of {editing.owner.title}. This is the course&apos;s discussion
+                      space, so its access follows the product.
+                    </p>
                   </div>
-
-                  {accessMode === "specific_members" ? (
-                    <div className="space-y-5 rounded-xl border p-4">
-                      <section className="space-y-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <Label>Community payment plans</Label>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Members of any selected community plan get access.
-                            </p>
-                          </div>
-                          {selectableCommunityPlans.length > 1 ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const allIds = selectableCommunityPlans.map(
-                                  (plan) => plan.id,
-                                );
-                                const areAllSelected = allIds.every((id) =>
-                                  selectedCommunityPlanIds.includes(id),
-                                );
-                                setSelectedCommunityPlanIds(
-                                  areAllSelected ? [] : allIds,
-                                );
-                              }}
-                            >
-                              {selectableCommunityPlans.every((plan) =>
-                                selectedCommunityPlanIds.includes(plan.id),
-                              )
-                                ? "Deselect all"
-                                : "Select all"}
-                            </Button>
-                          ) : null}
-                        </div>
-
-                        {selectableCommunityPlans.length > 0 ? (
-                          <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border bg-muted/20 p-2">
-                            {selectableCommunityPlans.map((plan) => (
-                              <PlanOption
-                                key={plan.id}
-                                plan={plan}
-                                checked={selectedCommunityPlanIds.includes(plan.id)}
-                                onCheckedChange={(checked) =>
-                                  toggleCommunityPlan(plan.id, checked)
-                                }
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                            No active community plans are available. Create one under{" "}
-                            <Link
-                              href="/community"
-                              className="font-medium text-foreground underline underline-offset-4"
-                            >
-                              Community payment plans
-                            </Link>
-                            .
-                          </p>
-                        )}
-                      </section>
-
-                      <section className="space-y-3 border-t pt-5">
-                        <div className="flex items-start gap-2">
-                          <Package className="mt-0.5 size-4 text-muted-foreground" />
-                          <div>
-                            <Label>Product access</Label>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Product rules are alternatives to the community plans
-                              selected above.
-                            </p>
-                          </div>
-                        </div>
-
-                        {!canReadProducts ? (
-                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                            Product read permission is required to configure product
-                            access. Existing product rules will be preserved.
-                          </p>
-                        ) : products.length === 0 ? (
-                          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                            No products are available. Create one under{" "}
-                            <Link
-                              href="/products/new"
-                              className="font-medium text-foreground underline underline-offset-4"
-                            >
-                              Products
-                            </Link>
-                            .
-                          </p>
-                        ) : (
-                          <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-                            {products.map((product) => {
-                              const selection = selectedProductUnlocks[product.id];
-                              const selectedPlanIds = selection?.planIds ?? [];
-                              const plans = (productPlans[product.id] ?? []).filter(
-                                (plan) =>
-                                  plan.status === "active" ||
-                                  selectedPlanIds.includes(plan.id),
-                              );
-                              const plansLoading = loadingProductPlanIds.includes(
-                                product.id,
-                              );
-                              return (
-                                <div
-                                  key={product.id}
-                                  className={cn(
-                                    "rounded-lg border p-3 transition-colors",
-                                    selection ? "bg-muted/20" : "bg-card",
-                                  )}
-                                >
-                                  <div className="flex items-start gap-2.5">
-                                    <Checkbox
-                                      id={`product-toggle-${product.id}`}
-                                      className="mt-0.5"
-                                      checked={Boolean(selection)}
-                                      onCheckedChange={(checked) =>
-                                        toggleProduct(product.id, checked === true)
-                                      }
-                                    />
-                                    <label
-                                      htmlFor={`product-toggle-${product.id}`}
-                                      className="min-w-0 flex-1 cursor-pointer"
-                                    >
-                                      <span className="flex items-center justify-between gap-2">
-                                        <span className="truncate text-sm font-medium">
-                                          {product.title}
-                                        </span>
-                                        <span className="shrink-0 text-xs capitalize text-muted-foreground">
-                                          {product.kind}
-                                          {product.status === "draft" ? " · Draft" : ""}
-                                        </span>
-                                      </span>
-                                    </label>
-                                  </div>
-
-                                  {selection ? (
-                                    <div className="mt-3 space-y-2 pl-7">
-                                      <Select
-                                        value={selection.mode}
-                                        onValueChange={(value) =>
-                                          setProductUnlockMode(
-                                            product.id,
-                                            value as "all" | "specific",
-                                          )
-                                        }
-                                      >
-                                        <SelectTrigger
-                                          id={`product-access-${product.id}`}
-                                        >
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="all">
-                                            Any product membership
-                                          </SelectItem>
-                                          <SelectItem
-                                            value="specific"
-                                            disabled={!canReadProductPlans}
-                                          >
-                                            Selected direct-purchase plans
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-
-                                      {selection.mode === "all" ? (
-                                        <p className="text-xs text-muted-foreground">
-                                          Includes direct purchases and access bundled
-                                          with another plan.
-                                        </p>
-                                      ) : !canReadProductPlans ? (
-                                        <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                                          Storefront read permission is required to
-                                          change this product's selected plans. Existing
-                                          plan selections will be preserved.
-                                        </p>
-                                      ) : plansLoading ? (
-                                        <p
-                                          className="flex items-center gap-2 text-xs text-muted-foreground"
-                                          role="status"
-                                          aria-label="Loading payment plans"
-                                        >
-                                          <CourseLitLoadingIcon size={12} />
-                                        </p>
-                                      ) : plans.length > 0 ? (
-                                        <div className="space-y-1 rounded-lg border bg-card p-2">
-                                          {plans.map((plan) => (
-                                            <PlanOption
-                                              key={plan.id}
-                                              plan={plan}
-                                              checked={selectedPlanIds.includes(
-                                                plan.id,
-                                              )}
-                                              onCheckedChange={(checked) =>
-                                                toggleProductPlan(
-                                                  product.id,
-                                                  plan.id,
-                                                  checked,
-                                                )
-                                              }
-                                            />
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                                          This product has no active payment plans. Add
-                                          one under{" "}
-                                          <Link
-                                            href={`/products/${encodeURIComponent(product.id)}/manage`}
-                                            className="font-medium text-foreground underline underline-offset-4"
-                                          >
-                                            product settings
-                                          </Link>
-                                          .
-                                        </p>
-                                      )}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </section>
-
-                      <p className="border-t pt-3 text-xs text-muted-foreground">
-                        A learner gets access when any selected community plan or
-                        product rule matches an active membership.
-                      </p>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="space-access">Access</Label>
+                      <Select
+                        value={accessMode}
+                        onValueChange={(value) => setAccessMode(value as AccessMode)}
+                      >
+                        <SelectTrigger id="space-access">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all_members">
+                            All community members
+                          </SelectItem>
+                          <SelectItem value="specific_members">
+                            Selected plans or products
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ) : null}
-                </div>
+
+                    {accessMode === "specific_members" ? (
+                      <div className="space-y-5 rounded-xl border p-4">
+                        <section className="space-y-2">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <Label>Community payment plans</Label>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Members of any selected community plan get access.
+                              </p>
+                            </div>
+                            {selectableCommunityPlans.length > 1 ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const allIds = selectableCommunityPlans.map(
+                                    (plan) => plan.id,
+                                  );
+                                  const areAllSelected = allIds.every((id) =>
+                                    selectedCommunityPlanIds.includes(id),
+                                  );
+                                  setSelectedCommunityPlanIds(
+                                    areAllSelected ? [] : allIds,
+                                  );
+                                }}
+                              >
+                                {selectableCommunityPlans.every((plan) =>
+                                  selectedCommunityPlanIds.includes(plan.id),
+                                )
+                                  ? "Deselect all"
+                                  : "Select all"}
+                              </Button>
+                            ) : null}
+                          </div>
+
+                          {selectableCommunityPlans.length > 0 ? (
+                            <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border bg-muted/20 p-2">
+                              {selectableCommunityPlans.map((plan) => (
+                                <PlanOption
+                                  key={plan.id}
+                                  plan={plan}
+                                  checked={selectedCommunityPlanIds.includes(plan.id)}
+                                  onCheckedChange={(checked) =>
+                                    toggleCommunityPlan(plan.id, checked)
+                                  }
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                              No active community plans are available. Create one under{" "}
+                              <Link
+                                href="/community"
+                                className="font-medium text-foreground underline underline-offset-4"
+                              >
+                                Community payment plans
+                              </Link>
+                              .
+                            </p>
+                          )}
+                        </section>
+
+                        <section className="space-y-3 border-t pt-5">
+                          <div className="flex items-start gap-2">
+                            <Package className="mt-0.5 size-4 text-muted-foreground" />
+                            <div>
+                              <Label>Product access</Label>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Product rules are alternatives to the community plans
+                                selected above.
+                              </p>
+                            </div>
+                          </div>
+
+                          {!canReadProducts ? (
+                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                              Product read permission is required to configure product
+                              access. Existing product rules will be preserved.
+                            </p>
+                          ) : products.length === 0 ? (
+                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                              No products are available. Create one under{" "}
+                              <Link
+                                href="/products/new"
+                                className="font-medium text-foreground underline underline-offset-4"
+                              >
+                                Products
+                              </Link>
+                              .
+                            </p>
+                          ) : (
+                            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                              {products.map((product) => {
+                                const selection = selectedProductUnlocks[product.id];
+                                const selectedPlanIds = selection?.planIds ?? [];
+                                const plans = (productPlans[product.id] ?? []).filter(
+                                  (plan) =>
+                                    plan.status === "active" ||
+                                    selectedPlanIds.includes(plan.id),
+                                );
+                                const plansLoading = loadingProductPlanIds.includes(
+                                  product.id,
+                                );
+                                return (
+                                  <div
+                                    key={product.id}
+                                    className={cn(
+                                      "rounded-lg border p-3 transition-colors",
+                                      selection ? "bg-muted/20" : "bg-card",
+                                    )}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <Checkbox
+                                        id={`product-toggle-${product.id}`}
+                                        className="mt-0.5"
+                                        checked={Boolean(selection)}
+                                        onCheckedChange={(checked) =>
+                                          toggleProduct(product.id, checked === true)
+                                        }
+                                      />
+                                      <label
+                                        htmlFor={`product-toggle-${product.id}`}
+                                        className="min-w-0 flex-1 cursor-pointer"
+                                      >
+                                        <span className="flex items-center justify-between gap-2">
+                                          <span className="truncate text-sm font-medium">
+                                            {product.title}
+                                          </span>
+                                          <span className="shrink-0 text-xs capitalize text-muted-foreground">
+                                            {product.kind}
+                                            {product.status === "draft" ? " · Draft" : ""}
+                                          </span>
+                                        </span>
+                                      </label>
+                                    </div>
+
+                                    {selection ? (
+                                      <div className="mt-3 space-y-2 pl-7">
+                                        <Select
+                                          value={selection.mode}
+                                          onValueChange={(value) =>
+                                            setProductUnlockMode(
+                                              product.id,
+                                              value as "all" | "specific",
+                                            )
+                                          }
+                                        >
+                                          <SelectTrigger
+                                            id={`product-access-${product.id}`}
+                                          >
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="all">
+                                              Any product membership
+                                            </SelectItem>
+                                            <SelectItem
+                                              value="specific"
+                                              disabled={!canReadProductPlans}
+                                            >
+                                              Selected direct-purchase plans
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+
+                                        {selection.mode === "all" ? (
+                                          <p className="text-xs text-muted-foreground">
+                                            Includes direct purchases and access bundled
+                                            with another plan.
+                                          </p>
+                                        ) : !canReadProductPlans ? (
+                                          <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                                            Storefront read permission is required to
+                                            change this product's selected plans. Existing
+                                            plan selections will be preserved.
+                                          </p>
+                                        ) : plansLoading ? (
+                                          <p
+                                            className="flex items-center gap-2 text-xs text-muted-foreground"
+                                            role="status"
+                                            aria-label="Loading payment plans"
+                                          >
+                                            <CourseLitLoadingIcon size={12} />
+                                          </p>
+                                        ) : plans.length > 0 ? (
+                                          <div className="space-y-1 rounded-lg border bg-card p-2">
+                                            {plans.map((plan) => (
+                                              <PlanOption
+                                                key={plan.id}
+                                                plan={plan}
+                                                checked={selectedPlanIds.includes(
+                                                  plan.id,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                  toggleProductPlan(
+                                                    product.id,
+                                                    plan.id,
+                                                    checked,
+                                                  )
+                                                }
+                                              />
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                                            This product has no active payment plans. Add
+                                            one under{" "}
+                                            <Link
+                                              href={`/products/${encodeURIComponent(product.id)}/manage`}
+                                              className="font-medium text-foreground underline underline-offset-4"
+                                            >
+                                              product settings
+                                            </Link>
+                                            .
+                                          </p>
+                                        )}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </section>
+
+                        <p className="border-t pt-3 text-xs text-muted-foreground">
+                          A learner gets access when any selected community plan or
+                          product rule matches an active membership.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
               {error ? (
@@ -1029,7 +1129,7 @@ export function SpacesAdmin() {
                     <SelectValue placeholder="Select a destination space" />
                   </SelectTrigger>
                   <SelectContent>
-                    {spaces
+                    {communitySpaces
                       .filter((space) => space.id !== deleting?.id)
                       .map((space) => (
                         <SelectItem key={space.id} value={space.id}>
@@ -1041,9 +1141,9 @@ export function SpacesAdmin() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Posts and their comments, reactions, reports, post subscriptions, and
-                attached media will be preserved under the destination space. Followers
-                and unlock rules for this space will be removed. Products using it for
-                discussions will have discussions disabled.
+                attached media will be preserved under the destination space, and its
+                members will be able to read them. Followers and unlock rules for this
+                space will be removed. Course discussion spaces can&apos;t be chosen.
               </p>
             </div>
 

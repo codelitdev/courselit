@@ -280,6 +280,11 @@ describe("space post notifications", () => {
       .select()
       .from(schema.communities)
       .where(eq(schema.communities.schoolId, world.schoolA.id));
+    // Community spaces are only open while the community is launched.
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, community!.id));
     const [space] = await runtime.db
       .select()
       .from(schema.spaces)

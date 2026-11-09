@@ -1341,6 +1341,18 @@ export const spaceSchema = z.object({
   unlocks: z.array(spaceUnlockSchema),
   canPost: z.boolean().optional(),
   followed: z.boolean().optional(),
+  /** Admin views only: what the space belongs to and whether learners can see it. */
+  owner: z
+    .discriminatedUnion("type", [
+      z.object({ type: z.literal("community"), live: z.boolean() }),
+      z.object({
+        type: z.literal("product"),
+        live: z.boolean(),
+        productId: z.string(),
+        title: z.string(),
+      }),
+    ])
+    .optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

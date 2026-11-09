@@ -29,7 +29,7 @@ import {
 } from "./notifications.js";
 import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
-import { accessibleSpaceIds } from "./space-access.js";
+import { accessibleSpaceIds, spaceOwnership } from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -59,9 +59,15 @@ export type SpaceDto = {
   }>;
   canPost?: boolean;
   followed?: boolean;
+  /** Admin views only: what the space belongs to and whether it is live. */
+  owner?: SpaceOwnerDto;
   createdAt: string;
   updatedAt: string;
 };
+
+export type SpaceOwnerDto =
+  | { type: "community"; live: boolean }
+  | { type: "product"; live: boolean; productId: string; title: string };
 
 function notFound(): Result<never> {
   return { ok: false, error: createPlatformError("not_found") };
@@ -264,6 +270,7 @@ function toDto(
   unlocks: SpaceDto["unlocks"],
   followed?: boolean,
   canPost?: boolean,
+  owner?: SpaceOwnerDto,
 ): SpaceDto {
   return {
     id: row.publicId,
@@ -278,6 +285,7 @@ function toDto(
     unlocks,
     ...(canPost === undefined ? {} : { canPost }),
     ...(followed === undefined ? {} : { followed }),
+    ...(owner === undefined ? {} : { owner }),
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
   };
@@ -404,14 +412,36 @@ export async function listAdminSpaces(
     .from(schema.spaces)
     .where(eq(schema.spaces.schoolId, schoolId))
     .orderBy(asc(schema.spaces.position), asc(schema.spaces.id));
-  const unlocks = await loadUnlocks(
-    db,
-    rows.map((row) => row.id),
-  );
+  const [unlocks, ownership] = await Promise.all([
+    loadUnlocks(
+      db,
+      rows.map((row) => row.id),
+    ),
+    spaceOwnership(db, schoolId),
+  ]);
   return {
     ok: true,
-    value: { items: rows.map((row) => toDto(row, unlocks.get(row.id) ?? [])) },
+    value: {
+      items: rows.map((row) =>
+        toDto(row, unlocks.get(row.id) ?? [], undefined, undefined, ownerOf(ownership, row.id)),
+      ),
+    },
   };
+}
+
+function ownerOf(
+  ownership: Awaited<ReturnType<typeof spaceOwnership>>,
+  spaceId: string,
+): SpaceOwnerDto {
+  const product = ownership.productSpaces.get(spaceId);
+  return product
+    ? {
+        type: "product",
+        live: product.discussions,
+        productId: product.productPublicId,
+        title: product.title,
+      }
+    : { type: "community", live: ownership.communityLaunched };
 }
 
 export async function createSpace(
@@ -550,6 +580,12 @@ export async function updateSpace(
     whoCanPost: input.whoCanPost ?? row.whoCanPost,
     updatedAt: clock.now(),
   };
+  if (input.unlocks) {
+    // A course's discussion space is for its buyers; its access follows the
+    // product and is not edited here.
+    const ownership = await spaceOwnership(db, schoolId);
+    if (ownership.productSpaces.has(row.id)) return validation("product_space_access");
+  }
   await db.update(schema.spaces).set(patch).where(eq(schema.spaces.id, row.id));
   if (input.unlocks) {
     const unlocks = await replaceUnlocks(db, schoolId, row.id, input.unlocks, clock);
@@ -605,11 +641,17 @@ export async function deleteSpace(
     const transaction = tx as AppDb;
     const row = await loadSpace(transaction, schoolId, spacePublicId);
     if (!row) return notFound();
-    const siblings = await transaction
-      .select({ id: schema.spaces.id })
-      .from(schema.spaces)
-      .where(eq(schema.spaces.schoolId, schoolId));
-    if (siblings.length <= 1) return validation("last_space");
+    // A course's discussion space is removed by turning its discussions off,
+    // which keeps the posts for when they are turned back on.
+    const ownership = await spaceOwnership(transaction, schoolId);
+    if (ownership.productSpaces.has(row.id)) return validation("product_space");
+    const communitySpaces = (
+      await transaction
+        .select({ id: schema.spaces.id })
+        .from(schema.spaces)
+        .where(eq(schema.spaces.schoolId, schoolId))
+    ).filter((space) => !ownership.productSpaces.has(space.id));
+    if (communitySpaces.length <= 1) return validation("last_space");
     const posts = await transaction
       .select({ id: schema.communityPosts.id })
       .from(schema.communityPosts)
@@ -620,15 +662,17 @@ export async function deleteSpace(
       if (destinationSpaceId === row.publicId) return validation("destination_same");
       const destination = await loadSpace(transaction, schoolId, destinationSpaceId);
       if (!destination) return notFound();
+      // Posts only move between community spaces, so nothing written for one
+      // audience lands in front of another (e.g. into a course's buyers-only
+      // space, or out of it).
+      if (ownership.productSpaces.has(destination.id)) {
+        return validation("destination_product_space");
+      }
       await transaction
         .update(schema.communityPosts)
         .set({ spaceId: destination.id, updatedAt: clock.now() })
         .where(eq(schema.communityPosts.spaceId, row.id));
     }
-    await transaction
-      .update(schema.products)
-      .set({ discussionSpaceId: null, discussions: false, updatedAt: clock.now() })
-      .where(eq(schema.products.discussionSpaceId, row.id));
     await transaction.delete(schema.spaces).where(eq(schema.spaces.id, row.id));
     return { ok: true, value: { id: row.publicId } };
   });

@@ -1,9 +1,59 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { AppDb } from "./types.js";
 
+/** A course's discussion space, which belongs to that product. */
+export type ProductSpaceOwner = {
+  productId: string;
+  productPublicId: string;
+  title: string;
+  discussions: boolean;
+};
+
+/**
+ * Who owns each space: a product's discussions, or the school's community
+ * (every other space). A space is live, and visible to learners, only while
+ * its owner is switched on: the product has discussions enabled, or the
+ * community is launched.
+ */
+export async function spaceOwnership(db: AppDb, schoolId: string) {
+  const [productRows, communityRows] = await Promise.all([
+    db
+      .select({
+        spaceId: schema.products.discussionSpaceId,
+        productId: schema.products.id,
+        productPublicId: schema.products.publicId,
+        title: schema.products.title,
+        discussions: schema.products.discussions,
+      })
+      .from(schema.products)
+      .where(
+        and(eq(schema.products.schoolId, schoolId), isNotNull(schema.products.discussionSpaceId)),
+      ),
+    db
+      .select({ enabled: schema.communities.enabled })
+      .from(schema.communities)
+      .where(and(eq(schema.communities.schoolId, schoolId), isNull(schema.communities.deletedAt)))
+      .limit(1),
+  ]);
+  const productSpaces = new Map<string, ProductSpaceOwner>();
+  for (const row of productRows) {
+    if (row.spaceId) productSpaces.set(row.spaceId, { ...row });
+  }
+  const communityLaunched = communityRows[0]?.enabled === true;
+  return {
+    productSpaces,
+    communityLaunched,
+    isLive(spaceId: string) {
+      const product = productSpaces.get(spaceId);
+      return product ? product.discussions : communityLaunched;
+    },
+  };
+}
+
 /**
  * Return the spaces a learner can access through an active school membership.
+ * Spaces whose owner is switched off (see `spaceOwnership`) are left out.
  *
  * This is deliberately independent from the community membership tables:
  * product memberships can unlock a space without making the learner a member
@@ -71,6 +121,11 @@ export async function accessibleSpaceIds(
       );
     });
     if (match) ids.add(unlock.spaceId);
+  }
+  if (ids.size === 0) return ids;
+  const ownership = await spaceOwnership(db, schoolId);
+  for (const id of ids) {
+    if (!ownership.isLive(id)) ids.delete(id);
   }
   return ids;
 }
