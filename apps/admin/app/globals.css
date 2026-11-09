@@ -1,21 +1,31 @@
 @import "@codelitdev/design-system/styles.css";
-/* The FrontLit stylesheets (page builder, text editor, media uploader) are
- * complete, precompiled Tailwind builds. They sit in their own layer, between
- * Tailwind's theme and base layers, so that:
- *  - its theme tokens (for example --shadow-md) win over Tailwind's defaults,
- *    which keeps page-builder themes such as Neo-Brutalism rendering their own
- *    shadows;
- *  - this app's utilities still win over the copies in them. Without that, its
- *    `.hidden` lands after `.md:block` and shadcn's responsive sidebar never
- *    shows on desktop. */
-@layer theme, frontlit, base, components, utilities;
+/* Page-builder content is styled the way FrontLit's own dashboard does it:
+ * this app's single Tailwind build takes the page builder's theme tokens and
+ * scans the published packages for the classes their blocks use. The packages'
+ * precompiled styles.css files are full Tailwind builds of their own; loading
+ * them here put a second preflight and a second set of utilities into the
+ * page preview, which fought this app's styles in whichever order they came.
+ * The text editor's stylesheet is imported from the layout, before this file,
+ * so it carries only its editor-specific rules. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@frontlit/page-builder/styles.css" layer(frontlit);
-@import "@frontlit/text-editor/styles.css" layer(frontlit);
-@import "@frontlit/media-uploader/styles.css" layer(frontlit);
+@import "@frontlit/page-builder/theme.css";
 
+/* The admin and the page preview share one set of utilities, but not one set
+ * of tokens: admin screens use the design system's radii and stock shadows,
+ * while page-builder content uses its theme's. So these utilities read
+ * variables instead of inlining values, and each side sets the variables (the
+ * admin at :root[data-product] and through the design system, the page-builder
+ * theme on .pb-theme, below). */
+@theme {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: 0.75rem;
+}
+
+@source "../node_modules/@frontlit/page-builder/dist";
+@source "../node_modules/@frontlit/media-uploader/dist";
 @source "../../../packages/components-library/src";
 @source "../../../packages/page-blocks/src";
 @source "../node_modules/@sendlit/email-blocks";
@@ -69,9 +79,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-xl: calc(var(--radius) + 6px);
 }
 
 :root {
@@ -110,49 +117,91 @@ body:has([data-full-screen-editor]) {
   overflow: hidden;
 }
 
+/* The page builder renders its preview in an iframe that copies this
+   document's stylesheets, so every rule here also reaches the preview. Its
+   <html> has none of this app's attributes, so rules for the admin's own
+   screens are scoped to :root[data-product], and the design system's
+   unlayered tokens and body typography are rolled back inside the preview.
+   That leaves the preview rendering the way the storefront does. */
+:root[data-product] {
+  --radius-xl: calc(var(--radius) + 6px);
+  /* page-builder/theme.css maps the shadow utilities to the page theme's
+     variables; the admin keeps Tailwind's stock shadows. */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+:root:not([data-product]) {
+  --radius-sm: revert-layer;
+  --radius-lg: revert-layer;
+  --radius-full: revert-layer;
+  --tracking-tight: revert-layer;
+  --ease-out: revert-layer;
+}
+/* Radii follow the page theme's --radius, the way the page builder's own
+   stylesheet resolves them on the storefront. */
+.pb-theme {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: 0.75rem;
+}
+:root:not([data-product]) body,
+:root:not([data-product]) :is(code, kbd, pre) {
+  margin: revert-layer;
+  font: revert-layer;
+  color: revert-layer;
+  background: revert-layer;
+}
+
 /* Layered so utility classes (for example a page-builder theme's input radius) win. */
 @layer base {
-/* Fallback styling for unstyled native inputs on legacy screens.
-   Skip non-textual controls so packaged editors keep swatch/slider sizing. */
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
-  [type="color"]
-):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
-  [type="submit"]
-):not([type="reset"]):not([type="image"]):not([data-slot]),
-select:not([data-slot]):not([aria-hidden="true"]) {
-  height: 36px;
-  width: 100%;
-  padding: 0 12px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 14px;
-}
-textarea:not([data-slot]) {
-  min-height: 80px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 14px;
-  resize: vertical;
-}
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
-  [type="color"]
-):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
-  [type="submit"]
-):not([type="reset"]):not([type="image"]):not([data-slot]):focus,
-select:not([data-slot]):not([aria-hidden="true"]):focus,
-textarea:not([data-slot]):focus {
-  outline: none;
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px var(--primary-soft);
-}
+  :root[data-product] {
+    /* Fallback styling for unstyled native inputs on legacy screens.
+       Skip non-textual controls so packaged editors keep swatch/slider sizing. */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="color"]
+    ):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
+      [type="submit"]
+    ):not([type="reset"]):not([type="image"]):not([data-slot]),
+    select:not([data-slot]):not([aria-hidden="true"]) {
+      height: 36px;
+      width: 100%;
+      padding: 0 12px;
+      border: 1px solid var(--input);
+      border-radius: var(--radius);
+      background: var(--card);
+      color: var(--foreground);
+      font: inherit;
+      font-size: 14px;
+    }
+    textarea:not([data-slot]) {
+      min-height: 80px;
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--input);
+      border-radius: var(--radius);
+      background: var(--card);
+      color: var(--foreground);
+      font: inherit;
+      font-size: 14px;
+      resize: vertical;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="color"]
+    ):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
+      [type="submit"]
+    ):not([type="reset"]):not([type="image"]):not([data-slot]):focus,
+    select:not([data-slot]):not([aria-hidden="true"]):focus,
+    textarea:not([data-slot]):focus {
+      outline: none;
+      border-color: var(--ring);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+  }
 }
 
 /* Retain utility classes used in forms and admin screens */
