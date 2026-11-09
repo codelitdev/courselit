@@ -1,13 +1,20 @@
 @import "@codelitdev/design-system/styles.css";
-/* Tailwind comes before the page-builder stylesheets so its default theme does
- * not override the tokens they map (for example --shadow-md), which would make
- * page-builder themes such as Neo-Brutalism render with stock shadows. */
+/* The FrontLit stylesheets (page builder, text editor, media uploader) are
+ * complete, precompiled Tailwind builds. They sit in their own layer, between
+ * Tailwind's theme and base layers, so that:
+ *  - its theme tokens (for example --shadow-md) win over Tailwind's defaults,
+ *    which keeps page-builder themes such as Neo-Brutalism rendering their own
+ *    shadows;
+ *  - this app's utilities still win over the copies in them. Without that, its
+ *    `.hidden` lands after `.md:block` and shadcn's responsive sidebar never
+ *    shows on desktop. */
+@layer theme, frontlit, base, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@frontlit/page-builder/styles.css";
-@import "@frontlit/text-editor/styles.css";
-@import "@frontlit/media-uploader/styles.css";
+@import "@frontlit/page-builder/styles.css" layer(frontlit);
+@import "@frontlit/text-editor/styles.css" layer(frontlit);
+@import "@frontlit/media-uploader/styles.css" layer(frontlit);
 
 @source "../../../packages/components-library/src";
 @source "../../../packages/page-blocks/src";
