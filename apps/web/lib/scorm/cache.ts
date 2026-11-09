@@ -23,7 +23,10 @@ export async function getExtractedFile(
 
     const cacheDir = constants.scormCacheDir;
     const extractDir = path.join(cacheDir, mediaId);
-    const targetFile = path.join(extractDir, filePath);
+    const targetFile = resolveFileInsideDirectory(extractDir, filePath);
+    if (!targetFile) {
+        return null;
+    }
     const markerFile = path.join(extractDir, ".extracted");
     const lockFile = path.join(cacheDir, `${mediaId}.lock`);
 
@@ -90,6 +93,30 @@ export async function getExtractedFile(
         await lockHandle.close();
         await fs.unlink(lockFile).catch(() => {});
     }
+}
+
+/**
+ * Resolve a requested file path against a directory.
+ * Returns null if the path is unsafe or escapes the directory.
+ */
+export function resolveFileInsideDirectory(
+    baseDir: string,
+    filePath: string,
+): string | null {
+    if (!filePath || filePath.includes("\0") || filePath.includes("\\")) {
+        return null;
+    }
+    if (filePath.split("/").includes("..")) {
+        return null;
+    }
+
+    const resolvedBaseDir = path.resolve(baseDir);
+    const resolvedTarget = path.resolve(resolvedBaseDir, filePath);
+    if (!resolvedTarget.startsWith(resolvedBaseDir + path.sep)) {
+        return null;
+    }
+
+    return resolvedTarget;
 }
 
 /**

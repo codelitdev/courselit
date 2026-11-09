@@ -8,6 +8,7 @@ import { InternalUser, InternalCourse } from "@courselit/orm-models";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import CourseModel from "@models/Course";
+import CommunityModel from "@models/Community";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";
 import CertificateTemplateModel, {
@@ -160,20 +161,39 @@ async function isActionAllowed(
                 ])
             );
         case "user":
-            return (
-                user.avatar.mediaId === mediaId ||
-                checkPermission(user.permissions, [
+            if (user.avatar?.mediaId === mediaId) {
+                return true;
+            }
+            if (
+                !checkPermission(user.permissions, [
                     constants.permissions.manageUsers,
                 ])
-            );
+            ) {
+                return false;
+            }
+            return !!(await UserModel.exists({
+                domain: domain._id,
+                "avatar.mediaId": mediaId,
+            }));
         case "domain":
-            return checkPermission(user.permissions, [
-                constants.permissions.manageSettings,
-            ]);
+            return (
+                domain.settings?.logo?.mediaId === mediaId &&
+                checkPermission(user.permissions, [
+                    constants.permissions.manageSettings,
+                ])
+            );
         case "community":
-            return checkPermission(user.permissions, [
-                constants.permissions.manageCommunity,
-            ]);
+            if (
+                !checkPermission(user.permissions, [
+                    constants.permissions.manageCommunity,
+                ])
+            ) {
+                return false;
+            }
+            return !!(await CommunityModel.exists({
+                domain: domain._id,
+                "featuredImage.mediaId": mediaId,
+            }));
         case "certificate":
             const certificateTemplate =
                 await CertificateTemplateModel.findOne<CertificateTemplate>({

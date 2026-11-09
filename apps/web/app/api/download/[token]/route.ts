@@ -117,13 +117,13 @@ export async function GET(
         const zipFileAddress = await createArchive({
             targetDirectory,
             filesDirectory,
-            archiveName: course.title,
+            archiveName: "course",
         });
 
         const zipStream = createReadStream(zipFileAddress);
         const headers = new Headers({
             "Content-Type": "application/zip",
-            "Content-Disposition": `attachment; filename=${course.title}.zip`,
+            "Content-Disposition": getContentDisposition(course.title),
         });
 
         const webStream = new ReadableStream({
@@ -161,6 +161,17 @@ function createFolder(folderPath: string) {
     }
 }
 
+function getContentDisposition(title: string) {
+    const fileName = `${title}.zip`;
+    const asciiFileName =
+        fileName.replace(/[^\x20-\x7e]|["\\/;]/g, "_").trim() || "course.zip";
+    const encodedFileName = encodeURIComponent(fileName).replace(
+        /['()*]/g,
+        (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+    );
+    return `attachment; filename="${asciiFileName}"; filename*=UTF-8''${encodedFileName}`;
+}
+
 function isDownloadableMedia(media: Media | Partial<Media>): media is Media {
     return (
         typeof media.mediaId === "string" &&
@@ -170,7 +181,11 @@ function isDownloadableMedia(media: Media | Partial<Media>): media is Media {
 }
 
 async function downloadFile(media: Media, folderPath: string) {
-    const filePath = path.join(folderPath, media.originalFileName);
+    const fileName = path.basename(media.originalFileName);
+    if (!fileName || fileName === "." || fileName === "..") {
+        throw new Error("Invalid file name");
+    }
+    const filePath = path.join(folderPath, fileName);
 
     try {
         const response: any = await fetch(media.file!);

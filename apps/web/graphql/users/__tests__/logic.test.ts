@@ -160,6 +160,87 @@ describe("updateUser", () => {
         }).lean()) as any;
         expect(owner?.active).toBe(true);
     });
+
+    it("prevents granting permissions the caller does not hold", async () => {
+        await UserModel.create({
+            userId: "member",
+            email: "member@example.com",
+            domain: domainId,
+            permissions: [],
+        });
+
+        await expect(
+            updateUser(
+                {
+                    id: "member",
+                    permissions: [UIConstants.permissions.manageSite],
+                },
+                ctx,
+            ),
+        ).rejects.toThrow(responses.action_not_allowed);
+
+        const member = (await UserModel.findOne({
+            userId: "member",
+            domain: domainId,
+        }).lean()) as any;
+        expect(member?.permissions).toEqual([]);
+    });
+
+    it("prevents revoking permissions the caller does not hold", async () => {
+        await UserModel.create({
+            userId: "member",
+            email: "member@example.com",
+            domain: domainId,
+            permissions: [UIConstants.permissions.manageSettings],
+        });
+
+        await expect(
+            updateUser(
+                {
+                    id: "member",
+                    permissions: [],
+                },
+                ctx,
+            ),
+        ).rejects.toThrow(responses.action_not_allowed);
+
+        const member = (await UserModel.findOne({
+            userId: "member",
+            domain: domainId,
+        }).lean()) as any;
+        expect(member?.permissions).toEqual([
+            UIConstants.permissions.manageSettings,
+        ]);
+    });
+
+    it("allows granting permissions the caller holds while keeping others unchanged", async () => {
+        await UserModel.create({
+            userId: "member",
+            email: "member@example.com",
+            domain: domainId,
+            permissions: [UIConstants.permissions.manageSettings],
+        });
+
+        await updateUser(
+            {
+                id: "member",
+                permissions: [
+                    UIConstants.permissions.manageSettings,
+                    UIConstants.permissions.manageUsers,
+                ],
+            },
+            ctx,
+        );
+
+        const member = (await UserModel.findOne({
+            userId: "member",
+            domain: domainId,
+        }).lean()) as any;
+        expect(member?.permissions).toEqual([
+            UIConstants.permissions.manageSettings,
+            UIConstants.permissions.manageUsers,
+        ]);
+    });
 });
 
 describe("finalizeUserCreation", () => {
