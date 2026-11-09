@@ -46,6 +46,16 @@ export function descriptionContent(value: string): TextEditorContent | null {
   };
 }
 
+/** A plan's amount as money, without cents when it is a whole number. */
+export function planAmount(plan: CourseLitPlan) {
+  const amount = plan.amountMinor / 100;
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: plan.currency,
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(amount);
+}
+
 export function planPrice(plan: CourseLitPlan | undefined) {
   if (!plan) return null;
   if (plan.type === "free") return "Free";

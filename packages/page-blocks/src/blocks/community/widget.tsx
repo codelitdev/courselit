@@ -16,7 +16,7 @@ import {
   Text2,
 } from "@frontlit/page-builder/primitives";
 import { TextRenderer } from "@frontlit/text-editor";
-import { ArrowRight, Lock, MessagesSquare, Users } from "lucide-react";
+import { Lock, MessagesSquare, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { planCopy } from "./plan-copy";
 import {
@@ -26,6 +26,9 @@ import {
   sectionTheme,
 } from "../shared/utils";
 import type { CommunitySettings } from "./settings";
+import { imageAspectRatioClass } from "../_shared/image-aspect-ratio";
+import { textSide } from "../_shared/text-side";
+import { COMMUNITY_IMAGE_ASPECT_RATIO } from "./constants";
 
 export default function CommunityWidget({
   settings,
@@ -196,7 +199,7 @@ export default function CommunityWidget({
           className="w-full"
           onClick={() => window.location.assign("/dashboard")}
         >
-          Go to the community <ArrowRight className="size-4" />
+          Go to the community
         </Button>
       ) : waiting ? (
         <Text2 theme={resolvedTheme}>
@@ -217,7 +220,6 @@ export default function CommunityWidget({
             {busyPlan === selected.id
               ? "Please wait…"
               : settings.buttonCaption?.trim() || selectedCopy.join}
-            {busyPlan === selected.id ? null : <ArrowRight className="size-4" />}
           </Button>
           {selectedCopy.note ? (
             <Text2 theme={resolvedTheme} className="flex items-center gap-1.5">
@@ -239,28 +241,24 @@ export default function CommunityWidget({
   const media = community.featuredImage ? (
     <PageCardImage
       theme={resolvedTheme}
-      src={community.featuredImage.thumbnailUrl ?? community.featuredImage.url}
+      src={community.featuredImage.url}
       alt={community.featuredImage.alt || title}
-      className="aspect-[1200/630] w-full rounded-xl border object-cover"
+      className={`w-full rounded-xl border ${imageAspectRatioClass(settings.imageAspectRatio, COMMUNITY_IMAGE_ASPECT_RATIO)}`}
     />
   ) : null;
 
-  const position = settings.textPosition ?? "left";
+  const side = textSide(settings.textPosition);
   return (
     <Section theme={resolvedTheme} id={settings.cssId} background={settings.background}>
-      {position === "top" || position === "bottom" || !media ? (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-          {position === "bottom" ? media : null}
-          {copy}
-          {position === "bottom" ? null : media}
-        </div>
-      ) : (
+      {media ? (
         <div
-          className={`grid w-full items-start gap-12 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] ${position === "right" ? "md:[&>*:first-child]:order-2" : ""}`}
+          className={`grid w-full items-start gap-12 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] ${side === "right" ? "md:[&>*:first-child]:order-2" : ""}`}
         >
           {copy}
           {media}
         </div>
+      ) : (
+        <div className="flex w-full flex-col gap-8">{copy}</div>
       )}
     </Section>
   );

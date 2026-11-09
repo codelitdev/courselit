@@ -4,6 +4,7 @@ import type { WidgetEditorProps } from "@frontlit/page-builder/models";
 import { useEffect, useState } from "react";
 import { BannerEditor, FieldGroup, SelectField } from "../_shared/fields";
 import { salesData } from "../shared/utils";
+import { PRODUCT_IMAGE_ASPECT_RATIO } from "./constants";
 import type { BannerSettings } from "./settings";
 
 export default function BannerAdminWidget(
@@ -41,7 +42,13 @@ export default function BannerAdminWidget(
           />
         </FieldGroup>
       )}
-      <BannerEditor settings={settings} onChange={onChange} />
+      <BannerEditor
+        settings={settings}
+        onChange={onChange}
+        defaultImageAspectRatio={PRODUCT_IMAGE_ASPECT_RATIO}
+        sideLabel="Buy card side"
+        sideDescription="The text takes the other side. On phones the card goes below the text."
+      />
     </div>
   );
 }

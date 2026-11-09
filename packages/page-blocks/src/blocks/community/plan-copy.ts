@@ -1,17 +1,9 @@
 import type { CourseLitPlan } from "../shared/types";
-
-function money(plan: CourseLitPlan) {
-  const amount = plan.amountMinor / 100;
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
-}
+import { planAmount } from "../shared/utils";
 
 /** Price, its unit, a one-line summary and the join caption for a plan. */
 export function planCopy(plan: CourseLitPlan, needsApproval: boolean) {
-  const price = money(plan);
+  const price = planAmount(plan);
   switch (plan.type) {
     case "free":
       return {

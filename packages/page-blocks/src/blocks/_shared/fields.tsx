@@ -4,6 +4,11 @@ import { Editor, emptyDoc, type TextEditorContent } from "@frontlit/text-editor"
 import type { ReactNode } from "react";
 import type { BannerSettings } from "../banner/settings";
 import type { CurriculumSettings } from "../curriculum/settings";
+import { oppositeSide, textSide } from "./text-side";
+import {
+  IMAGE_ASPECT_RATIO_OPTIONS,
+  type ImageAspectRatio,
+} from "./image-aspect-ratio";
 
 export function FieldGroup({
   title,
@@ -108,9 +113,17 @@ export function ToggleField({
 export function BannerEditor({
   settings,
   onChange,
+  defaultImageAspectRatio,
+  sideLabel,
+  sideDescription,
 }: {
   settings: BannerSettings;
   onChange: (settings: BannerSettings) => void;
+  defaultImageAspectRatio: ImageAspectRatio;
+  /** E.g. "Buy card side": the setting names the card, the text takes the
+   * other side. */
+  sideLabel: string;
+  sideDescription?: string;
 }) {
   const update = (partial: Partial<BannerSettings>) =>
     onChange({ ...settings, ...partial });
@@ -145,16 +158,14 @@ export function BannerEditor({
       </FieldGroup>
       <FieldGroup title="Design">
         <SelectField
-          label="Text content position"
-          description="Where the text sits relative to the featured image. It has no effect without one."
-          value={settings.textPosition ?? "left"}
+          label={sideLabel}
+          description={sideDescription}
+          value={oppositeSide(textSide(settings.textPosition))}
           options={[
-            { label: "Left", value: "left" },
             { label: "Right", value: "right" },
-            { label: "Top", value: "top" },
-            { label: "Bottom", value: "bottom" },
+            { label: "Left", value: "left" },
           ]}
-          onChange={(textPosition) => update({ textPosition })}
+          onChange={(side) => update({ textPosition: oppositeSide(side) })}
         />
         <SelectField
           label="Text alignment"
@@ -165,6 +176,13 @@ export function BannerEditor({
             { label: "Right", value: "right" },
           ]}
           onChange={(textAlignment) => update({ textAlignment })}
+        />
+        <SelectField
+          label="Image aspect ratio"
+          description="How the featured image is cropped."
+          value={settings.imageAspectRatio ?? defaultImageAspectRatio}
+          options={IMAGE_ASPECT_RATIO_OPTIONS}
+          onChange={(imageAspectRatio) => update({ imageAspectRatio })}
         />
       </FieldGroup>
     </div>
