@@ -5,6 +5,7 @@ import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 import { buildMcpParityManifest } from "./mcp-parity.js";
 
 export * from "./team-permissions.js";
+export * from "./learner-avatar.js";
 
 const c = initContract();
 
@@ -842,10 +843,11 @@ export const learnerCommunityMediaAuthorizationBodySchema = z.object({
   byteSize: z.number().int().positive().max(100_000_000),
   accessPolicy: z.enum(["public", "private"]).default("private"),
 });
+// Type and size are checked by the API so a rejection names its reason.
 export const learnerAvatarMediaAuthorizationBodySchema = z.object({
   fileName: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().min(1).max(200),
-  byteSize: z.number().int().positive().max(2_000_000),
+  byteSize: z.number().int().positive(),
 });
 export const learnerAvatarMediaFinalizeBodySchema = z.object({
   uploadId: z.string().trim().min(1).max(255),

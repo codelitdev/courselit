@@ -1,5 +1,6 @@
 "use client";
 
+import { LEARNER_AVATAR_MAX_BYTES, LEARNER_AVATAR_MIME_TYPES } from "@courselit/api-contract/learner-avatar";
 import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
 import { Camera, LogOut, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
@@ -15,7 +16,7 @@ import {
   LearnerAvatar,
   LearnerAvatarFallback,
   LearnerAvatarImage,
-  LearnerCheckbox,
+  LearnerSwitch,
   LearnerHeader1,
   LearnerHeader2,
   LearnerInput,
@@ -39,7 +40,7 @@ type LearnerProfile = {
   emailUpdatesEnabled: boolean;
 };
 
-const PROFILE_PHOTO_ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const PROFILE_PHOTO_ACCEPTED_TYPES = [...LEARNER_AVATAR_MIME_TYPES];
 
 function initialsFor(profile: LearnerProfile, email: string) {
   const source = profile.name.trim() || email;
@@ -277,7 +278,7 @@ export default function AccountPage() {
                 title="Select profile photo"
                 allowExistingMedia={false}
                 acceptedTypes={PROFILE_PHOTO_ACCEPTED_TYPES}
-                maxUploadBytes={2 * 1024 * 1024}
+                maxUploadBytes={LEARNER_AVATAR_MAX_BYTES}
                 allowUnsplash={false}
                 metadataMode="alt"
                 onSelect={selectPhoto}
@@ -390,10 +391,15 @@ export default function AccountPage() {
               </LearnerHeader2>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <LearnerLabel htmlFor="email-updates-enabled">
-                Receive newsletter and marketing emails
-              </LearnerLabel>
-              <LearnerCheckbox
+              <div className="grid gap-1">
+                <LearnerLabel htmlFor="email-updates-enabled">
+                  Newsletter and marketing emails
+                </LearnerLabel>
+                <LearnerText2 className="text-muted-foreground">
+                  Sign-in codes and receipts arrive either way.
+                </LearnerText2>
+              </div>
+              <LearnerSwitch
                 id="email-updates-enabled"
                 checked={emailUpdatesEnabled}
                 disabled={savingEmailPreference}

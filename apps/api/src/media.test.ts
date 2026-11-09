@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { LEARNER_AVATAR_MAX_BYTES } from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./test-learner-auth.js";
@@ -462,6 +463,23 @@ describe.serial("media library", () => {
       },
     });
     expect(authorization.status).toBe(201);
+    // The size limit is the one the storefront's uploader enforces (2 MiB),
+    // and going over it says so.
+    for (const [byteSize, status] of [
+      [LEARNER_AVATAR_MAX_BYTES, 201],
+      [LEARNER_AVATAR_MAX_BYTES + 1, 400],
+    ] as const) {
+      const sized = await dispatch(runtime, {
+        method: "POST",
+        path: "/v1/learner/profile-media/upload-authorizations",
+        headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
+        body: { fileName: "big.jpg", mimeType: "image/jpeg", byteSize },
+      });
+      expect(sized.status).toBe(status);
+      if (status === 400) {
+        expect(sized.body).toMatchObject({ details: { reason: "file_too_large" } });
+      }
+    }
     const finalized = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/profile-media",

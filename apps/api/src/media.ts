@@ -8,7 +8,11 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import type { MediaRef } from "@courselit/api-contract";
+import {
+  LEARNER_AVATAR_MAX_BYTES,
+  LEARNER_AVATAR_MIME_TYPES,
+  type MediaRef,
+} from "@courselit/api-contract";
 import {
   and,
   asc,
@@ -862,16 +866,15 @@ export async function authorizeLearnerAvatarUpload(
   if (!input.mimeType.trim() || input.mimeType.length > 200) {
     return invalid("invalid_mime_type");
   }
-  if (![
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-  ].includes(input.mimeType.toLowerCase())) {
+  if (
+    !(LEARNER_AVATAR_MIME_TYPES as readonly string[]).includes(input.mimeType.toLowerCase())
+  ) {
     return invalid("unsupported_avatar_type");
   }
-  if (!Number.isSafeInteger(input.byteSize) || input.byteSize < 1 || input.byteSize > 2_000_000) {
+  if (!Number.isSafeInteger(input.byteSize) || input.byteSize < 1) {
     return invalid("invalid_file_size");
   }
+  if (input.byteSize > LEARNER_AVATAR_MAX_BYTES) return invalid("file_too_large");
   const expiresAt = new Date(clock.now().getTime() + 10 * 60 * 1000);
   try {
     const authorization = await client.authorizeUpload({

@@ -8,6 +8,10 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts"
     },
+    "./learner-avatar": {
+      "types": "./src/learner-avatar.ts",
+      "import": "./src/learner-avatar.ts"
+    },
     "./team-permissions": {
       "types": "./src/team-permissions.ts",
       "import": "./src/team-permissions.ts"

@@ -5,6 +5,7 @@ import type {
   MediaUploaderAdapters,
   MediaUploadMeta,
 } from "@frontlit/media-uploader";
+import { LEARNER_AVATAR_MAX_BYTES } from "@courselit/api-contract/learner-avatar";
 import { useCallback, useMemo, useState } from "react";
 import type { LearnerCommunityMedia } from "./community-media-uploader";
 import { type MediaUploadAuthorization, uploadAuthorizedMedia } from "./media-upload";
@@ -41,16 +42,19 @@ function mediaFromApi(item: ProfileMediaDto): LearnerAvatarMedia {
   };
 }
 
+const REASON_MESSAGES: Record<string, string> = {
+  file_too_large: `Choose a photo under ${LEARNER_AVATAR_MAX_BYTES / (1024 * 1024)} MB.`,
+  unsupported_avatar_type: "Choose a PNG, JPEG or WebP image.",
+};
+
 async function throwResponseError(response: Response, fallback: string): Promise<void> {
   if (response.ok) return;
   const body = (await response.json().catch(() => null)) as {
     message?: unknown;
+    details?: { reason?: unknown };
   } | null;
-  const message =
-    body && typeof body.message === "string" && body.message.trim()
-      ? body.message
-      : fallback;
-  throw new Error(message);
+  const reason = typeof body?.details?.reason === "string" ? body.details.reason : "";
+  throw new Error(REASON_MESSAGES[reason] ?? fallback);
 }
 
 export function useLearnerProfileMediaUploader(): MediaUploaderAdapters<LearnerAvatarMedia> {
