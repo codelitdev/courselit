@@ -1,4 +1,5 @@
 import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
+import { writeSignedInHint } from "@/lib/header-account";
 import { learnerHeaders } from "@/lib/school";
 
 // Learners sign in to this school only. Email codes and Google both end in a
@@ -45,6 +46,7 @@ export async function verifyEmailCode(email: string, code: string): Promise<void
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Invalid or expired code."));
   }
+  writeSignedInHint(true);
 }
 
 /** Leave for Google sign-in; the learner comes back to `next` on this site. */
@@ -54,6 +56,7 @@ export function signInWithGoogle(next: string) {
 
 /** End the school session on this site. */
 export async function signOutLearner() {
+  writeSignedInHint(false);
   await fetch("/api/v1/learner/auth/sign-out", {
     method: "POST",
     credentials: "include",

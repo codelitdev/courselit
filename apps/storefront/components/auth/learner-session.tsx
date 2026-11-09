@@ -4,6 +4,7 @@ import { learnerSchema } from "@courselit/api-contract";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { z } from "zod";
+import { writeSignedInHint } from "@/lib/header-account";
 import { requestJson } from "@/lib/request-json";
 import { clearLearnerIdentityLink } from "@/lib/school";
 
@@ -54,10 +55,13 @@ export function LearnerSessionProvider({ children }: { children: React.ReactNode
       .then((body) => {
         if (!active) return;
         clearLearnerIdentityLink();
+        writeSignedInHint(true);
         setLearner(body);
       })
       .catch(() => {
-        if (active) setLearner(null);
+        if (!active) return;
+        writeSignedInHint(false);
+        setLearner(null);
       })
       .finally(() => {
         if (active) setChecking(false);

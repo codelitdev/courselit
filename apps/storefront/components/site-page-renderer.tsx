@@ -12,6 +12,7 @@ import {
   useSchoolThemeStyle,
 } from "@/lib/school-theme-context";
 import { resolveSchoolTheme } from "@/lib/site-theme";
+import { useHeaderForVisitor } from "./use-header-account";
 
 registerCourseLitBlocks();
 
@@ -47,11 +48,12 @@ export function SitePageRenderer({
   const theme = resolveSchoolTheme(themeId ?? null, themeStyle ?? null);
   const { mode, mounted, setMode } = useSchoolThemeMode();
   const nextTheme = mounted ? mode : "light";
+  const visitorLayout = useHeaderForVisitor(layout);
 
   return (
     <SchoolThemeContextProvider theme={theme}>
       <PageRenderer
-        layout={layout}
+        layout={visitorLayout}
         theme={theme}
         pageData={pageData}
         dataSlots={dataSlots}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import { LearnerButton, LearnerText2 } from "@/components/themed-page-builder";
+import { writeSignedInHint } from "@/lib/header-account";
 
 function safeNext(value: string | null): string {
   return value?.startsWith("/") && !value.startsWith("//") && !value.includes("\\")
@@ -37,6 +38,7 @@ export function AuthComplete() {
     })
       .then((response) => {
         if (!response.ok) throw new Error("ticket_rejected");
+        writeSignedInHint(true);
         window.location.replace(next);
       })
       .catch(() => setFailed(true));
