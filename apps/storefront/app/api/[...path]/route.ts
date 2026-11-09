@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { resolveSchoolForRequest } from "@/lib/school-resolution";
 
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
+const NULL_BODY_STATUSES = new Set([204, 205, 304]);
 
 async function proxy(
   request: NextRequest,
@@ -90,7 +91,11 @@ async function proxy(
         "courselit.login.nonce=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
       );
     }
-    const buffer = await response.arrayBuffer();
+    // A Response for 204, 205 or 304 must have a null body; even an empty
+    // buffer makes the constructor throw.
+    const buffer = NULL_BODY_STATUSES.has(response.status)
+      ? null
+      : await response.arrayBuffer();
     return new NextResponse(buffer, {
       status: response.status,
       headers: outputHeaders,
