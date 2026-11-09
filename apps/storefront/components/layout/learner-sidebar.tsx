@@ -81,7 +81,8 @@ export function LearnerSidebar({
   const displayName = user ? displayNameFor(user) : "";
   const initials = user ? initialsFor(displayName, user.email) : "";
   const brandTitle = schoolTitle?.trim() || "CourseLit";
-  const brandSubtitle = schoolSubtitle?.trim() || "Storefront";
+  // The school's own tagline only; no filler when it has none.
+  const brandSubtitle = schoolSubtitle?.trim() || null;
   const logoRadius = theme.interactives?.card?.border?.radius ?? "rounded-md";
 
   useEffect(() => {
@@ -131,12 +132,14 @@ export function LearnerSidebar({
                 <LearnerText2 component="span" className="truncate font-medium">
                   {brandTitle}
                 </LearnerText2>
-                <LearnerText2
-                  component="span"
-                  className="truncate text-xs text-muted-foreground"
-                >
-                  {brandSubtitle}
-                </LearnerText2>
+                {brandSubtitle ? (
+                  <LearnerText2
+                    component="span"
+                    className="truncate text-xs text-muted-foreground"
+                  >
+                    {brandSubtitle}
+                  </LearnerText2>
+                ) : null}
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
