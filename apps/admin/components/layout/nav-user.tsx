@@ -134,7 +134,8 @@ export function NavUser({
                   method: "POST",
                   credentials: "include",
                 });
-                router.push("/login");
+                // Replace so Back does not reopen the signed-out dashboard.
+                router.replace("/login");
               }}
             >
               <LogOut />

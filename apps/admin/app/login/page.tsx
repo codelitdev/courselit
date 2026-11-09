@@ -2,14 +2,43 @@
 
 import { Button } from "@codelitdev/design-system";
 import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
+
+function destinationAfterSignIn() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Someone already signed in (Back after signing in, a bookmark, a page
+  // restored from the back/forward cache) goes straight on.
+  useEffect(() => {
+    let active = true;
+    function continueIfSignedIn() {
+      void fetch("/api/auth/get-session", { cache: "no-store", credentials: "include" })
+        .then(async (response) => {
+          if (!active || !response.ok) return;
+          const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
+          if (active && body?.user) window.location.replace(destinationAfterSignIn());
+        })
+        .catch(() => {});
+    }
+    continueIfSignedIn();
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) continueIfSignedIn();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      active = false;
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
 
   async function sendCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,10 +81,8 @@ export default function SignInPage() {
       setError("That code is invalid or expired.");
       return;
     }
-    const next = new URLSearchParams(window.location.search).get("next");
-    window.location.assign(
-      next && next.startsWith("/") && !next.startsWith("//") ? next : "/",
-    );
+    // Replace, not push: Back after signing in should not land on this form.
+    window.location.replace(destinationAfterSignIn());
   }
 
   return (

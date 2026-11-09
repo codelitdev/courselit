@@ -231,7 +231,7 @@ export function LearnerSidebar({
                 <LearnerDropdownMenuItem
                   onClick={async () => {
                     await signOutLearner();
-                    window.location.href = "/";
+                    window.location.replace("/");
                   }}
                 >
                   <LogOut />

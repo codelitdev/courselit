@@ -210,7 +210,7 @@ export default function AccountPage() {
   async function signOut() {
     setSigningOut(true);
     await signOutLearner();
-    window.location.href = "/";
+    window.location.replace("/");
   }
 
   if (checking) {

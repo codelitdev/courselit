@@ -21,6 +21,7 @@ import {
   learnerHeaders,
   writeLearnerIdentityLink,
 } from "@/lib/school";
+import { readSignedInHint } from "@/lib/header-account";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type OtpStep = "email" | "otp";
@@ -56,6 +57,35 @@ export function PublicLoginBlock() {
   });
   const [loading, setLoading] = useState(false);
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
+
+  // A learner who is already signed in (Back after signing in, a bookmark, a
+  // page restored from the back/forward cache) goes straight on. Only browsers
+  // that signed in before are checked, so other visitors make no request.
+  useEffect(() => {
+    if (identityLinkToken) return;
+    let active = true;
+    function continueIfSignedIn() {
+      if (!readSignedInHint()) return;
+      void fetch("/api/v1/learner/me", {
+        cache: "no-store",
+        credentials: "include",
+        headers: learnerHeaders(),
+      })
+        .then((response) => {
+          if (active && response.ok) window.location.replace(destinationAfterLogin());
+        })
+        .catch(() => {});
+    }
+    continueIfSignedIn();
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) continueIfSignedIn();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      active = false;
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [identityLinkToken]);
 
   useEffect(() => {
     void fetch(publicApiPath(schoolId, "/login-methods"))
@@ -107,7 +137,8 @@ export function PublicLoginBlock() {
         );
       }
       clearLearnerIdentityLink();
-      window.location.assign(destinationAfterLogin());
+      // Replace, not push: Back after signing in should not land on this form.
+      window.location.replace(destinationAfterLogin());
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to verify the sign-in code.",
