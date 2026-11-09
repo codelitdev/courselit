@@ -70,7 +70,7 @@ import {
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
 import { openRazorpayCheckout } from "@/lib/razorpay";
-import { requestJson } from "@/lib/request-json";
+import { RequestError, requestJson } from "@/lib/request-json";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import {
   LearnerGifPicker,
@@ -453,7 +453,9 @@ export function LearnerSpacePost({
   const { learner, checking } = useLearnerSession(routePath);
   const [spacePost, setSpacePost] = useState<CommunityPost | null>(null);
   const [spaceName, setSpaceName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<"unavailable" | "failed" | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     if (!learner) return;
@@ -471,18 +473,16 @@ export function LearnerSpacePost({
         }
       })
       .catch((caught) => {
-        if (active) {
-          setError(
-            caught instanceof Error
-              ? caught.message
-              : "Unable to load this discussion.",
-          );
-        }
+        if (!active) return;
+        // The API answers "not found" both for a removed post and for a space
+        // the learner cannot open, so the page does not say which.
+        const status = caught instanceof RequestError ? caught.status : 0;
+        setError(status === 404 || status === 403 ? "unavailable" : "failed");
       });
     return () => {
       active = false;
     };
-  }, [learner, postId, spaceId]);
+  }, [learner, postId, spaceId, attempt]);
 
   if (checking) {
     return (
@@ -495,15 +495,43 @@ export function LearnerSpacePost({
   }
   if (!learner) return null;
   if (error) {
-    return (
+    const content = (
       <main className="flex min-h-[400px] items-center justify-center p-6">
-        <LearnerText2 className="text-destructive" role="alert">
-          {error}
-        </LearnerText2>
+        <PageCard className="w-full max-w-md">
+          <PageCardContent className="grid gap-3 text-center">
+            <LearnerHeader2>
+              {error === "unavailable"
+                ? "This discussion isn't available"
+                : "We couldn't load this discussion"}
+            </LearnerHeader2>
+            <LearnerText2 className="text-muted-foreground" role="alert">
+              {error === "unavailable"
+                ? "It may have been removed, or it's in a space you don't have access to."
+                : "Check your connection and try again."}
+            </LearnerText2>
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              {error === "failed" ? (
+                <Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>
+              ) : null}
+              <Button
+                variant={error === "failed" ? "outline" : "default"}
+                onClick={() => router.push("/dashboard")}
+              >
+                Back to dashboard
+              </Button>
+            </div>
+          </PageCardContent>
+        </PageCard>
       </main>
     );
+    if (embedded) return content;
+    return (
+      <LearnerShell user={learner} headerTitle="Space">
+        {content}
+      </LearnerShell>
+    );
   }
-  if (!spacePost) return <LoadingState label="Loading discussion…" />;
+  if (!spacePost) return <LoadingState label="Loading discussion…" headerTitle="Space" embedded={embedded} />;
 
   return (
     <LearnerCommunity
