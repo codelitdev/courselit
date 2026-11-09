@@ -2,14 +2,6 @@ import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { AppDb } from "./types.js";
 
-/** A course's discussion space, which belongs to that product. */
-export type ProductSpaceOwner = {
-  productId: string;
-  productPublicId: string;
-  title: string;
-  discussions: boolean;
-};
-
 /**
  * Who owns each space: a product's discussions, or the school's community
  * (every other space). A space is live, and visible to learners, only while
@@ -21,9 +13,6 @@ export async function spaceOwnership(db: AppDb, schoolId: string) {
     db
       .select({
         spaceId: schema.products.discussionSpaceId,
-        productId: schema.products.id,
-        productPublicId: schema.products.publicId,
-        title: schema.products.title,
         discussions: schema.products.discussions,
       })
       .from(schema.products)
@@ -36,17 +25,16 @@ export async function spaceOwnership(db: AppDb, schoolId: string) {
       .where(and(eq(schema.communities.schoolId, schoolId), isNull(schema.communities.deletedAt)))
       .limit(1),
   ]);
-  const productSpaces = new Map<string, ProductSpaceOwner>();
+  /** Course discussion space id → whether the course's discussions are on. */
+  const productSpaces = new Map<string, boolean>();
   for (const row of productRows) {
-    if (row.spaceId) productSpaces.set(row.spaceId, { ...row });
+    if (row.spaceId) productSpaces.set(row.spaceId, row.discussions);
   }
   const communityLaunched = communityRows[0]?.enabled === true;
   return {
     productSpaces,
-    communityLaunched,
     isLive(spaceId: string) {
-      const product = productSpaces.get(spaceId);
-      return product ? product.discussions : communityLaunched;
+      return productSpaces.get(spaceId) ?? communityLaunched;
     },
   };
 }

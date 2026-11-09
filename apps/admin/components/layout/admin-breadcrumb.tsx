@@ -97,8 +97,8 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (clean === "/communities" || clean === "/community") {
     return [{ label: "Community" }];
   }
-  if (clean === "/spaces") {
-    return [{ label: "Spaces" }];
+  if (clean === "/community/spaces") {
+    return [{ label: "Community", href: "/community" }, { label: "Spaces" }];
   }
   if (clean === "/community/new" || clean === "/communities/new") {
     return [{ label: "Community", href: "/community" }];

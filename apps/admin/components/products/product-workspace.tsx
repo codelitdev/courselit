@@ -41,6 +41,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { StatusBanner } from "@/components/status-banner";
 import { AuthGate } from "@/components/auth-gate";
 import { CourseLitLoading } from "@/components/loading";
 import { PermissionMessage } from "@/components/permission-message";
@@ -973,12 +974,12 @@ export function ProductWorkspace({
     <AuthGate>
       <main className="page-shell">
         {view === "overview" && product.status === "draft" && canWriteProducts ? (
-          <div className="mb-5 rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground">
-            This product is unpublished.{" "}
-            <Link href={`${productRoot}/manage#publish`} className="underline">
-              Manage publishing
-            </Link>
-          </div>
+          <StatusBanner
+            actionLabel="Manage publishing"
+            actionHref={`${productRoot}/manage#publish`}
+          >
+            This product is unpublished.
+          </StatusBanner>
         ) : null}
         {view === "overview" ? (
           <header className="app-header items-start">

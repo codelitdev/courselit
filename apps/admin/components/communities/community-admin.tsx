@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { CommunityDetails } from "./community-details";
 import { CommunityMembers } from "./community-members";
 import { CommunityReports } from "./community-reports";
+import { CommunitySpaces } from "./community-spaces";
 import { CommunityNotSetUp, CommunitySetup } from "./community-setup";
 import {
   type Community,
@@ -41,7 +42,12 @@ import {
   type StorefrontPlan,
 } from "./community-shared";
 
-export type CommunityManageSection = "details" | "setup" | "memberships" | "reports";
+export type CommunityManageSection =
+  | "details"
+  | "setup"
+  | "memberships"
+  | "spaces"
+  | "reports";
 
 type ApiError = { message?: string; details?: { reason?: string } };
 
@@ -66,12 +72,14 @@ const SECTION_LABELS: Record<CommunityManageSection, string | null> = {
   details: null,
   setup: "Set up",
   memberships: "Members",
+  spaces: "Spaces",
   reports: "Reports",
 };
 
 function sectionFor(pathname: string): CommunityManageSection {
   if (pathname.startsWith("/community/setup")) return "setup";
   if (pathname.startsWith("/community/memberships")) return "memberships";
+  if (pathname.startsWith("/community/spaces")) return "spaces";
   if (pathname.startsWith("/community/reports")) return "reports";
   return "details";
 }
@@ -277,6 +285,7 @@ export function CommunityAdmin() {
         href: "/community/memberships",
         count: pendingMembers,
       },
+      { value: "spaces", label: "Spaces", href: "/community/spaces", count: null },
       {
         value: "reports",
         label: "Reports",
@@ -347,6 +356,7 @@ export function CommunityAdmin() {
             const active = tab.value === activeSection;
             if (tab.value === "details" && !canWrite) return null;
             if (tab.value === "memberships" && !canWrite) return null;
+            if (tab.value === "spaces" && !canWrite) return null;
             if (tab.value === "reports" && !canModerate) return null;
             return (
               <Link
@@ -396,6 +406,11 @@ export function CommunityAdmin() {
               setNotice={setNotice}
               setError={setError}
             />
+          </div>
+        ) : null}
+        {canWrite ? (
+          <div hidden={activeSection !== "spaces"}>
+            <CommunitySpaces />
           </div>
         ) : null}
         {canModerate ? (

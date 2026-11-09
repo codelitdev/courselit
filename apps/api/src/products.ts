@@ -713,9 +713,15 @@ export async function updateProduct(
       discussionSpaceId = await enableProductDiscussionSpace(
         tx as AppDb,
         ctx.tenantId!,
-        row,
+        { ...row, title: next.title },
         clock,
       );
+    } else if (discussionSpaceId && next.title !== row.title) {
+      // A course's discussion space is named after the course.
+      await tx
+        .update(schema.spaces)
+        .set({ name: next.title, updatedAt: now })
+        .where(eq(schema.spaces.id, discussionSpaceId));
     }
     await tx
       .update(schema.products)

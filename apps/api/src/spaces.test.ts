@@ -500,7 +500,7 @@ describe.serial("school spaces and included products", () => {
 
     await runtime.close();
   });
-  it("shows spaces only while their community or product discussions are on, and protects course spaces", async () => {
+  it("shows spaces only while their community or course discussions are on, and keeps course spaces with the course", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-02T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({
       clock,
@@ -547,20 +547,19 @@ describe.serial("school spaces and included products", () => {
         headers: adminHeaders,
       });
       expect(listed.status).toBe(200);
-      return (
-        listed.body as { items: Array<{ id: string; name: string; owner: unknown }> }
-      ).items;
+      return (listed.body as { items: Array<{ id: string; name: string }> }).items;
     };
+    // The Spaces screen lists only the community's spaces.
     const spaces = await adminSpaces();
-    const general = spaces.find((space) => space.name === "General")!;
-    const course = spaces.find((space) => space.name === "Watercolours")!;
-    expect(general.owner).toEqual({ type: "community", live: false });
-    expect(course.owner).toEqual({
-      type: "product",
-      live: true,
-      productId,
-      title: "Watercolours",
-    });
+    expect(spaces.map((space) => space.name)).toEqual(["General"]);
+    const general = spaces[0]!;
+    const [courseRow] = await runtime.db
+      .select({ publicId: schema.spaces.publicId, name: schema.spaces.name })
+      .from(schema.spaces)
+      .innerJoin(schema.products, eq(schema.products.discussionSpaceId, schema.spaces.id))
+      .where(eq(schema.products.publicId, productId));
+    expect(courseRow?.name).toBe("Watercolours");
+    const course = { id: courseRow!.publicId };
 
     const learner = await dispatch(runtime, {
       method: "POST",
@@ -631,9 +630,6 @@ describe.serial("school spaces and included products", () => {
       headers: learnerHeaders,
     });
     expect(hiddenFeed.status).toBe(404);
-    expect((await adminSpaces()).find((space) => space.id === course.id)?.owner).toMatchObject({
-      live: false,
-    });
 
     // Turning discussions back on brings back the same space.
     const discussionsOn = await dispatch(runtime, {
@@ -649,23 +645,33 @@ describe.serial("school spaces and included products", () => {
       .where(eq(schema.communities.id, community!.id));
     expect((await learnerSpaceIds()).sort()).toEqual([course.id, general.id].sort());
 
-    const deleteCourse = await dispatch(runtime, {
-      method: "DELETE",
-      path: `/v1/spaces/${course.id}`,
-      headers: adminHeaders,
-      body: {},
-    });
-    expect(deleteCourse.status).toBe(400);
-    expect(deleteCourse.body).toMatchObject({ details: { reason: "product_space" } });
+    // The course's space is not the Spaces screen's to read, edit or delete.
+    for (const request of [
+      { method: "GET" as const, body: undefined },
+      { method: "PATCH" as const, body: { whoCanPost: "admin" } },
+      { method: "DELETE" as const, body: {} },
+    ]) {
+      const response = await dispatch(runtime, {
+        ...request,
+        path: `/v1/spaces/${course.id}`,
+        headers: adminHeaders,
+      });
+      expect(response.status).toBe(404);
+    }
 
-    const courseAccess = await dispatch(runtime, {
+    // Its name follows the course title.
+    const renamed = await dispatch(runtime, {
       method: "PATCH",
-      path: `/v1/spaces/${course.id}`,
+      path: `/v1/products/${productId}`,
       headers: adminHeaders,
-      body: { unlocks: [{ entityType: "community", planIds: [] }] },
+      body: { title: "Watercolour basics" },
     });
-    expect(courseAccess.status).toBe(400);
-    expect(courseAccess.body).toMatchObject({ details: { reason: "product_space_access" } });
+    expect(renamed.status).toBe(200);
+    const [renamedSpace] = await runtime.db
+      .select({ name: schema.spaces.name })
+      .from(schema.spaces)
+      .where(eq(schema.spaces.publicId, course.id));
+    expect(renamedSpace?.name).toBe("Watercolour basics");
 
     // A community space with posts can only hand them to another community space.
     const extra = await dispatch(runtime, {
@@ -689,10 +695,7 @@ describe.serial("school spaces and included products", () => {
       headers: adminHeaders,
       body: { destinationSpaceId: course.id },
     });
-    expect(intoCourse.status).toBe(400);
-    expect(intoCourse.body).toMatchObject({
-      details: { reason: "destination_product_space" },
-    });
+    expect(intoCourse.status).toBe(404);
     const intoGeneral = await dispatch(runtime, {
       method: "DELETE",
       path: `/v1/spaces/${extraId}`,

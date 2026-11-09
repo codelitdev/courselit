@@ -7,7 +7,6 @@ import {
   LibraryBig,
   LifeBuoy,
   Mail,
-  Hash,
   MessageCircleHeart,
   Settings,
   Target,
@@ -46,34 +45,6 @@ const CREATE_NAV: PermissionedNavItem[] = [
     requiredPermission: "communities:read",
   },
   {
-    href: "/spaces",
-    label: "Spaces",
-    icon: Hash,
-    requiredPermission: "communities:read",
-  },
-  {
-    href: "#",
-    label: "Website",
-    icon: Globe,
-    items: [
-      {
-        href: "/website/pages",
-        label: "Pages",
-        requiredPermission: "storefront:read",
-      },
-      {
-        href: "/website/blogs",
-        label: "Blogs",
-        requiredPermission: "storefront:read",
-      },
-      {
-        href: "/website/settings",
-        label: "Settings",
-        requiredPermission: "storefront:read",
-      },
-    ],
-  },
-  {
     href: "/contacts",
     label: "Contacts",
     icon: Contact,
@@ -103,6 +74,27 @@ const CREATE_NAV: PermissionedNavItem[] = [
         href: "/mails/settings",
         label: "Settings",
         requiredPermission: "contacts:read",
+      },
+    ],
+  },  {
+    href: "#",
+    label: "Website",
+    icon: Globe,
+    items: [
+      {
+        href: "/website/pages",
+        label: "Pages",
+        requiredPermission: "storefront:read",
+      },
+      {
+        href: "/website/blogs",
+        label: "Blogs",
+        requiredPermission: "storefront:read",
+      },
+      {
+        href: "/website/settings",
+        label: "Settings",
+        requiredPermission: "storefront:read",
       },
     ],
   },
