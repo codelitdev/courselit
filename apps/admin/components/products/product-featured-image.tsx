@@ -21,6 +21,10 @@ const PRODUCT_IMAGE_ACCEPTED_TYPES = [
   "image/webp",
 ];
 
+function imageLabel(image: MediaRef): string | null {
+  return image.alt?.trim() || image.title?.trim() || image.fileName?.trim() || null;
+}
+
 export function ProductFeaturedImage({
   school,
   value,
@@ -73,7 +77,11 @@ export function ProductFeaturedImage({
             className="h-28 w-44 rounded-md border object-cover"
           />
           <div className="space-y-2 text-sm">
-            <p className="font-medium">{value.alt || value.url}</p>
+            {/* Never show the storage URL: it is infrastructure, not something the
+                creator chose. Older references may have no name at all. */}
+            {imageLabel(value) ? (
+              <p className="font-medium">{imageLabel(value)}</p>
+            ) : null}
             <Button
               type="button"
               variant="outline"
