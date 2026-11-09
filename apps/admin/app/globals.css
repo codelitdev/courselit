@@ -161,12 +161,13 @@ body:has([data-full-screen-editor]) {
 @layer base {
   :root[data-product] {
     /* Fallback styling for unstyled native inputs on legacy screens.
-       Skip non-textual controls so packaged editors keep swatch/slider sizing. */
+       Skip non-textual controls so packaged editors keep swatch/slider sizing,
+       and command-menu search boxes, which style themselves. */
     input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
       [type="color"]
     ):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
       [type="submit"]
-    ):not([type="reset"]):not([type="image"]):not([data-slot]),
+    ):not([type="reset"]):not([type="image"]):not([data-slot]):not([cmdk-input]),
     select:not([data-slot]):not([aria-hidden="true"]) {
       height: 36px;
       width: 100%;
@@ -194,7 +195,7 @@ body:has([data-full-screen-editor]) {
       [type="color"]
     ):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
       [type="submit"]
-    ):not([type="reset"]):not([type="image"]):not([data-slot]):focus,
+    ):not([type="reset"]):not([type="image"]):not([data-slot]):not([cmdk-input]):focus,
     select:not([data-slot]):not([aria-hidden="true"]):focus,
     textarea:not([data-slot]):focus {
       outline: none;
@@ -202,6 +203,12 @@ body:has([data-full-screen-editor]) {
       box-shadow: 0 0 0 3px var(--primary-soft);
     }
   }
+}
+
+/* Command menus (e.g. the SendLit tag picker) keep a group's heading even
+ * when nothing in it matches; hide the empty group so only "No results" shows. */
+[cmdk-group]:not(:has([cmdk-item])) {
+  display: none;
 }
 
 /* Retain utility classes used in forms and admin screens */

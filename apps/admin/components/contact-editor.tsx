@@ -432,8 +432,8 @@ export function ContactEditor({
                         <Label htmlFor="contact-subscribed">Mailing subscription</Label>
                         <p className="text-xs text-muted-foreground">
                           {form.subscribed
-                            ? "This contact is eligible for marketing mail."
-                            : "This contact will not receive marketing mail."}
+                            ? "Gets your broadcasts and sequences."
+                            : "Won't get broadcasts or sequences. Sign-in codes and receipts still arrive."}
                         </p>
                       </div>
                       <Switch
@@ -451,8 +451,8 @@ export function ContactEditor({
                         <Label htmlFor="contact-status">Portal access</Label>
                         <p className="text-xs text-muted-foreground">
                           {form.status === "active"
-                            ? "This contact is active and can sign in."
-                            : "This contact is deactivated."}
+                            ? "Can sign in."
+                            : "Can't sign in."}
                         </p>
                       </div>
                       <Switch
