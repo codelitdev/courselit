@@ -77,7 +77,15 @@
             "lodash": "4.18.1",
             "lodash-es": "4.18.1",
             "express>path-to-regexp": "0.1.13",
-            "handlebars": "4.7.9"
+            "handlebars": "4.7.10",
+            "proxy-addr": "2.0.8"
+        },
+        "packageExtensions": {
+            "@hookform/resolvers@3": {
+                "peerDependencies": {
+                    "zod": "^3.23.8"
+                }
+            }
         }
     }
 }
