@@ -20,6 +20,99 @@ No row becomes **Verified** from code review alone. The evidence must cover tena
 
 This inventory is complete for code visible in the CourseLit and `courselit-subscriptions` repositories. Production-only configuration, traffic, data volume, provider usage, and operational procedures still require operator evidence; they are tracked in the Milestone 0 exit checklist below.
 
+## Rewrite checklist
+
+A quick view of what is already in the `platform-based-rewrite` branch. A ticked box means the capability exists in the branch's code (API, admin, storefront or worker). It is **not** the ledger's "Verified" status: browser side-by-side evidence and production-shaped migration fixtures are still pending for almost every item. An unticked box means the capability is missing, partial, or could not be confirmed in the code. Row IDs refer to the tables below. Last reviewed: 2026-11-07.
+
+### Schools, tenancy, and identity
+
+- [x] School model with host resolution (SCH-001, SCH-002)
+- [x] Custom domains: add, verify, remove (SCH-005)
+- [x] Self-serve school creation and onboarding (SCH-004)
+- [x] Team members and invitations with roles (ADM-002)
+- [x] School-bound API keys (ADM-003)
+- [x] Learner sign-in: email code and Google (ADM-004, API and storefront)
+- [ ] Admin screen for Google/SSO login-provider settings (`main` has `settings/login-provider/*`; none found in `apps/admin`)
+- [ ] SSO sign-in for learners (ADM-004)
+- [ ] Owner reconciliation from the legacy domain email (SCH-003)
+- [ ] Admin/learner classification and forced re-authentication on cutover (ADM-001, ADM-005)
+- [ ] School deletion workflow with retention (SCH-006)
+
+### Products and learning
+
+- [x] Courses and digital downloads (PRD-001)
+- [x] Sections and lessons, ordering (PRD-002)
+- [x] All lesson types: text, video, audio, PDF, file, embed, quiz, SCORM (PRD-003)
+- [x] SCORM packages, private delivery, runtime state, quiz evaluation (PRD-004)
+- [x] Preview of unpublished products via short-lived grants (PRD-005)
+- [x] Certificates, templates, and public verification (PRD-006)
+- [x] Learner memberships and "My content" (PRD-007)
+- [x] Drip scheduling, plus the drip-release email in the worker (PRD-008)
+- [x] Product manage screen: details, featured image, plans, discussions, lead magnet, publishing, certificates, deletion (M3-FPB-001, M3-FPB-002)
+- [x] Product dashboard and per-product analytics (M3-FPB-004)
+- [x] Product catalog list (M3-FPB-005)
+- [x] Digital-download links and archive delivery (M4-FPB-002)
+- [x] Learner lesson viewer and course sidebar (M4-FPB-004)
+- [ ] School-wide admin reports and learner activity history (PRD-009)
+
+### Commerce and billing
+
+- [x] Product payment plans: free, one-time, subscription, EMI, default, archive (PAY-001)
+- [x] Checkout with Stripe, Lemon Squeezy, and Razorpay (PAY-002)
+- [x] Purchases and invoices grant access (PAY-003)
+- [x] Community payment plans (COM-005)
+- [x] Platform plan billing and Plan screen through Dodo (replaces BILL-001, BILL-002)
+- [ ] Block provider transfer for active recurring learner payments (PAY-004)
+- [ ] Expired trial/subscription enforcement (BILL-003)
+- [ ] KYC and Enterprise feature state (BILL-004)
+
+### Communities, discussions, and notifications
+
+- [x] Communities: categories, visibility, memberships, roles (COM-001)
+- [x] Community posts, comments, reactions, subscriptions, reports (COM-002)
+- [x] Spaces
+- [ ] Product and lesson discussions: replies, likes, subscriptions, summaries, reports (COM-003, partial)
+- [ ] Replies through signed inbound email (COM-004)
+- [x] In-app notifications, preferences, and read state (NOT-001)
+- [x] Notification stream (NOT-002)
+
+### Website, email, and media
+
+- [x] Pages, blogs, menus, themes, and site settings owned by CourseLit (FL-001)
+- [x] Full-screen page and blog editor in admin (FL-003)
+- [x] Themes apply on the storefront
+- [x] Contacts, tags, and segments (SL-001)
+- [x] Broadcasts, sequences, and templates (SL-001)
+- [x] Worker runs sequences, scheduled mail, and drip (SL-002)
+- [ ] Delivery events, open/click tracking, and unsubscribe (SL-001)
+- [ ] Course delivery by email (SL-003)
+- [ ] Legacy page blocks mapped onto the page builder (FL-002)
+- [x] Media library with MediaLit storage (MED-001)
+- [x] Media deletion with reference checks (MED-002)
+- [x] Private downloads and SCORM content delivery (MED-003)
+
+### API, MCP, and operations
+
+- [x] Public REST API with OpenAPI (API-002)
+- [x] MCP with one named tool per operation and OAuth (API-003)
+- [x] Separate worker entrypoint (OPS-001)
+- [ ] Operational logging and PostHog instrumentation (OPS-002)
+- [ ] Legacy and new schools coexisting during rollout, Caddy routing (OPS-003, W-010)
+- [ ] School migration as a product workflow (OPS-004)
+
+### Data import from `main`
+
+- [x] Importers: domains, learners, products, payment plans, communities, notifications
+- [ ] Importers: certificates and templates, media, contacts and mail, community posts
+- [ ] Count and checksum reconciliation with production-shaped fixtures
+
+### Docs and retirement
+
+- [ ] Documentation for the new platform, API, and MCP (W-003)
+- [ ] Retire `courselit-subscriptions` (W-005)
+- [ ] Retire the legacy app and queue images (W-006, W-007)
+- [ ] Archive MongoDB after reconciliation (W-008)
+
 ## Workload and deployment inventory
 
 | ID    | Current workload                  | Current responsibility                                                                                                                                   | Target                                                 | Disposition                                                   | Status           | Evidence                                                     |
