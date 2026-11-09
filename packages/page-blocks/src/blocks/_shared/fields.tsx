@@ -55,11 +55,13 @@ export function SelectField<T extends string>({
   value,
   options,
   onChange,
+  description,
 }: {
   label: string;
   value: T;
   options: Array<{ label: string; value: T }>;
   onChange: (value: T) => void;
+  description?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-xs font-semibold">
@@ -75,6 +77,9 @@ export function SelectField<T extends string>({
           </option>
         ))}
       </select>
+      {description ? (
+        <span className="text-xs font-normal text-muted-foreground">{description}</span>
+      ) : null}
     </label>
   );
 }
@@ -141,6 +146,7 @@ export function BannerEditor({
       <FieldGroup title="Design">
         <SelectField
           label="Text content position"
+          description="Where the text sits relative to the featured image. It has no effect without one."
           value={settings.textPosition ?? "left"}
           options={[
             { label: "Left", value: "left" },

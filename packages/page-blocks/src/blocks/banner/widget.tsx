@@ -166,6 +166,8 @@ export default function BannerWidget({
     }
   }
 
+  // Like main, the block's button caption replaces the default checkout label.
+  const buttonCaption = settings.buttonCaption?.trim();
   const copy = (
     <div
       className={
@@ -257,7 +259,7 @@ export default function BannerWidget({
                     type="submit"
                     disabled={editing || busyPlan !== null}
                   >
-                    {busyPlan === plan.id ? "Please wait…" : "Get for free"}
+                    {busyPlan === plan.id ? "Please wait…" : buttonCaption || "Get for free"}
                   </Button>
                 </form>
               ) : (
@@ -272,9 +274,7 @@ export default function BannerWidget({
                 >
                   {busyPlan === plan.id
                     ? "Please wait…"
-                    : plan.type === "free"
-                      ? "Get for free"
-                      : "Buy now"}
+                    : buttonCaption || (plan.type === "free" ? "Get for free" : "Buy now")}
                 </Button>
               )}
             </PageCard>
