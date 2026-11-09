@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useLearnerSession } from "@/components/communities/learner-community";
+import { LearnerCommunityMembershipBar } from "@/components/communities/learner-community-membership";
 import { LearnerPostGifs, withGif } from "@/components/communities/learner-gif-picker";
 import { LearnerPostComposerDialog } from "@/components/communities/learner-post-composer-dialog";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/course-lit-loader";
@@ -702,6 +703,7 @@ export function LearnerFeed({
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-7">
+      {requestedSpaceId ? null : <LearnerCommunityMembershipBar />}
       {postableSpaces.length > 0 ? (
         <FeedComposer onOpen={() => setComposeOpen(true)} />
       ) : null}

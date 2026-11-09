@@ -86,8 +86,8 @@ describe("admin and learner surfaces", () => {
     );
     const learnerFeed = read("storefront/components/dashboard/learner-feed.tsx");
     const learnerProducts = read("storefront/components/dashboard/learner-products.tsx");
-    const learnerCommunityMemberships = read(
-      "storefront/components/account/learner-community-memberships.tsx",
+    const learnerCommunityMembership = read(
+      "storefront/components/communities/learner-community-membership.tsx",
     );
     const publicCommunitiesCatalog = read(
       "storefront/components/public-communities-catalog.tsx",
@@ -448,11 +448,13 @@ describe("admin and learner surfaces", () => {
     expect(learnerSidebar).toContain('href="/dashboard/account/notifications"');
     expect(learnerSidebar).toContain('href="/dashboard/account/profile"');
     expect(learnerAccount).toContain('redirect("/dashboard/account/profile")');
-    expect(learnerSidebar).toContain('href="/dashboard/account/communities"');
-    expect(learnerCommunityMemberships).toContain("/api/v1/learner/communities?");
-    expect(learnerCommunityMemberships).toContain("/leave");
-    expect(learnerCommunityMemberships).toContain("Leave community");
-    expect(learnerCommunityMemberships).toContain("LearnerAlertDialog");
+    // A school has one community, so it is left from the feed, not listed in Account.
+    expect(learnerSidebar).not.toContain("/dashboard/account/communities");
+    expect(learnerFeed).toContain("<LearnerCommunityMembershipBar />");
+    expect(learnerCommunityMembership).toContain("/api/v1/learner/communities?limit=1");
+    expect(learnerCommunityMembership).toContain("/leave");
+    expect(learnerCommunityMembership).toContain("Leave community");
+    expect(learnerCommunityMembership).toContain("LearnerAlertDialog");
     expect(publicCommunitiesCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicCommunitiesCatalog).toContain('publicApiPath(schoolId, "/communities');
     expect(learnerSpacePost).toContain("spaceId");
@@ -487,7 +489,6 @@ describe("admin and learner surfaces", () => {
     expect(learnerCommunityComponent).toContain("postId?: string");
     expect(learnerCommunityComponent).toContain("LearnerSpacePost");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/spaces/");
-    expect(learnerCommunityMemberships).toContain("community.featuredImage");
     expect(learnerCommunityComponent).toContain("community.banner");
     expect(learnerCommunityComponent).toContain("communityDescriptionHasContent");
     expect(learnerCommunityComponent).toContain("Welcome banner");

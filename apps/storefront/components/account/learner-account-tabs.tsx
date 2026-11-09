@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Receipt, UserRound, Users } from "lucide-react";
+import { Bell, Receipt, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LearnerButton } from "@/components/themed-page-builder";
@@ -11,11 +11,6 @@ const ACCOUNT_TABS = [
     href: "/dashboard/account/notifications",
     label: "Notifications",
     icon: Bell,
-  },
-  {
-    href: "/dashboard/account/communities",
-    label: "Communities",
-    icon: Users,
   },
   { href: "/dashboard/account/purchases", label: "Purchases", icon: Receipt },
 ] as const;

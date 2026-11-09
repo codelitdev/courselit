@@ -1423,6 +1423,7 @@ export async function listLearnerCommunities(
     eq(schema.learnerMemberships.entityType, "community"),
     eq(schema.learnerMemberships.isIncludedInPlan, false),
     eq(schema.learnerMemberships.status, "active"),
+    eq(schema.communities.enabled, true),
     isNull(schema.communities.deletedAt),
   ];
   if (cursor) {

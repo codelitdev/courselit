@@ -290,6 +290,23 @@ describe.serial("community billing when access ends", () => {
     }
   }, 60_000);
 
+  it("does not list a turned-off community to its members", async () => {
+    const setup = await setupMember("free");
+    try {
+      const list = () =>
+        dispatch(setup.runtime, {
+          method: "GET",
+          path: "/v1/learner/communities",
+          headers: setup.learnerHeaders,
+        });
+      expect((await list()).body).toMatchObject({ items: [expect.any(Object)] });
+      await setup.runtime.db.update(schema.communities).set({ enabled: false });
+      expect(await list()).toMatchObject({ status: 200, body: { items: [] } });
+    } finally {
+      await setup.runtime.close();
+    }
+  }, 60_000);
+
   it("keeps the member and their billing untouched when the provider cannot cancel", async () => {
     const setup = await setupMember("subscription");
     try {

@@ -9,7 +9,6 @@ import {
   Package,
   Receipt,
   UserRound,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -213,12 +212,6 @@ export function LearnerSidebar({
                   <Link href="/dashboard/account/notifications">
                     <Bell />
                     <LearnerText2 component="span">Notifications</LearnerText2>
-                  </Link>
-                </LearnerDropdownMenuItem>
-                <LearnerDropdownMenuItem asChild>
-                  <Link href="/dashboard/account/communities">
-                    <Users />
-                    <LearnerText2 component="span">Communities</LearnerText2>
                   </Link>
                 </LearnerDropdownMenuItem>
                 <LearnerDropdownMenuItem asChild>
