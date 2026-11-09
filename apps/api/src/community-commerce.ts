@@ -22,6 +22,7 @@ import {
   getPaymentProvider,
   type PaymentCheckoutResult,
   type PaymentProvider,
+  type PaymentWebhookScope,
 } from "./payments.js";
 import type { AppDb } from "./types.js";
 
@@ -826,7 +827,18 @@ function metadataFrom(data: Record<string, unknown>): Record<string, string> {
   );
 }
 
-async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
+function communityAttemptInScope(scope: PaymentWebhookScope) {
+  return and(
+    eq(schema.communityCheckoutAttempts.schoolId, scope.schoolId),
+    eq(schema.communityCheckoutAttempts.provider, scope.provider),
+  );
+}
+
+async function findEventCheckout(
+  db: AppDb,
+  data: Record<string, unknown>,
+  scope: PaymentWebhookScope,
+) {
   const metadata = metadataFrom(data);
   const checkoutPublicId =
     metadata.courselit_community_checkout_id ??
@@ -855,7 +867,7 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
         schema.schools,
         eq(schema.schools.id, schema.communityCheckoutAttempts.schoolId),
       )
-      .where(eq(schema.communityCheckoutAttempts.publicId, checkoutPublicId))
+      .where(and(eq(schema.communityCheckoutAttempts.publicId, checkoutPublicId), communityAttemptInScope(scope)))
       .limit(1);
     if (rows[0]) return rows[0];
   }
@@ -866,7 +878,7 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
   if (!providerCheckoutId && providerSubscriptionId) {
     // Renewal events can lack checkout metadata; the subscription recorded
     // from the first payment still points at its checkout.
-    const subscription = await findCommunitySubscription(db, providerSubscriptionId);
+    const subscription = await findCommunitySubscription(db, providerSubscriptionId, scope);
     return subscription
       ? {
           attempt: subscription.attempt,
@@ -900,12 +912,16 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
       schema.schools,
       eq(schema.schools.id, schema.communityCheckoutAttempts.schoolId),
     )
-    .where(eq(schema.communityCheckoutAttempts.providerCheckoutId, providerCheckoutId))
+    .where(and(eq(schema.communityCheckoutAttempts.providerCheckoutId, providerCheckoutId), communityAttemptInScope(scope)))
     .limit(1);
   return rows[0] ?? null;
 }
 
-async function findCommunitySubscription(db: AppDb, providerSubscriptionId: string) {
+async function findCommunitySubscription(
+  db: AppDb,
+  providerSubscriptionId: string,
+  scope: PaymentWebhookScope,
+) {
   const rows = await db
     .select({
       subscription: schema.communitySubscriptions,
@@ -935,7 +951,10 @@ async function findCommunitySubscription(db: AppDb, providerSubscriptionId: stri
       eq(schema.schools.id, schema.communityCheckoutAttempts.schoolId),
     )
     .where(
-      eq(schema.communitySubscriptions.providerSubscriptionId, providerSubscriptionId),
+      and(
+        eq(schema.communitySubscriptions.providerSubscriptionId, providerSubscriptionId),
+        communityAttemptInScope(scope),
+      ),
     )
     .limit(1);
   return rows[0] ?? null;
@@ -1026,6 +1045,7 @@ export async function revokeCommunityMembershipAccess(
 
 async function ensureCommunitySubscription(
   tx: AppDb,
+  scope: PaymentWebhookScope,
   checkoutId: string,
   providerSubscriptionId: string,
   data: Record<string, unknown>,
@@ -1039,16 +1059,17 @@ async function ensureCommunitySubscription(
   const cancelAt = dateValue(data.cancel_at ?? data.cancelled_at);
   const existing = (
     await tx
-      .select()
+      .select({ subscription: schema.communitySubscriptions })
       .from(schema.communitySubscriptions)
+      .innerJoin(schema.communityCheckoutAttempts, eq(schema.communityCheckoutAttempts.id, schema.communitySubscriptions.checkoutId))
       .where(
-        eq(
-          schema.communitySubscriptions.providerSubscriptionId,
-          providerSubscriptionId,
+        and(
+          eq(schema.communitySubscriptions.providerSubscriptionId, providerSubscriptionId),
+          communityAttemptInScope(scope),
         ),
       )
       .limit(1)
-  )[0];
+  )[0]?.subscription;
   if (existing) {
     // A payment never revives a subscription that already ended (e.g. a
     // paid-off installment plan cancelled after its last charge).
@@ -1102,17 +1123,27 @@ async function communityInstallmentPlanPaidOff(
 }
 
 /** Find the recorded community payment a refund or dispute refers to. */
-async function findRefundedCommunityPayment(db: AppDb, data: Record<string, unknown>) {
+async function findRefundedCommunityPayment(
+  db: AppDb,
+  data: Record<string, unknown>,
+  scope: PaymentWebhookScope,
+) {
   const paymentId = stringValue(data.payment_id);
   if (paymentId) {
     const byId = (
       await db
-        .select()
+        .select({ payment: schema.communityPayments })
         .from(schema.communityPayments)
-        .where(eq(schema.communityPayments.providerPaymentId, paymentId))
+        .innerJoin(schema.communityCheckoutAttempts, eq(schema.communityCheckoutAttempts.id, schema.communityPayments.checkoutId))
+        .where(
+          and(
+            eq(schema.communityPayments.providerPaymentId, paymentId),
+            communityAttemptInScope(scope),
+          ),
+        )
         .limit(1)
     )[0];
-    if (byId) return byId;
+    if (byId) return byId.payment;
   }
   const invoiceId = stringValue(data.invoice_id);
   if (invoiceId) {
@@ -1124,7 +1155,13 @@ async function findRefundedCommunityPayment(db: AppDb, data: Record<string, unkn
           schema.communityPayments,
           eq(schema.communityPayments.id, schema.communityInvoices.paymentId),
         )
-        .where(eq(schema.communityInvoices.providerInvoiceId, invoiceId))
+        .innerJoin(schema.communityCheckoutAttempts, eq(schema.communityCheckoutAttempts.id, schema.communityPayments.checkoutId))
+        .where(
+          and(
+            eq(schema.communityInvoices.providerInvoiceId, invoiceId),
+            communityAttemptInScope(scope),
+          ),
+        )
         .limit(1)
     )[0];
     if (byInvoice) return byInvoice.payment;
@@ -1139,7 +1176,13 @@ async function findRefundedCommunityPayment(db: AppDb, data: Record<string, unkn
           schema.communityPayments,
           eq(schema.communityPayments.checkoutId, schema.communitySubscriptions.checkoutId),
         )
-        .where(eq(schema.communitySubscriptions.providerSubscriptionId, subscriptionId))
+        .innerJoin(schema.communityCheckoutAttempts, eq(schema.communityCheckoutAttempts.id, schema.communitySubscriptions.checkoutId))
+        .where(
+          and(
+            eq(schema.communitySubscriptions.providerSubscriptionId, subscriptionId),
+            communityAttemptInScope(scope),
+          ),
+        )
         .orderBy(asc(schema.communityPayments.occurredAt), asc(schema.communityPayments.createdAt))
         .limit(1)
     )[0];
@@ -1151,13 +1194,14 @@ async function findRefundedCommunityPayment(db: AppDb, data: Record<string, unkn
 /** Returns null when the event belongs to the product storefront. */
 export async function processCommunityPaymentEvent(
   db: AppDb,
+  scope: PaymentWebhookScope,
   eventType: string,
   data: Record<string, unknown>,
   clock: Clock,
   requestId: string,
   paymentProvider?: PaymentProvider,
 ): Promise<"processed" | "ignored" | null> {
-  const eventCheckout = await findEventCheckout(db, data);
+  const eventCheckout = await findEventCheckout(db, data, scope);
   const paymentId = stringValue(data.payment_id);
   const providerSubscriptionId = stringValue(data.subscription_id ?? data.id);
   if (!eventCheckout && !paymentId && !providerSubscriptionId) return null;
@@ -1359,6 +1403,7 @@ export async function processCommunityPaymentEvent(
         if (subscriptionId && recurringPlan) {
           subscription = await ensureCommunitySubscription(
             tx as unknown as AppDb,
+            scope,
             current.id,
             subscriptionId,
             data,
@@ -1396,12 +1441,7 @@ export async function processCommunityPaymentEvent(
           await tx
             .update(schema.communitySubscriptions)
             .set({ status: "cancelled", cancelAt: now, updatedAt: now })
-            .where(
-              eq(
-                schema.communitySubscriptions.providerSubscriptionId,
-                subscriptionId,
-              ),
-            );
+            .where(eq(schema.communitySubscriptions.id, subscription.id));
         }
         await tx.insert(schema.auditEvents).values({
           id: uuidv7(clock),
@@ -1448,7 +1488,7 @@ export async function processCommunityPaymentEvent(
     }
   }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
-    const payment = await findRefundedCommunityPayment(db, data);
+    const payment = await findRefundedCommunityPayment(db, data, scope);
     if (!payment) return eventCheckout ? "ignored" : null;
     const now = clock.now();
     const status = eventType === "payment.refunded" ? "refunded" : "disputed";
@@ -1521,7 +1561,7 @@ export async function processCommunityPaymentEvent(
   }
   if (eventType.startsWith("subscription.")) {
     if (!providerSubscriptionId) return "ignored";
-    let subscription = await findCommunitySubscription(db, providerSubscriptionId);
+    let subscription = await findCommunitySubscription(db, providerSubscriptionId, scope);
     if (!subscription && eventCheckout) {
       const now = clock.now();
       await db.insert(schema.communitySubscriptions).values({
@@ -1537,7 +1577,7 @@ export async function processCommunityPaymentEvent(
         createdAt: now,
         updatedAt: now,
       });
-      subscription = await findCommunitySubscription(db, providerSubscriptionId);
+      subscription = await findCommunitySubscription(db, providerSubscriptionId, scope);
     }
     if (!subscription) return null;
     const now = clock.now();

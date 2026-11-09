@@ -20,6 +20,7 @@ import {
   type NormalizedPaymentEvent,
   type PaymentCheckoutResult,
   type PaymentProvider,
+  type PaymentWebhookScope,
 } from "./payments.js";
 import {
   findLearnerMembership,
@@ -1004,7 +1005,18 @@ function metadataFrom(data: Record<string, unknown>): Record<string, string> {
   return result;
 }
 
-async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
+function storefrontAttemptInScope(scope: PaymentWebhookScope) {
+  return and(
+    eq(schema.storefrontCheckoutAttempts.schoolId, scope.schoolId),
+    eq(schema.storefrontCheckoutAttempts.provider, scope.provider),
+  );
+}
+
+async function findEventCheckout(
+  db: AppDb,
+  data: Record<string, unknown>,
+  scope: PaymentWebhookScope,
+) {
   const metadata = metadataFrom(data);
   const checkoutPublicId = metadata.courselit_checkout_id;
   if (checkoutPublicId) {
@@ -1026,7 +1038,7 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
         schema.products,
         eq(schema.products.id, schema.storefrontCheckoutAttempts.productId),
       )
-      .where(eq(schema.storefrontCheckoutAttempts.publicId, checkoutPublicId))
+      .where(and(eq(schema.storefrontCheckoutAttempts.publicId, checkoutPublicId), storefrontAttemptInScope(scope)))
       .limit(1);
     if (rows[0]) return rows[0];
   }
@@ -1059,7 +1071,12 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
         schema.products,
         eq(schema.products.id, schema.storefrontCheckoutAttempts.productId),
       )
-      .where(eq(schema.storefrontSubscriptions.providerSubscriptionId, providerSubscriptionId))
+      .where(
+        and(
+          eq(schema.storefrontSubscriptions.providerSubscriptionId, providerSubscriptionId),
+          storefrontAttemptInScope(scope),
+        ),
+      )
       .limit(1);
     return rows[0] ?? null;
   }
@@ -1082,7 +1099,7 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
       schema.products,
       eq(schema.products.id, schema.storefrontCheckoutAttempts.productId),
     )
-    .where(eq(schema.storefrontCheckoutAttempts.providerCheckoutId, providerCheckoutId))
+    .where(and(eq(schema.storefrontCheckoutAttempts.providerCheckoutId, providerCheckoutId), storefrontAttemptInScope(scope)))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -1100,13 +1117,14 @@ async function revokeStorefrontAccess(
 
 async function processPaymentEvent(
   db: AppDb,
+  scope: PaymentWebhookScope,
   eventType: string,
   data: Record<string, unknown>,
   clock: Clock,
   requestId: string,
   paymentProvider?: PaymentProvider,
 ): Promise<"processed" | "ignored"> {
-  const eventCheckout = await findEventCheckout(db, data);
+  const eventCheckout = await findEventCheckout(db, data, scope);
   const paymentId = stringValue(data.payment_id);
   if (eventType === "payment.succeeded") {
     if (!eventCheckout || !paymentId) return "ignored";
@@ -1300,13 +1318,17 @@ async function processPaymentEvent(
       if (subscriptionId && recurringPlan) {
         subscription = (
           await tx
-            .select()
+            .select({ subscription: schema.storefrontSubscriptions })
             .from(schema.storefrontSubscriptions)
+            .innerJoin(schema.storefrontCheckoutAttempts, eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId))
             .where(
-              eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
+              and(
+                eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
+                storefrontAttemptInScope(scope),
+              ),
             )
             .limit(1)
-        )[0];
+        )[0]?.subscription;
         const currentPeriodEnd = dateValue(data.current_period_end);
         if (!subscription) {
           subscription = {
@@ -1409,7 +1431,7 @@ async function processPaymentEvent(
     return "processed";
   }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
-    const payment = await findRefundedPayment(db, data);
+    const payment = await findRefundedPayment(db, data, scope);
     if (!payment) return "ignored";
     const nextPaymentStatus =
       eventType === "payment.refunded" ? "refunded" : "disputed";
@@ -1477,13 +1499,17 @@ async function processPaymentEvent(
     if (!subscriptionId) return "ignored";
     let subscription = (
       await db
-        .select()
+        .select({ subscription: schema.storefrontSubscriptions })
         .from(schema.storefrontSubscriptions)
+        .innerJoin(schema.storefrontCheckoutAttempts, eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId))
         .where(
-          eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
+          and(
+            eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
+            storefrontAttemptInScope(scope),
+          ),
         )
         .limit(1)
-    )[0];
+    )[0]?.subscription;
     if (!subscription && eventCheckout) {
       const now = clock.now();
       subscription = {
@@ -1592,17 +1618,27 @@ async function processPaymentEvent(
  * never the checkout session, and a Lemon Squeezy refund of an `initial`
  * subscription invoice refers to the charge recorded from its order.
  */
-async function findRefundedPayment(db: AppDb, data: Record<string, unknown>) {
+async function findRefundedPayment(
+  db: AppDb,
+  data: Record<string, unknown>,
+  scope: PaymentWebhookScope,
+) {
   const paymentId = stringValue(data.payment_id);
   if (paymentId) {
     const byId = (
       await db
-        .select()
+        .select({ payment: schema.storefrontPayments })
         .from(schema.storefrontPayments)
-        .where(eq(schema.storefrontPayments.providerPaymentId, paymentId))
+        .innerJoin(schema.storefrontCheckoutAttempts, eq(schema.storefrontCheckoutAttempts.id, schema.storefrontPayments.checkoutId))
+        .where(
+          and(
+            eq(schema.storefrontPayments.providerPaymentId, paymentId),
+            storefrontAttemptInScope(scope),
+          ),
+        )
         .limit(1)
     )[0];
-    if (byId) return byId;
+    if (byId) return byId.payment;
   }
   const invoiceId = stringValue(data.invoice_id);
   if (invoiceId) {
@@ -1614,7 +1650,13 @@ async function findRefundedPayment(db: AppDb, data: Record<string, unknown>) {
           schema.storefrontPayments,
           eq(schema.storefrontPayments.id, schema.storefrontInvoices.paymentId),
         )
-        .where(eq(schema.storefrontInvoices.providerInvoiceId, invoiceId))
+        .innerJoin(schema.storefrontCheckoutAttempts, eq(schema.storefrontCheckoutAttempts.id, schema.storefrontPayments.checkoutId))
+        .where(
+          and(
+            eq(schema.storefrontInvoices.providerInvoiceId, invoiceId),
+            storefrontAttemptInScope(scope),
+          ),
+        )
         .limit(1)
     )[0];
     if (byInvoice) return byInvoice.payment;
@@ -1629,7 +1671,13 @@ async function findRefundedPayment(db: AppDb, data: Record<string, unknown>) {
           schema.storefrontPayments,
           eq(schema.storefrontPayments.checkoutId, schema.storefrontSubscriptions.checkoutId),
         )
-        .where(eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId))
+        .innerJoin(schema.storefrontCheckoutAttempts, eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId))
+        .where(
+          and(
+            eq(schema.storefrontSubscriptions.providerSubscriptionId, subscriptionId),
+            storefrontAttemptInScope(scope),
+          ),
+        )
         .orderBy(asc(schema.storefrontPayments.occurredAt), asc(schema.storefrontPayments.createdAt))
         .limit(1)
     )[0];
@@ -1812,8 +1860,10 @@ export async function receivePaymentWebhook(
     }
   }
   try {
+    const scope: PaymentWebhookScope = { schoolId, provider: providerName };
     const communityStatus = await processCommunityPaymentEvent(
       db,
+      scope,
       event.eventType,
       event.data,
       clock,
@@ -1822,6 +1872,7 @@ export async function receivePaymentWebhook(
     );
     const status = communityStatus ?? await processPaymentEvent(
       db,
+      scope,
       event.eventType,
       event.data,
       clock,

@@ -7,6 +7,16 @@ import { eq } from "drizzle-orm";
 export const paymentProviderNames = ["stripe", "lemonsqueezy", "razorpay"] as const;
 export type PaymentProviderName = (typeof paymentProviderNames)[number];
 
+/**
+ * The school and provider whose webhook secret verified an event. Any school
+ * owner can sign events with their own secret, so every checkout, payment,
+ * invoice and subscription an event touches must belong to this scope.
+ */
+export type PaymentWebhookScope = {
+  schoolId: string;
+  provider: Exclude<PaymentProviderName, "free">;
+};
+
 export type StoredPaymentSettings = {
   provider?: PaymentProviderName | null;
   stripe?: {

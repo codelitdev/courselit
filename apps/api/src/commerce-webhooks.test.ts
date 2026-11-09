@@ -652,6 +652,46 @@ describe.serial("payment webhooks: Stripe products", () => {
     await env.runtime.close();
   });
 
+  it("ignores events signed for another school that point at this school's records", async () => {
+    // Every school owner sets their own webhook secret, so a signed event only
+    // proves it came from the school it names. That school must not reach
+    // checkouts or payments that belong to another school.
+    const env = await setup("stripe");
+    const sale = await buyProduct(env, "one_time");
+    const otherSchool = { courselit_school_id: env.world.schoolB.publicId };
+
+    const forged = await env.deliver(
+      stripeEvent(
+        "checkout.session.completed",
+        stripeSession({ ...sale.metadata, ...otherSchool }, AMOUNTS.one_time, null, "pi_forged"),
+      ),
+    );
+    expect(forged).toMatchObject({ status: 200, body: { status: "ignored" } });
+    let state = await productState(env, sale.productId);
+    expect(state.payments).toHaveLength(0);
+    expect(state.membership?.status).toBe("pending");
+
+    expectProcessed(
+      await env.deliver(
+        stripeEvent(
+          "checkout.session.completed",
+          stripeSession(sale.metadata, AMOUNTS.one_time, null, "pi_real"),
+        ),
+      ),
+    );
+    const refund = await env.deliver(
+      stripeEvent("charge.refunded", {
+        ...stripeCharge({ paymentIntent: "pi_real", invoice: null, amount: AMOUNTS.one_time }),
+        metadata: otherSchool,
+      }),
+    );
+    expect(refund).toMatchObject({ status: 200, body: { status: "ignored" } });
+    state = await productState(env, sale.productId);
+    expect(state.payments[0]?.status).toBe("succeeded");
+    expect(state.membership?.status).toBe("active");
+    await env.runtime.close();
+  });
+
   for (const order of ["session first", "invoice first"] as const) {
     it(`counts the first subscription charge once (${order}) and records renewals`, async () => {
       const env = await setup("stripe");
