@@ -26,6 +26,34 @@
 
 @source "../../../packages/page-blocks/src";
 
+/* The text editor sets light fallback colors on its own root, which beats the
+ * school theme the page inherits and paints the editor white in dark themes.
+ * The storefront always has the school theme on :root, so take every token
+ * the theme defines from there. It sets no --primary-soft,
+ * --destructive-foreground or --radius, so the editor keeps its own for
+ * those. */
+.tiptap-editor,
+.bubble-menu {
+  --background: inherit;
+  --foreground: inherit;
+  --card: inherit;
+  --card-foreground: inherit;
+  --popover: inherit;
+  --popover-foreground: inherit;
+  --primary: inherit;
+  --primary-foreground: inherit;
+  --secondary: inherit;
+  --secondary-foreground: inherit;
+  --muted: inherit;
+  --muted-foreground: inherit;
+  --accent: inherit;
+  --accent-foreground: inherit;
+  --destructive: inherit;
+  --border: inherit;
+  --input: inherit;
+  --ring: inherit;
+}
+
 .newsletter-signup-fields {
   grid-template-columns: minmax(0, 1fr);
 }
