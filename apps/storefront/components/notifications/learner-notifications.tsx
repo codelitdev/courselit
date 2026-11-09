@@ -11,9 +11,9 @@ import {
 } from "@/components/communities/learner-community";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import {
-  LearnerCheckbox,
   LearnerHeader1,
   LearnerHeader2,
+  LearnerSwitch,
   LearnerText2,
   LearnerCard as PageCard,
   LearnerCardContent as PageCardContent,
@@ -203,7 +203,7 @@ export function LearnerNotifications() {
                               key={`${preference.type}-${channel.key}`}
                             >
                               <div className="flex justify-center">
-                                <LearnerCheckbox
+                                <LearnerSwitch
                                   aria-label={`${channel.label}: ${preferenceTitles[preference.type]}`}
                                   checked={preference[channel.key]}
                                   disabled={isUpdating}
@@ -211,7 +211,7 @@ export function LearnerNotifications() {
                                     void updatePreference(
                                       preference.type,
                                       channel.key,
-                                      value === true,
+                                      value,
                                     )
                                   }
                                 />
