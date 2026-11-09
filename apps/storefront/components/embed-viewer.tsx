@@ -92,7 +92,10 @@ function SandboxedEmbed({ content }: { content: string }) {
     <iframe
       className="w-full border-0"
       height={height}
-      sandbox="allow-scripts allow-popups allow-forms allow-same-origin"
+      /* No allow-same-origin: a srcDoc frame inherits this page's origin, so
+          with scripts allowed the embed could reach the parent page and call
+          the API with the viewer's cookies. */
+      sandbox="allow-scripts allow-popups allow-forms"
       srcDoc={srcDoc}
       title="Embedded content"
     />
