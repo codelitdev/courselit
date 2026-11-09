@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./test-learner-auth.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
@@ -713,5 +713,107 @@ describe.serial("school spaces and included products", () => {
     });
     expect(lastCommunitySpace.status).toBe(400);
     expect(lastCommunitySpace.body).toMatchObject({ details: { reason: "last_space" } });
+  });
+
+  it("opens course discussions to product managers and community spaces to moderators on the team", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-02T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
+    const world = await seedWorld(runtime, clock);
+    const adminHeaders = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers: adminHeaders,
+      body: { kind: "course", title: "Watercolours" },
+    });
+    expect(created.status).toBe(201);
+    const productId = (created.body as { id: string }).id;
+    const enabled = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      body: { discussions: true },
+    });
+    expect(enabled.status).toBe(200);
+    const [courseRow] = await runtime.db
+      .select({ publicId: schema.spaces.publicId })
+      .from(schema.spaces)
+      .innerJoin(schema.products, eq(schema.products.discussionSpaceId, schema.spaces.id))
+      .where(eq(schema.products.publicId, productId));
+
+    const signedUp = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-up",
+      headers: { "x-school-id": world.schoolA.publicId },
+      body: {
+        schoolId: world.schoolA.publicId,
+        email: "team-moderator@example.com",
+        password: "learner-password-1",
+        name: "Team Moderator",
+      },
+    });
+    expect(signedUp.status).toBe(201);
+    const headers = {
+      cookie: learnerCookie(signedUp),
+      "x-school-id": world.schoolA.publicId,
+    };
+    const [account] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "team-moderator@example.com"));
+    const spaceIds = async () => {
+      const listed = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/learner/spaces",
+        headers,
+      });
+      expect(listed.status).toBe(200);
+      return (listed.body as { items: Array<{ id: string }> }).items.map((item) => item.id);
+    };
+    expect(await spaceIds()).toEqual([]);
+
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const [general] = await runtime.db
+      .select({ publicId: schema.spaces.publicId })
+      .from(schema.spaces)
+      .where(and(eq(schema.spaces.schoolId, world.schoolA.id), eq(schema.spaces.name, "General")));
+    expect(await spaceIds()).toEqual([]);
+
+    const grant = async (permissions: string[]) => {
+      await runtime.db.delete(schema.memberships).where(eq(schema.memberships.schoolAccountId, account!.id));
+      await runtime.db.insert(schema.memberships).values({
+        id: "66666666-6666-4666-8666-666666666661",
+        publicId: "mem_team_member",
+        schoolId: world.schoolA.id,
+        schoolAccountId: account!.id,
+        isOwner: false,
+        permissions,
+        createdAt: clock.now(),
+        updatedAt: clock.now(),
+      });
+    };
+    // Managing products opens their discussions, not the community.
+    await grant(["products:write"]);
+    expect(await spaceIds()).toEqual([courseRow!.publicId]);
+    const posted = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${courseRow!.publicId}/posts`,
+      headers,
+      body: { title: "Welcome", content: "Ask anything here." },
+    });
+    expect(posted.status).toBe(201);
+    // Moderating the community opens its spaces, not the courses'.
+    await grant(["communities:moderate"]);
+    expect(await spaceIds()).toEqual([general!.publicId]);
+    expect(posted.status).toBe(201);
   });
 });

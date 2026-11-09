@@ -29,7 +29,7 @@ import {
 } from "./notifications.js";
 import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
-import { accessibleSpaceIds, spaceOwnership } from "./space-access.js";
+import { accessibleSpaceIds, spaceOwnership, staffSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -698,6 +698,7 @@ export async function listLearnerSpaces(
   const communityMembership = memberships.find(
     (membership) => membership.entityType === "community",
   );
+  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId);
   const onlyComment =
     communityMembership?.role === "comment" &&
     memberships.every(
@@ -712,9 +713,10 @@ export async function listLearnerSpaces(
           row,
           unlocks.get(row.id) ?? [],
           followed.has(row.id),
-          row.whoCanPost === "admin"
-            ? communityMembership?.role === "moderate"
-            : !onlyComment,
+          staff.has(row.id) ||
+            (row.whoCanPost === "admin"
+              ? communityMembership?.role === "moderate"
+              : !onlyComment),
         ),
       ),
     },
@@ -803,12 +805,14 @@ export async function createLearnerSpacePost(
   const onlyComment =
     communityMembership?.role === "comment" &&
     memberships.every((row) => row.entityType === "community" || row.isIncludedInPlan);
-  if (space.whoCanPost === "admin") {
-    if (communityMembership?.role !== "moderate") {
+  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  // Team members may post wherever their role reaches them.
+  if (!staff.has(space.id)) {
+    if (space.whoCanPost === "admin") {
+      if (communityMembership?.role !== "moderate") return forbidden();
+    } else if (onlyComment) {
       return forbidden();
     }
-  } else if (onlyComment) {
-    return forbidden();
   }
   const title = input.title.trim();
   if (!title) return validation("invalid_title");

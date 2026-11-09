@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { parsePermissions } from "./permissions.js";
 import type { AppDb } from "./types.js";
 
 /**
@@ -40,14 +41,76 @@ export async function spaceOwnership(db: AppDb, schoolId: string) {
 }
 
 /**
- * Return the spaces a learner can access through an active school membership.
- * Spaces whose owner is switched off (see `spaceOwnership`) are left out.
+ * The live spaces a school account reaches as a member of the school's team,
+ * without buying or joining anything. A product's discussion belongs to the
+ * course, so it follows `products:write`; the community's spaces follow
+ * `communities:moderate`. The owner has both. Team members may also post in
+ * these spaces where only admins can.
+ */
+export async function staffSpaceIds(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+): Promise<Set<string>> {
+  const [staff] = await db
+    .select({
+      isOwner: schema.memberships.isOwner,
+      permissions: schema.memberships.permissions,
+    })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, schoolId),
+        eq(schema.memberships.schoolAccountId, schoolAccountId),
+      ),
+    )
+    .limit(1);
+  if (!staff) return new Set();
+  const permissions = parsePermissions(staff.permissions);
+  const products = staff.isOwner || permissions.has("products:write");
+  const community = staff.isOwner || permissions.has("communities:moderate");
+  if (!products && !community) return new Set();
+  const [rows, ownership] = await Promise.all([
+    db
+      .select({ id: schema.spaces.id })
+      .from(schema.spaces)
+      .where(eq(schema.spaces.schoolId, schoolId)),
+    spaceOwnership(db, schoolId),
+  ]);
+  return new Set(
+    rows
+      .map((row) => row.id)
+      .filter((id) => {
+        if (!ownership.isLive(id)) return false;
+        return ownership.productSpaces.has(id) ? products : community;
+      }),
+  );
+}
+
+/**
+ * Return the spaces a school account can access: those its active learner
+ * memberships unlock, plus those it reaches as a team member (see
+ * `staffSpaceIds`). Spaces whose owner is switched off (see `spaceOwnership`)
+ * are left out.
  *
  * This is deliberately independent from the community membership tables:
  * product memberships can unlock a space without making the learner a member
  * of the school-wide community.
  */
 export async function accessibleSpaceIds(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+): Promise<Set<string>> {
+  const [learner, staff] = await Promise.all([
+    learnerSpaceIds(db, schoolId, schoolAccountId),
+    staffSpaceIds(db, schoolId, schoolAccountId),
+  ]);
+  for (const id of staff) learner.add(id);
+  return learner;
+}
+
+async function learnerSpaceIds(
   db: AppDb,
   schoolId: string,
   schoolAccountId: string,
