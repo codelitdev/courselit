@@ -4,6 +4,7 @@ import { LegalPagesProvider, SchoolProvider } from "../../../components/school-c
 import { SchoolThemeProvider } from "../../../components/school-theme-provider";
 import { LearnerTooltipProvider } from "../../../components/themed-page-builder";
 import { getPageBySlug, getSettings } from "../../../lib/courselit-public";
+import { siteLogoAlt, siteLogoUrl, siteTitle } from "../../../lib/site-branding";
 
 export async function generateMetadata({
   params,
@@ -15,12 +16,9 @@ export async function generateMetadata({
   const metadataBase = settings?.canonicalHost
     ? new URL(`https://${settings.canonicalHost}`)
     : undefined;
-  const title = settings?.title?.trim() || "CourseLit";
+  const title = siteTitle(settings);
   const subtitle = settings?.subtitle?.trim();
-  const siteLogoUrl =
-    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
-      ? settings.logo.url.trim()
-      : "/icon.svg";
+  const logoUrl = siteLogoUrl(settings);
 
   return {
     ...(metadataBase ? { metadataBase } : {}),
@@ -30,9 +28,9 @@ export async function generateMetadata({
     },
     description: subtitle || undefined,
     icons: {
-      icon: siteLogoUrl,
-      shortcut: siteLogoUrl,
-      apple: siteLogoUrl,
+      icon: logoUrl,
+      shortcut: logoUrl,
+      apple: logoUrl,
     },
   };
 }
@@ -80,12 +78,6 @@ async function ConfiguredStorefront({
     getPageBySlug(schoolId, "terms"),
     getPageBySlug(schoolId, "privacy"),
   ]);
-  // No logo means no logo: the school's name stands alone.
-  const siteLogoUrl =
-    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
-      ? settings.logo.url.trim()
-      : null;
-  const siteLogoAlt = settings?.logo?.alt || settings?.title?.trim() || "";
 
   return (
     <LegalPagesProvider
@@ -96,8 +88,8 @@ async function ConfiguredStorefront({
         subtitle={settings?.subtitle}
         themeId={settings?.themeId ?? null}
         themeStyle={settings?.theme ?? null}
-        logoUrl={siteLogoUrl}
-        logoAlt={siteLogoAlt}
+        logoUrl={siteLogoUrl(settings)}
+        logoAlt={siteLogoAlt(settings)}
       >
         {children}
       </StorefrontProviders>

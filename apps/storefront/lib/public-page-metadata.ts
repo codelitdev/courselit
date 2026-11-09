@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { PublicPage, PublicSettings } from "./courselit-public";
+import { siteLogoUrl as siteLogoUrlFor, siteTitle as siteTitleFor } from "./site-branding";
 
 function imageUrl(image: { url?: unknown } | null): string | undefined {
   return typeof image?.url === "string" && image.url.trim() ? image.url : undefined;
@@ -11,7 +12,9 @@ export function metadataForPublicPage(
   settings?: PublicSettings | null,
   isHomepage = false,
 ): Metadata {
-  const siteTitle = settings?.title?.trim() || fallbackTitle;
+  // Like main, page titles keep their "<page> | <site>" suffix even when the
+  // school has no site title of its own.
+  const siteTitle = siteTitleFor(settings);
   const siteSubtitle = settings?.subtitle?.trim() || undefined;
 
   let title: string;
@@ -33,10 +36,7 @@ export function metadataForPublicPage(
   const rawDescription = page?.description?.trim();
   const description = rawDescription || siteSubtitle;
 
-  const siteLogoUrl =
-    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
-      ? settings.logo.url.trim()
-      : "/icon.svg";
+  const siteLogoUrl = siteLogoUrlFor(settings);
   const socialImage = imageUrl(page?.socialImage ?? null) || siteLogoUrl;
   const robots =
     page?.robotsAllowed === null || page?.robotsAllowed === undefined

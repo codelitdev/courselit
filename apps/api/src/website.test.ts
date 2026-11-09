@@ -266,6 +266,31 @@ describe.serial("school website", () => {
     }
   });
 
+  it("titles the public site with the school's name when no site title is set", async () => {
+    const { runtime, world } = await setup();
+    try {
+      const [school] = await runtime.db
+        .select({ name: schema.schools.name })
+        .from(schema.schools)
+        .where(eq(schema.schools.id, world.schoolA.id));
+      for (const title of [null, "", "   "]) {
+        await runtime.db
+          .update(schema.websiteSettings)
+          .set({ title })
+          .where(eq(schema.websiteSettings.schoolId, world.schoolA.id));
+        const response = await dispatch(runtime, {
+          method: "GET",
+          path: `/v1/public/${world.schoolA.publicId}/site/settings`,
+          headers: {},
+        });
+        expect(response.status).toBe(200);
+        expect((response.body as { title: string | null }).title).toBe(school!.name);
+      }
+    } finally {
+      await runtime.close();
+    }
+  });
+
   it("selects the school from the path and ignores the request host", async () => {
     const { runtime, world } = await setup();
     const titleOf = async (schoolPublicId: string, headers: Record<string, string>) => {

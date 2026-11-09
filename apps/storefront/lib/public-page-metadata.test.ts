@@ -160,4 +160,31 @@ describe("metadataForPublicPage", () => {
 
     expect(metadata.alternates?.canonical).toBe("/about/us");
   });
+
+  it("keeps the site suffix and the CourseLit icon when the school has no title or logo", () => {
+    const page = {
+      pageId: "page-product",
+      slug: "product-1",
+      name: "Product 1",
+      title: null,
+      description: null,
+      layout: [],
+      socialImage: null,
+      robotsAllowed: null,
+      publishedAt: null,
+      updatedAt: null,
+    };
+    const metadata = metadataForPublicPage(page, "Product 1", {
+      title: null,
+      subtitle: null,
+      logo: null,
+      themeId: null,
+      theme: null,
+      codeInjectionHead: "",
+      codeInjectionBody: "",
+    });
+
+    expect(metadata.title).toEqual({ absolute: "Product 1 | CourseLit" });
+    expect(metadata.icons).toMatchObject({ icon: "/icon.svg" });
+  });
 });

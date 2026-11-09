@@ -594,7 +594,18 @@ export async function getPublicWebsiteSettings(
       .limit(1);
     theme = row?.style ?? null;
   }
-  return { ...toBrandingDto(settings), theme };
+  const branding = toBrandingDto(settings);
+  // Like main, and like the admin's branding form, a school without a site
+  // title is titled with its name, so the header and page titles never go blank.
+  if (!branding.title?.trim()) {
+    const [school] = await db
+      .select({ name: schema.schools.name })
+      .from(schema.schools)
+      .where(eq(schema.schools.id, schoolId))
+      .limit(1);
+    if (school?.name) branding.title = school.name;
+  }
+  return { ...branding, theme };
 }
 
 // ---------------------------------------------------------------------------

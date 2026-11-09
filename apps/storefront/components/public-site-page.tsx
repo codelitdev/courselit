@@ -6,6 +6,7 @@ import { PublicBlogFeed } from "@/components/public-blog-feed";
 import { PublicCommunitiesCatalog } from "@/components/public-communities-catalog";
 import { PublicProductsCatalog } from "@/components/public-products-catalog";
 import { SitePageRenderer, SitePageSection } from "@/components/site-page-renderer";
+import { siteLogoAlt, siteLogoUrl } from "@/lib/site-branding";
 import {
   getPageBySlug,
   getPublicCommunity,
@@ -76,12 +77,8 @@ export async function PublicSitePage({
   const resolvedPage = page ?? fallbackPage;
   if (!resolvedPage && !allowEmpty) notFound();
 
-  // No logo means no logo: never fall back to the CourseLit mark.
-  const siteLogoUrl =
-    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
-      ? settings.logo.url.trim()
-      : null;
-  const siteLogoAlt = settings?.logo?.alt || settings?.title?.trim() || null;
+  const logoUrl = siteLogoUrl(settings);
+  const logoAlt = siteLogoAlt(settings);
   const isHome = !pageSlug && !systemRoute && !isSalesPage;
   const [homeOffers, termsPage, privacyPage, articles] = await Promise.all([
     isHome ? listPublicHomeOffers(schoolId) : Promise.resolve([]),
@@ -124,8 +121,8 @@ export async function PublicSitePage({
     schoolId,
     siteTitle: settings?.title ?? null,
     siteSubtitle: settings?.subtitle ?? null,
-    siteLogoUrl,
-    siteLogoAlt,
+    siteLogoUrl: logoUrl,
+    siteLogoAlt: logoAlt,
     ...(isHome ? { courseLitHome: { offers: homeOffers } } : {}),
     ...(salesProduct && salesResource?.resourceType === "product"
       ? {
@@ -176,6 +173,15 @@ export async function PublicSitePage({
   };
   const year = new Date().getFullYear();
   const schoolName = settings?.title?.trim() || "";
+  // The header's default "Join" button points at /join, which 404s until the
+  // school has a community, so only look it up when a header asks for it.
+  const headerNeedsCommunity = baseLayout.some(
+    (instance) =>
+      instance.name === "header" && instance.settings?.ctaHref === "/join",
+  );
+  const hasCommunity = headerNeedsCommunity
+    ? Boolean(siteCommunity ?? (await getPublicCommunity(schoolId, "community")))
+    : true;
   const renderLayout = baseLayout.map((rawInstance) => {
     let instance = rawInstance;
     if (instance.name === "footer") {
@@ -212,7 +218,14 @@ export async function PublicSitePage({
             ? articles.total > 0
             : true,
       );
-      instance = { ...instance, settings: { ...instance.settings, links } };
+      instance = {
+        ...instance,
+        settings: {
+          ...instance.settings,
+          links,
+          ...(hasCommunity ? {} : { ctaLabel: "", ctaHref: "" }),
+        },
+      };
     }
     const isLegacySalesSlot =
       instance.name === "data-slot" &&

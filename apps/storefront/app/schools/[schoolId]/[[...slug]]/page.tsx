@@ -13,6 +13,7 @@ import {
   getSettings,
 } from "@/lib/courselit-public";
 import { metadataForPublicPage } from "@/lib/public-page-metadata";
+import { siteLogoUrl as siteLogoUrlFor, siteTitle as siteTitleFor } from "@/lib/site-branding";
 
 interface Props {
   params: Promise<{ schoolId: string; slug?: string[] }>;
@@ -22,11 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { schoolId, slug } = await params;
   const pageSlug = (slug ?? []).join("/");
   const settings = await getSettings(schoolId);
-  const siteTitle = settings?.title?.trim() || "CourseLit";
-  const siteLogoUrl =
-    typeof settings?.logo?.url === "string" && settings.logo.url.trim()
-      ? settings.logo.url.trim()
-      : "/icon.svg";
+  const siteTitle = siteTitleFor(settings);
+  const siteLogoUrl = siteLogoUrlFor(settings);
 
   const systemRoute = publicSystemRouteForSlug(pageSlug);
   if (systemRoute) {
