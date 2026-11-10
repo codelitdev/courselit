@@ -6,7 +6,7 @@ export const MailJob = z.object({
     subject: z.string(),
     body: z.string(),
     domainId: z.string(),
-    headers: z.record(z.string()).optional(),
+    headers: z.record(z.string(), z.string()).optional(),
 });
 
 export type MailJob = z.infer<typeof MailJob>;
