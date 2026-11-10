@@ -299,7 +299,24 @@ describe.serial("community billing when access ends", () => {
           path: "/v1/learner/communities",
           headers: setup.learnerHeaders,
         });
-      expect((await list()).body).toMatchObject({ items: [expect.any(Object)] });
+      expect((await list()).body).toMatchObject({ items: [{ canLeave: true }] });
+      // A team member stays in the community, so the storefront offers no way out.
+      await setup.runtime.db.insert(schema.memberships).values({
+        id: "66666666-6666-4666-8666-666666666662",
+        publicId: "mem_billing_team",
+        schoolId: (
+          await setup.runtime.db
+            .select({ schoolId: schema.schoolAccounts.schoolId })
+            .from(schema.schoolAccounts)
+            .where(eq(schema.schoolAccounts.id, setup.learnerAccountId))
+        )[0]!.schoolId,
+        schoolAccountId: setup.learnerAccountId,
+        isOwner: false,
+        permissions: ["products:read"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect((await list()).body).toMatchObject({ items: [{ canLeave: false }] });
       await setup.runtime.db.update(schema.communities).set({ enabled: false });
       expect(await list()).toMatchObject({ status: 200, body: { items: [] } });
     } finally {

@@ -416,7 +416,7 @@ export function CommunityAdmin() {
         {canModerate ? (
           <div hidden={activeSection !== "reports"}>
             <CommunityReports
-              community={community}
+              reportsPath={`/api/v1/communities/${encodeURIComponent(community.id)}/reports`}
               request={request}
               pendingCount={pendingReports}
               onPendingChanged={() => void refreshPending(community.id)}

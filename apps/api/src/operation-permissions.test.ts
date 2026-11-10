@@ -57,13 +57,24 @@ describe("operation permissions", () => {
     const all = new Set<string>(COURSELIT_PERMISSIONS);
     for (const { operationId, policy } of schoolPolicies()) {
       const required = policy.requiredPermissions ?? [];
+      const any = policy.anyPermissions ?? [];
       const owner = !policy.ownerOnly;
-      expect(
-        operationPermissionsAllow(operationId, {
-          permissions: new Set(required),
-          isOwner: true,
-        }),
-      ).toBe(true);
+      // Any one of the alternatives is enough, and none at all is not.
+      for (const alternative of any.length ? any : [null]) {
+        expect(
+          operationPermissionsAllow(operationId, {
+            permissions: new Set(alternative ? [...required, alternative] : required),
+            isOwner: true,
+          }),
+        ).toBe(true);
+      }
+      if (any.length) {
+        const withoutAny = new Set(all);
+        for (const alternative of any) withoutAny.delete(alternative);
+        expect(
+          operationPermissionsAllow(operationId, { permissions: withoutAny, isOwner: true }),
+        ).toBe(false);
+      }
       for (const missing of required) {
         const without = new Set(all);
         without.delete(missing);
@@ -144,7 +155,10 @@ describe("operation permissions", () => {
     const refused: string[] = [];
     for (const { operationId, policy } of candidates) {
       const route = routes[operationId]!;
-      const required = policy.requiredPermissions ?? [];
+      const required = [
+        ...(policy.requiredPermissions ?? []),
+        ...(policy.anyPermissions ?? []).slice(0, 1),
+      ];
       const key = await createKey(
         runtime,
         world,

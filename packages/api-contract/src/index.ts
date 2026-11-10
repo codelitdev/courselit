@@ -1100,6 +1100,8 @@ export const learnerCommunityMembershipSchema = communitySchema.extend({
       planName: z.string(),
     })
     .nullable(),
+  /** False for a member of the school's team, who stays in the community. */
+  canLeave: z.boolean(),
 });
 
 export const publicCommunityListItemSchema = communitySchema.extend({
@@ -1240,6 +1242,8 @@ export const learnerFeedPostSchema = communityPostSchema.extend({
       featuredImage: mediaRefSchema.nullable(),
     })
     .optional(),
+  /** Set on a single space post: whether the viewer may remove others' posts and comments there. */
+  canModerate: z.boolean().optional(),
 });
 
 export const communityCommentSchema = z.object({
@@ -2338,6 +2342,22 @@ export const contract = c.router({
     method: "GET",
     path: "/v1/communities/:communityId/reports",
     pathParams: z.object({ communityId: z.string() }),
+    query: communityStatusQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(communityReportSchema),
+        nextCursor: z.string().nullable(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listProductDiscussionReports: {
+    method: "GET",
+    path: "/v1/products/:productId/discussion-reports",
+    pathParams: z.object({ productId: z.string() }),
     query: communityStatusQuerySchema,
     responses: {
       200: z.object({

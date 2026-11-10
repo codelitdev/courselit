@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/codelit/dialog";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import {
-  type Community,
   CommunityGifPreview,
   CommunityMediaPreview,
   communityPagePath,
@@ -36,18 +35,20 @@ const CONTENT_LABEL: Record<Report["contentType"], string> = {
   reply: "Reply",
 };
 
+/** Reports for the community's spaces, or for one course's discussion. */
 export function CommunityReports({
-  community,
+  reportsPath,
   request,
-  pendingCount,
+  pendingCount = null,
   onPendingChanged,
   setNotice,
   setError,
 }: {
-  community: Community;
+  /** Lists the reports: the community's or a course discussion's. */
+  reportsPath: string;
   request: CommunityRequest;
-  pendingCount: string | null;
-  onPendingChanged: () => void;
+  pendingCount?: string | null;
+  onPendingChanged?: () => void;
   setNotice: (value: string | null) => void;
   setError: (value: string | null) => void;
 }) {
@@ -59,8 +60,6 @@ export function CommunityReports({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toKeep, setToKeep] = useState<Report | null>(null);
   const [keepReason, setKeepReason] = useState("");
-
-  const reportsPath = `/api/v1/communities/${encodeURIComponent(community.id)}/reports`;
 
   const load = useCallback(
     async (cursor?: string | null) => {
@@ -113,7 +112,7 @@ export function CommunityReports({
           .map((item) => (item.id === updated.id ? updated : item))
           .filter((item) => filter === "all" || item.status === filter),
       );
-      onPendingChanged();
+      onPendingChanged?.();
       setNotice(notice);
       return true;
     } catch (caught) {

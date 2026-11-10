@@ -177,6 +177,7 @@ import {
   listComments,
   listMemberships,
   listPosts,
+  listProductDiscussionReports,
   listReports,
   togglePostSubscription,
   toggleReaction,
@@ -3531,6 +3532,26 @@ export async function dispatch(
         decodeURIComponent(communitySubscriptionMatch[1]!),
         parsed.data.subscribed,
         deps.clock,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+    const productReportsMatch = /^\/v1\/products\/([^/]+)\/discussion-reports$/.exec(path);
+    if (productReportsMatch && request.method === "GET") {
+      const parsed = communityStatusQuerySchema.safeParse({
+        cursor: query.get("cursor") ?? undefined,
+        limit: query.get("limit") ?? undefined,
+        status: query.get("status") ?? undefined,
+      });
+      if (!parsed.success)
+        return errorResponse(createPlatformError("validation_failed"));
+      const result = await listProductDiscussionReports(
+        deps.db,
+        context,
+        communitySchool,
+        decodeURIComponent(productReportsMatch[1]!),
+        parsed.data,
       );
       return result.ok
         ? { status: 200, body: result.value }

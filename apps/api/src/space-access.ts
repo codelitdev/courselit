@@ -88,6 +88,37 @@ export async function staffSpaceIds(
 }
 
 /**
+ * Whether a school account may remove other people's posts and comments in a
+ * space. A course discussion is moderated by the team members who manage
+ * products; a community space by those who moderate the community, and by
+ * community members given the moderator role.
+ */
+export async function moderatesSpace(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+  spaceId: string,
+): Promise<boolean> {
+  if ((await staffSpaceIds(db, schoolId, schoolAccountId)).has(spaceId)) return true;
+  const ownership = await spaceOwnership(db, schoolId);
+  if (ownership.productSpaces.has(spaceId)) return false;
+  const [moderator] = await db
+    .select({ id: schema.learnerMemberships.id })
+    .from(schema.learnerMemberships)
+    .where(
+      and(
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.schoolAccountId, schoolAccountId),
+        eq(schema.learnerMemberships.entityType, "community"),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.learnerMemberships.role, "moderate"),
+      ),
+    )
+    .limit(1);
+  return Boolean(moderator);
+}
+
+/**
  * Return the spaces a school account can access: those its active learner
  * memberships unlock, plus those it reaches as a team member (see
  * `staffSpaceIds`). Spaces whose owner is switched off (see `spaceOwnership`)

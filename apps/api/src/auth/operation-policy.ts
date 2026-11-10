@@ -8,7 +8,8 @@ export type CredentialKind = "session" | "oauth" | "api_key";
 export type TeamOperationPolicy = {
   audience: "school";
   requiredPermissions?: readonly CourseLitPermission[];
-  requireAll?: boolean;
+  /** At least one of these is needed too; the domain decides which applies. */
+  anyPermissions?: readonly CourseLitPermission[];
   ownerOnly?: boolean;
   allowedCredentials: readonly CredentialKind[];
   recentAuthentication?: boolean;
@@ -250,7 +251,12 @@ export const OPERATION_POLICIES = {
   toggleCommunityPostSubscription: schoolOp(["communities:write"]),
   listCommunityReports: schoolOp(["communities:moderate"]),
   createCommunityReport: schoolOp(["communities:moderate"]),
-  updateCommunityReport: schoolOp(["communities:moderate"]),
+  // A report on a course discussion is resolved by those who manage products.
+  updateCommunityReport: {
+    ...schoolOp([]),
+    anyPermissions: ["communities:moderate", "products:write"],
+  },
+  listProductDiscussionReports: schoolOp(["products:write"]),
   getSchoolCommunity: schoolOp(["communities:read"]),
   listCommunityPlans: schoolOp(["communities:read"]),
   createCommunityPlan: schoolOp(["communities:write"]),
@@ -442,8 +448,11 @@ export function operationPermissionsAllow(
   const policy = getOperationPolicy(operationId);
   if (policy?.audience !== "school") return true;
   if (policy.ownerOnly && !caller.isOwner) return false;
-  return (policy.requiredPermissions ?? []).every((permission) =>
-    caller.permissions.has(permission),
+  const any = policy.anyPermissions ?? [];
+  return (
+    (policy.requiredPermissions ?? []).every((permission) =>
+      caller.permissions.has(permission),
+    ) && (any.length === 0 || any.some((permission) => caller.permissions.has(permission)))
   );
 }
 

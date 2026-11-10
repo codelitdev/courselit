@@ -32,7 +32,10 @@ describe("fail-closed operation policy coverage", () => {
     for (const [opId, policy] of Object.entries(OPERATION_POLICIES)) {
       if (policy.audience === "school") {
         const teamPolicy = policy as TeamOperationPolicy;
-        for (const perm of teamPolicy.requiredPermissions ?? []) {
+        for (const perm of [
+          ...(teamPolicy.requiredPermissions ?? []),
+          ...(teamPolicy.anyPermissions ?? []),
+        ]) {
           expect(validPermSet.has(perm)).toBe(true);
         }
       }

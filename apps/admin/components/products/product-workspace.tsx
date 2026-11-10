@@ -72,6 +72,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/codelit/select";
+import { CommunityReports } from "@/components/communities/community-reports";
 import { Switch } from "@/components/ui/codelit/switch";
 import { storefrontUrl } from "@/lib/storefront-url";
 import { hasSchoolPermission } from "@/lib/school-permissions";
@@ -1764,6 +1765,17 @@ export function ProductWorkspace({
                     disabled={saving}
                   />
                 </div>
+                {discussionsDraft ? (
+                  <div className="space-y-3 border-t pt-4">
+                    <h3 className="text-sm font-medium">Reports</h3>
+                    <CommunityReports
+                      reportsPath={`/api/v1/products/${encodeURIComponent(productId)}/discussion-reports`}
+                      request={request}
+                      setNotice={setNotice}
+                      setError={setError}
+                    />
+                  </div>
+                ) : null}
               </section>
             ) : null}
 

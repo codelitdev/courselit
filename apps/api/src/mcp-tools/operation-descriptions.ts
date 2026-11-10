@@ -45,8 +45,10 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   createCommunityReport:
     "Reports a post or comment to the community's moderators.",
   listCommunityReports: "Lists the reports moderators have received for a community.",
+  listProductDiscussionReports:
+    "Lists the reports learners have made about posts, comments and replies in a course's discussion.",
   updateCommunityReport:
-    "Resolves or dismisses a moderation report. Needs the reportId from list_community_reports.",
+    "Resolves or dismisses a moderation report. Needs the reportId from list_community_reports or list_product_discussion_reports.",
 
   // Spaces
   listSpaces: "Lists the school's spaces, in their display order.",

@@ -20,6 +20,7 @@ import {
   lt,
   or,
   sql,
+  type SQL,
 } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
 import {
@@ -57,7 +58,7 @@ import {
 import type { PaymentProvider } from "./payments.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
-import { accessibleSpaceIds } from "./space-access.js";
+import { accessibleSpaceIds, moderatesSpace } from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -109,6 +110,8 @@ export type CommunityDto = {
 
 export type LearnerCommunityMembershipDto = CommunityDto & {
   billing: LearnerCommunityBilling | null;
+  /** False for a member of the school's team, who stays in the community. */
+  canLeave: boolean;
 };
 
 export type PublicCommunityListItemDto = CommunityDto & {
@@ -176,6 +179,8 @@ export type LearnerSpaceFeedPostDto = LearnerFeedPostDto & {
     logo: string;
     featuredImage: MediaRef | null;
   };
+  /** Set on a single post: whether the viewer may remove others' posts and comments in its space. */
+  canModerate?: boolean;
 };
 
 export type CommunityCommentDto = {
@@ -1159,10 +1164,12 @@ async function canModerateCommunity(
   schoolId: string,
   communityId: string,
   viewer: CommunityViewer,
+  spaceId?: string | null,
 ) {
   if (viewer.kind === "admin") {
     return adminCan(viewer.context, "communities:moderate");
   }
+  if (spaceId) return moderatesSpace(db, schoolId, viewer.learnerId, spaceId);
   const membership = await loadMembership(db, schoolId, communityId, {
     kind: "learner",
     id: viewer.learnerId,
@@ -1471,6 +1478,18 @@ export async function listLearnerCommunities(
     schoolAccountId: viewer.learnerId,
     communityIds: page.map((row) => row.community.id),
   });
+  // Leaving is refused for team members (see `leaveCommunity`).
+  const [team] = await db
+    .select({ id: schema.memberships.id })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, viewer.schoolId),
+        eq(schema.memberships.schoolAccountId, viewer.learnerId),
+      ),
+    )
+    .limit(1);
+  const onTeam = Boolean(team);
   return {
     ok: true,
     value: {
@@ -1488,6 +1507,7 @@ export async function listLearnerCommunities(
           postsCount.get(row.community.id) ?? 0,
         ),
         billing: billing.get(row.community.id) ?? null,
+        canLeave: !onTeam,
       })),
       nextCursor:
         rows.length > options.limit && page.at(-1)
@@ -3120,6 +3140,15 @@ async function staffPostHref(
   return `${siteUrl}${await learnerPostHref(db, schoolId, postPublicId, fragment)}`;
 }
 
+async function postSpaceId(db: AppDb, postId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ spaceId: schema.communityPosts.spaceId })
+    .from(schema.communityPosts)
+    .where(eq(schema.communityPosts.id, postId))
+    .limit(1);
+  return row?.spaceId ?? null;
+}
+
 async function loadComment(db: AppDb, schoolId: string, publicId: string) {
   const rows = await db
     .select()
@@ -3725,7 +3754,13 @@ export async function deletePost(
     return forbidden();
   const canDelete =
     (await authorCanChange(viewer, existing.schoolAccountId)) ||
-    (await canModerateCommunity(db, schoolId, existing.communityId, viewer));
+    (await canModerateCommunity(
+      db,
+      schoolId,
+      existing.communityId,
+      viewer,
+      existing.spaceId,
+    ));
   if (!canDelete) return forbidden();
   const now = clock.now();
   await db
@@ -4125,7 +4160,13 @@ export async function deleteComment(
     return forbidden();
   const canDelete =
     (await authorCanChange(viewer, existing.schoolAccountId)) ||
-    (await canModerateCommunity(db, schoolId, existing.communityId, viewer));
+    (await canModerateCommunity(
+      db,
+      schoolId,
+      existing.communityId,
+      viewer,
+      await postSpaceId(db, existing.postId),
+    ));
   if (!canDelete) return forbidden();
   const now = clock.now();
   await db
@@ -4468,12 +4509,91 @@ export async function listReports(
   if (!adminCan(context, "communities:moderate")) return forbidden();
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
   if (!community) return notFound();
+  // Reports on course discussions are handled from the course.
+  return reportsPage(db, school, community, options, sql`not exists (
+    select 1 from ${schema.products}
+    where ${schema.products.schoolId} = ${school.schoolId}
+      and ${schema.products.discussionSpaceId} = ${reportSpaceId()}
+  )`);
+}
+
+/** Reports on posts, comments and replies in a course's discussion. */
+export async function listProductDiscussionReports(
+  db: AppDb,
+  context: AdminContext,
+  school: { schoolId: string; publicId: string },
+  productPublicId: string,
+  options: {
+    status?: "pending" | "accepted" | "rejected";
+    cursor?: string;
+    limit: number;
+  },
+): Promise<Result<{ items: CommunityReportDto[]; nextCursor: string | null }>> {
+  if (!adminCan(context, "products:write")) return forbidden();
+  const [product] = await db
+    .select({ discussionSpaceId: schema.products.discussionSpaceId })
+    .from(schema.products)
+    .where(
+      and(
+        eq(schema.products.schoolId, school.schoolId),
+        eq(schema.products.publicId, productPublicId),
+      ),
+    )
+    .limit(1);
+  if (!product) return notFound();
+  const [community] = await db
+    .select()
+    .from(schema.communities)
+    .where(
+      and(
+        eq(schema.communities.schoolId, school.schoolId),
+        isNull(schema.communities.deletedAt),
+      ),
+    )
+    .limit(1);
+  if (!product.discussionSpaceId || !community) {
+    return { ok: true, value: { items: [], nextCursor: null } };
+  }
+  return reportsPage(
+    db,
+    school,
+    community,
+    options,
+    sql`${reportSpaceId()} = ${product.discussionSpaceId}`,
+  );
+}
+
+/** The space of the post, comment or reply a report is about. */
+function reportSpaceId() {
+  return sql`coalesce(
+    (select ${schema.communityPosts.spaceId} from ${schema.communityPosts}
+      where ${schema.communityReports.contentType} = 'post'
+        and ${schema.communityPosts.id} = ${schema.communityReports.contentId}),
+    (select ${schema.communityPosts.spaceId} from ${schema.communityComments}
+      join ${schema.communityPosts} on ${schema.communityPosts.id} = ${schema.communityComments.postId}
+      where ${schema.communityReports.contentType} <> 'post'
+        and ${schema.communityComments.id} = ${schema.communityReports.contentId})
+  )`;
+}
+
+async function reportsPage(
+  db: AppDb,
+  school: { schoolId: string; publicId: string },
+  community: typeof schema.communities.$inferSelect,
+  options: {
+    status?: "pending" | "accepted" | "rejected";
+    cursor?: string;
+    limit: number;
+  },
+  inScope: SQL,
+): Promise<Result<{ items: CommunityReportDto[]; nextCursor: string | null }>> {
   const cursor = decodeCursor(options.cursor);
   if (options.cursor && !cursor)
     return { ok: false, error: createPlatformError("validation_failed") };
   const conditions = [
     eq(schema.communityReports.schoolId, school.schoolId),
     eq(schema.communityReports.communityId, community.id),
+    inScope,
   ];
   if (options.status)
     conditions.push(eq(schema.communityReports.status, options.status));
@@ -4541,9 +4661,21 @@ export async function updateReport(
   },
   clock: Clock,
 ): Promise<Result<CommunityReportDto>> {
-  if (!adminCan(context, "communities:moderate")) return forbidden();
+  if (
+    !adminCan(context, "communities:moderate") &&
+    !adminCan(context, "products:write")
+  ) {
+    return forbidden();
+  }
   const rows = await db
-    .select()
+    .select({
+      report: schema.communityReports,
+      inCourse: sql<boolean>`exists (
+        select 1 from ${schema.products}
+        where ${schema.products.schoolId} = ${schoolId}
+          and ${schema.products.discussionSpaceId} = ${reportSpaceId()}
+      )`,
+    })
     .from(schema.communityReports)
     .where(
       and(
@@ -4552,8 +4684,13 @@ export async function updateReport(
       ),
     )
     .limit(1);
-  const existing = rows[0];
+  const existing = rows[0]?.report;
   if (!existing) return notFound();
+  // A course discussion is moderated by those who manage products; the
+  // community's spaces by those who moderate the community.
+  if (!adminCan(context, rows[0]!.inCourse ? "products:write" : "communities:moderate")) {
+    return forbidden();
+  }
   const now = clock.now();
   const rejectionReason = input.rejectionReason?.trim() || null;
   if (input.status === "rejected" && !rejectionReason) {

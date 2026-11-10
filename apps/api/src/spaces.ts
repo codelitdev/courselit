@@ -29,7 +29,12 @@ import {
 } from "./notifications.js";
 import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
-import { accessibleSpaceIds, spaceOwnership, staffSpaceIds } from "./space-access.js";
+import {
+  accessibleSpaceIds,
+  moderatesSpace,
+  spaceOwnership,
+  staffSpaceIds,
+} from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -1048,7 +1053,9 @@ export async function getLearnerSpacePost(
   const post = rows[0]?.post;
   if (!post) return notFound();
   const [item] = await mapLearnerSpaceFeedPosts(db, viewer, [{ post, space }]);
-  return item ? { ok: true, value: item } : notFound();
+  if (!item) return notFound();
+  const canModerate = await moderatesSpace(db, viewer.schoolId, viewer.learnerId, space.id);
+  return { ok: true, value: { ...item, canModerate } };
 }
 
 export async function listSpaceReports(

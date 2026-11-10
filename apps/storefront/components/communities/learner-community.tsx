@@ -451,7 +451,9 @@ export function LearnerSpacePost({
 }) {
   const routePath = `/dashboard/s/${encodeURIComponent(spaceId)}/${encodeURIComponent(postId)}`;
   const { learner, checking } = useLearnerSession(routePath);
-  const [spacePost, setSpacePost] = useState<CommunityPost | null>(null);
+  const [spacePost, setSpacePost] = useState<
+    (CommunityPost & { communityId: string; canModerate?: boolean }) | null
+  >(null);
   const [spaceName, setSpaceName] = useState<string | null>(null);
   const [error, setError] = useState<"unavailable" | "failed" | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -463,7 +465,13 @@ export function LearnerSpacePost({
     setSpacePost(null);
     setSpaceName(null);
     setError(null);
-    void requestJson<CommunityPost & { communityId: string; space?: { name: string } }>(
+    void requestJson<
+      CommunityPost & {
+        communityId: string;
+        space?: { name: string };
+        canModerate?: boolean;
+      }
+    >(
       `/api/v1/learner/spaces/${encodeURIComponent(spaceId)}/posts/${encodeURIComponent(postId)}`,
     )
       .then((post) => {
@@ -539,6 +547,7 @@ export function LearnerSpacePost({
       spaceId={spaceId}
       postId={postId}
       initialPost={spacePost}
+      canModerateSpace={spacePost.canModerate === true}
       spaceName={spaceName ?? undefined}
       routePath={routePath}
       embedded={embedded}
@@ -551,6 +560,7 @@ export function LearnerCommunity({
   spaceId,
   postId,
   initialPost,
+  canModerateSpace,
   spaceName,
   routePath,
   embedded = false,
@@ -559,6 +569,8 @@ export function LearnerCommunity({
   spaceId?: string;
   postId?: string;
   initialPost?: CommunityPost;
+  /** Decided by the API for a space post: who moderates depends on the space. */
+  canModerateSpace?: boolean;
   spaceName?: string;
   routePath?: string;
   embedded?: boolean;
@@ -750,9 +762,10 @@ export function LearnerCommunity({
   const focusedPost = postId ? posts.find((post) => post.id === postId) : null;
   const displayedPosts = postId ? (focusedPost ? [focusedPost] : []) : posts;
   const canModerate =
-    hasCommunityMembership &&
-    (community?.membership?.role === "moderator" ||
-      community?.membership?.role === "owner");
+    canModerateSpace ??
+    (hasCommunityMembership &&
+      (community?.membership?.role === "moderator" ||
+        community?.membership?.role === "owner"));
   const categoryOptions = useMemo(
     () => (community?.categories.length ? community.categories : ["General"]),
     [community?.categories],

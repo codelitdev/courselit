@@ -105,26 +105,28 @@ export function LearnerCommunityMembershipBar() {
       {community.membership?.role === "moderator" ? (
         <LearnerBadge variant="secondary">Moderator</LearnerBadge>
       ) : null}
-      <LearnerDropdownMenu>
-        <LearnerDropdownMenuTrigger asChild>
-          <LearnerButton
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="ml-auto"
-            disabled={leaving}
-            aria-label={`${community.name} options`}
-          >
-            <EllipsisVertical />
-          </LearnerButton>
-        </LearnerDropdownMenuTrigger>
-        <LearnerDropdownMenuContent align="end">
-          <LearnerDropdownMenuItem onSelect={() => setConfirming(true)}>
-            <LogOut />
-            <LearnerText2 component="span">Leave community</LearnerText2>
-          </LearnerDropdownMenuItem>
-        </LearnerDropdownMenuContent>
-      </LearnerDropdownMenu>
+      {community.canLeave ? (
+        <LearnerDropdownMenu>
+          <LearnerDropdownMenuTrigger asChild>
+            <LearnerButton
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="ml-auto"
+              disabled={leaving}
+              aria-label={`${community.name} options`}
+            >
+              <EllipsisVertical />
+            </LearnerButton>
+          </LearnerDropdownMenuTrigger>
+          <LearnerDropdownMenuContent align="end">
+            <LearnerDropdownMenuItem onSelect={() => setConfirming(true)}>
+              <LogOut />
+              <LearnerText2 component="span">Leave community</LearnerText2>
+            </LearnerDropdownMenuItem>
+          </LearnerDropdownMenuContent>
+        </LearnerDropdownMenu>
+      ) : null}
       <LearnerAlertDialog open={confirming} onOpenChange={setConfirming}>
         <LearnerAlertDialogContent>
           <LearnerAlertDialogHeader>

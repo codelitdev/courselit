@@ -811,6 +811,100 @@ describe.serial("school spaces and included products", () => {
       body: { title: "Welcome", content: "Ask anything here." },
     });
     expect(posted.status).toBe(201);
+    const welcomeId = (posted.body as { id: string }).id;
+
+    // A buyer posts in the course and reports the team member's post.
+    const buyerSignUp = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/learner/auth/sign-up",
+      headers: { "x-school-id": world.schoolA.publicId },
+      body: {
+        schoolId: world.schoolA.publicId,
+        email: "course-buyer@example.com",
+        password: "learner-password-1",
+        name: "Course Buyer",
+      },
+    });
+    expect(buyerSignUp.status).toBe(201);
+    const buyerHeaders = {
+      cookie: learnerCookie(buyerSignUp),
+      "x-school-id": world.schoolA.publicId,
+    };
+    const [buyer] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "course-buyer@example.com"));
+    await runtime.db.insert(schema.learnerMemberships).values({
+      id: "55555555-5555-4555-8555-555555555561",
+      publicId: "lrm_buyer",
+      schoolId: world.schoolA.id,
+      schoolAccountId: buyer!.id,
+      entityType: "product",
+      entityId: productId,
+      paymentPlanId: null,
+      status: "active",
+      role: null,
+      isIncludedInPlan: false,
+      parentMembershipId: null,
+      joiningReason: "",
+      createdAt: clock.now(),
+      updatedAt: clock.now(),
+    });
+    const buyerPost = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${courseRow!.publicId}/posts`,
+      headers: buyerHeaders,
+      body: { title: "Spam", content: "Buy my thing." },
+    });
+    expect(buyerPost.status).toBe(201);
+    const spamId = (buyerPost.body as { id: string }).id;
+    const reported = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${courseRow!.publicId}/reports`,
+      headers: buyerHeaders,
+      body: { contentType: "post", contentId: welcomeId, reason: "Off topic" },
+    });
+    expect(reported.status).toBe(201);
+
+    // The report is handled from the course, not from the community.
+    const courseReports = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${productId}/discussion-reports`,
+      headers: adminHeaders,
+    });
+    expect(courseReports.status).toBe(200);
+    expect((courseReports.body as { items: unknown[] }).items).toHaveLength(1);
+    const [communityRow] = await runtime.db
+      .select({ publicId: schema.communities.publicId })
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const communityReports = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/communities/${communityRow!.publicId}/reports`,
+      headers: adminHeaders,
+    });
+    expect(communityReports.status).toBe(200);
+    expect((communityReports.body as { items: unknown[] }).items).toHaveLength(0);
+
+    // The product manager may remove the buyer's post; the buyer may not moderate.
+    const canModerate = async (requestHeaders: Record<string, string>) => {
+      const post = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/learner/spaces/${courseRow!.publicId}/posts/${spamId}`,
+        headers: requestHeaders,
+      });
+      expect(post.status).toBe(200);
+      return (post.body as { canModerate?: boolean }).canModerate;
+    };
+    expect(await canModerate(buyerHeaders)).toBe(false);
+    expect(await canModerate(headers)).toBe(true);
+    const removed = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/learner/community-posts/${spamId}`,
+      headers,
+    });
+    expect(removed.status).toBe(200);
+
     // Moderating the community opens its spaces, not the courses'.
     await grant(["communities:moderate"]);
     expect(await spaceIds()).toEqual([general!.publicId]);
