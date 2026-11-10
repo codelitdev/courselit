@@ -61,7 +61,7 @@ const DispatchNotificationJob = z.object({
         ),
     entityId: z.string(),
     entityTargetId: z.string().optional(),
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
 });
 
 const NotificationJob = z.object({
@@ -73,7 +73,7 @@ const NotificationJob = z.object({
         ),
     entityId: z.string(),
     entityTargetId: z.string().optional(),
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
 });
 
 router.post(

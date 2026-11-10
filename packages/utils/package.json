@@ -45,6 +45,6 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@sindresorhus/slugify": "^2.2.1",
-        "nanoid": "^5.0.9"
+        "nanoid": "^5.1.16"
     }
 }

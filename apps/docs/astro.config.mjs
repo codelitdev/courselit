@@ -6,9 +6,13 @@ import react from "@astrojs/react";
 export default defineConfig({
     integrations: [
         // Enable Preact to support Preact JSX components.
-        preact(),
+        preact({
+            include: ["**/RightSidebar/*.tsx", "**/Header/SidebarToggle.tsx"],
+        }),
         // Enable React for the Algolia search component.
-        react(),
+        react({
+            include: ["**/Header/Search.tsx", "**/Header/LanguageSelect.tsx"],
+        }),
     ],
     site: `https://docs.courselit.app`,
 });
