@@ -53,7 +53,7 @@
     "better-call": "1.4.0",
     "dodopayments": "^2.61.1",
     "drizzle-orm": "0.45.2",
-    "express": "4.21.2",
+    "express": "4.22.3",
     "express-rate-limit": "^7.5.0",
     "fflate": "0.4.9",
     "nodemailer": "^10.0.1",

@@ -17,7 +17,7 @@
   "overrides": {
     "esbuild": "0.28.2",
     "postcss": "8.5.28",
-    "qs": "6.16.0",
+    "qs": "6.16.1",
     "ts-deepmerge": "8.0.0"
   },
   "patchedDependencies": {
