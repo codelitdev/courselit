@@ -165,6 +165,65 @@ Community setup with live preview; the Members screen (the answer to the join
 question, approve and reject, roles); the sequence editor and its triggers; the
 feed composer; the course player with progress; certificates.
 
+## Parity gaps vs `main` (2026-11-10)
+
+Things `main` (v0.74.4) does that the rewrite doesn't. Found by reading the
+code on both branches, not by running them. The item-by-item comparison is in
+`docs/platform-rewrite-parity-ledger.md`.
+
+### Before launch
+
+- [ ] **Contacts list loads only the first 100 contacts** and filters them in
+  the browser (`apps/admin/app/contacts/page.tsx`). Counts and search are wrong
+  for bigger schools.
+- [ ] **Image upload inside page-builder blocks is broken.** The builder's
+  `ImageUploadDialog` gets no upload adapters and the admin never mounts a
+  `MediaUploaderProvider`, so uploading throws. Pasting a URL may still work.
+- [ ] **Contact filters in the UI cover only email, tag, subscription and
+  signed up.** Product, community, last active and permission are missing,
+  though `apps/api/src/contact-filters.ts` supports most of them. This also
+  limits broadcast and sequence audiences.
+- [ ] **The generic "Email signup" and "Support form" page blocks say they
+  succeeded but save nothing.** They need `teamId` and `publicApiBaseUrl`, which
+  the storefront never passes. The CourseLit "Newsletter signup" block works.
+  Not confirmed at runtime.
+
+### Missing features
+
+- [ ] SAML SSO login.
+- [ ] Per-school Google login (the school's own client ID and secret) and
+  per-school toggles for login methods. Google is now platform-wide, set by env
+  vars.
+- [ ] Pinning community posts. The API supports it and the feed shows a
+  "Pinned" badge, but no screen sets it.
+- [ ] Reply by email to discussions and community posts (see
+  `docs/wip/community-replies-from-email.md`).
+- [ ] A tag management page: counts, delete a tag, untag everyone.
+- [ ] Unpublishing a blog post: there's no endpoint or button.
+- [ ] Smaller ones: a "Downloaded" column for download products; editing a
+  comment (API only); subscription ID and method in the member list; a share
+  button on community posts; the list of contacts in a sequence (count only);
+  a per-sequence "From" name; Unsplash in page-builder blocks (community image
+  and rich text only); the version/about page.
+
+### Changed on purpose (confirm)
+
+- [ ] One community per school instead of many, and no public `/communities`
+  list (`apps/api/docs/one-community-per-school.md`).
+- [ ] Course discussions are one community space per course, not per lesson.
+
+## Dependency audit (`bun audit`, 2026-11-10)
+
+Commit f142df23 fixed both criticals and all but one high.
+
+- [ ] **Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high:
+  validating an oversized constrained collection can exhaust memory). The API,
+  storefront and `api-contract` pin zod 3.25.76. So do ts-rest, the patched
+  `@anatine/zod-openapi` and our `@codelitdev/*` packages, which all need zod
+  3, so this is a migration rather than a version bump.
+- [ ] minimatch (moderate) and deepmerge (low). Both come in only through the
+  `shadcn` CLI, a dev tool; they clear when shadcn updates its dependencies.
+
 ## Not yet verified
 
 - [ ] Paid checkout, receipts, sale alerts, cancellation and refunds against
