@@ -38,7 +38,7 @@
     },
     "peerDependencies": {
         "lucide-react": "*",
-        "next": "^16.0.10",
+        "next": "^16.4.5",
         "react": "*",
         "react-dom": "*"
     },
