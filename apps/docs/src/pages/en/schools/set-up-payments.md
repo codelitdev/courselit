@@ -10,6 +10,7 @@ CourseLit offers integrations with the following payment platforms:
 
 - [Stripe](https://stripe.com)
 - [Razorpay](https://razorpay.com)
+- [PayPal](https://paypal.com)
 - [Lemonsqueezy](https://lemonsqueezy.com) (Experimental)
 
 > A school can only have a single payment platform activated at a time.
@@ -106,6 +107,37 @@ CourseLit offers integrations with the following payment platforms:
           ![Lemon Squeezy webhook configuration](/assets/schools/lemon-webhook-config.png)
 
 9. That's it! Your Lemon Squeezy configuration is complete, and you are ready to receive payments.
+
+## PayPal setup
+
+> PayPal subscriptions require a product and recurring plans. Similar to our Lemon Squeezy integration, CourseLit does not create these provider-side objects for you. You must create them in PayPal first and then copy the IDs into CourseLit.
+
+1. Sign up for a PayPal Business account and a PayPal Developer account, and get your business approved (or use sandbox accounts for testing).
+2. In the PayPal Developer dashboard, go to `Apps & Credentials`.
+3. Create an app if you do not already have one, then keep that screen open.
+4. Copy the `Client ID` and `Client Secret` for your PayPal app.
+5. Create a generic PayPal product for CourseLit subscriptions.
+   PayPal requires a product before recurring billing plans can be created.
+6. Create the recurring plans you want to use with CourseLit:
+    - **Monthly plan**: To enable monthly subscriptions and EMIs in CourseLit
+    - **Yearly plan**: To enable yearly subscriptions in CourseLit
+7. In your CourseLit school's dashboard, go to `Settings > Payment` and configure the settings as described below:
+    1. **Currency**: This will be visible throughout your school.
+    2. **Payment method**: Select PayPal.
+    3. **PayPal Client ID**: Paste the client ID from your PayPal app.
+    4. **PayPal Client Secret**: Paste the client secret from your PayPal app.
+    5. **PayPal Product ID**: Paste the generic product ID you created in PayPal.
+    6. **PayPal Monthly Plan ID**: Paste the monthly recurring plan ID.
+    7. **PayPal Yearly Plan ID**: Paste the yearly recurring plan ID.
+8. Set up the webhooks. Using webhooks, your school receives timely updates about payments from PayPal.
+9. In the PayPal Developer dashboard, create a webhook using your CourseLit school's webhook endpoint (listed in the same payment screen in your school).
+10. Subscribe the webhook to the following events:
+    - `Checkout order completed`: For confirming one-time payments
+    - `Payment sale completed`: For confirming subscription and EMI payments
+    - `Billing subscription cancelled`: For subscription cancellation updates
+    - `Billing subscription expired`: For subscription expiry updates
+    - `Billing subscription payment failed`: For failed recurring payments
+11. That's it! Your PayPal configuration is complete, and you are ready to receive payments.
 
 ## Reset payment method
 

@@ -3,6 +3,7 @@ import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import DomainModel from "@/models/Domain";
 import UserModel from "@/models/User";
+import { checkForInvalidPaymentMethodSettings } from "../helpers";
 import { resetPaymentMethod } from "../logic";
 
 const SUITE_PREFIX = `payment-settings-${Date.now()}`;
@@ -99,5 +100,32 @@ describe("Payment settings", () => {
             UIConstants.PAYMENT_METHOD_NONE,
         );
         expect(updatedDomain?.settings?.currencyISOCode).toBe("usd");
+    });
+
+    it("should treat PayPal as invalid when required ids or credentials are missing", () => {
+        expect(
+            checkForInvalidPaymentMethodSettings({
+                paymentMethod: UIConstants.PAYMENT_METHOD_PAYPAL,
+                currencyISOCode: "usd",
+                paypalClientId: "client-id",
+                paypalClientSecret: "client-secret",
+                paypalProductId: "product-id",
+                paypalMonthlyPlanId: "monthly-plan-id",
+            } as any),
+        ).toBe(UIConstants.PAYMENT_METHOD_PAYPAL);
+    });
+
+    it("should accept PayPal when credentials and recurring template ids are present", () => {
+        expect(
+            checkForInvalidPaymentMethodSettings({
+                paymentMethod: UIConstants.PAYMENT_METHOD_PAYPAL,
+                currencyISOCode: "usd",
+                paypalClientId: "client-id",
+                paypalClientSecret: "client-secret",
+                paypalProductId: "product-id",
+                paypalMonthlyPlanId: "monthly-plan-id",
+                paypalYearlyPlanId: "yearly-plan-id",
+            } as any),
+        ).toBeUndefined();
     });
 });
