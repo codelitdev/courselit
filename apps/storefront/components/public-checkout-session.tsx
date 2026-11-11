@@ -516,6 +516,14 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
           setMembershipStatus("rejected");
           return;
         }
+        if (body?.details?.reason === "checkout_refused") {
+          throw new Error(
+            "This school can't take payments right now. We've let the school know. Please try again later.",
+          );
+        }
+        if (body?.details?.reason === "provider_unavailable") {
+          throw new Error("This school isn't set up to take payments yet.");
+        }
         throw new Error("Unable to start checkout.");
       }
       const checkout = (await response.json()) as StartedCheckout;

@@ -25,6 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
   community_membership_requested: "Community membership requests",
   community_joined: "New community members",
   new_sale: "New sales",
+  checkout_refused: "Checkouts your payment provider refused",
 };
 
 /** Lets a team member choose which activity notifies them in the app and

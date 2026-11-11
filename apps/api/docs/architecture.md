@@ -23,6 +23,9 @@
 - [Media](#media)
   - [Categories](#categories)
   - [Learner uploads](#learner-uploads)
+- [Payment webhooks](#payment-webhooks)
+  - [One URL per provider](#one-url-per-provider)
+  - [Known limitation: schools sharing a provider account](#known-limitation-schools-sharing-a-provider-account)
 - [Reference source files](#reference-source-files)
 
 ---
@@ -305,6 +308,34 @@ references and deletion safeguards continue to apply. They are not included in
 `GET /v1/media` unless the caller requests `category=user_uploads`. The admin
 media page exposes this as the `User uploads` category, while direct media
 lookups continue to work for assets already referenced by school content.
+
+## Payment webhooks
+
+Schools take payments through their own Stripe, Lemon Squeezy or Razorpay
+account. When a creator saves their keys, the API registers the payment
+webhook on that account and stores the signing secret it gets back
+(`src/payment-webhooks.ts`). If registration fails, the keys are still saved
+and the reason is kept for the settings page, which offers a retry. Razorpay
+has no delete call, so its webhook is updated in place instead of replaced.
+
+### One URL per provider
+
+Every school's webhook points at the same URL for its provider,
+`/v1/storefront/webhooks/<provider>` under `PAYMENT_WEBHOOK_BASE_URL` (by
+default the admin origin's API proxy). The school is read from the checkout
+metadata in the event, and the event is verified with that school's stored
+secret. Events that don't belong to a CourseLit checkout are acknowledged
+and ignored, so a provider account shared with other apps doesn't make the
+provider retry them.
+
+### Known limitation: schools sharing a provider account
+
+Two schools that use the same provider account each register their own
+webhook, at the same URL and with different secrets. The provider sends every
+event to both webhooks, and the delivery signed with the other school's secret
+fails verification. The provider keeps retrying it and may eventually switch
+that webhook off. This is rare enough to leave for now; putting the school in
+the webhook URL would fix it.
 
 ---
 

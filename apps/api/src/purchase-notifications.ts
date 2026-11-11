@@ -1,5 +1,5 @@
 import { type Clock, uuidv7 } from "@codelitdev/platform";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, gt } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { schoolSiteUrl } from "./membership-events.js";
 import { createAdminNotification } from "./notifications.js";
@@ -330,6 +330,65 @@ async function createSaleAlerts(tx: AppDb, purchase: Purchase, clock: Clock) {
           purchase.resourceType === "product"
             ? `/products/${encodeURIComponent(purchase.resourceId)}/customers`
             : "/community/memberships",
+      },
+      clock,
+    );
+  }
+}
+
+/** Staff notification type for checkouts the payment provider refused. */
+export const CHECKOUT_REFUSED_NOTIFICATION_TYPE = "checkout_refused";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  stripe: "Stripe",
+  lemonsqueezy: "Lemon Squeezy",
+  razorpay: "Razorpay",
+};
+
+/**
+ * Tells the owner and everyone who manages payments that the payment
+ * provider refused to start a learner's checkout, usually because the saved
+ * keys are wrong or were revoked. At most one alert an hour per school,
+ * however many learners try in that time.
+ */
+export async function notifyCheckoutRefused(
+  db: AppDb,
+  input: { schoolId: string; provider: string; title: string },
+  clock: Clock,
+) {
+  const [recent] = await db
+    .select({ id: schema.notifications.id })
+    .from(schema.notifications)
+    .where(
+      and(
+        eq(schema.notifications.schoolId, input.schoolId),
+        eq(schema.notifications.type, CHECKOUT_REFUSED_NOTIFICATION_TYPE),
+        gt(schema.notifications.createdAt, new Date(clock.now().getTime() - 60 * 60 * 1000)),
+      ),
+    )
+    .limit(1);
+  if (recent) return;
+  const members = await db
+    .select({
+      schoolAccountId: schema.memberships.schoolAccountId,
+      isOwner: schema.memberships.isOwner,
+      permissions: schema.memberships.permissions,
+    })
+    .from(schema.memberships)
+    .where(eq(schema.memberships.schoolId, input.schoolId));
+  const provider = PROVIDER_LABELS[input.provider] ?? input.provider;
+  for (const member of members) {
+    if (!member.isOwner && !parsePermissions(member.permissions).has("commerce:manage")) {
+      continue;
+    }
+    await createAdminNotification(
+      db,
+      { schoolId: input.schoolId, schoolAccountId: member.schoolAccountId },
+      {
+        type: CHECKOUT_REFUSED_NOTIFICATION_TYPE,
+        title: `${provider} refused a checkout`,
+        body: `A learner couldn't pay for ${input.title} because ${provider} refused to start the checkout. Check your ${provider} keys in the payment settings.`,
+        href: "/settings/payment",
       },
       clock,
     );

@@ -14,10 +14,11 @@ import {
   findLearnerMembership,
   type LearnerMembershipRow,
   revokeLearnerMembership,
+  unstageLearnerMembership,
   upsertLearnerMembership,
 } from "./learner-memberships.js";
 import { createSchoolAdminNotifications } from "./notifications.js";
-import { notifyPaymentSucceeded } from "./purchase-notifications.js";
+import { notifyCheckoutRefused, notifyPaymentSucceeded } from "./purchase-notifications.js";
 import {
   getPaymentProvider,
   type PaymentCheckoutResult,
@@ -626,6 +627,7 @@ export async function startLearnerCommunityCheckout(
         .update(schema.learnerMemberships)
         .set({ status: "expired", updatedAt: clock.now() })
         .where(eq(schema.learnerMemberships.id, existingLearnerMembership.id));
+      existingLearnerMembership.status = "expired";
     }
   }
   const membership = (
@@ -733,13 +735,27 @@ export async function startLearnerCommunityCheckout(
         courselit_community_plan_id: selected.plan.publicId,
       },
     });
-  } catch {
+  } catch (thrown) {
+    console.error("[CourseLit] Payment provider refused the checkout", {
+      checkout: row.publicId,
+      provider: paymentProvider!.name,
+      error: thrown instanceof Error ? thrown.message : String(thrown),
+    });
     await db
       .update(schema.communityCheckoutAttempts)
       .set({ status: "failed", updatedAt: clock.now(), completedAt: clock.now() })
       .where(eq(schema.communityCheckoutAttempts.id, row.id));
-    await revokeLearnerMembership(db, linkedRow.membershipId, "payment_failed", clock);
-    return error("conflict", { reason: "provider_unavailable" });
+    await unstageLearnerMembership(db, learnerMembership.id, existingLearnerMembership);
+    await notifyCheckoutRefused(
+      db,
+      {
+        schoolId: context.schoolId,
+        provider: paymentProvider!.name,
+        title: selected.community.name,
+      },
+      clock,
+    );
+    return error("conflict", { reason: "checkout_refused" });
   }
   const updatedAt = clock.now();
   await db

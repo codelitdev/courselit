@@ -81,15 +81,20 @@ cut, full REST and MCP coverage, multiple schools per account, open source.
   - LemonSqueezy checked 2026-11-10: one-time and monthly checkout, receipt,
     sale alert, refund (access removed), learner cancel (access kept until the
     period ends) and refund of the first subscription charge (access removed),
-    all through real webhooks. Its checkout page shows the variant's own price
-    ("$10.00 billed every month") under our $5.00 price; the subscription
-    really renews at $5.00, but the learner sees a wrong amount.
-  - Razorpay checked 2026-11-11: one-time checkout in USD with an Indian test
-    card works and access is granted by the webhook. Before this, every
-    Razorpay API call failed authentication, so its checkout never opened.
-    Still to check: subscriptions, learner cancel, and refunds (the QA
-    account's refund API rejects the USD test payment, and international
-    cards are off on that account).
+    all through real webhooks.
+  - LemonSqueezy's checkout shows our price as the headline, then its own
+    line "<variant price> billed every month" under it, taken from the
+    variant's list price. The charge and renewals use our price. Nothing in
+    the checkout API changes that line (`subscription_preview` and hiding the
+    description don't), and variants can't be edited through the API.
+    Creators are told on the settings page to price the variants to match
+    their usual plan.
+  - Razorpay checked 2026-11-11 with the school in INR (the QA account has
+    international cards off): one-time and monthly checkout, learner cancel
+    (kept until the period ends), and refund of the subscription's first
+    charge (access removed, subscription cancelled), all through real
+    webhooks. Before this, every Razorpay API call failed authentication, so
+    its checkout never opened.
 - [ ] **5. Refunds of a first subscription charge on Stripe's March 2025 API or
   later.** _(QA)_
   - Fixed 2026-11-10, awaiting deploy. Confirmed against Stripe on
@@ -102,11 +107,13 @@ cut, full REST and MCP coverage, multiple schools per account, open source.
 - [ ] **7. A file download end to end.** _(QA)_
   - Checked 2026-11-10. Fixed on the way, awaiting deploy: the zip was named
     after its token, because the proxies dropped `Content-Disposition`.
-- [ ] **8. Wrong gateway keys fail silently.** With an invalid Stripe secret
-  the learner sees "Unable to start checkout" and the creator is told nothing;
-  the provider's error is swallowed. Each failed attempt also leaves the
-  learner on the product's Customers list as "Payment Failed", though they
-  never paid. _(QA 2026-11-10)_
+- [ ] **8. Wrong gateway keys fail silently.** _(QA 2026-11-10)_
+  - Fixed 2026-11-11, awaiting deploy. Saving keys the provider rejects shows
+    why on the settings page. When the provider refuses to start a checkout,
+    the learner is told the school can't take payments right now, the owner
+    and payment managers get a "refused a checkout" alert (at most one an
+    hour), the reason is logged, and the learner no longer shows up as
+    "Payment Failed" on the Customers list.
 
 ## 2. What visitors and learners see
 

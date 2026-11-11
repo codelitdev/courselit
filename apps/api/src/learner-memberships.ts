@@ -181,6 +181,30 @@ export async function activeProductMemberships(
 }
 
 /** Revoke a membership and every product membership derived from it. */
+/**
+ * Undo the pending membership a checkout staged when the payment provider
+ * refused to start that checkout. The learner never got to pay, so they must
+ * not show up as a failed payment: a membership created for the checkout is
+ * removed, and one that existed before goes back to how it was.
+ */
+export async function unstageLearnerMembership(
+  db: AppDb,
+  membershipId: string,
+  previous: LearnerMembershipRow | null,
+): Promise<void> {
+  if (!previous) {
+    await db
+      .delete(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.id, membershipId));
+    return;
+  }
+  const { id: _id, publicId: _publicId, createdAt: _createdAt, ...restored } = previous;
+  await db
+    .update(schema.learnerMemberships)
+    .set(restored)
+    .where(eq(schema.learnerMemberships.id, membershipId));
+}
+
 export async function revokeLearnerMembership(
   db: AppDb,
   membershipId: string,

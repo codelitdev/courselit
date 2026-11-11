@@ -63,6 +63,7 @@ function realProvider(name: ProviderName): PaymentProvider {
 type ProviderCall = { method: string; url: string; body: string };
 let calls: ProviderCall[] = [];
 let failSubscriptionCalls = false;
+let refuseCheckouts = false;
 const originalFetch = globalThis.fetch;
 
 function providerResponse(method: string, url: string): unknown {
@@ -138,6 +139,7 @@ function providerResponse(method: string, url: string): unknown {
 beforeEach(() => {
   calls = [];
   failSubscriptionCalls = false;
+  refuseCheckouts = false;
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url =
       typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -152,6 +154,12 @@ beforeEach(() => {
     calls.push({ method, url, body: typeof init?.body === "string" ? init.body : "" });
     if (failSubscriptionCalls && url.includes("/subscriptions/")) {
       return new Response(JSON.stringify({ error: "unavailable" }), { status: 503 });
+    }
+    if (refuseCheckouts && url === "https://api.stripe.com/v1/checkout/sessions") {
+      return new Response(
+        JSON.stringify({ error: { message: "Invalid API Key provided" } }),
+        { status: 401 },
+      );
     }
     return new Response(JSON.stringify(providerResponse(method, url) ?? {}), {
       status: 200,
@@ -2090,6 +2098,51 @@ describe.serial("subscription cancellation", () => {
     expect((await productState(env, oneTime.productId)).membership?.status).toBe(
       "expired",
     );
+    await env.runtime.close();
+  });
+});
+
+describe.serial("checkouts the provider refuses", () => {
+  it("leaves no failed customer behind and tells the team once", async () => {
+    const env = await setup("stripe");
+    const sale = await buyProduct(env, "one_time", "first@example.com");
+
+    refuseCheckouts = true;
+    const tryToBuy = async (email: string) => {
+      const learner = await env.signUp(email);
+      return dispatch(env.runtime, {
+        method: "POST",
+        path: "/v1/learner/checkout",
+        headers: { ...learner.headers, "idempotency-key": `refused-${email}` },
+        body: { planId: sale.planId, returnUrl: "http://localhost:3000/checkout/complete" },
+      });
+    };
+    const refused = await tryToBuy("refused@example.com");
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({ details: { reason: "checkout_refused" } });
+    expect(await tryToBuy("refused-again@example.com")).toMatchObject({ status: 409 });
+
+    // Neither learner paid, so neither is on the product's customer list.
+    const memberships = await env.runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.entityId, sale.productId));
+    expect(memberships.map((membership) => membership.schoolAccountId)).toEqual([
+      sale.learner.account.id,
+    ]);
+    // The owner hears about it once, not once per learner.
+    const alerts = await env.runtime.db
+      .select()
+      .from(schema.notifications)
+      .where(eq(schema.notifications.type, "checkout_refused"));
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]).toMatchObject({
+      title: "Stripe refused a checkout",
+      href: "/settings/payment",
+    });
+
+    refuseCheckouts = false;
+    expect((await tryToBuy("later@example.com")).status).toBe(201);
     await env.runtime.close();
   });
 });

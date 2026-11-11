@@ -26,8 +26,9 @@ import {
   findLearnerMembership,
   upsertLearnerMembership,
   revokeLearnerMembership,
+  unstageLearnerMembership,
 } from "./learner-memberships.js";
-import { notifyPaymentSucceeded } from "./purchase-notifications.js";
+import { notifyCheckoutRefused, notifyPaymentSucceeded } from "./purchase-notifications.js";
 import { amountMinorForPlan, sourceTypeForKind } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
@@ -776,6 +777,7 @@ export async function startLearnerCheckout(
       .update(schema.learnerMemberships)
       .set({ status: "expired", updatedAt: clock.now() })
       .where(eq(schema.learnerMemberships.id, existingMembership.id));
+    existingMembership.status = "expired";
   } else if (
     await hasActiveProductAccess(
       db,
@@ -888,13 +890,21 @@ export async function startLearnerCheckout(
   } catch (thrown) {
     console.error("[CourseLit] Payment provider refused the checkout", {
       checkout: row.publicId,
+      provider: paymentProvider!.name,
       error: thrown instanceof Error ? thrown.message : String(thrown),
     });
     await markCheckoutFailed(db, row.id, clock);
-    if (linkedRow.membershipId) {
-      await revokeLearnerMembership(db, linkedRow.membershipId, "payment_failed", clock);
-    }
-    return error("conflict", { reason: "provider_unavailable" });
+    await unstageLearnerMembership(db, membership.id, existingMembership);
+    await notifyCheckoutRefused(
+      db,
+      {
+        schoolId: context.schoolId,
+        provider: paymentProvider!.name,
+        title: selected.product.title,
+      },
+      clock,
+    );
+    return error("conflict", { reason: "checkout_refused" });
   }
   const updatedAt = clock.now();
   await db

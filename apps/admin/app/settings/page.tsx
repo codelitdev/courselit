@@ -598,6 +598,11 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       onChange={(event) => setLemonsqueezyYearly(event.target.value)}
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Learners pay the price you set in CourseLit, but Lemon Squeezy&apos;s
+                    checkout also shows each subscription variant&apos;s own price. Set
+                    those variants to the price of your usual plan so the two match.
+                  </p>
                 </>
               ) : null}
               <div className="flex items-center gap-3">
