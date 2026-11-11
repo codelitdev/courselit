@@ -56,23 +56,32 @@ cut, full REST and MCP coverage, multiple schools per account, open source.
 
 ## 1. Data loss, money and broken features
 
-- [ ] **1. Signup forms that save nothing.** The generic "Email signup" and
+All eight were deployed to QA on 2026-11-11 (images `rewrite-37d53649`) and
+checked there in the browser: on each of Stripe, LemonSqueezy and Razorpay,
+saving the keys connected the webhook, a purchase granted access, and a refund
+removed it. Stripe also covered the receipt, the sale alert and a learner
+cancel.
+Found during that pass and fixed, not yet deployed: a learner who bought
+again one-time after a refunded subscription saw "Subscription ended" on the
+product, and the admin sign-in page showed developer notes.
+
+- [x] **1. Signup forms that save nothing.** The generic "Email signup" and
   "Support form" page blocks say they succeeded but store nothing. _(Parity)_
-  - Fixed 2026-11-10, awaiting deploy. Both blocks need FrontLit backends
+  - Fixed 2026-11-10, deployed to QA 2026-11-11. Both blocks need FrontLit backends
     (lead capture, support tickets), so they are out of the block picker and
     the API rejects pages that use them. "Newsletter signup" saves the contact
     (checked in the browser).
-- [ ] **2. Image upload inside page-builder blocks is broken.** _(Parity)_
-  - Fixed 2026-11-10, awaiting deploy. The page editor now provides the
+- [x] **2. Image upload inside page-builder blocks is broken.** _(Parity)_
+  - Fixed 2026-11-10, deployed to QA 2026-11-11. The page editor now provides the
     school's media library; upload, publish and the live page were checked in
     the browser.
-- [ ] **3. The contacts list loads only the first 100 contacts** and filters them
+- [x] **3. The contacts list loads only the first 100 contacts** and filters them
   in the browser. _(Parity)_
-  - Fixed 2026-11-10, awaiting deploy. The list pages and filters on the
+  - Fixed 2026-11-10, deployed to QA 2026-11-11. The list pages and filters on the
     server. Also fixed: pages after the first skipped contacts (SendLit's
     `offset` is a page number), filters were dropped silently, and saved
     segments never listed (SendLit returns a bare array).
-- [ ] **4. Check paid flows against real Stripe, LemonSqueezy and Razorpay test
+- [x] **4. Check paid flows against real Stripe, LemonSqueezy and Razorpay test
   accounts:** checkout, receipts, sale alerts, cancellation and refunds. _(QA)_
   - Stripe checked 2026-11-10: one-time and subscription checkout, receipt,
     sale alert, refund, learner cancel and creator remove-access all work.
@@ -95,20 +104,20 @@ cut, full REST and MCP coverage, multiple schools per account, open source.
     charge (access removed, subscription cancelled), all through real
     webhooks. Before this, every Razorpay API call failed authentication, so
     its checkout never opened.
-- [ ] **5. Refunds of a first subscription charge on Stripe's March 2025 API or
+- [x] **5. Refunds of a first subscription charge on Stripe's March 2025 API or
   later.** _(QA)_
-  - Fixed 2026-11-10, awaiting deploy. Confirmed against Stripe on
+  - Fixed 2026-11-10, deployed to QA 2026-11-11. Confirmed against Stripe on
     `2025-03-31.basil`: the refund named only the payment intent and was
     dropped. Invoice payments are now recorded under their payment intent.
-- [ ] **6. Webhooks that can't be tied to a school return an error.** _(QA)_
-  - Fixed 2026-11-10, awaiting deploy. They are acknowledged and ignored.
+- [x] **6. Webhooks that can't be tied to a school return an error.** _(QA)_
+  - Fixed 2026-11-10, deployed to QA 2026-11-11. They are acknowledged and ignored.
     Also fixed: after switching provider, the old provider's renewals, refunds
     and cancellations were rejected.
-- [ ] **7. A file download end to end.** _(QA)_
-  - Checked 2026-11-10. Fixed on the way, awaiting deploy: the zip was named
+- [x] **7. A file download end to end.** _(QA)_
+  - Checked 2026-11-10. Fixed on the way, deployed to QA 2026-11-11: the zip was named
     after its token, because the proxies dropped `Content-Disposition`.
-- [ ] **8. Wrong gateway keys fail silently.** _(QA 2026-11-10)_
-  - Fixed 2026-11-11, awaiting deploy. Saving keys the provider rejects shows
+- [x] **8. Wrong gateway keys fail silently.** _(QA 2026-11-10)_
+  - Fixed 2026-11-11, deployed to QA 2026-11-11. Saving keys the provider rejects shows
     why on the settings page. When the provider refuses to start a checkout,
     the learner is told the school can't take payments right now, the owner
     and payment managers get a "refused a checkout" alert (at most one an

@@ -1811,6 +1811,57 @@ async function paidStripeSubscription(
   return { ...sale, subscriptionId };
 }
 
+describe.serial("buying again after a refund", () => {
+  it("doesn't describe a one-time purchase with the refunded subscription", async () => {
+    const env = await setup("stripe");
+    const sale = await paidStripeSubscription(env, "subscription");
+    await env.deliver(
+      stripeEvent(
+        "charge.refunded",
+        stripeCharge({
+          paymentIntent: `pi_${sale.checkoutId}`,
+          invoice: null,
+          amount: AMOUNTS.subscription,
+        }),
+      ),
+    );
+    expect((await productState(env, sale.productId)).membership?.status).not.toBe("active");
+
+    const plan = await dispatch(env.runtime, {
+      method: "POST",
+      path: `/v1/products/${sale.productId}/plans`,
+      headers: env.admin,
+      body: PLANS.one_time,
+    });
+    const rebuy = await dispatch(env.runtime, {
+      method: "POST",
+      path: "/v1/learner/checkout",
+      headers: { ...sale.learner.headers, "idempotency-key": "rebuy-one-time" },
+      body: {
+        planId: (plan.body as { id: string }).id,
+        returnUrl: "http://localhost:3000/checkout/complete",
+      },
+    });
+    expect(rebuy.status).toBe(201);
+    await env.deliver(
+      stripeEvent(
+        "checkout.session.completed",
+        stripeSession(checkoutMetadata(env), AMOUNTS.one_time, null, "pi_rebuy"),
+      ),
+    );
+
+    const listed = await dispatch(env.runtime, {
+      method: "GET",
+      path: "/v1/learner/products",
+      headers: sale.learner.headers,
+    });
+    expect((listed.body as { items: unknown[] }).items[0]).toMatchObject({
+      subscription: null,
+    });
+    await env.runtime.close();
+  });
+});
+
 describe.serial("subscription cancellation", () => {
   it("lets a learner stop renewing and keeps access until the provider ends it", async () => {
     const env = await setup("stripe");

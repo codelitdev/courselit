@@ -144,12 +144,16 @@ async function subscriptionRecordsFor(
   }
   for (const membership of direct) {
     const candidates = rows.filter((row) => row.attempt.membershipId === membership.id);
-    // Prefer the subscription the membership currently points at; otherwise
-    // the most recent one (rows are newest first).
+    // Only the subscription behind the current access counts: the one the
+    // membership points at, or the one its latest checkout started. An older
+    // subscription (say, refunded before the learner bought again one-time)
+    // must not describe a purchase it has nothing to do with.
     const chosen =
       candidates.find(
-        (row) => row.subscription.providerSubscriptionId === membership.subscriptionId,
-      ) ?? candidates[0];
+        (row) =>
+          membership.subscriptionId !== null &&
+          row.subscription.providerSubscriptionId === membership.subscriptionId,
+      ) ?? candidates.find((row) => row.attempt.publicId === membership.sessionId);
     if (!chosen) continue;
     result.set(membership.id, {
       ...chosen,

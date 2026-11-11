@@ -116,9 +116,11 @@ export default function SignInPage() {
         ) : (
           <form onSubmit={verifyCode} className="stack">
             <p>Enter the code sent to {email}.</p>
-            <p className="muted">
-              In development the code is printed in the API server log.
-            </p>
+            {process.env.NODE_ENV === "development" ? (
+              <p className="muted">
+                In development the code is printed in the API server log.
+              </p>
+            ) : null}
             <label>
               Sign-in code
               <input
@@ -134,7 +136,6 @@ export default function SignInPage() {
           </form>
         )}
         {error ? <p role="alert">{error}</p> : null}
-        <small>Same-origin BFF cookies are set by the API after verification.</small>
       </section>
     </main>
   );
