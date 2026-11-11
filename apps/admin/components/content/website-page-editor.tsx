@@ -12,6 +12,7 @@ import {
   withSchoolCopyright,
 } from "@courselit/page-blocks/copyright";
 import { COURSELIT_SYSTEM_THEMES } from "@courselit/page-blocks/theme";
+import { MediaUploaderProvider } from "@frontlit/media-uploader";
 import { PageBuilder, type PageBuilderState } from "@frontlit/page-builder/builder";
 import type {
   Theme as BuilderTheme,
@@ -41,6 +42,7 @@ import {
   resolveEditorTheme,
   themeSnapshot,
 } from "@/lib/website-theme";
+import { useCourseLitMediaUploader } from "@/lib/course-media-uploader";
 
 registerCourseLitBlocks();
 
@@ -155,6 +157,24 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
   const themeSnapshotsRef = useRef(new Map<string, string>());
   const appliedThemeIdRef = useRef<string | null>(null);
   const appliedThemeSnapshotRef = useRef<string | null>(null);
+
+  // Blocks with images (hero, media, grid…) upload through this school's media
+  // library.
+  const [schoolId, setSchoolId] = useState("");
+  const mediaAdapters = useCourseLitMediaUploader({
+    schoolId,
+    purpose: "website_page",
+    accessPolicy: "public",
+  });
+  useEffect(() => {
+    void fetch("/api/v1/schools", { credentials: "include", cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { items: [] }))
+      .then((body: { items?: Array<{ id: string; selected?: boolean }> }) => {
+        const selected = body.items?.find((item) => item.selected) ?? body.items?.[0];
+        if (selected) setSchoolId(selected.id);
+      })
+      .catch(() => undefined);
+  }, []);
 
   useSetBreadcrumb([
     { label: "Pages", href: redirectTo },
@@ -492,50 +512,52 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
             ) : null}
           </div>
         ) : null}
-        {page ? (
+        {page && schoolId ? (
           <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-            <PageBuilder
-              key={`${resetKey}-${salesPreview ? `ready-${salesPreview.resourceType}-${salesPreview.resourceType === "product" ? salesPreview.resource.kind : "community"}` : `pending-${salesResourceType ?? "none"}`}`}
-              initialLayout={withSchoolCopyright(
-                normalizeSalesLayout(
-                  page.draftLayout ?? page.layout,
-                  salesPreview?.resourceType ?? salesResourceType,
-                  page.salesResourceKind ??
-                    (salesPreview?.resourceType === "product"
-                      ? salesPreview.resource.kind
-                      : null),
-                ),
-                siteBranding.title,
-              )}
-              initialTheme={initialTheme}
-              themes={{ system: COURSELIT_SYSTEM_THEMES, custom: customThemes ?? [] }}
-              pageData={{
-                pageType: "custom",
-                siteTitle: siteBranding.title,
-                siteSubtitle: siteBranding.subtitle,
-                siteLogoUrl: siteBranding.logoUrl,
-                siteLogoAlt: siteBranding.logoAlt,
-                ...(salesPreview
-                  ? {
-                      courseLitSalesData: {
-                        resourceType: salesPreview.resourceType,
-                        ...(salesPreview.resourceType === "product"
-                          ? { product: salesPreview.resource }
-                          : { community: salesPreview.resource }),
-                      },
-                    }
-                  : {}),
-              }}
-              initialSeo={{
-                title: page.draftTitle ?? undefined,
-                description: page.draftDescription ?? undefined,
-                socialImage:
-                  page.draftSocialImage as unknown as PageBuilderState["seo"]["socialImage"],
-                robotsAllowed: page.draftRobotsAllowed ?? undefined,
-              }}
-              allowThemeEditing
-              onChange={(state) => void handleChange(state)}
-            />
+            <MediaUploaderProvider {...mediaAdapters}>
+              <PageBuilder
+                key={`${resetKey}-${salesPreview ? `ready-${salesPreview.resourceType}-${salesPreview.resourceType === "product" ? salesPreview.resource.kind : "community"}` : `pending-${salesResourceType ?? "none"}`}`}
+                initialLayout={withSchoolCopyright(
+                  normalizeSalesLayout(
+                    page.draftLayout ?? page.layout,
+                    salesPreview?.resourceType ?? salesResourceType,
+                    page.salesResourceKind ??
+                      (salesPreview?.resourceType === "product"
+                        ? salesPreview.resource.kind
+                        : null),
+                  ),
+                  siteBranding.title,
+                )}
+                initialTheme={initialTheme}
+                themes={{ system: COURSELIT_SYSTEM_THEMES, custom: customThemes ?? [] }}
+                pageData={{
+                  pageType: "custom",
+                  siteTitle: siteBranding.title,
+                  siteSubtitle: siteBranding.subtitle,
+                  siteLogoUrl: siteBranding.logoUrl,
+                  siteLogoAlt: siteBranding.logoAlt,
+                  ...(salesPreview
+                    ? {
+                        courseLitSalesData: {
+                          resourceType: salesPreview.resourceType,
+                          ...(salesPreview.resourceType === "product"
+                            ? { product: salesPreview.resource }
+                            : { community: salesPreview.resource }),
+                        },
+                      }
+                    : {}),
+                }}
+                initialSeo={{
+                  title: page.draftTitle ?? undefined,
+                  description: page.draftDescription ?? undefined,
+                  socialImage:
+                    page.draftSocialImage as unknown as PageBuilderState["seo"]["socialImage"],
+                  robotsAllowed: page.draftRobotsAllowed ?? undefined,
+                }}
+                allowThemeEditing
+                onChange={(state) => void handleChange(state)}
+              />
+            </MediaUploaderProvider>
           </div>
         ) : null}
       </div>

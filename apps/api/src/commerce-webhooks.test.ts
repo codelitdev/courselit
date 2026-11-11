@@ -70,6 +70,21 @@ function providerResponse(method: string, url: string): unknown {
   if (url === "https://api.stripe.com/v1/checkout/sessions") {
     return { id: `cs_test_${n}`, url: `https://checkout.stripe.test/cs_test_${n}` };
   }
+  if (url.startsWith("https://api.stripe.com/v1/invoice_payments?")) {
+    // Invoice `in_x` was paid by payment intent `pi_x`.
+    const invoice = new URL(url).searchParams.get("invoice") ?? "";
+    return {
+      object: "list",
+      data: [
+        {
+          object: "invoice_payment",
+          invoice,
+          status: "paid",
+          payment: { type: "payment_intent", payment_intent: invoice.replace(/^in_/, "pi_") },
+        },
+      ],
+    };
+  }
   if (url.startsWith("https://api.stripe.com/v1/subscriptions/")) {
     const id = decodeURIComponent(url.split("/").pop()!);
     if (method === "POST") {
@@ -652,6 +667,19 @@ describe.serial("payment webhooks: Stripe products", () => {
     await env.runtime.close();
   });
 
+  it("acknowledges events that aren't about a CourseLit purchase", async () => {
+    // The school's Stripe account may serve other apps; failing their events
+    // would make Stripe retry them for days and then disable the endpoint.
+    const env = await setup("stripe");
+    const unrelated = await env.deliver(
+      stripeEvent("charge.refunded", {
+        ...stripeCharge({ paymentIntent: "pi_elsewhere", invoice: null, amount: 1234 }),
+      }),
+    );
+    expect(unrelated).toMatchObject({ status: 200, body: { status: "ignored" } });
+    await env.runtime.close();
+  });
+
   it("ignores events signed for another school that point at this school's records", async () => {
     // Every school owner sets their own webhook secret, so a signed event only
     // proves it came from the school it names. That school must not reach
@@ -818,6 +846,40 @@ describe.serial("payment webhooks: Stripe products", () => {
       ),
     );
     expect(subscriptionCancelCalls()).toHaveLength(1);
+    await env.runtime.close();
+  });
+
+  it("refunds the first subscription charge on API 2025-03-31, where the charge names no invoice", async () => {
+    // From API version 2025-03-31 a charge no longer links to its invoice and
+    // carries no metadata: only the payment intent ties the refund to the
+    // first payment, which the checkout session reported without one.
+    const env = await setup("stripe");
+    const sale = await buyProduct(env, "subscription");
+    expectProcessed(
+      await env.deliver(
+        stripeEvent(
+          "checkout.session.completed",
+          stripeSession(sale.metadata, AMOUNTS.subscription, {
+            subscription: "sub_basil",
+            invoice: "in_basil1",
+          }),
+        ),
+      ),
+    );
+    expect(calls.map((call) => call.url)).toContain(
+      "https://api.stripe.com/v1/invoice_payments?invoice=in_basil1&limit=10",
+    );
+    expectProcessed(
+      await env.deliver(
+        stripeEvent(
+          "charge.refunded",
+          stripeCharge({ paymentIntent: "pi_basil1", invoice: null, amount: AMOUNTS.subscription }),
+        ),
+      ),
+    );
+    const state = await productState(env, sale.productId);
+    expect(state.payments[0]?.status).toBe("refunded");
+    expect(state.membership?.status).toBe("expired");
     await env.runtime.close();
   });
 
@@ -1916,7 +1978,8 @@ describe.serial("subscription cancellation", () => {
     );
     expect(JSON.parse(razorpayCall!.body)).toEqual({ cancel_at_cycle_end: 1 });
     await razorpay.runtime.close();
-  });
+    // Sets up a Lemon Squeezy and a Razorpay school, so it outlasts the default.
+  }, 30_000);
 
   it("lets a creator cancel at period end or remove access, with product permission", async () => {
     const env = await setup("stripe");

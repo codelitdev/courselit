@@ -629,12 +629,14 @@ export async function listSendLitSegments(
   options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
 ): Promise<{ items: SendLitSegment[] }> {
   const config = options.config ?? sendLitConfig();
-  return requestJson<{ items: SendLitSegment[] }>(
+  // SendLit answers with a bare array of segments.
+  const items = await requestJson<SendLitSegment[]>(
     config,
     "/segments",
     { method: "GET", teamApiKey },
     options.fetcher,
   );
+  return { items };
 }
 
 export async function createSendLitSegment(

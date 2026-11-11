@@ -1822,10 +1822,14 @@ export async function receivePaymentWebhook(
   | { ok: true; duplicate: boolean; status: "processed" | "ignored" }
   | { ok: false; error: PlatformError }
 > {
+  // An event that isn't about a CourseLit purchase (the school's provider
+  // account may serve other apps too), or names a provider the school never
+  // set up, is acknowledged and dropped: failing it would only make the
+  // provider retry it for days and eventually switch the endpoint off.
   const schoolId = await webhookSchoolId(db, rawBody);
-  if (!schoolId) return error("conflict", { reason: "provider_unavailable" });
+  if (!schoolId) return { ok: true, duplicate: false, status: "ignored" };
   const provider = await getConfiguredPaymentProvider(db, schoolId, providerName, paymentProviderOverride);
-  if (!provider) return error("conflict", { reason: "provider_unavailable" });
+  if (!provider) return { ok: true, duplicate: false, status: "ignored" };
   let event: NormalizedPaymentEvent;
   try {
     provider.verifyWebhook(rawBody, headers, clock.now());
@@ -1860,6 +1864,7 @@ export async function receivePaymentWebhook(
     }
   }
   try {
+    if (provider.completeWebhookEvent) event = await provider.completeWebhookEvent(event);
     const scope: PaymentWebhookScope = { schoolId, provider: providerName };
     const communityStatus = await processCommunityPaymentEvent(
       db,

@@ -138,7 +138,7 @@ describe("SendLit Service", () => {
 
       if (url.includes("/segments")) {
         if (method === "GET") {
-          return new Response(JSON.stringify({ items: [{ id: "seg_1", name: "VIP Segment" }] }));
+          return new Response(JSON.stringify([{ id: "seg_1", name: "VIP Segment" }]));
         }
         if (method === "POST") {
           return new Response(JSON.stringify({ id: "seg_2", name: body.name }));
@@ -266,6 +266,8 @@ describe("SendLit Service", () => {
       // 4. Segments
       const segments = await listSegments(runtime.db, schoolId, clock);
       expect(segments.ok).toBe(true);
+      // SendLit lists segments as a bare array.
+      if (segments.ok) expect(segments.value.items.map((item) => item.name)).toEqual(["VIP Segment"]);
 
       const createdSeg = await createSegment(runtime.db, schoolId, clock, {
         name: "Active Learners",
@@ -430,7 +432,7 @@ describe("SendLit Service", () => {
         return new Response(JSON.stringify({ items: [{ contactId: "c_1", email: "learner@test.com", tags: ["vip"] }], total: 1 }));
       }
       if (url.includes("/segments")) {
-        return new Response(JSON.stringify({ items: [{ id: "seg_1", name: "High Achievers" }] }));
+        return new Response(JSON.stringify([{ id: "seg_1", name: "High Achievers" }]));
       }
       if (url.includes("/sequences")) {
         return new Response(JSON.stringify({ items: [{ id: "seq_1", title: "Welcome Flow" }], total: 1 }));

@@ -8,6 +8,10 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts"
     },
+    "./payment-webhooks": {
+      "types": "./src/payment-webhooks.ts",
+      "import": "./src/payment-webhooks.ts"
+    },
     "./learner-avatar": {
       "types": "./src/learner-avatar.ts",
       "import": "./src/learner-avatar.ts"
@@ -15,6 +19,10 @@
     "./team-permissions": {
       "types": "./src/team-permissions.ts",
       "import": "./src/team-permissions.ts"
+    },
+    "./page-blocks": {
+      "types": "./src/page-blocks.ts",
+      "import": "./src/page-blocks.ts"
     }
   },
   "scripts": {

@@ -3,9 +3,12 @@ import { z } from "zod";
 
 import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 import { buildMcpParityManifest } from "./mcp-parity.js";
+import { UNAVAILABLE_PAGE_BLOCKS } from "./page-blocks.js";
 
 export * from "./team-permissions.js";
 export * from "./learner-avatar.js";
+export * from "./page-blocks.js";
+export * from "./payment-webhooks.js";
 
 const c = initContract();
 
@@ -522,17 +525,30 @@ export const schoolSchema = z.object({
     .nullable()
     .optional(),
 });
+/**
+ * How a provider's payment webhook is set up. `automatic`: CourseLit
+ * registers it on the school's provider account when the keys are saved.
+ * `manual`: the provider has no API for it, so the creator adds `url` in the
+ * provider's dashboard and saves its signing secret here.
+ */
+export const paymentWebhookStatusSchema = z.object({
+  setup: z.enum(["automatic", "manual"]),
+  url: z.string(),
+  connected: z.boolean(),
+  /** Why the last automatic registration failed. */
+  error: z.string().nullable(),
+});
 export const schoolPaymentSettingsSchema = z.object({
   provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]).nullable(),
   stripe: z.object({
     publishableKey: z.string(),
     secretConfigured: z.boolean(),
-    webhookSecretConfigured: z.boolean(),
+    webhook: paymentWebhookStatusSchema,
   }),
   razorpay: z.object({
     keyId: z.string(),
     secretConfigured: z.boolean(),
-    webhookSecretConfigured: z.boolean(),
+    webhook: paymentWebhookStatusSchema,
   }),
   lemonsqueezy: z.object({
     storeId: z.string(),
@@ -540,9 +556,10 @@ export const schoolPaymentSettingsSchema = z.object({
     monthlyVariantId: z.string(),
     yearlyVariantId: z.string(),
     apiKeyConfigured: z.boolean(),
-    webhookSecretConfigured: z.boolean(),
+    webhook: paymentWebhookStatusSchema,
   }),
 });
+export type SchoolPaymentSettings = z.infer<typeof schoolPaymentSettingsSchema>;
 export const updateSchoolPaymentSettingsBodySchema = z
   .object({
     provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]).nullable().optional(),
@@ -550,7 +567,6 @@ export const updateSchoolPaymentSettingsBodySchema = z
       .object({
         publishableKey: z.string().optional(),
         secretKey: z.string().optional(),
-        webhookSecret: z.string().optional(),
       })
       .optional(),
     razorpay: z
@@ -567,7 +583,6 @@ export const updateSchoolPaymentSettingsBodySchema = z
         oneTimeVariantId: z.string().optional(),
         monthlyVariantId: z.string().optional(),
         yearlyVariantId: z.string().optional(),
-        webhookSecret: z.string().optional(),
       })
       .optional(),
   })
@@ -592,7 +607,11 @@ export const salesPageSchema = z.object({
 });
 export const websiteWidgetSchema = z.object({
   widgetId: z.string(),
-  name: z.string(),
+  name: z
+    .string()
+    .refine((name) => !UNAVAILABLE_PAGE_BLOCKS.includes(name), {
+      message: "This block isn't available on CourseLit pages.",
+    }),
   deletable: z.boolean(),
   moveable: z.boolean(),
   shared: z.boolean(),

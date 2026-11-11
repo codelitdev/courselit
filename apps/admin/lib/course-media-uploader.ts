@@ -12,6 +12,7 @@ import { type MediaUploadAuthorization, uploadAuthorizedMedia } from "./media-up
 
 export type MediaUploadPurpose =
   | "school_branding"
+  | "website_page"
   | "blog_artwork"
   | "product_artwork"
   | "product_content"

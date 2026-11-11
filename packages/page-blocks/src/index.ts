@@ -1,4 +1,5 @@
-import { getWidget, registerBlock } from "@frontlit/page-builder";
+import { UNAVAILABLE_PAGE_BLOCKS } from "@courselit/api-contract/page-blocks";
+import { getWidget, NON_ADDABLE_BLOCK_NAMES, registerBlock } from "@frontlit/page-builder";
 import { BANNER_BLOCK, Banner } from "./blocks/banner";
 import { COMMUNITY_BLOCK, Community } from "./blocks/community";
 import { PRODUCT_CURRICULUM_BLOCK, ProductCurriculum } from "./blocks/curriculum";
@@ -22,6 +23,11 @@ export type {
 } from "./blocks/shared/types";
 
 export function registerCourseLitBlocks() {
+  // Keep the page builder's blocks that need backends CourseLit doesn't have
+  // out of the block picker (see UNAVAILABLE_PAGE_BLOCKS).
+  for (const name of UNAVAILABLE_PAGE_BLOCKS) {
+    if (!NON_ADDABLE_BLOCK_NAMES.includes(name)) NON_ADDABLE_BLOCK_NAMES.push(name);
+  }
   if (!getWidget(BANNER_BLOCK)) registerBlock(Banner);
   if (!getWidget(COMMUNITY_BLOCK)) registerBlock(Community);
   if (!getWidget(PRODUCT_CURRICULUM_BLOCK)) registerBlock(ProductCurriculum);

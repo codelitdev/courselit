@@ -9789,6 +9789,543 @@
         ]
       }
     },
+    "/v1/products/{productId}/discussion-reports": {
+      "get": {
+        "tags": [
+          "Products & Courses"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 500
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "spaceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "communityId": {
+                            "type": "string"
+                          },
+                          "contentType": {
+                            "type": "string",
+                            "enum": [
+                              "post",
+                              "comment",
+                              "reply"
+                            ]
+                          },
+                          "contentId": {
+                            "type": "string"
+                          },
+                          "contentParentId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reporterId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reporterKind": {
+                            "type": "string",
+                            "enum": [
+                              "learner",
+                              "admin"
+                            ],
+                            "nullable": true
+                          },
+                          "content": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              },
+                              "media": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "image",
+                                        "video",
+                                        "pdf"
+                                      ]
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "type": "string",
+                                      "format": "uri"
+                                    },
+                                    "thumbnailUrl": {
+                                      "type": "string",
+                                      "format": "uri",
+                                      "nullable": true
+                                    },
+                                    "fileName": {
+                                      "type": "string"
+                                    },
+                                    "mimeType": {
+                                      "type": "string"
+                                    },
+                                    "byteSize": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "exclusiveMinimum": 0
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type",
+                                    "title",
+                                    "url",
+                                    "thumbnailUrl",
+                                    "fileName",
+                                    "mimeType",
+                                    "byteSize"
+                                  ]
+                                }
+                              },
+                              "gifUrls": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
+                              "authorId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "authorKind": {
+                                "type": "string",
+                                "enum": [
+                                  "learner",
+                                  "admin"
+                                ],
+                                "nullable": true
+                              },
+                              "author": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "learner",
+                                      "admin"
+                                    ]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "format": "email",
+                                    "nullable": true
+                                  },
+                                  "imageUrl": {
+                                    "type": "string",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "email",
+                                  "imageUrl"
+                                ],
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "content",
+                              "media",
+                              "gifUrls",
+                              "authorId",
+                              "authorKind",
+                              "author"
+                            ],
+                            "nullable": true
+                          },
+                          "authorId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "authorKind": {
+                            "type": "string",
+                            "enum": [
+                              "learner",
+                              "admin"
+                            ],
+                            "nullable": true
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "accepted",
+                              "rejected"
+                            ]
+                          },
+                          "rejectionReason": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "communityId",
+                          "contentType",
+                          "contentId",
+                          "contentParentId",
+                          "reporterId",
+                          "reporterKind",
+                          "content",
+                          "authorId",
+                          "authorKind",
+                          "reason",
+                          "status",
+                          "rejectionReason",
+                          "createdAt",
+                          "updatedAt"
+                        ]
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
     "/v1/community-reports/{reportId}": {
       "patch": {
         "tags": [
@@ -10573,6 +11110,9 @@
                               "planName"
                             ],
                             "nullable": true
+                          },
+                          "canLeave": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -10593,7 +11133,8 @@
                           "membership",
                           "createdAt",
                           "updatedAt",
-                          "billing"
+                          "billing",
+                          "canLeave"
                         ]
                       }
                     },
@@ -14115,6 +14656,9 @@
                         "logo",
                         "featuredImage"
                       ]
+                    },
+                    "canModerate": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -14631,6 +15175,9 @@
                               "logo",
                               "featuredImage"
                             ]
+                          },
+                          "canModerate": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -19064,8 +19611,7 @@
                   "byteSize": {
                     "type": "integer",
                     "minimum": 0,
-                    "exclusiveMinimum": 0,
-                    "maximum": 2000000
+                    "exclusiveMinimum": 0
                   }
                 },
                 "required": [
@@ -63523,14 +64069,39 @@
                         "secretConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
                         "publishableKey",
                         "secretConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     },
                     "razorpay": {
@@ -63542,14 +64113,39 @@
                         "secretConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
                         "keyId",
                         "secretConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     },
                     "lemonsqueezy": {
@@ -63570,8 +64166,33 @@
                         "apiKeyConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
@@ -63580,7 +64201,7 @@
                         "monthlyVariantId",
                         "yearlyVariantId",
                         "apiKeyConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     }
                   },
@@ -63798,9 +64419,6 @@
                       },
                       "secretKey": {
                         "type": "string"
-                      },
-                      "webhookSecret": {
-                        "type": "string"
                       }
                     }
                   },
@@ -63834,9 +64452,6 @@
                         "type": "string"
                       },
                       "yearlyVariantId": {
-                        "type": "string"
-                      },
-                      "webhookSecret": {
                         "type": "string"
                       }
                     }
@@ -63873,14 +64488,39 @@
                         "secretConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
                         "publishableKey",
                         "secretConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     },
                     "razorpay": {
@@ -63892,14 +64532,39 @@
                         "secretConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
                         "keyId",
                         "secretConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     },
                     "lemonsqueezy": {
@@ -63920,8 +64585,33 @@
                         "apiKeyConfigured": {
                           "type": "boolean"
                         },
-                        "webhookSecretConfigured": {
-                          "type": "boolean"
+                        "webhook": {
+                          "type": "object",
+                          "properties": {
+                            "setup": {
+                              "type": "string",
+                              "enum": [
+                                "automatic",
+                                "manual"
+                              ]
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "connected": {
+                              "type": "boolean"
+                            },
+                            "error": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "setup",
+                            "url",
+                            "connected",
+                            "error"
+                          ]
                         }
                       },
                       "required": [
@@ -63930,7 +64620,7 @@
                         "monthlyVariantId",
                         "yearlyVariantId",
                         "apiKeyConfigured",
-                        "webhookSecretConfigured"
+                        "webhook"
                       ]
                     }
                   },
@@ -74885,6 +75575,900 @@
                   },
                   "required": [
                     "checkoutUrl"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/school/billing": {
+      "get": {
+        "summary": "Get the school's CourseLit plan",
+        "tags": [
+          "School & Team"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "billingAvailable": {
+                      "type": "boolean"
+                    },
+                    "plan": {
+                      "type": "string",
+                      "enum": [
+                        "pro",
+                        "business"
+                      ],
+                      "nullable": true
+                    },
+                    "interval": {
+                      "type": "string",
+                      "enum": [
+                        "month",
+                        "year"
+                      ],
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "amountMinor": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "currency": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "trialEndsAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "currentPeriodEndsAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "paidThroughAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "cancelAtPeriodEnd": {
+                      "type": "boolean"
+                    },
+                    "pendingCheckout": {
+                      "type": "boolean"
+                    },
+                    "pendingPlanChange": {
+                      "type": "boolean"
+                    },
+                    "canCancel": {
+                      "type": "boolean"
+                    },
+                    "canResume": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "billingAvailable",
+                    "plan",
+                    "interval",
+                    "status",
+                    "amountMinor",
+                    "currency",
+                    "trialEndsAt",
+                    "currentPeriodEndsAt",
+                    "paidThroughAt",
+                    "cancelAtPeriodEnd",
+                    "pendingCheckout",
+                    "pendingPlanChange",
+                    "canCancel",
+                    "canResume"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/school/billing/cancel": {
+      "post": {
+        "summary": "Cancel the school's CourseLit plan at the end of the paid period (hosted only)",
+        "tags": [
+          "School & Team"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "plan": {
+                      "type": "object",
+                      "properties": {
+                        "billingAvailable": {
+                          "type": "boolean"
+                        },
+                        "plan": {
+                          "type": "string",
+                          "enum": [
+                            "pro",
+                            "business"
+                          ],
+                          "nullable": true
+                        },
+                        "interval": {
+                          "type": "string",
+                          "enum": [
+                            "month",
+                            "year"
+                          ],
+                          "nullable": true
+                        },
+                        "status": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "amountMinor": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "currency": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "trialEndsAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "currentPeriodEndsAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "paidThroughAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "cancelAtPeriodEnd": {
+                          "type": "boolean"
+                        },
+                        "pendingCheckout": {
+                          "type": "boolean"
+                        },
+                        "pendingPlanChange": {
+                          "type": "boolean"
+                        },
+                        "canCancel": {
+                          "type": "boolean"
+                        },
+                        "canResume": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "billingAvailable",
+                        "plan",
+                        "interval",
+                        "status",
+                        "amountMinor",
+                        "currency",
+                        "trialEndsAt",
+                        "currentPeriodEndsAt",
+                        "paidThroughAt",
+                        "cancelAtPeriodEnd",
+                        "pendingCheckout",
+                        "pendingPlanChange",
+                        "canCancel",
+                        "canResume"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "plan"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/school/billing/resume": {
+      "post": {
+        "summary": "Resume a scheduled cancellation of the school's CourseLit plan (hosted only)",
+        "tags": [
+          "School & Team"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "plan": {
+                      "type": "object",
+                      "properties": {
+                        "billingAvailable": {
+                          "type": "boolean"
+                        },
+                        "plan": {
+                          "type": "string",
+                          "enum": [
+                            "pro",
+                            "business"
+                          ],
+                          "nullable": true
+                        },
+                        "interval": {
+                          "type": "string",
+                          "enum": [
+                            "month",
+                            "year"
+                          ],
+                          "nullable": true
+                        },
+                        "status": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "amountMinor": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "currency": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "trialEndsAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "currentPeriodEndsAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "paidThroughAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "cancelAtPeriodEnd": {
+                          "type": "boolean"
+                        },
+                        "pendingCheckout": {
+                          "type": "boolean"
+                        },
+                        "pendingPlanChange": {
+                          "type": "boolean"
+                        },
+                        "canCancel": {
+                          "type": "boolean"
+                        },
+                        "canResume": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "billingAvailable",
+                        "plan",
+                        "interval",
+                        "status",
+                        "amountMinor",
+                        "currency",
+                        "trialEndsAt",
+                        "currentPeriodEndsAt",
+                        "paidThroughAt",
+                        "cancelAtPeriodEnd",
+                        "pendingCheckout",
+                        "pendingPlanChange",
+                        "canCancel",
+                        "canResume"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "plan"
                   ]
                 }
               }

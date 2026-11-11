@@ -1,11 +1,35 @@
-# Complete rewrite: what's still missing
+# Complete rewrite: what's left
 
-Tracker for the gaps between the rewrite and the creator-commerce platforms it
-competes with (Kajabi, Circle, Podia, Teachable). Tick an item when it ships.
+One ordered list of everything between the rewrite and a product people can
+rely on.
 
-The competitor details come from general knowledge of those products as of
-mid-2026, not a fresh look at them. Treat them as approximate. Before building
-anything below, check `main`, which may already have it.
+## How to use this list
+
+- **Work top to bottom.** Items are ordered by how much they hurt the people
+  using CourseLit (creators, their learners, and visitors to their sites):
+  1. things that lose data, mishandle money, or don't work;
+  2. what visitors and learners see;
+  3. a creator's first hour;
+  4. security hardening;
+  5. features `main` has that the rewrite lacks;
+  6. the competitor roadmap;
+  7. maintenance.
+- **Tick an item when it is merged and deployed.** Don't skip ahead. If an item
+  is blocked, write why under it and move to the next one.
+- **Items marked "confirm first"** may not be real problems. Check before
+  building.
+- **Add new findings where they belong** by the same rule, with a source tag.
+  Renumbering is fine.
+- **Before building anything, check `main`,** which may already have it.
+
+Source tags:
+- **QA:** creator and learner walkthrough, 2026-11-03.
+- **Parity:** code comparison with `main` v0.74.4, 2026-11-10. The
+  item-by-item comparison is in `docs/platform-rewrite-parity-ledger.md`.
+- **Audit:** `bun audit`, 2026-11-10.
+- **Roadmap:** gaps against Kajabi, Circle, Podia and Teachable. These come from
+  general knowledge of those products as of mid-2026, so treat them as
+  approximate.
 
 ## Where we stand
 
@@ -30,210 +54,255 @@ What the rewrite already has:
 Edges the others don't have: school-owned payment gateways with no platform
 cut, full REST and MCP coverage, multiple schools per account, open source.
 
-## Commerce gaps (in priority order)
+## 1. Data loss, money and broken features
 
-- [ ] **Discount codes.** Every competitor has them. Issue #839.
-- [ ] **Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
-  Issue #840.
-- [ ] **Order bumps and upsells at checkout.** Bundles already exist, so this
-  is a short step. Issue #841 (relates to #426).
-- [ ] **Tax handling.** LemonSqueezy is merchant of record, so it covers this.
-  Stripe and Razorpay schools are on their own.
-- [ ] **Importers** from Teachable, Kajabi and Thinkific. Switching cost is the
-  main thing stopping creators from moving.
-- [ ] **Trials and coupons on community plans.** Standard in Kajabi and Circle.
+- [ ] **1. Signup forms that save nothing.** The generic "Email signup" and
+  "Support form" page blocks say they succeeded but store nothing. _(Parity)_
+  - Fixed 2026-11-10, awaiting deploy. Both blocks need FrontLit backends
+    (lead capture, support tickets), so they are out of the block picker and
+    the API rejects pages that use them. "Newsletter signup" saves the contact
+    (checked in the browser).
+- [ ] **2. Image upload inside page-builder blocks is broken.** _(Parity)_
+  - Fixed 2026-11-10, awaiting deploy. The page editor now provides the
+    school's media library; upload, publish and the live page were checked in
+    the browser.
+- [ ] **3. The contacts list loads only the first 100 contacts** and filters them
+  in the browser. _(Parity)_
+  - Fixed 2026-11-10, awaiting deploy. The list pages and filters on the
+    server. Also fixed: pages after the first skipped contacts (SendLit's
+    `offset` is a page number), filters were dropped silently, and saved
+    segments never listed (SendLit returns a bare array).
+- [ ] **4. Check paid flows against real Stripe, LemonSqueezy and Razorpay test
+  accounts:** checkout, receipts, sale alerts, cancellation and refunds. _(QA)_
+  - Stripe checked 2026-11-10: one-time and subscription checkout, receipt,
+    sale alert, refund, learner cancel and creator remove-access all work.
+    Saving Stripe or Lemon Squeezy keys now registers the payment webhook on
+    the school's account (checked against both with real events); only
+    Razorpay's is still added by hand.
+  - LemonSqueezy checked 2026-11-10: one-time and monthly checkout, receipt,
+    sale alert, refund (access removed), learner cancel (access kept until the
+    period ends) and refund of the first subscription charge (access removed),
+    all through real webhooks. Its checkout page shows the variant's own price
+    ("$10.00 billed every month") under our $5.00 price; the subscription
+    really renews at $5.00, but the learner sees a wrong amount.
+  - Blocked: Razorpay. Its webhooks can only be added in the Razorpay
+    dashboard: add `https://predator.taile2f1.ts.net:8443/api/v1/storefront/webhooks/razorpay`
+    with a secret, and save the same secret in dev.
+- [ ] **5. Refunds of a first subscription charge on Stripe's March 2025 API or
+  later.** _(QA)_
+  - Fixed 2026-11-10, awaiting deploy. Confirmed against Stripe on
+    `2025-03-31.basil`: the refund named only the payment intent and was
+    dropped. Invoice payments are now recorded under their payment intent.
+- [ ] **6. Webhooks that can't be tied to a school return an error.** _(QA)_
+  - Fixed 2026-11-10, awaiting deploy. They are acknowledged and ignored.
+    Also fixed: after switching provider, the old provider's renewals, refunds
+    and cancellations were rejected.
+- [ ] **7. A file download end to end.** _(QA)_
+  - Checked 2026-11-10. Fixed on the way, awaiting deploy: the zip was named
+    after its token, because the proxies dropped `Content-Disposition`.
+- [ ] **8. Wrong gateway keys fail silently.** With an invalid Stripe secret
+  the learner sees "Unable to start checkout" and the creator is told nothing;
+  the provider's error is swallowed. Each failed attempt also leaves the
+  learner on the product's Customers list as "Payment Failed", though they
+  never paid. _(QA 2026-11-10)_
 
-## Live and coaching
+## 2. What visitors and learners see
 
-- [ ] **Live sessions:** events, a calendar, coaching bookings, and webinars
-  through Zoom or a link. Circle's and Kajabi's moat, and cohort courses depend
-  on it. Issue #842 (relates to #390).
-
-## Integrations
-
-- [ ] **Outbound webhooks and Zapier.** Without them creators can't connect
-  CourseLit to their other tools. Issue #843 (relates to #645 and #636).
-
-## Community gaps
-
-The community is one per school, set up in a few steps. It is behind Circle and
-Kajabi once it's running. Suggested order:
-
-- [ ] **Getting members in:** admins can already invite a person by email onto a
-  plan (the Invite button on Members). Still missing: a shareable invite link,
-  CSV import, and member search on the Members tab.
-- [ ] **Onboarding new members:** a welcome post or onboarding checklist, beyond
-  today's welcome banner. Profile prompts and automated welcome messages.
-- [ ] **Moderation:** bulk approve and reject; mute or ban a member; content
-  rules and keyword filters; moderator permissions per space.
-- [ ] **Community analytics:** active members, posts per week, pending requests
-  over time, churn.
-- [ ] **Events:** simple scheduled sessions or a calendar space (overlaps with
-  live sessions above).
-- [ ] **Multiple communities per school,** and groups that contain spaces with
-  access per space.
-- [ ] **Engagement tools:** chat or DMs, challenges, gamification (points,
-  levels, leaderboards), polls, digests.
-
-## Later
-
-- [ ] Native mobile app, or at least a PWA.
-- [ ] Funnels, and the automation layer that joins email, access, coupons and
-  affiliates.
-- [ ] Podcasts.
-- [ ] AI course and copy drafting.
-- [ ] A member directory.
-
-## Done: launch blockers in the core product and community loop
-
-Fixed and covered by regression tests (`commerce-webhooks.test.ts`,
-`commerce-receipts.test.ts`, `community-billing.test.ts`). Commit 9dc5a1d8.
-
-- [x] First subscription charge counted once; renewals reach their checkout;
-  refunds, partial refunds, cancellation and expiry handled on all three
-  gateways.
-- [x] Learners can cancel a product subscription; creators can cancel it or
-  remove access.
-- [x] Removing a paying community member cancels their billing first.
-- [x] Learners can leave a community.
-- [x] A learner who already has access can't buy the same product again.
-- [x] Download buyers see the download button wherever the product opens.
-- [x] One receipt per payment, a learner Purchases page, a new-sale
-  notification, and platform mail as a fallback when a school has no mail setup.
-
-## Gaps from the creator and learner walkthrough (QA, 2026-11-03)
-
-Found by signing up as a creator, building a course and an approval-only
-community, then joining and taking the course as a learner.
-
-### Bugs (fixed, awaiting commit and deploy)
-
-- [x] Approving a join request didn't grant the plan's included courses.
-- [x] `/join` ignored the community sales page edits; it now serves that page.
-- [x] The sales page said "Join for free" and checkout said "Complete Purchase"
-  for approval-only communities; both now say "Request to join".
-- [x] Activating a sequence without a mailing address failed with a vague error;
-  it now says to add the address in Mails → Settings.
-
-### Creator journey
-
-- [ ] **No onboarding.** A new account lands on an empty stats board with no
-  getting-started checklist. Creating a school doesn't open it. The creator's
-  name defaults to the email prefix.
-- [ ] **Placeholder content goes live.** The default homepage ships the
+- [ ] **9. Placeholder content goes live.** The default homepage ships the
   CourseLit promo video, "Ask user to take action", a "default page created for
   you" notice and generic feature-grid copy. Terms and Privacy are published but
-  empty, and checkout links to the Terms.
-- [ ] **School branding missing.** The footer shows CourseLit's tagline and
-  copyright, not the school's. Product cards use the CourseLit logo as the
-  placeholder image.
-- [ ] **Email can go out unedited.** New emails default to "Start writing here"
-  with no guard. The mailing address is required but nothing prompts for it
-  during setup.
-- [ ] **Publishing a lesson takes three steps** (open it, switch Publish on,
-  Update). Lessons also default to Draft with no quick publish in the list.
-- [ ] **Confusing switch copy.** The product Visibility switch's helper text
-  stays "Only accessible via direct link" whichever way it is set.
-- [ ] **Community details need an explicit Save,** at the bottom of the page.
-  Navigating away loses edits with no warning.
-- [ ] **No testimonials or social-proof block** in the page builder.
-- [ ] **Paid flows can't be tried without real gateway credentials.** No test
-  mode for creators setting up a school.
-- [ ] **Slow first navigation in the admin** (some pages took 20 to 30 seconds).
+  empty, and checkout links to the Terms. _(QA)_
+- [ ] **10. The site isn't branded with the school.**
+  - The footer shows CourseLit's tagline and copyright.
+  - Product cards use the CourseLit logo as the placeholder image.
+  - The learner sidebar says "CourseLit / Storefront".
+  - The certificate header says "CourseLit".
+  - The sign-in code email is titled "Your CourseLit Sign-in Code".
 
-### Learner journey
+  _(QA)_
+- [ ] **11. The public header shows "Join" when the learner is already signed
+  in.** _(QA)_
+- [ ] **12. Free courses show "$0.00"** in the catalogue instead of "Free".
+  Checkout for a free product also shows "$0.00" and "Complete Purchase".
+  _(QA)_
+- [ ] **13. Signed-out checkout is misleading.** It says "This community is not
+  available for checkout yet" until the learner signs in. _(QA)_
+- [ ] **14. A pending join request isn't acknowledged.** After asking to join,
+  the learner lands on the feed with the members' welcome banner and "You do not
+  have access to any spaces yet". Nothing says the request is pending. _(QA)_
+- [ ] **15. The learner sidebar is stale after joining** until a reload. _(QA)_
+- [ ] **16. The course page doesn't say it is included with the community
+  plan.** _(QA)_
+- [ ] **17. A learner can't find where to cancel a subscription.** Purchases
+  lists it with no action; cancelling is only on My products.
+  _(QA 2026-11-10)_
+- [ ] **18. The learner's name is the email prefix.** No name is collected at
+  sign-up. _(QA)_
 
-- [ ] **A pending request isn't acknowledged.** After asking to join, the
-  learner lands on the feed with the members' welcome banner and "You do not
-  have access to any spaces yet", with nothing saying the request is pending.
-- [ ] **Signed-out checkout is misleading.** It says "This community is not
-  available for checkout yet" until the learner signs in.
-- [ ] **The portal isn't branded with the school.** The learner sidebar says
-  "CourseLit / Storefront" and the certificate header says "CourseLit". The
-  public header shows "Join" even when signed in.
-- [ ] **Free courses show "$0.00"** in the catalogue instead of "Free".
-- [ ] **The course page doesn't say** it is included with the community plan.
-- [ ] **Learner name is the email prefix;** no name is collected at sign-up.
-- [ ] **The creator isn't signed in on the storefront** and must sign in
-  separately as a learner to join their own community (not confirmed: the two
-  test tabs may not share cookies).
-- [ ] **The learner sidebar is stale after joining** until a reload.
+## 3. A creator's first hour
 
-### What worked
+- [ ] **19. No onboarding.** A new account lands on an empty stats board with no
+  getting-started checklist. Creating a school doesn't open it. The creator's
+  name defaults to the email prefix. See `docs/wip/admin-onboarding-journey.md`.
+  _(QA)_
+- [ ] **20. Email can go out unedited.** New emails default to "Start writing
+  here" with no guard. The mailing address is required, but nothing prompts for
+  it during setup. _(QA)_
+- [ ] **21. Paid flows can't be tried without real gateway credentials.** There
+  is no test mode for creators setting up a school. _(QA)_
+- [ ] **22. The first navigation in the admin is slow.** Some pages took 20 to 30
+  seconds. _(QA)_
+- [ ] **23. Publishing a lesson takes three steps:** open it, switch Publish on,
+  then Update. Lessons default to Draft, and the list has no quick publish.
+  _(QA)_
+- [ ] **24. Community details need an explicit Save** at the bottom of the page.
+  Navigating away loses edits with no warning. _(QA)_
+- [ ] **25. The contact filters in the UI cover only email, tag, subscription and
+  signed up.**
+  - Product, community, last active and permission are missing, though
+    `apps/api/src/contact-filters.ts` supports most of them.
+  - This also limits broadcast and sequence audiences.
 
-Community setup with live preview; the Members screen (the answer to the join
-question, approve and reject, roles); the sequence editor and its triggers; the
-feed composer; the course player with progress; certificates.
+  _(Parity)_
+- [ ] **26. The product Visibility switch's helper text** stays "Only accessible
+  via direct link" whichever way it is set. _(QA)_
+- [ ] **27. The creator isn't signed in on the storefront** and must sign in
+  separately as a learner to join their own community. Confirm first: the two
+  test tabs may not have shared cookies. _(QA)_
+- [ ] **28. There is no testimonials or social-proof block** in the page
+  builder. _(QA)_
 
-## Parity gaps vs `main` (2026-11-10)
+## 4. Security hardening
 
-Things `main` (v0.74.4) does that the rewrite doesn't. Found by reading the
-code on both branches, not by running them. The item-by-item comparison is in
-`docs/platform-rewrite-parity-ledger.md`.
+- [ ] **29. Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high):
+  validating an oversized constrained collection can exhaust memory.
+  - The API, storefront and `api-contract` pin zod 3.25.76.
+  - So do ts-rest, the patched `@anatine/zod-openapi` and our `@codelitdev/*`
+    packages, and they all need zod 3.
+  - This is a migration, not a version bump.
 
-### Before launch
+  _(Audit)_
 
-- [ ] **Contacts list loads only the first 100 contacts** and filters them in
-  the browser (`apps/admin/app/contacts/page.tsx`). Counts and search are wrong
-  for bigger schools.
-- [ ] **Image upload inside page-builder blocks is broken.** The builder's
-  `ImageUploadDialog` gets no upload adapters and the admin never mounts a
-  `MediaUploaderProvider`, so uploading throws. Pasting a URL may still work.
-- [ ] **Contact filters in the UI cover only email, tag, subscription and
-  signed up.** Product, community, last active and permission are missing,
-  though `apps/api/src/contact-filters.ts` supports most of them. This also
-  limits broadcast and sequence audiences.
-- [ ] **The generic "Email signup" and "Support form" page blocks say they
-  succeeded but save nothing.** They need `teamId` and `publicApiBaseUrl`, which
-  the storefront never passes. The CourseLit "Newsletter signup" block works.
-  Not confirmed at runtime.
+## 5. Missing compared with `main`
 
-### Missing features
+- [ ] **30. Confirm the two changes made on purpose.**
+  - One community per school instead of many, with no public `/communities`
+    list (`apps/api/docs/one-community-per-school.md`).
+  - Course discussions are one community space per course, not one per lesson.
 
-- [ ] SAML SSO login.
-- [ ] Per-school Google login (the school's own client ID and secret) and
-  per-school toggles for login methods. Google is now platform-wide, set by env
-  vars.
-- [ ] Pinning community posts. The API supports it and the feed shows a
-  "Pinned" badge, but no screen sets it.
-- [ ] Reply by email to discussions and community posts (see
-  `docs/wip/community-replies-from-email.md`).
-- [ ] A tag management page: counts, delete a tag, untag everyone.
-- [ ] Unpublishing a blog post: there's no endpoint or button.
-- [ ] Smaller ones: a "Downloaded" column for download products; editing a
-  comment (API only); subscription ID and method in the member list; a share
-  button on community posts; the list of contacts in a sequence (count only);
-  a per-sequence "From" name; Unsplash in page-builder blocks (community image
-  and rich text only); the version/about page.
+  _(Parity)_
+- [ ] **31. Pinning community posts.** The API supports it and the feed shows a
+  "Pinned" badge, but no screen sets it. _(Parity)_
+- [ ] **32. Unpublishing a blog post.** There is no endpoint or button.
+  _(Parity)_
+- [ ] **33. A tag management page:** counts, delete a tag, untag everyone.
+  _(Parity)_
+- [ ] **34. Reply by email** to discussions and community posts. See
+  `docs/wip/community-replies-from-email.md`. _(Parity)_
+- [ ] **35. Per-school Google login** with the school's own client ID and secret,
+  and per-school toggles for login methods. Google login is now platform-wide,
+  set by env vars. _(Parity)_
+- [ ] **36. SAML SSO login.** _(Parity)_
+- [ ] **37. Editing a comment.** It exists in the API only. _(Parity)_
+- [ ] **38. A share button on community posts.** _(Parity)_
+- [ ] **39. A "Downloaded" column for download products.** _(Parity)_
+- [ ] **40. The list of contacts in a sequence.** Only the count is shown.
+  _(Parity)_
+- [ ] **41. A "From" name for each sequence.** _(Parity)_
+- [ ] **42. Subscription ID and payment method in the community member list.**
+  _(Parity)_
+- [ ] **43. Unsplash in page-builder blocks.** Today it is in the community image
+  and rich text only. _(Parity)_
+- [ ] **44. A version or about page.** _(Parity)_
 
-### Changed on purpose (confirm)
+## 6. Roadmap against competitors
 
-- [ ] One community per school instead of many, and no public `/communities`
-  list (`apps/api/docs/one-community-per-school.md`).
-- [ ] Course discussions are one community space per course, not per lesson.
+- [ ] **45. Discount codes.** Every competitor has them. Issue #839.
+- [ ] **46. Outbound webhooks and Zapier.** Without them creators can't connect
+  CourseLit to their other tools. Issue #843 (relates to #645 and #636).
+- [ ] **47. Getting members into the community.** Admins can already invite a
+  person by email onto a plan (the Invite button on Members). Still missing:
+  - a shareable invite link;
+  - CSV import;
+  - member search on the Members tab.
+- [ ] **48. Community moderation tools:**
+  - bulk approve and reject;
+  - mute or ban a member;
+  - content rules and keyword filters;
+  - moderator permissions for each space.
+- [ ] **49. Trials and coupons on community plans.** Standard in Kajabi and
+  Circle.
+- [ ] **50. Order bumps and upsells at checkout.** Bundles already exist, so this
+  is a short step. Issue #841 (relates to #426).
+- [ ] **51. Onboarding new community members.** Today there is a welcome banner.
+  Still missing:
+  - a welcome post or onboarding checklist;
+  - profile prompts;
+  - automated welcome messages.
+- [ ] **52. Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
+  Issue #840.
+- [ ] **53. Importers from Teachable, Kajabi and Thinkific.** Switching cost is
+  the main thing stopping creators from moving.
+- [ ] **54. Tax handling.** LemonSqueezy is the merchant of record, so it covers
+  this. Stripe and Razorpay schools are on their own.
+- [ ] **55. Live sessions:**
+  - events and a calendar, including a calendar space in the community;
+  - coaching bookings;
+  - webinars through Zoom or a link.
 
-## Dependency audit (`bun audit`, 2026-11-10)
+  This is Circle's and Kajabi's moat, and cohort courses depend on it. Issue
+  #842 (relates to #390).
+- [ ] **56. Community analytics:** active members, posts per week, pending
+  requests over time, churn.
+- [ ] **57. Engagement tools:**
+  - chat or DMs;
+  - challenges;
+  - gamification (points, levels, leaderboards);
+  - polls;
+  - digests.
+- [ ] **58. Multiple communities per school, and groups of spaces with access
+  set for each space.** Only if item 30 reverses the decision to have one
+  community per school.
+- [ ] **59. A member directory.**
+- [ ] **60. A native mobile app, or at least a PWA.**
+- [ ] **61. Funnels, and the automation layer** that joins email, access, coupons
+  and affiliates.
+- [ ] **62. AI drafting of courses and copy.**
+- [ ] **63. Podcasts.**
 
-Commit f142df23 fixed both criticals and all but one high.
+## 7. Maintenance
 
-- [ ] **Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high:
-  validating an oversized constrained collection can exhaust memory). The API,
-  storefront and `api-contract` pin zod 3.25.76. So do ts-rest, the patched
-  `@anatine/zod-openapi` and our `@codelitdev/*` packages, which all need zod
-  3, so this is a migration rather than a version bump.
-- [ ] minimatch (moderate) and deepmerge (low). Both come in only through the
-  `shadcn` CLI, a dev tool; they clear when shadcn updates its dependencies.
+- [ ] **64. minimatch (moderate) and deepmerge (low).** Both come in only through
+  the `shadcn` CLI, a dev tool. They clear when shadcn updates its dependencies.
+  _(Audit)_
+- [ ] **65. Correct the parity ledger.**
+  `docs/platform-rewrite-parity-ledger.md` (COM-002) says the admin has pin and
+  unpin controls. It doesn't; see item 31.
 
-## Not yet verified
+## Done
 
-- [ ] Paid checkout, receipts, sale alerts, cancellation and refunds against
-  real Stripe, LemonSqueezy and Razorpay test accounts. The 2026-11-03 QA smoke
-  test could only cover free plans.
-- [ ] Stripe accounts on the March 2025 API or later: a refund of the first
-  subscription charge may not be matched, because the newer API drops the
-  charge-to-invoice link.
-- [ ] Webhooks that can't be tied to a school return an error, so the gateway
-  retries and may eventually disable the endpoint.
-- [ ] The real Turnstile challenge in a normal browser. The automated browser
-  couldn't complete it.
-- [ ] A file download end to end. The QA test product had no file attached.
+- **Core product and community loop** (commit 9dc5a1d8). Covered by regression
+  tests in `commerce-webhooks.test.ts`, `commerce-receipts.test.ts` and
+  `community-billing.test.ts`.
+  - The first subscription charge is counted once.
+  - Renewals reach their checkout.
+  - Refunds, partial refunds, cancellation and expiry are handled on all three
+    gateways.
+  - Learners can cancel a product subscription.
+  - Creators can cancel a learner's subscription or remove their access.
+  - Removing a paying community member cancels their billing first.
+  - Learners can leave a community.
+  - A learner who already has access can't buy the same product again.
+  - Download buyers see the download button wherever the product opens.
+  - One receipt per payment, a learner Purchases page, a new-sale
+    notification, and platform mail as a fallback when a school has no mail
+    setup.
+- **QA walkthrough fixes:**
+  - Approving a join request now grants the plan's included courses.
+  - `/join` serves the community sales page with its edits.
+  - Approval-only communities say "Request to join" on both the sales page and
+    checkout.
+  - Activating a sequence without a mailing address now says to add it in
+    Mails → Settings.
+- **Turnstile** challenge verified end to end in a normal browser.
+- **Dependency audit** (f142df23). Fixed both criticals and all but one high.

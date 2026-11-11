@@ -1,4 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { paymentWebhookUrl } from "./payment-webhooks.js";
 import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
 import type { AppDb } from "./types.js";
 import * as schema from "./db/schema/index.js";
@@ -23,6 +24,11 @@ export type StoredPaymentSettings = {
     publishableKey?: string;
     secretKey?: string;
     webhookSecret?: string;
+    /** Set by automatic webhook registration (see payment-webhooks.ts). */
+    webhookEndpointId?: string;
+    webhookUrl?: string;
+    /** Why the last automatic registration failed. */
+    webhookError?: string;
   };
   razorpay?: {
     keyId?: string;
@@ -36,6 +42,11 @@ export type StoredPaymentSettings = {
     monthlyVariantId?: string;
     yearlyVariantId?: string;
     webhookSecret?: string;
+    /** Set by automatic webhook registration (see payment-webhooks.ts). */
+    webhookEndpointId?: string;
+    webhookUrl?: string;
+    /** Why the last automatic registration failed. */
+    webhookError?: string;
   };
 };
 
@@ -96,6 +107,12 @@ export type PaymentProvider = {
   validateSubscription?(providerSubscriptionId: string): Promise<boolean>;
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, now: Date): void;
   parseWebhook(rawBody: string, headers: Record<string, string | undefined>): NormalizedPaymentEvent;
+  /**
+   * Fills in what a verified event leaves out but later events will refer to,
+   * by asking the provider. Throws when the provider can't be reached, so the
+   * event is retried.
+   */
+  completeWebhookEvent?(event: NormalizedPaymentEvent): Promise<NormalizedPaymentEvent>;
 };
 
 function required(value: unknown, field: string): string {
@@ -266,6 +283,41 @@ class StripePayment implements PaymentProvider {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * A subscription's payments are reported against its invoices: the checkout
+   * session (first payment) and, from API version 2025-03-31, renewal
+   * invoices carry no payment intent. A refund or dispute, though, names only
+   * the payment intent (its charge no longer links to the invoice), so record
+   * each invoice payment under the payment intent that paid it.
+   */
+  async completeWebhookEvent(event: NormalizedPaymentEvent): Promise<NormalizedPaymentEvent> {
+    const invoiceId = stringValue(event.data.invoice_id);
+    const paymentId = stringValue(event.data.payment_id);
+    if (event.eventType !== "payment.succeeded" || !invoiceId || paymentId?.startsWith("pi_")) {
+      return event;
+    }
+    const response = await fetch(
+      `https://api.stripe.com/v1/invoice_payments?invoice=${encodeURIComponent(invoiceId)}&limit=10`,
+      {
+        headers: {
+          authorization: basicAuth(required(this.settings.secretKey, "stripe_secret_key")),
+          // Invoice payments exist from this version on; pin it so the call
+          // works whatever version the account defaults to.
+          "stripe-version": "2025-03-31.basil",
+        },
+      },
+    );
+    if (!response.ok) throw new Error(`stripe_invoice_payments_failed_${response.status}`);
+    const payments = (objectValue(await response.json()).data as unknown[] | undefined) ?? [];
+    const paid = payments
+      .map(objectValue)
+      .find((item) => item.status === "paid" && objectValue(item.payment).type === "payment_intent");
+    const paymentIntent = stringValue(objectValue(paid?.payment).payment_intent);
+    return paymentIntent
+      ? { ...event, data: { ...event.data, payment_id: paymentIntent } }
+      : event;
   }
 
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, now: Date): void {
@@ -803,8 +855,22 @@ export async function getConfiguredPaymentProvider(
     .where(eq(schema.schools.id, schoolId))
     .limit(1);
   const settings = parseStoredPaymentSettings(rows[0]?.paymentSettingsEncrypted);
-  if (expectedName && settings.provider !== expectedName) return null;
+  // A purchase stays with the provider that took it: after a school switches
+  // provider, renewals, refunds and cancellations of earlier purchases still
+  // go through the old one while its credentials are kept.
+  if (expectedName) return paymentProviderNamed(settings, expectedName);
   return paymentProviderFromSettings(settings);
+}
+
+function paymentProviderNamed(
+  settings: StoredPaymentSettings,
+  name: PaymentProviderName,
+): PaymentProvider | null {
+  const credentials = settings[name];
+  if (!credentials || !Object.values(credentials).some((value) => Boolean(value))) {
+    return null;
+  }
+  return paymentProviderFromSettings({ ...settings, provider: name });
 }
 
 export async function getPaymentProvider(
@@ -819,11 +885,46 @@ export async function getPaymentProvider(
   return null;
 }
 
+function automaticWebhookStatus(
+  provider: "stripe" | "lemonsqueezy",
+  group: { webhookSecret?: string; webhookUrl?: string; webhookError?: string } | undefined,
+) {
+  const url = paymentWebhookUrl(provider);
+  return {
+    setup: "automatic" as const,
+    url,
+    // A webhook registered for another URL (the school moved domains) no
+    // longer receives events.
+    connected: Boolean(group?.webhookSecret) && group?.webhookUrl === url,
+    error: group?.webhookError ?? null,
+  };
+}
+
 export function providerSettingsDto(settings: StoredPaymentSettings) {
   return {
     provider: settings.provider ?? null,
-    stripe: { publishableKey: settings.stripe?.publishableKey ?? "", secretConfigured: Boolean(settings.stripe?.secretKey), webhookSecretConfigured: Boolean(settings.stripe?.webhookSecret) },
-    razorpay: { keyId: settings.razorpay?.keyId ?? "", secretConfigured: Boolean(settings.razorpay?.keySecret), webhookSecretConfigured: Boolean(settings.razorpay?.webhookSecret) },
-    lemonsqueezy: { storeId: settings.lemonsqueezy?.storeId ?? "", oneTimeVariantId: settings.lemonsqueezy?.oneTimeVariantId ?? "", monthlyVariantId: settings.lemonsqueezy?.monthlyVariantId ?? "", yearlyVariantId: settings.lemonsqueezy?.yearlyVariantId ?? "", apiKeyConfigured: Boolean(settings.lemonsqueezy?.apiKey), webhookSecretConfigured: Boolean(settings.lemonsqueezy?.webhookSecret) },
+    stripe: {
+      publishableKey: settings.stripe?.publishableKey ?? "",
+      secretConfigured: Boolean(settings.stripe?.secretKey),
+      webhook: automaticWebhookStatus("stripe", settings.stripe),
+    },
+    razorpay: {
+      keyId: settings.razorpay?.keyId ?? "",
+      secretConfigured: Boolean(settings.razorpay?.keySecret),
+      webhook: {
+        setup: "manual" as const,
+        url: paymentWebhookUrl("razorpay"),
+        connected: Boolean(settings.razorpay?.webhookSecret),
+        error: null,
+      },
+    },
+    lemonsqueezy: {
+      storeId: settings.lemonsqueezy?.storeId ?? "",
+      oneTimeVariantId: settings.lemonsqueezy?.oneTimeVariantId ?? "",
+      monthlyVariantId: settings.lemonsqueezy?.monthlyVariantId ?? "",
+      yearlyVariantId: settings.lemonsqueezy?.yearlyVariantId ?? "",
+      apiKeyConfigured: Boolean(settings.lemonsqueezy?.apiKey),
+      webhook: automaticWebhookStatus("lemonsqueezy", settings.lemonsqueezy),
+    },
   };
 }

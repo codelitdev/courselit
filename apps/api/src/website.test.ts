@@ -232,6 +232,19 @@ describe.serial("school website", () => {
         layout: [header],
       });
       expect(missingFooter.status).toBe(400);
+
+      // The page builder's lead-capture and support-ticket blocks need backends
+      // CourseLit doesn't have, so a page can't use them.
+      for (const name of ["email-form", "support-form"]) {
+        const unavailable = await admin("PATCH", `/v1/school/website/pages/${pageId}`, {
+          layout: [
+            header,
+            { widgetId: `w-${name}`, name, deletable: true, moveable: true, shared: false },
+            footer,
+          ],
+        });
+        expect(unavailable.status).toBe(400);
+      }
     } finally {
       await runtime.close();
     }

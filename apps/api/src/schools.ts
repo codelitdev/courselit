@@ -25,6 +25,12 @@ import {
   providerSettingsDto,
   type StoredPaymentSettings,
 } from "./payments.js";
+import {
+  AUTOMATIC_WEBHOOK_PROVIDERS,
+  paymentWebhookUrl,
+  registerPaymentWebhook,
+  WebhookRegistrationError,
+} from "./payment-webhooks.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionSchoolCommunity } from "./spaces.js";
 import { provisionWebsite } from "./website.js";
@@ -535,7 +541,7 @@ export async function updateSchoolCodeInjection(
 
 type PaymentSettingsPatch = {
   provider?: "stripe" | "lemonsqueezy" | "razorpay" | null;
-  stripe?: { publishableKey?: string; secretKey?: string; webhookSecret?: string };
+  stripe?: { publishableKey?: string; secretKey?: string };
   razorpay?: { keyId?: string; keySecret?: string; webhookSecret?: string };
   lemonsqueezy?: {
     apiKey?: string;
@@ -543,7 +549,6 @@ type PaymentSettingsPatch = {
     oneTimeVariantId?: string;
     monthlyVariantId?: string;
     yearlyVariantId?: string;
-    webhookSecret?: string;
   };
 };
 
@@ -559,6 +564,56 @@ function mergeSecretGroup<T extends Record<string, string | undefined>>(
     }
   }
   return merged;
+}
+
+/**
+ * Register Stripe and Lemon Squeezy webhooks on the school's own account
+ * when their keys are saved. A save that names the provider again (even with
+ * no changes) retries a registration that failed or points at an old URL.
+ * The keys are saved either way; a failure is kept for the settings page.
+ */
+async function connectPaymentWebhooks(
+  current: StoredPaymentSettings,
+  next: StoredPaymentSettings,
+  patch: PaymentSettingsPatch,
+  schoolPublicId: string,
+) {
+  for (const provider of AUTOMATIC_WEBHOOK_PROVIDERS) {
+    if (!patch[provider]) continue;
+    const before = current[provider];
+    const group = next[provider];
+    const credentialsChanged =
+      provider === "stripe"
+        ? next.stripe?.secretKey !== current.stripe?.secretKey
+        : next.lemonsqueezy?.apiKey !== current.lemonsqueezy?.apiKey ||
+          next.lemonsqueezy?.storeId !== current.lemonsqueezy?.storeId;
+    const ready =
+      provider === "stripe"
+        ? Boolean(next.stripe?.secretKey)
+        : Boolean(next.lemonsqueezy?.apiKey && next.lemonsqueezy?.storeId);
+    if (!group || !ready) continue;
+    const connected =
+      Boolean(before?.webhookSecret) && before?.webhookUrl === paymentWebhookUrl(provider);
+    if (connected && !credentialsChanged) continue;
+    try {
+      const webhook = await registerPaymentWebhook(provider, next, schoolPublicId);
+      next[provider] = {
+        ...group,
+        webhookSecret: webhook.secret,
+        webhookEndpointId: webhook.endpointId,
+        webhookUrl: webhook.url,
+        webhookError: undefined,
+      };
+    } catch (error) {
+      const message =
+        error instanceof WebhookRegistrationError ? error.message : "Couldn't register the webhook.";
+      // A webhook on the previous account can't verify the new account's
+      // events, so it no longer counts as connected.
+      next[provider] = credentialsChanged
+        ? { ...group, webhookSecret: undefined, webhookEndpointId: undefined, webhookUrl: undefined, webhookError: message }
+        : { ...group, webhookError: message };
+    }
+  }
 }
 
 export async function updateSchoolPaymentSettings(
@@ -589,6 +644,7 @@ export async function updateSchoolPaymentSettings(
     razorpay: mergeSecretGroup(current.razorpay, input.settings.razorpay),
     lemonsqueezy: mergeSecretGroup(current.lemonsqueezy, input.settings.lemonsqueezy),
   };
+  await connectPaymentWebhooks(current, next, input.settings, school.publicId);
   const now = clock.now();
   await db.transaction(async (tx) => {
     await tx

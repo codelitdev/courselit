@@ -22,10 +22,7 @@ import {
   cancelCommunitySubscriptionsAtProvider,
   markCommunitySubscriptionsCancelled,
 } from "./community-billing.js";
-import {
-  fromSendLitFilter,
-  toSendLitFilter,
-} from "./contact-filters.js";
+import { fromSendLitFilter, toSendLitFilter } from "./contact-filters.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import { getConfiguredPaymentProvider, type PaymentProvider } from "./payments.js";
@@ -89,7 +86,9 @@ function mergeContactSyncPayload(
     next.subscribed = input.subscribed;
     next.ensureSubscribed = input.subscribed;
   } else {
-    next.ensureSubscribed = Boolean(existing.ensureSubscribed || input.ensureSubscribed);
+    next.ensureSubscribed = Boolean(
+      existing.ensureSubscribed || input.ensureSubscribed,
+    );
     if (input.ensureSubscribed && existing.subscribed === false) {
       next.subscribed = true;
     }
@@ -478,7 +477,8 @@ export async function listContacts(
           q: query.q,
           segmentId: query.segmentId,
           filter: wireFilterString,
-          offset: (query.page - 1) * query.rowsPerPage + 1,
+          // SendLit's `offset` is the 1-based page number, not a row offset.
+          offset: query.page,
           rowsPerPage: query.rowsPerPage,
         },
         { config: cfg },
@@ -499,9 +499,7 @@ export async function listContacts(
           ),
         );
 
-      const accountBySendLitId = new Map(
-        accounts.map((a) => [a.sendlitContactId, a]),
-      );
+      const accountBySendLitId = new Map(accounts.map((a) => [a.sendlitContactId, a]));
 
       const items: Contact[] = [];
       for (const item of sendlitResult.items) {
@@ -939,7 +937,9 @@ export async function deleteContact(
   contactId: string,
   clock: Clock,
   paymentProviderOverride?: PaymentProvider,
-): Promise<{ ok: true; value: { success: true } } | { ok: false; error: PlatformError }> {
+): Promise<
+  { ok: true; value: { success: true } } | { ok: false; error: PlatformError }
+> {
   const schoolId = getSchoolId(ctx);
   if (!schoolId) {
     return { ok: false, error: createPlatformError("tenant_forbidden") };
@@ -1005,7 +1005,10 @@ export async function deleteContact(
     .from(schema.storefrontSubscriptions)
     .innerJoin(
       schema.storefrontCheckoutAttempts,
-      eq(schema.storefrontCheckoutAttempts.id, schema.storefrontSubscriptions.checkoutId),
+      eq(
+        schema.storefrontCheckoutAttempts.id,
+        schema.storefrontSubscriptions.checkoutId,
+      ),
     )
     .where(
       and(
@@ -1067,7 +1070,12 @@ export async function deleteContact(
     const checkoutIds = storefrontCheckouts.map((c) => c.id);
     await db
       .update(schema.storefrontSubscriptions)
-      .set({ status: "cancelled", cancelAt: now, cancelAtPeriodEnd: false, updatedAt: now })
+      .set({
+        status: "cancelled",
+        cancelAt: now,
+        cancelAtPeriodEnd: false,
+        updatedAt: now,
+      })
       .where(
         and(
           inArray(schema.storefrontSubscriptions.checkoutId, checkoutIds),
@@ -1340,7 +1348,8 @@ export async function updateContactSegment(
     return { ok: false, error: createPlatformError("internal_error") };
   }
 
-  const updateInput: { name?: string; filter?: ReturnType<typeof toSendLitFilter> } = {};
+  const updateInput: { name?: string; filter?: ReturnType<typeof toSendLitFilter> } =
+    {};
   if (body.name !== undefined) updateInput.name = body.name;
   if (body.filter !== undefined) {
     try {
@@ -1385,7 +1394,9 @@ export async function deleteContactSegment(
   ctx: AdminContactContext,
   segmentId: string,
   options: { config?: SendLitConfig } = {},
-): Promise<{ ok: true; value: { success: true } } | { ok: false; error: PlatformError }> {
+): Promise<
+  { ok: true; value: { success: true } } | { ok: false; error: PlatformError }
+> {
   const schoolId = getSchoolId(ctx);
   if (!schoolId) {
     return { ok: false, error: createPlatformError("tenant_forbidden") };
@@ -1446,7 +1457,8 @@ export async function getContactSegmentMembers(
       teamApiKey,
       {
         segmentId,
-        offset: (query.page - 1) * query.rowsPerPage + 1,
+        // SendLit's `offset` is the 1-based page number, not a row offset.
+        offset: query.page,
         rowsPerPage: query.rowsPerPage,
       },
       { config: cfg },

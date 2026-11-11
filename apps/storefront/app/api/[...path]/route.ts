@@ -77,7 +77,14 @@ async function proxy(
       redirect: "manual",
     });
     const outputHeaders = new Headers();
-    for (const name of ["content-type", "location", "x-request-id", "retry-after"]) {
+    for (const name of [
+      "content-type",
+      // Names a download (e.g. a product's files as `<title>.zip`).
+      "content-disposition",
+      "location",
+      "x-request-id",
+      "retry-after",
+    ]) {
       const value = response.headers.get(name);
       if (value) outputHeaders.set(name, value);
     }

@@ -231,3 +231,43 @@ describe.serial("school payment providers", () => {
     }
   });
 });
+
+describe("the provider a purchase was made with", () => {
+  it("stays reachable after the school switches provider", async () => {
+    process.env.INTEGRATIONS_ENCRYPTION_KEY = "test-secret-that-is-at-least-thirty-two-characters";
+    const { createPgliteRuntime, freezeRuntimeClock } = await import("./runtime.js");
+    const { seedWorld } = await import("./seed.js");
+    const { encryptIntegrationSecret } = await import("./utils/integration-secrets.js");
+    const { getConfiguredPaymentProvider, getPaymentProvider } = await import("./payments.js");
+    const schema = await import("./db/schema/index.js");
+    const { eq } = await import("drizzle-orm");
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      // Took Stripe payments, then moved to Razorpay; the Stripe keys are kept.
+      await runtime.db
+        .update(schema.schools)
+        .set({
+          paymentSettingsEncrypted: encryptIntegrationSecret(
+            JSON.stringify({
+              provider: "razorpay",
+              stripe: { secretKey: "sk_test_old", webhookSecret: "whsec_old" },
+              razorpay: { keyId: "rzp_test", keySecret: "rzp_secret", webhookSecret: "rzp_hook" },
+            }),
+          ),
+        })
+        .where(eq(schema.schools.id, world.schoolA.id));
+
+      expect((await getPaymentProvider(runtime.db, world.schoolA.id))?.name).toBe("razorpay");
+      expect((await getConfiguredPaymentProvider(runtime.db, world.schoolA.id, "stripe"))?.name).toBe(
+        "stripe",
+      );
+      expect(
+        await getConfiguredPaymentProvider(runtime.db, world.schoolA.id, "lemonsqueezy"),
+      ).toBeNull();
+    } finally {
+      await runtime.close();
+    }
+  });
+});

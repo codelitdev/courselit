@@ -87,7 +87,7 @@ function subscriptionSummary(subscription: ProductSubscription): string {
   }
 }
 
-function ProductSubscriptionPanel({
+function ProductSubscriptionDetails({
   product,
   onChange,
 }: {
@@ -120,8 +120,7 @@ function ProductSubscriptionPanel({
   }
 
   return (
-    <LearnerCard>
-      <LearnerCardContent className="grid gap-3">
+    <LearnerCardContent className="grid gap-3 pt-0">
         <LearnerText2 className="text-muted-foreground">
           {subscriptionSummary(subscription)}
         </LearnerText2>
@@ -148,7 +147,6 @@ function ProductSubscriptionPanel({
             {error}
           </LearnerText2>
         ) : null}
-      </LearnerCardContent>
       <LearnerAlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <LearnerAlertDialogContent>
           <LearnerAlertDialogHeader>
@@ -178,11 +176,17 @@ function ProductSubscriptionPanel({
           </LearnerAlertDialogFooter>
         </LearnerAlertDialogContent>
       </LearnerAlertDialog>
-    </LearnerCard>
+    </LearnerCardContent>
   );
 }
 
-function LearnerProductCard({ product }: { product: LearnerProduct }) {
+function LearnerProductCard({
+  product,
+  onSubscriptionChange,
+}: {
+  product: LearnerProduct;
+  onSubscriptionChange: (subscription: ProductSubscription) => void;
+}) {
   const TypeIcon = product.kind === "course" ? BookOpen : Download;
   const description = descriptionText(product.description);
   const progressPercent =
@@ -190,16 +194,18 @@ function LearnerProductCard({ product }: { product: LearnerProduct }) {
       ? Math.round((product.completedLessonsCount / product.totalLessons) * 100)
       : 0;
 
+  // The card holds the subscription's cancel button, which can't sit inside
+  // a link, so only the image and details link to the course.
   return (
-    <Link
-      href={courseViewerHref(
-        `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`,
-        null,
-        "dashboard",
-      )}
-      className="group block"
-    >
-      <LearnerCard isLink className="overflow-hidden transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/60 group-hover:shadow-lg">
+    <LearnerCard isLink className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg">
+      <Link
+        href={courseViewerHref(
+          `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`,
+          null,
+          "dashboard",
+        )}
+        className="block"
+      >
         {product.featuredImage ? (
           <LearnerCardImage
             src={product.featuredImage.thumbnailUrl ?? product.featuredImage.url}
@@ -255,8 +261,9 @@ function LearnerProductCard({ product }: { product: LearnerProduct }) {
           </div>
         ) : null}
       </LearnerCardContent>
-      </LearnerCard>
-    </Link>
+      </Link>
+      <ProductSubscriptionDetails product={product} onChange={onSubscriptionChange} />
+    </LearnerCard>
   );
 }
 
@@ -324,19 +331,17 @@ export function LearnerProducts() {
           aria-label="Your products"
         >
           {products.map((product) => (
-            <div key={product.id} className="grid content-start gap-3">
-              <LearnerProductCard product={product} />
-              <ProductSubscriptionPanel
-                product={product}
-                onChange={(subscription) =>
-                  setProducts((current) =>
-                    current.map((item) =>
-                      item.id === product.id ? { ...item, subscription } : item,
-                    ),
-                  )
-                }
-              />
-            </div>
+            <LearnerProductCard
+              key={product.id}
+              product={product}
+              onSubscriptionChange={(subscription) =>
+                setProducts((current) =>
+                  current.map((item) =>
+                    item.id === product.id ? { ...item, subscription } : item,
+                  ),
+                )
+              }
+            />
           ))}
         </section>
       )}
