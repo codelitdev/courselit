@@ -161,6 +161,8 @@ async function provisionOneSendLitSchool(
       {
         externalId: payload.externalId,
         name: payload.name,
+        // Learners see the school, not the shared sending account, as the sender.
+        sender: { fromName: payload.name },
         mailingAddress: payload.mailingAddress,
       },
       { config },
@@ -268,7 +270,11 @@ async function syncSendLitContactJob(
     }
 
     const integration = await getIntegration(db, job.schoolId, "sendlit");
-    if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
+    if (
+      !integration ||
+      !integration.encryptedTeamKey ||
+      integration.status !== "ready"
+    ) {
       throw new SendLitApiError(
         "SendLit is not provisioned or ready yet",
         undefined,
@@ -421,7 +427,11 @@ async function sendSchoolEmailJob(
   }
   const integration = await getIntegration(db, job.schoolId, "sendlit");
   if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
-    throw new SendLitApiError("SendLit is not provisioned or ready yet", undefined, true);
+    throw new SendLitApiError(
+      "SendLit is not provisioned or ready yet",
+      undefined,
+      true,
+    );
   }
   const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
   const send = operations.sendEmail ?? sendSendLitTransactionalEmail;
@@ -479,7 +489,11 @@ async function trackSendLitEventJob(
 
   const integration = await getIntegration(db, job.schoolId, "sendlit");
   if (!integration || !integration.encryptedTeamKey || integration.status !== "ready") {
-    throw new SendLitApiError("SendLit is not provisioned or ready yet", undefined, true);
+    throw new SendLitApiError(
+      "SendLit is not provisioned or ready yet",
+      undefined,
+      true,
+    );
   }
   const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
   const doTrackEvent = operations.trackEvent ?? trackSendLitEvent;
@@ -651,7 +665,9 @@ async function failJob(
   let message = safeError(error);
   if (
     error instanceof SendLitApiError &&
-    (error.status === 402 || error.status === 403 || error.message.includes("plan_limit_exceeded"))
+    (error.status === 402 ||
+      error.status === 403 ||
+      error.message.includes("plan_limit_exceeded"))
   ) {
     message = "sendlit_quota_exceeded";
     actionRequired = true;

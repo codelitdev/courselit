@@ -97,14 +97,18 @@ describe("CourseLit SendLit provisioning", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) throw new Error("school_creation_failed");
 
+    const provisioned: Array<{ name: string; sender?: { fromName?: string } }> = [];
     const sendLitOperations: SendLitOperations = {
-      provisionTeam: async (input) => ({
-        teamId: "sl_team_1",
-        externalId: input.externalId,
-        name: input.name,
-        created: true,
-        apiKey: "sl_live_key_999",
-      }),
+      provisionTeam: async (input) => {
+        provisioned.push(input);
+        return {
+          teamId: "sl_team_1",
+          externalId: input.externalId,
+          name: input.name,
+          created: true,
+          apiKey: "sl_live_key_999",
+        };
+      },
       rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
     };
 
@@ -116,6 +120,8 @@ describe("CourseLit SendLit provisioning", () => {
       { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" },
     );
     expect(processed).toBe(true);
+    // Its email goes out under the school's name, not the shared account's.
+    expect(provisioned[0]?.sender?.fromName).toBe("SendLit School");
 
     const [ready] = await runtime.db
       .select()

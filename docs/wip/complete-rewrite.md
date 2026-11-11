@@ -149,6 +149,10 @@ product, and the admin sign-in page showed developer notes.
     <school>", in the school's name, and with the real 10-minute expiry.
     The email used to say 5 minutes. Certificate verification returns
     `schoolName`, and the page header shows it.
+    Each school's SendLit team is now created with the school's name as its
+    sender name, which replaces "CourseLit Shared". Checked on the local stack
+    2026-11-11. QA's existing teams still need their sender name set once,
+    because CourseLit's SendLit key can't update teams (`teams:manage`).
 - [ ] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
 - [ ] **12. Free courses show "$0.00"** in the catalogue instead of "Free".

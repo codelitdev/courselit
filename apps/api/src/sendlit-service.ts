@@ -5,7 +5,9 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 
-export type Result<T, E = PlatformError> = { ok: true; value: T } | { ok: false; error: E };
+export type Result<T, E = PlatformError> =
+  | { ok: true; value: T }
+  | { ok: false; error: E };
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
@@ -74,7 +76,6 @@ export type SendLitTeamAuth = {
   server?: string | null;
 };
 
-
 const CODE_BY_STATUS: Record<number, Parameters<typeof createPlatformError>[0]> = {
   400: "validation_failed",
   401: "forbidden",
@@ -105,9 +106,15 @@ function mapSendLitError(error: unknown): PlatformError {
       cause: error,
     });
   }
-  if (error instanceof SendLitApiError && error.status && CODE_BY_STATUS[error.status]) {
+  if (
+    error instanceof SendLitApiError &&
+    error.status &&
+    CODE_BY_STATUS[error.status]
+  ) {
     return createPlatformError(CODE_BY_STATUS[error.status]!, {
-      safeDetails: { reason: error.detail ?? "The mailing service rejected the request." },
+      safeDetails: {
+        reason: error.detail ?? "The mailing service rejected the request.",
+      },
       cause: error,
     });
   }
@@ -139,7 +146,11 @@ export async function ensureSendLitTeam(
     )
     .limit(1);
 
-  if (existing?.status === "ready" && existing.encryptedTeamKey && existing.remoteTeamId) {
+  if (
+    existing?.status === "ready" &&
+    existing.encryptedTeamKey &&
+    existing.remoteTeamId
+  ) {
     try {
       const teamApiKey = decryptIntegrationSecret(existing.encryptedTeamKey);
       return { teamId: existing.remoteTeamId, teamApiKey, server: existing.server };
@@ -161,6 +172,7 @@ export async function ensureSendLitTeam(
       {
         externalId: school.publicId,
         name: school.name,
+        sender: { fromName: school.name },
       },
       { config },
     );
@@ -258,10 +270,21 @@ export async function getSendLitAuthForSchool(
     )
     .limit(1);
 
-  if (integration?.status === "ready" && integration.encryptedTeamKey && integration.remoteTeamId) {
+  if (
+    integration?.status === "ready" &&
+    integration.encryptedTeamKey &&
+    integration.remoteTeamId
+  ) {
     try {
       const teamApiKey = decryptIntegrationSecret(integration.encryptedTeamKey);
-      return { ok: true, value: { teamId: integration.remoteTeamId, teamApiKey, server: integration.server } };
+      return {
+        ok: true,
+        value: {
+          teamId: integration.remoteTeamId,
+          teamApiKey,
+          server: integration.server,
+        },
+      };
     } catch {
       // Decryption failed; fall back to provisioning
     }
@@ -274,13 +297,20 @@ export async function getSendLitAuthForSchool(
     .limit(1);
 
   if (!school) {
-    return { ok: false, error: createPlatformError("not_found", { safeDetails: { reason: "School not found" } }) };
+    return {
+      ok: false,
+      error: createPlatformError("not_found", {
+        safeDetails: { reason: "School not found" },
+      }),
+    };
   }
 
   if (!config.server || !config.provisioningApiKey) {
     return {
       ok: false,
-      error: createPlatformError("conflict", { safeDetails: { reason: "Mailing service integration is not configured" } }),
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "Mailing service integration is not configured" },
+      }),
     };
   }
 
@@ -295,13 +325,12 @@ export async function getSendLitAuthForSchool(
   } catch (error) {
     return {
       ok: false,
-      error: createPlatformError(
-        "conflict",
-        {
-          safeDetails: { reason: "The mailing service is unavailable. Try again shortly." },
-          cause: error,
+      error: createPlatformError("conflict", {
+        safeDetails: {
+          reason: "The mailing service is unavailable. Try again shortly.",
         },
-      ),
+        cause: error,
+      }),
     };
   }
 }
@@ -358,7 +387,8 @@ export async function updateMailingSettings(
     db,
     schoolId,
     clock,
-    (auth, cfg) => updateSendLitGeneralSettings(auth.teamApiKey, input, { config: cfg }),
+    (auth, cfg) =>
+      updateSendLitGeneralSettings(auth.teamApiKey, input, { config: cfg }),
     config,
   );
 }
@@ -366,7 +396,6 @@ export async function updateMailingSettings(
 // ---------------------------------------------------------------------------
 // Tags
 // ---------------------------------------------------------------------------
-
 
 export async function addTagToContact(
   db: AppDb,
@@ -380,7 +409,8 @@ export async function addTagToContact(
     db,
     schoolId,
     clock,
-    (auth, cfg) => addSendLitContactTag(auth.teamApiKey, contactId, tag, { config: cfg }),
+    (auth, cfg) =>
+      addSendLitContactTag(auth.teamApiKey, contactId, tag, { config: cfg }),
     config,
   );
 }
@@ -397,7 +427,8 @@ export async function removeTagFromContact(
     db,
     schoolId,
     clock,
-    (auth, cfg) => removeSendLitContactTag(auth.teamApiKey, contactId, tag, { config: cfg }),
+    (auth, cfg) =>
+      removeSendLitContactTag(auth.teamApiKey, contactId, tag, { config: cfg }),
     config,
   );
 }
@@ -445,7 +476,12 @@ export async function createSubscriber(
   db: AppDb,
   schoolId: string,
   clock: Clock,
-  input: { email: string; name?: string; tags?: string[]; customFields?: Record<string, unknown> },
+  input: {
+    email: string;
+    name?: string;
+    tags?: string[];
+    customFields?: Record<string, unknown>;
+  },
   config?: SendLitConfig,
 ): Promise<Result<SendLitContact, PlatformError>> {
   return withSendLitAuth(
@@ -491,7 +527,8 @@ export async function updateSubscriber(
     db,
     schoolId,
     clock,
-    (auth, cfg) => updateSendLitContact(auth.teamApiKey, contactId, input, { config: cfg }),
+    (auth, cfg) =>
+      updateSendLitContact(auth.teamApiKey, contactId, input, { config: cfg }),
     config,
   );
 }
@@ -576,7 +613,8 @@ export async function updateSegment(
     db,
     schoolId,
     clock,
-    (auth, cfg) => updateSendLitSegment(auth.teamApiKey, segmentId, input, { config: cfg }),
+    (auth, cfg) =>
+      updateSendLitSegment(auth.teamApiKey, segmentId, input, { config: cfg }),
     config,
   );
 }
@@ -622,7 +660,10 @@ export async function listSequences(
       const res = await listSendLitSequences(
         auth.teamApiKey,
         {
-          type: query.type === "broadcast" || query.type === "sequence" ? query.type : undefined,
+          type:
+            query.type === "broadcast" || query.type === "sequence"
+              ? query.type
+              : undefined,
           itemsPerPage: query.limit,
         },
         { config: cfg },
@@ -642,9 +683,7 @@ export async function listSequences(
       }
       if (query.search?.trim()) {
         const searchLower = query.search.trim().toLowerCase();
-        items = items.filter((item) =>
-          item.title?.toLowerCase().includes(searchLower),
-        );
+        items = items.filter((item) => item.title?.toLowerCase().includes(searchLower));
       }
       return {
         items: items.map(fromSendLitTrigger),
@@ -667,7 +706,8 @@ export async function createSequence(
   },
   config?: SendLitConfig,
 ): Promise<Result<SendLitSequence, PlatformError>> {
-  const defaultTitle = input.type === "sequence" ? "Untitled Sequence" : "Untitled broadcast";
+  const defaultTitle =
+    input.type === "sequence" ? "Untitled Sequence" : "Untitled broadcast";
   const normalizedInput = {
     ...input,
     title: input.title?.trim() || defaultTitle,
@@ -678,7 +718,9 @@ export async function createSequence(
     schoolId,
     clock,
     async (auth, cfg) => {
-      let created = await createSendLitSequence(auth.teamApiKey, normalizedInput, { config: cfg });
+      let created = await createSendLitSequence(auth.teamApiKey, normalizedInput, {
+        config: cfg,
+      });
       if (normalizedInput.title && created.title !== normalizedInput.title) {
         try {
           const updated = await updateSendLitSequence(
@@ -757,9 +799,14 @@ export async function updateSequence(
     clock,
     async (auth, cfg) =>
       fromSendLitTrigger(
-        await updateSendLitSequence(auth.teamApiKey, sequenceId, toSendLitTrigger(input), {
-          config: cfg,
-        }),
+        await updateSendLitSequence(
+          auth.teamApiKey,
+          sequenceId,
+          toSendLitTrigger(input),
+          {
+            config: cfg,
+          },
+        ),
       ),
     config,
   );
@@ -793,7 +840,8 @@ export async function addSequenceEmail(
     db,
     schoolId,
     clock,
-    (auth, cfg) => addSendLitSequenceEmail(auth.teamApiKey, sequenceId, input, { config: cfg }),
+    (auth, cfg) =>
+      addSendLitSequenceEmail(auth.teamApiKey, sequenceId, input, { config: cfg }),
     config,
   );
 }
@@ -819,7 +867,9 @@ export async function updateSequenceEmail(
     schoolId,
     clock,
     (auth, cfg) =>
-      updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input, { config: cfg }),
+      updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input, {
+        config: cfg,
+      }),
     config,
   );
 }
@@ -836,7 +886,8 @@ export async function deleteSequenceEmail(
     db,
     schoolId,
     clock,
-    (auth, cfg) => deleteSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, { config: cfg }),
+    (auth, cfg) =>
+      deleteSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, { config: cfg }),
     config,
   );
 }
@@ -874,7 +925,9 @@ export async function startSequence(
     schoolId,
     clock,
     async (auth, cfg) => {
-      const settings = await getSendLitGeneralSettings(auth.teamApiKey, { config: cfg });
+      const settings = await getSendLitGeneralSettings(auth.teamApiKey, {
+        config: cfg,
+      });
       if (!settings.mailingAddress?.trim()) throw new MailingAddressRequiredError();
       return fromSendLitTrigger(
         await startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
@@ -896,7 +949,9 @@ export async function pauseSequence(
     schoolId,
     clock,
     async (auth, cfg) =>
-      fromSendLitTrigger(await pauseSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg })),
+      fromSendLitTrigger(
+        await pauseSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+      ),
     config,
   );
 }
@@ -912,7 +967,8 @@ export async function getSequenceStats(
     db,
     schoolId,
     clock,
-    (auth, cfg) => getSendLitSequenceStats(auth.teamApiKey, sequenceId, { config: cfg }),
+    (auth, cfg) =>
+      getSendLitSequenceStats(auth.teamApiKey, sequenceId, { config: cfg }),
     config,
   );
 }
@@ -956,7 +1012,13 @@ export async function createTemplate(
   db: AppDb,
   schoolId: string,
   clock: Clock,
-  input: { name?: string; title?: string; content?: SendLitTemplateContent; thumbnail?: string; purpose?: "marketing" | "transactional" },
+  input: {
+    name?: string;
+    title?: string;
+    content?: SendLitTemplateContent;
+    thumbnail?: string;
+    purpose?: "marketing" | "transactional";
+  },
   config?: SendLitConfig,
 ): Promise<Result<SendLitTemplate, PlatformError>> {
   return withSendLitAuth(
@@ -998,7 +1060,13 @@ export async function updateTemplate(
   schoolId: string,
   clock: Clock,
   templateId: string,
-  input: { name?: string; title?: string; content?: SendLitTemplateContent; thumbnail?: string; purpose?: "marketing" | "transactional" },
+  input: {
+    name?: string;
+    title?: string;
+    content?: SendLitTemplateContent;
+    thumbnail?: string;
+    purpose?: "marketing" | "transactional";
+  },
   config?: SendLitConfig,
 ): Promise<Result<SendLitTemplate, PlatformError>> {
   return withSendLitAuth(
@@ -1031,7 +1099,8 @@ export async function duplicateTemplate(
     db,
     schoolId,
     clock,
-    (auth, cfg) => duplicateSendLitTemplate(auth.teamApiKey, templateId, { config: cfg }),
+    (auth, cfg) =>
+      duplicateSendLitTemplate(auth.teamApiKey, templateId, { config: cfg }),
     config,
   );
 }
