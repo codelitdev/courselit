@@ -41,6 +41,7 @@ export type CertificateDto = {
 };
 
 export type CertificateVerificationDto = CertificateDto & {
+  schoolName: string;
   title: string;
   subtitle: string;
   description: string;
@@ -636,7 +637,12 @@ export async function issueCertificateIfComplete(
 
 export async function listLearnerCertificates(
   db: AppDb,
-  input: { schoolId: string; schoolAccountId?: string; learnerId?: string; publicSchoolId: string },
+  input: {
+    schoolId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
+    publicSchoolId: string;
+  },
 ): Promise<CertificateDto[]> {
   const accountId = input.schoolAccountId ?? input.learnerId!;
   const rows = await db
@@ -647,7 +653,10 @@ export async function listLearnerCertificates(
     })
     .from(schema.certificates)
     .innerJoin(schema.products, eq(schema.products.id, schema.certificates.productId))
-    .innerJoin(schema.schoolAccounts, eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId))
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId),
+    )
     .where(
       and(
         eq(schema.certificates.schoolId, input.schoolId),
@@ -676,7 +685,10 @@ export async function verifyCertificate(
     .from(schema.certificates)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.certificates.schoolId))
     .innerJoin(schema.products, eq(schema.products.id, schema.certificates.productId))
-    .innerJoin(schema.schoolAccounts, eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId))
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId),
+    )
     .leftJoin(
       schema.certificateTemplates,
       eq(schema.certificateTemplates.id, schema.certificates.templateId),
@@ -721,6 +733,7 @@ export async function verifyCertificate(
   );
   return {
     ...certificateToDto(row.certificate, row.product, row.learner, row.school.publicId),
+    schoolName: row.school.name,
     title: template.title || "Certificate of Completion",
     subtitle: template.subtitle || "This certificate is awarded to",
     description: template.description || "for completing the course.",

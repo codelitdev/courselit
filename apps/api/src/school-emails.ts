@@ -20,6 +20,8 @@ export type SendSchoolEmailPayload = {
 type EmailBody = {
   schoolName: string;
   paragraphs: string[];
+  /** A one-time code, shown large under the paragraphs. */
+  code?: string;
   button?: { label: string; url: string };
   /** Small print under the button, e.g. where to change email settings. */
   footer?: { text: string; link?: { label: string; url: string } };
@@ -32,6 +34,9 @@ export function renderSchoolEmail(body: EmailBody): { html: string; text: string
         `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#111827">${escapeHtml(paragraph)}</p>`,
     )
     .join("");
+  const code = body.code
+    ? `<div style="margin:8px 0 24px"><span style="display:inline-block;padding:12px 20px;background:#f3f4f6;border-radius:8px;font-size:32px;font-weight:700;letter-spacing:6px;color:#111827">${escapeHtml(body.code)}</span></div>`
+    : "";
   const button = body.button
     ? `<p style="margin:24px 0 32px"><a href="${escapeHtml(body.button.url)}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:6px">${escapeHtml(body.button.label)}</a></p>`
     : "";
@@ -42,10 +47,11 @@ export function renderSchoolEmail(body: EmailBody): { html: string; text: string
           : ""
       }</p>`
     : "";
-  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif"><div style="max-width:560px;margin:0 auto">${paragraphs}${button}<p style="margin:0;font-size:14px;color:#374151">${escapeHtml(body.schoolName)}</p>${footer}</div></body></html>`;
+  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif"><div style="max-width:560px;margin:0 auto">${paragraphs}${code}${button}<p style="margin:0;font-size:14px;color:#374151">${escapeHtml(body.schoolName)}</p>${footer}</div></body></html>`;
 
   const text = [
     ...body.paragraphs,
+    ...(body.code ? [body.code] : []),
     ...(body.button ? [`${body.button.label}: ${body.button.url}`] : []),
     body.schoolName,
     ...(body.footer

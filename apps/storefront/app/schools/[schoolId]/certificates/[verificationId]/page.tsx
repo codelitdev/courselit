@@ -17,6 +17,7 @@ type Certificate = {
   id: string;
   verificationId: string;
   schoolId: string;
+  schoolName: string;
   learnerName: string;
   productTitle: string;
   issuedAt: string;
@@ -51,7 +52,11 @@ export default function CertificateVerificationPage() {
     <main className="certificate-page">
       <header className="certificate-toolbar">
         <div>
-          <LearnerText2 className="font-semibold">CourseLit</LearnerText2>
+          {certificate ? (
+            <LearnerText2 className="font-semibold">
+              {certificate.schoolName}
+            </LearnerText2>
+          ) : null}
           <LearnerText2 className="text-muted-foreground">
             Certificate verification
           </LearnerText2>

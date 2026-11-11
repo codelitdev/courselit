@@ -101,7 +101,14 @@ export const publicProductListItemSchema = productSchema.extend({
 export const productSubscriptionSchema = z.object({
   id: z.string(),
   planKind: z.enum(["subscription", "installment"]),
-  status: z.enum(["active", "cancelling", "past_due", "cancelled", "expired", "completed"]),
+  status: z.enum([
+    "active",
+    "cancelling",
+    "past_due",
+    "cancelled",
+    "expired",
+    "completed",
+  ]),
   provider: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
   accessUntil: z.string().nullable(),
@@ -603,11 +610,9 @@ export const salesPageSchema = z.object({
 });
 export const websiteWidgetSchema = z.object({
   widgetId: z.string(),
-  name: z
-    .string()
-    .refine((name) => !UNAVAILABLE_PAGE_BLOCKS.includes(name), {
-      message: "This block isn't available on CourseLit pages.",
-    }),
+  name: z.string().refine((name) => !UNAVAILABLE_PAGE_BLOCKS.includes(name), {
+    message: "This block isn't available on CourseLit pages.",
+  }),
   deletable: z.boolean(),
   moveable: z.boolean(),
   shared: z.boolean(),
@@ -913,9 +918,7 @@ export const apiKeySchema = z.object({
   /** `cl_live_<publicId>`; the secret part is never returned after creation. */
   prefix: z.string(),
   permissions: z.array(z.enum(COURSELIT_PERMISSIONS)),
-  createdBy: z
-    .object({ name: z.string(), email: z.string() })
-    .nullable(),
+  createdBy: z.object({ name: z.string(), email: z.string() }).nullable(),
   createdAt: z.string(),
   lastUsedAt: z.string().nullable(),
   expiresAt: z.string().nullable(),
@@ -1783,6 +1786,7 @@ export const certificateSchema = z.object({
   revokedAt: z.string().nullable(),
 });
 export const certificateVerificationSchema = certificateSchema.extend({
+  schoolName: z.string(),
   title: z.string(),
   subtitle: z.string(),
   description: z.string(),
@@ -4768,7 +4772,8 @@ export const contract = c.router({
   cancelSchoolBillingPlan: {
     method: "POST",
     path: "/v1/school/billing/cancel",
-    summary: "Cancel the school's CourseLit plan at the end of the paid period (hosted only)",
+    summary:
+      "Cancel the school's CourseLit plan at the end of the paid period (hosted only)",
     body: z.object({}).strict(),
     responses: {
       200: schoolBillingActionResponseSchema,
@@ -4781,7 +4786,8 @@ export const contract = c.router({
   resumeSchoolBillingPlan: {
     method: "POST",
     path: "/v1/school/billing/resume",
-    summary: "Resume a scheduled cancellation of the school's CourseLit plan (hosted only)",
+    summary:
+      "Resume a scheduled cancellation of the school's CourseLit plan (hosted only)",
     body: z.object({}).strict(),
     responses: {
       200: schoolBillingActionResponseSchema,

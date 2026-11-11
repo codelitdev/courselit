@@ -265,6 +265,7 @@ describe.serial("certificates", () => {
       id: certificateId,
       verificationId,
       schoolId: world.schoolA.publicId,
+      schoolName: "School A",
       title: "Course completion",
       subtitle: "This certifies that",
       description: "Completed every lesson.",

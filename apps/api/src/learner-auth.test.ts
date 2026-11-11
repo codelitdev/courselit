@@ -84,6 +84,33 @@ describe.serial("learner authentication", () => {
     await runtime.close();
   });
 
+  it("emails the sign-in code in the school's name", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+
+    const requested = await requestLearnerEmailCode(
+      runtime.db,
+      { schoolPublicId: world.schoolA.publicId, email: "brand@example.com" },
+      clock,
+    );
+    expect(requested.ok).toBe(true);
+
+    const jobs = await runtime.db
+      .select()
+      .from(schema.integrationOutboxJobs)
+      .where(eq(schema.integrationOutboxJobs.schoolId, world.schoolA.id));
+    const email = jobs
+      .map((job) => job.payload as { to?: string; subject?: string; text?: string })
+      .find((payload) => payload.to === "brand@example.com");
+    expect(email?.subject).toBe("Sign in to School A");
+    expect(email?.text).toContain("Enter this code to sign in to School A:");
+    expect(email?.text).toContain("expires in 10 minutes");
+    expect(`${email?.subject} ${email?.text}`).not.toContain("CourseLit");
+
+    await runtime.close();
+  });
+
   it("signs a learner in to one school with an emailed code", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -325,9 +352,9 @@ describe.serial("learner authentication", () => {
       const nonceCookie = `courselit.login.nonce=${nonce}`;
 
       // Another browser (no nonce, or a different one) can't redeem it.
-      expect(
-        (await consume({ "x-school-id": world.schoolA.publicId })).status,
-      ).toBe(401);
+      expect((await consume({ "x-school-id": world.schoolA.publicId })).status).toBe(
+        401,
+      );
       expect(
         (
           await consume({
@@ -397,9 +424,12 @@ describe.serial("learner authentication", () => {
       if (!started.ok) return;
       const requestToken = new URL(started.value.url).searchParams.get("request")!;
 
-      const begin = await fetch(`${base}/learner-login/google?request=${requestToken}`, {
-        redirect: "manual",
-      });
+      const begin = await fetch(
+        `${base}/learner-login/google?request=${requestToken}`,
+        {
+          redirect: "manual",
+        },
+      );
       expect(begin.status).toBe(302);
       const google = new URL(begin.headers.get("location")!);
       expect(google.hostname).toBe("accounts.google.com");

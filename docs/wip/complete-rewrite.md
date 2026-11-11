@@ -144,6 +144,11 @@ product, and the admin sign-in page showed developer notes.
   The site itself is branded with the school (checked on QA 2026-11-11): the
   header, footer, product placeholders and learner sidebar use its name, logo
   and tagline. _(QA)_
+  - Fixed 2026-11-11, not yet on QA. Learner codes now go out like the school's
+    other email, through its mailing team when it has one: "Sign in to
+    <school>", in the school's name, and with the real 10-minute expiry.
+    The email used to say 5 minutes. Certificate verification returns
+    `schoolName`, and the page header shows it.
 - [ ] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
 - [ ] **12. Free courses show "$0.00"** in the catalogue instead of "Free".

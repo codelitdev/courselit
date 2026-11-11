@@ -6,7 +6,6 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import { and, count, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
-import { sendVerificationOTP } from "./auth/options.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import {
@@ -18,6 +17,7 @@ import {
   type LearnerSession,
   signInLearnerWithIdentity,
 } from "./learners.js";
+import { queueSchoolEmail, renderSchoolEmail } from "./school-emails.js";
 import { loadSchoolByPublicId, resolveSchoolByHost } from "./schools.js";
 import type { AppDb } from "./types.js";
 
@@ -56,13 +56,30 @@ export function safeNextPath(next: string | null | undefined): string {
   return next.slice(0, 1000);
 }
 
+/** The sign-in code email, sent in the school's name like its other email. */
+export function learnerCodeEmail(
+  schoolName: string,
+  code: string,
+): { subject: string; html: string; text: string } {
+  return {
+    subject: `Sign in to ${schoolName}`,
+    ...renderSchoolEmail({
+      schoolName,
+      paragraphs: [`Enter this code to sign in to ${schoolName}:`],
+      code,
+      footer: {
+        text: `The code expires in ${EMAIL_CODE_TTL_MS / 60_000} minutes. If you didn't ask for it, you can ignore this email.`,
+      },
+    }),
+  };
+}
+
 /** Email a six-digit sign-in code that only works for this school. */
 export async function requestLearnerEmailCode(
   db: AppDb,
   input: { schoolPublicId: string; email: string },
   clock: Clock,
-  deliver: (message: { email: string; otp: string }) => Promise<void> = (message) =>
-    sendVerificationOTP({ ...message, type: "sign-in" }),
+  deliver?: (message: { email: string; otp: string }) => Promise<void>,
 ): Promise<Result<null>> {
   const school = await loadSchoolByPublicId(db, input.schoolPublicId);
   if (!school) return { ok: false, error: createPlatformError("tenant_required") };
@@ -99,7 +116,23 @@ export async function requestLearnerEmailCode(
     expiresAt: new Date(now.getTime() + EMAIL_CODE_TTL_MS),
     createdAt: now,
   });
-  await deliver({ email, otp: code });
+  if (deliver) {
+    await deliver({ email, otp: code });
+  } else {
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[Learner sign-in code] ${school.name} for ${email}: ${code}`);
+    }
+    await queueSchoolEmail(
+      db,
+      school.id,
+      {
+        to: email,
+        idempotencyKey: `learner-sign-in-code:${id}`,
+        ...learnerCodeEmail(school.name, code),
+      },
+      clock,
+    );
+  }
   return { ok: true, value: null };
 }
 
