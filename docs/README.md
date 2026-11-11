@@ -61,6 +61,8 @@ To self host CourseLit, follow our [official guide](https://docs.courselit.app/e
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,AUTH_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
 
+<a href="https://repocloud.io/details/Courselit/"><img src="https://d16t0pc4846x52.cloudfront.net/deploylobe.svg" alt="Deploy on RepoCloud" height="32"></a>
+
 ## Development
 
 The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Pnpm workspaces](https://pnpm.io/workspaces) for managing the mono-repo.
