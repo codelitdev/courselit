@@ -135,7 +135,7 @@ product, and the admin sign-in page showed developer notes.
     (hero, published offers, newsletter signup), with no copy baked in. Terms
     and Privacy start as unpublished drafts, and the site and checkout don't
     link to them until they're published. What's left is item 19a.
-- [ ] **10. Two learner-facing places still say CourseLit instead of the school.**
+- [x] **10. Two learner-facing places still say CourseLit instead of the school.**
   - The learner sign-in code email is titled "Your CourseLit Sign-in Code" and
     headed "CourseLit Security Code" (`apps/api/src/auth/options.ts`). Fine for
     the admin; a learner should see the school's name.
@@ -144,14 +144,14 @@ product, and the admin sign-in page showed developer notes.
   The site itself is branded with the school (checked on QA 2026-11-11): the
   header, footer, product placeholders and learner sidebar use its name, logo
   and tagline. _(QA)_
-  - Fixed 2026-11-11, not yet on QA. Learner codes now go out like the school's
+  - Fixed 2026-11-11. Learner codes now go out like the school's
     other email, through its mailing team when it has one: "Sign in to
     <school>", in the school's name, and with the real 10-minute expiry.
     The email used to say 5 minutes. Certificate verification returns
     `schoolName`, and the page header shows it.
     Each school's SendLit team is now created with the school's name as its
     sender name, which replaces "CourseLit Shared". Checked on the local stack
-    2026-11-11. QA's existing teams still need their sender name set once,
+    2026-11-11. On the next QA deploy, QA's existing teams still need their sender name set once,
     because CourseLit's SendLit key can't update teams (`teams:manage`).
 - [ ] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
