@@ -1,5 +1,5 @@
-// Stripe and Lemon Squeezy webhooks are registered on the school's own
-// provider account when the creator saves their keys; Razorpay's stay manual.
+// Payment webhooks are registered on the school's own provider account when
+// the creator saves their keys.
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
@@ -94,7 +94,6 @@ describe.serial("automatic payment webhooks", () => {
     ]);
     expect((await stored()).stripe?.webhookSecret).toBe("whsec_new");
     expect(result.ok && result.value.stripe.webhook).toEqual({
-      setup: "automatic",
       url: `${WEBHOOK_URL_BASE}/v1/storefront/webhooks/stripe`,
       connected: true,
       error: null,
@@ -162,18 +161,42 @@ describe.serial("automatic payment webhooks", () => {
     ]);
   });
 
-  it("leaves Razorpay webhooks to the creator", async () => {
-    respond = () => json({});
+  it("registers a Razorpay webhook and updates it in place", async () => {
+    respond = (call) => {
+      if (call.method === "GET") {
+        return json({ items: [{ id: "wh_qa", url: "https://elsewhere.example/hook" }] });
+      }
+      return json({ id: "wh_1" });
+    };
+
     const result = await save({
       provider: "razorpay",
       razorpay: { keyId: "rzp_test", keySecret: "rzp_secret" },
     });
-    expect(calls).toEqual([]);
+    const created = calls.find((call) => call.method === "POST")!;
+    expect(created.url).toBe("https://api.razorpay.com/v1/webhooks");
+    expect(created.body).not.toContain("payment.refunded");
+    const body = JSON.parse(created.body);
+    expect(body.url).toBe(`${WEBHOOK_URL_BASE}/v1/storefront/webhooks/razorpay`);
+    expect(body.events["refund.processed"]).toBe(true);
+    expect(body.events["subscription.charged"]).toBe(true);
+    expect((await stored()).razorpay?.webhookSecret).toBe(body.secret);
     expect(result.ok && result.value.razorpay.webhook).toEqual({
-      setup: "manual",
       url: `${WEBHOOK_URL_BASE}/v1/storefront/webhooks/razorpay`,
-      connected: false,
+      connected: true,
       error: null,
     });
+
+    // Razorpay can't delete webhooks, so a new secret key rewrites the
+    // school's webhook rather than adding another.
+    respond = (call) =>
+      call.method === "GET"
+        ? json({ items: [{ id: "wh_1", url: body.url }] })
+        : json({ id: "wh_1" });
+    calls = [];
+    await save({ razorpay: { keySecret: "rzp_secret_2" } });
+    const updated = calls.find((call) => call.method !== "GET")!;
+    expect(updated).toMatchObject({ method: "PUT", url: "https://api.razorpay.com/v1/webhooks/wh_1" });
+    expect((await stored()).razorpay?.webhookSecret).toBe(JSON.parse(updated.body).secret);
   });
 });

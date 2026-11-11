@@ -76,18 +76,20 @@ cut, full REST and MCP coverage, multiple schools per account, open source.
   accounts:** checkout, receipts, sale alerts, cancellation and refunds. _(QA)_
   - Stripe checked 2026-11-10: one-time and subscription checkout, receipt,
     sale alert, refund, learner cancel and creator remove-access all work.
-    Saving Stripe or Lemon Squeezy keys now registers the payment webhook on
-    the school's account (checked against both with real events); only
-    Razorpay's is still added by hand.
+    Saving a provider's keys now registers the payment webhook on the
+    school's account (checked against all three with real events).
   - LemonSqueezy checked 2026-11-10: one-time and monthly checkout, receipt,
     sale alert, refund (access removed), learner cancel (access kept until the
     period ends) and refund of the first subscription charge (access removed),
     all through real webhooks. Its checkout page shows the variant's own price
     ("$10.00 billed every month") under our $5.00 price; the subscription
     really renews at $5.00, but the learner sees a wrong amount.
-  - Blocked: Razorpay. Its webhooks can only be added in the Razorpay
-    dashboard: add `https://predator.taile2f1.ts.net:8443/api/v1/storefront/webhooks/razorpay`
-    with a secret, and save the same secret in dev.
+  - Razorpay checked 2026-11-11: one-time checkout in USD with an Indian test
+    card works and access is granted by the webhook. Before this, every
+    Razorpay API call failed authentication, so its checkout never opened.
+    Still to check: subscriptions, learner cancel, and refunds (the QA
+    account's refund API rejects the USD test payment, and international
+    cards are off on that account).
 - [ ] **5. Refunds of a first subscription charge on Stripe's March 2025 API or
   later.** _(QA)_
   - Fixed 2026-11-10, awaiting deploy. Confirmed against Stripe on

@@ -526,13 +526,10 @@ export const schoolSchema = z.object({
     .optional(),
 });
 /**
- * How a provider's payment webhook is set up. `automatic`: CourseLit
- * registers it on the school's provider account when the keys are saved.
- * `manual`: the provider has no API for it, so the creator adds `url` in the
- * provider's dashboard and saves its signing secret here.
+ * The payment webhook CourseLit registers on the school's provider account
+ * when the keys are saved.
  */
 export const paymentWebhookStatusSchema = z.object({
-  setup: z.enum(["automatic", "manual"]),
   url: z.string(),
   connected: z.boolean(),
   /** Why the last automatic registration failed. */
@@ -573,7 +570,6 @@ export const updateSchoolPaymentSettingsBodySchema = z
       .object({
         keyId: z.string().optional(),
         keySecret: z.string().optional(),
-        webhookSecret: z.string().optional(),
       })
       .optional(),
     lemonsqueezy: z

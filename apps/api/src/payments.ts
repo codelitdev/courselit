@@ -34,6 +34,11 @@ export type StoredPaymentSettings = {
     keyId?: string;
     keySecret?: string;
     webhookSecret?: string;
+    /** Set by automatic webhook registration (see payment-webhooks.ts). */
+    webhookEndpointId?: string;
+    webhookUrl?: string;
+    /** Why the last automatic registration failed. */
+    webhookError?: string;
   };
   lemonsqueezy?: {
     apiKey?: string;
@@ -178,8 +183,9 @@ function jsonResponse(body: unknown, provider: string): Record<string, unknown> 
   return object;
 }
 
-function basicAuth(value: string): string {
-  return `Basic ${Buffer.from(`${value}:`, "utf8").toString("base64")}`;
+/** HTTP Basic auth; Stripe takes the secret key as the user and no password. */
+function basicAuth(user: string, password = ""): string {
+  return `Basic ${Buffer.from(`${user}:${password}`, "utf8").toString("base64")}`;
 }
 
 function hmacHex(secret: string, value: string): string {
@@ -664,9 +670,13 @@ class RazorpayPayment implements PaymentProvider {
     const keySecret = required(this.settings.keySecret, "razorpay_key_secret");
     const response = await fetch(`https://api.razorpay.com/v1${path}`, {
       ...init,
-      headers: { authorization: basicAuth(`${keyId}:${keySecret}`), "content-type": "application/json", ...(init.headers ?? {}) },
+      headers: { authorization: basicAuth(keyId, keySecret), "content-type": "application/json", ...(init.headers ?? {}) },
     });
-    if (!response.ok) throw new Error(`razorpay_request_failed_${response.status}`);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { error?: { description?: unknown } } | null;
+      const reason = typeof body?.error?.description === "string" ? `: ${body.error.description}` : "";
+      throw new Error(`razorpay_request_failed_${response.status}${reason}`);
+    }
     return jsonResponse(await response.json(), "razorpay");
   }
 
@@ -804,8 +814,7 @@ function razorpayEventType(
       return "payment.succeeded";
     case "payment.failed":
       return "payment.failed";
-    case "refund.processed":
-    case "payment.refunded": {
+    case "refund.processed": {
       const paymentAmount = integerValue(payment.amount);
       const refundAmount = integerValue(refund.amount);
       const partial =
@@ -885,13 +894,12 @@ export async function getPaymentProvider(
   return null;
 }
 
-function automaticWebhookStatus(
-  provider: "stripe" | "lemonsqueezy",
+function webhookStatus(
+  provider: PaymentProviderName,
   group: { webhookSecret?: string; webhookUrl?: string; webhookError?: string } | undefined,
 ) {
   const url = paymentWebhookUrl(provider);
   return {
-    setup: "automatic" as const,
     url,
     // A webhook registered for another URL (the school moved domains) no
     // longer receives events.
@@ -906,17 +914,12 @@ export function providerSettingsDto(settings: StoredPaymentSettings) {
     stripe: {
       publishableKey: settings.stripe?.publishableKey ?? "",
       secretConfigured: Boolean(settings.stripe?.secretKey),
-      webhook: automaticWebhookStatus("stripe", settings.stripe),
+      webhook: webhookStatus("stripe", settings.stripe),
     },
     razorpay: {
       keyId: settings.razorpay?.keyId ?? "",
       secretConfigured: Boolean(settings.razorpay?.keySecret),
-      webhook: {
-        setup: "manual" as const,
-        url: paymentWebhookUrl("razorpay"),
-        connected: Boolean(settings.razorpay?.webhookSecret),
-        error: null,
-      },
+      webhook: webhookStatus("razorpay", settings.razorpay),
     },
     lemonsqueezy: {
       storeId: settings.lemonsqueezy?.storeId ?? "",
@@ -924,7 +927,7 @@ export function providerSettingsDto(settings: StoredPaymentSettings) {
       monthlyVariantId: settings.lemonsqueezy?.monthlyVariantId ?? "",
       yearlyVariantId: settings.lemonsqueezy?.yearlyVariantId ?? "",
       apiKeyConfigured: Boolean(settings.lemonsqueezy?.apiKey),
-      webhook: automaticWebhookStatus("lemonsqueezy", settings.lemonsqueezy),
+      webhook: webhookStatus("lemonsqueezy", settings.lemonsqueezy),
     },
   };
 }

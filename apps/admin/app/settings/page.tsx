@@ -5,7 +5,6 @@ import {
   Check,
   CheckCircle2,
   Code,
-  Copy,
   CreditCard,
   ExternalLink,
   Globe,
@@ -19,7 +18,6 @@ import {
   Users,
 } from "lucide-react";
 import type { SchoolPaymentSettings } from "@courselit/api-contract";
-import { PAYMENT_WEBHOOK_EVENTS } from "@courselit/api-contract/payment-webhooks";
 import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -85,7 +83,7 @@ function isSettingsTab(value: string | null, mode: SettingsMode): value is Setti
   return tabs.includes(value as never);
 }
 
-type PaymentProvider = keyof typeof PAYMENT_WEBHOOK_EVENTS;
+type PaymentProvider = NonNullable<SchoolPaymentSettings["provider"]>;
 
 const PROVIDER_LABELS: Record<PaymentProvider, string> = {
   stripe: "Stripe",
@@ -176,7 +174,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const [stripeSecret, setStripeSecret] = useState("");
   const [razorpayKey, setRazorpayKey] = useState("");
   const [razorpaySecret, setRazorpaySecret] = useState("");
-  const [razorpayWebhookSecret, setRazorpayWebhookSecret] = useState("");
   const [lemonsqueezyKey, setLemonsqueezyKey] = useState("");
   const [lemonsqueezyStoreId, setLemonsqueezyStoreId] = useState("");
   const [lemonsqueezyOneTime, setLemonsqueezyOneTime] = useState("");
@@ -282,15 +279,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     }
   }
 
-  async function copyWebhook() {
-    if (!webhook) return;
-    try {
-      await navigator.clipboard.writeText(webhook.url);
-    } catch {
-      /* ignore */
-    }
-  }
-
   /** Ask the API to register the provider's webhook again. */
   async function retryWebhook() {
     if (!schoolId || !isPaymentProvider(paymentMethod) || webhookRetrying) return;
@@ -347,7 +335,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           razorpay: paymentMethod === "razorpay" ? {
             keyId: razorpayKey,
             keySecret: razorpaySecret,
-            webhookSecret: razorpayWebhookSecret,
           } : undefined,
           lemonsqueezy: paymentMethod === "lemonsqueezy" ? {
             apiKey: lemonsqueezyKey,
@@ -565,16 +552,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       onChange={(event) => setRazorpaySecret(event.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="razorpay-webhook-secret">Razorpay Webhook Secret</Label>
-                    <Input
-                      id="razorpay-webhook-secret"
-                      type="password"
-                      autoComplete="off"
-                      value={razorpayWebhookSecret}
-                      onChange={(event) => setRazorpayWebhookSecret(event.target.value)}
-                    />
-                  </div>
                 </>
               ) : null}
               {paymentMethod === "lemonsqueezy" ? (
@@ -646,9 +623,8 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                   <CardDescription className="flex items-start gap-2">
                     <Info className="mt-0.5 size-4 shrink-0" />
                     <span>
-                      {webhook.setup === "automatic"
-                        ? `CourseLit sets this up on your ${PROVIDER_LABELS[paymentMethod]} account when you save your keys.`
-                        : `Add this URL as a webhook in your ${PROVIDER_LABELS[paymentMethod]} dashboard, then save its secret above.`}{" "}
+                      CourseLit sets this up on your {PROVIDER_LABELS[paymentMethod]} account
+                      when you save your keys.{" "}
                       <a
                         className="underline"
                         href="https://docs.courselit.app/schools/set-up-payments"
@@ -662,69 +638,34 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {webhook.setup === "automatic" ? (
-                    webhook.connected ? (
-                      <p className="flex items-start gap-2 text-sm" role="status">
-                        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
-                        <span>
-                          Connected. {PROVIDER_LABELS[paymentMethod]} sends payment
-                          events to <code className="break-all text-xs">{webhook.url}</code>
-                        </span>
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        <p
-                          className={webhook.error ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
-                          role={webhook.error ? "alert" : undefined}
-                        >
-                          {webhook.error ??
-                            "Not connected yet. Save your keys to connect it."}
-                        </p>
-                        {webhook.error && providerSettings && isConfigured(providerSettings) ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={webhookRetrying}
-                            onClick={() => void retryWebhook()}
-                          >
-                            {webhookRetrying ? "Connecting…" : "Try again"}
-                          </Button>
-                        ) : null}
-                      </div>
-                    )
+                  {webhook.connected ? (
+                    <p className="flex items-start gap-2 text-sm" role="status">
+                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span>
+                        Connected. {PROVIDER_LABELS[paymentMethod]} sends payment
+                        events to <code className="break-all text-xs">{webhook.url}</code>
+                      </span>
+                    </p>
                   ) : (
-                    <>
-                      <div className="flex gap-2">
-                        <Input readOnly value={webhook.url} />
+                    <div className="space-y-3">
+                      <p
+                        className={webhook.error ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
+                        role={webhook.error ? "alert" : undefined}
+                      >
+                        {webhook.error ??
+                          "Not connected yet. Save your keys to connect it."}
+                      </p>
+                      {webhook.error && providerSettings && isConfigured(providerSettings) ? (
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => void copyWebhook()}
+                          disabled={webhookRetrying}
+                          onClick={() => void retryWebhook()}
                         >
-                          <Copy className="size-4" />
+                          {webhookRetrying ? "Connecting…" : "Try again"}
                         </Button>
-                      </div>
-                      <div className="space-y-1.5">
-                        <p className="text-sm text-muted-foreground">
-                          Send these events, or refunds, renewals and cancellations
-                          won’t reach your school:
-                        </p>
-                        <ul className="flex flex-wrap gap-1.5">
-                          {PAYMENT_WEBHOOK_EVENTS[paymentMethod].map((event) => (
-                            <li key={event}>
-                              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                                {event}
-                              </code>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      {webhook.connected ? (
-                        <p className="text-sm text-muted-foreground" role="status">
-                          Webhook secret saved.
-                        </p>
                       ) : null}
-                    </>
+                    </div>
                   )}
                 </CardContent>
               </Card>

@@ -885,7 +885,11 @@ export async function startLearnerCheckout(
         courselit_plan_id: selected.plan.publicId,
       },
     });
-  } catch {
+  } catch (thrown) {
+    console.error("[CourseLit] Payment provider refused the checkout", {
+      checkout: row.publicId,
+      error: thrown instanceof Error ? thrown.message : String(thrown),
+    });
     await markCheckoutFailed(db, row.id, clock);
     if (linkedRow.membershipId) {
       await revokeLearnerMembership(db, linkedRow.membershipId, "payment_failed", clock);

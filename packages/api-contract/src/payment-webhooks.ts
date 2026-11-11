@@ -35,7 +35,6 @@ export const PAYMENT_WEBHOOK_EVENTS = {
   razorpay: [
     "order.paid",
     "payment.failed",
-    "payment.refunded",
     "refund.processed",
     "payment.dispute.created",
     "subscription.charged",

@@ -8,10 +8,6 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts"
     },
-    "./payment-webhooks": {
-      "types": "./src/payment-webhooks.ts",
-      "import": "./src/payment-webhooks.ts"
-    },
     "./learner-avatar": {
       "types": "./src/learner-avatar.ts",
       "import": "./src/learner-avatar.ts"

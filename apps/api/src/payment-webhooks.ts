@@ -3,14 +3,18 @@ import { PAYMENT_WEBHOOK_EVENTS } from "@courselit/api-contract";
 import type { PaymentProviderName, StoredPaymentSettings } from "./payments.js";
 
 /**
- * Payment webhooks for providers whose API can manage them (Stripe, Lemon
- * Squeezy) are registered on the school's own provider account when the
- * creator saves their keys, so the creator never copies URLs or secrets
- * around. Providers without such an API (Razorpay) stay manual.
+ * Payment webhooks are registered on the school's own provider account when
+ * the creator saves their keys, so the creator never copies URLs or secrets
+ * around.
  */
 
-export const AUTOMATIC_WEBHOOK_PROVIDERS = ["stripe", "lemonsqueezy"] as const;
-export type AutomaticWebhookProvider = (typeof AUTOMATIC_WEBHOOK_PROVIDERS)[number];
+export const PAYMENT_WEBHOOK_PROVIDERS = ["stripe", "lemonsqueezy", "razorpay"] as const satisfies readonly PaymentProviderName[];
+
+const PROVIDER_LABELS: Record<PaymentProviderName, string> = {
+  stripe: "Stripe",
+  lemonsqueezy: "Lemon Squeezy",
+  razorpay: "Razorpay",
+};
 
 /** The Stripe API version webhook payloads are pinned to. */
 const STRIPE_WEBHOOK_API_VERSION = "2025-03-31.basil";
@@ -54,9 +58,12 @@ function failure(provider: string, status: number, detail?: string): WebhookRegi
 
 async function errorDetail(response: Response): Promise<string | undefined> {
   const body = (await response.json().catch(() => null)) as
-    | { error?: { message?: unknown }; errors?: Array<{ detail?: unknown }> }
+    | {
+        error?: { message?: unknown; description?: unknown };
+        errors?: Array<{ detail?: unknown }>;
+      }
     | null;
-  const message = body?.error?.message ?? body?.errors?.[0]?.detail;
+  const message = body?.error?.message ?? body?.error?.description ?? body?.errors?.[0]?.detail;
   return typeof message === "string" ? message : undefined;
 }
 
@@ -160,20 +167,68 @@ async function registerLemonSqueezyWebhook(
   return { endpointId: String(endpointId), secret, url };
 }
 
+async function registerRazorpayWebhook(
+  settings: NonNullable<StoredPaymentSettings["razorpay"]>,
+): Promise<RegisteredWebhook> {
+  const { keyId, keySecret } = settings;
+  if (!keyId || !keySecret) {
+    throw new WebhookRegistrationError("Add the Razorpay key and secret key first.");
+  }
+  const headers = {
+    authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`,
+    "content-type": "application/json",
+  };
+  const url = paymentWebhookUrl("razorpay");
+
+  // Razorpay's API creates and updates webhooks but can't delete them, so
+  // the school's earlier webhook (or one already at this URL) is updated in
+  // place rather than left behind with a secret nobody knows.
+  const list = await fetch("https://api.razorpay.com/v1/webhooks", { headers });
+  if (!list.ok) throw failure("Razorpay", list.status, await errorDetail(list));
+  const existing = ((await list.json()) as { items?: Array<{ id: string; url?: string }> }).items ?? [];
+  const reuse =
+    existing.find((webhook) => webhook.id === settings.webhookEndpointId) ??
+    existing.find((webhook) => webhook.url === url);
+
+  const secret = randomBytes(20).toString("hex");
+  const saved = await fetch(
+    `https://api.razorpay.com/v1/webhooks${reuse ? `/${encodeURIComponent(reuse.id)}` : ""}`,
+    {
+      method: reuse ? "PUT" : "POST",
+      headers,
+      body: JSON.stringify({
+        url,
+        secret,
+        // Razorpay replaces the whole event set, so name each one.
+        events: Object.fromEntries(PAYMENT_WEBHOOK_EVENTS.razorpay.map((event) => [event, true])),
+      }),
+    },
+  );
+  if (!saved.ok) throw failure("Razorpay", saved.status, await errorDetail(saved));
+  const webhook = (await saved.json()) as { id?: unknown };
+  if (typeof webhook.id !== "string") throw failure("Razorpay", saved.status);
+  return { endpointId: webhook.id, secret, url };
+}
+
 /** Register (or replace) the provider's webhook for a school. */
 export async function registerPaymentWebhook(
-  provider: AutomaticWebhookProvider,
+  provider: PaymentProviderName,
   settings: StoredPaymentSettings,
   schoolId: string,
 ): Promise<RegisteredWebhook> {
   try {
-    return provider === "stripe"
-      ? await registerStripeWebhook(settings.stripe ?? {}, schoolId)
-      : await registerLemonSqueezyWebhook(settings.lemonsqueezy ?? {});
+    switch (provider) {
+      case "stripe":
+        return await registerStripeWebhook(settings.stripe ?? {}, schoolId);
+      case "lemonsqueezy":
+        return await registerLemonSqueezyWebhook(settings.lemonsqueezy ?? {});
+      case "razorpay":
+        return await registerRazorpayWebhook(settings.razorpay ?? {});
+    }
   } catch (error) {
     if (error instanceof WebhookRegistrationError) throw error;
     throw new WebhookRegistrationError(
-      `Couldn't reach ${provider === "stripe" ? "Stripe" : "Lemon Squeezy"} to register the webhook. Try again.`,
+      `Couldn't reach ${PROVIDER_LABELS[provider]} to register the webhook. Try again.`,
     );
   }
 }

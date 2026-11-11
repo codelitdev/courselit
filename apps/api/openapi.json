@@ -64072,13 +64072,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64091,7 +64084,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"
@@ -64116,13 +64108,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64135,7 +64120,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"
@@ -64169,13 +64153,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64188,7 +64165,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"
@@ -64430,9 +64406,6 @@
                       },
                       "keySecret": {
                         "type": "string"
-                      },
-                      "webhookSecret": {
-                        "type": "string"
                       }
                     }
                   },
@@ -64491,13 +64464,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64510,7 +64476,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"
@@ -64535,13 +64500,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64554,7 +64512,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"
@@ -64588,13 +64545,6 @@
                         "webhook": {
                           "type": "object",
                           "properties": {
-                            "setup": {
-                              "type": "string",
-                              "enum": [
-                                "automatic",
-                                "manual"
-                              ]
-                            },
                             "url": {
                               "type": "string"
                             },
@@ -64607,7 +64557,6 @@
                             }
                           },
                           "required": [
-                            "setup",
                             "url",
                             "connected",
                             "error"

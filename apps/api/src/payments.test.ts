@@ -166,11 +166,15 @@ describe.serial("school payment providers", () => {
 
   it("creates Razorpay orders/subscriptions and verifies webhook signatures", async () => {
     const originalFetch = globalThis.fetch;
-    const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
+    const calls: Array<{ url: string; body: Record<string, unknown>; authorization: string }> = [];
     try {
       globalThis.fetch = (async (input, init) => {
         const url = String(input);
-        calls.push({ url, body: JSON.parse(String(init?.body)) as Record<string, unknown> });
+        calls.push({
+          url,
+          body: JSON.parse(String(init?.body)) as Record<string, unknown>,
+          authorization: new Headers(init?.headers).get("authorization") ?? "",
+        });
         const response = url.endsWith("/plans")
           ? { id: "plan_test" }
           : url.endsWith("/subscriptions")
@@ -203,6 +207,10 @@ describe.serial("school payment providers", () => {
       });
       expect(subscription.checkoutData).toMatchObject({ provider: "razorpay", subscriptionId: "sub_test" });
       expect(calls[0]?.url).toEndWith("/orders");
+      // Razorpay authenticates with the key id and secret as user and password.
+      expect(calls[0]?.authorization).toBe(
+        `Basic ${Buffer.from("rzp_test:rzp_secret").toString("base64")}`,
+      );
       expect(calls[1]?.url).toEndWith("/plans");
       expect(calls[2]?.url).toEndWith("/subscriptions");
       expect(calls[2]?.body.total_count).toBe(10);
