@@ -187,8 +187,7 @@ type GrantResult =
   | { ok: false; error: PlatformError };
 
 /**
- * Issues a single-use grant for one billing action on one school. People who
- * signed in a while ago must sign in again first.
+ * Issues a single-use grant for one billing action on one school.
  */
 async function issueBillingGrant(input: {
   billing: BillingBundle;

@@ -108,6 +108,23 @@ describe("school plan", () => {
     await runtime.close();
   });
 
+  it("doesn't ask an owner who signed in a while ago to sign in again", async () => {
+    // Creators often reach billing long after signing in, for example at the
+    // end of onboarding. Sessions are stamped with the real time, so run the
+    // API two hours after this owner signed in.
+    const clock = freezeRuntimeClock(new Date(Date.now() + 2 * 60 * 60 * 1000));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const cancelled = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/school/billing/cancel",
+      headers: owner(world),
+      body: {},
+    });
+    expect(cancelled.status).toBe(200);
+    await runtime.close();
+  });
+
   it("uses each grant once and leaves none behind", async () => {
     const { runtime, world } = await setup();
     await dispatch(runtime, {

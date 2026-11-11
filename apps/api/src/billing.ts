@@ -120,14 +120,13 @@ export function composeBilling(
     schema: billingSchema,
     clock,
   });
-  const recentAuthSeconds = Number(process.env.BILLING_RECENT_AUTH_MAX_AGE_SECONDS ?? 900);
   const grants = createBillingActionGrants({
     store: drizzleVerificationGrantStore(db as never, verification),
     clock,
-    recentAuthMaxAgeMs:
-      Number.isSafeInteger(recentAuthSeconds) && recentAuthSeconds > 0
-        ? recentAuthSeconds * 1000
-        : 900_000,
+    // Buying, changing or cancelling a plan never asks for a fresh sign-in:
+    // the single-use grant already stops replay and CSRF, and the provider
+    // confirms the payer. Asking again only stops people mid-purchase.
+    recentAuthActions: [],
   });
   const origins: string[] = [];
   for (const candidate of [options.webOrigin, env.NODE_ENV === "test" ? "https://app.test" : undefined]) {

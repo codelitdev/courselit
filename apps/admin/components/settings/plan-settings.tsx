@@ -77,11 +77,7 @@ function statusBadge(plan: SchoolPlan) {
   }
 }
 
-function failureMessage(status: number, body: unknown, action: "cancel" | "resume") {
-  const reason = (body as { details?: { reason?: string } } | null)?.details?.reason;
-  if (reason === "recent_authentication_required") {
-    return "For your security, sign out and sign back in, then try again.";
-  }
+function failureMessage(status: number, action: "cancel" | "resume") {
   if (status === 409) {
     return "Your plan is being updated. Please try again in a minute.";
   }
@@ -143,7 +139,7 @@ export function PlanSettings({ schoolId }: { schoolId: string | null }) {
           showPermissionDeniedToast();
           return;
         }
-        throw new Error(failureMessage(response.status, body, action));
+        throw new Error(failureMessage(response.status, action));
       }
       setPlan(body.plan);
       setConfirmCancel(false);
