@@ -148,6 +148,25 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         }
     }
 
+    if (Array.isArray(userData.permissions)) {
+        const currentPermissions: string[] = user.permissions || [];
+        const changedPermissions = [
+            ...userData.permissions.filter(
+                (permission) => !currentPermissions.includes(permission),
+            ),
+            ...currentPermissions.filter(
+                (permission) => !userData.permissions!.includes(permission),
+            ),
+        ];
+        if (
+            changedPermissions.some(
+                (permission) => !ctx.user.permissions.includes(permission),
+            )
+        ) {
+            throw new Error(responses.action_not_allowed);
+        }
+    }
+
     for (const key of keys.filter((key) => key !== "id")) {
         if (key === "tags") {
             await addTags(userData["tags"]!, ctx);

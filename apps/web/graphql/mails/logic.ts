@@ -594,6 +594,12 @@ export async function pauseSequence({
     ctx: GQLContext;
     sequenceId: string;
 }): Promise<Sequence> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
     const sequence = await SequenceModel.findOne({
         domain: ctx.subdomain._id,
         sequenceId,

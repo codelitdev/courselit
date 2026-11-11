@@ -14,6 +14,7 @@ import {
     createSequence,
     getEmailTemplates,
     getSystemEmailTemplates,
+    pauseSequence,
     updateEmailTemplate,
 } from "../logic";
 import SequenceModel from "@/models/Sequence";
@@ -247,5 +248,59 @@ describe("createEmailTemplate", () => {
         expect(sequence?.emails[0].content?.meta?.previewText).toBe(
             defaultEmail.meta.previewText,
         );
+    });
+});
+
+describe("pauseSequence", () => {
+    let domain: any;
+    let sequenceId: string;
+
+    beforeAll(async () => {
+        domain = await DomainModel.create({
+            name: `pause-sequence-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+            email: "owner@example.com",
+        });
+    });
+
+    beforeEach(async () => {
+        await SequenceModel.deleteMany({ domain: domain._id });
+        const sequence = await SequenceModel.create({
+            domain: domain._id,
+            type: "sequence",
+            title: "Welcome",
+            creatorId: "admin-user",
+            status: "active",
+        });
+        sequenceId = sequence.sequenceId;
+    });
+
+    afterAll(async () => {
+        await SequenceModel.deleteMany({ domain: domain._id });
+        await DomainModel.deleteMany({ _id: domain._id });
+    });
+
+    it("rejects unauthenticated requests", async () => {
+        const ctx = { subdomain: domain } as unknown as GQLContext;
+
+        await expect(pauseSequence({ ctx, sequenceId })).rejects.toThrow(
+            responses.request_not_authenticated,
+        );
+
+        const sequence = await SequenceModel.findOne({ sequenceId });
+        expect(sequence?.status).toBe("active");
+    });
+
+    it("rejects users without the manage users permission", async () => {
+        const ctx = {
+            subdomain: domain,
+            user: { userId: "learner", permissions: [] },
+        } as unknown as GQLContext;
+
+        await expect(pauseSequence({ ctx, sequenceId })).rejects.toThrow(
+            responses.action_not_allowed,
+        );
+
+        const sequence = await SequenceModel.findOne({ sequenceId });
+        expect(sequence?.status).toBe("active");
     });
 });

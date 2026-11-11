@@ -38,7 +38,7 @@
     },
     "peerDependencies": {
         "lucide-react": "*",
-        "next": "^16.0.10",
+        "next": "^16.4.5",
         "react": "*",
         "react-dom": "*"
     },
@@ -49,7 +49,7 @@
         "eslint": "^8.57.0",
         "eslint-plugin-n": "^15.2.0",
         "eslint-plugin-promise": "^6.0.0",
-        "postcss": "^8.4.27",
+        "postcss": "^8.5.32",
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
         "tsconfig": "workspace:^",
@@ -61,8 +61,8 @@
         "@courselit/common-models": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/text-editor": "workspace:^",
-        "@tiptap/core": "^3.0.0",
-        "@tiptap/static-renderer": "^3.10.7",
+        "@tiptap/core": "^3.33.0",
+        "@tiptap/static-renderer": "^3.33.0",
         "@courselit/icons": "workspace:^",
         "@courselit/page-models": "workspace:^",
         "@courselit/page-primitives": "workspace:^",

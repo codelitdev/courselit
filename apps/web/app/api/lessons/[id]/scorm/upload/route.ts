@@ -5,6 +5,9 @@ import { UIConstants as constants, Constants } from "@courselit/common-models";
 import DomainModel, { Domain } from "@models/Domain";
 import User from "@models/User";
 import Lesson from "@models/Lesson";
+import CourseModel from "@models/Course";
+import GQLContext from "@models/GQLContext";
+import { canManageCourseInContext } from "@/graphql/courses/permissions";
 import { extractScormPackage } from "@/lib/scorm/extractor";
 import { MediaLit } from "medialit";
 import { error as logError } from "@/services/logger";
@@ -76,6 +79,20 @@ export async function POST(
     });
     if (!lesson) {
         return Response.json({ message: "Lesson not found" }, { status: 404 });
+    }
+
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain: domain._id,
+    }).select("creatorId");
+    if (
+        !course ||
+        !canManageCourseInContext(course, {
+            user,
+            subdomain: domain,
+        } as unknown as GQLContext)
+    ) {
+        return Response.json({ message: "Forbidden" }, { status: 403 });
     }
 
     // Check if lesson type is SCORM

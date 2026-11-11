@@ -32,14 +32,16 @@ export async function initPosthogLogs() {
             "service.name": SERVICE_NAME,
             "deployment.environment": process.env.DEPLOY_ENV || "unknown",
         }),
-        logRecordProcessor: new BatchLogRecordProcessor(
-            new OTLPLogExporter({
-                url,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        logRecordProcessors: [
+            new BatchLogRecordProcessor({
+                exporter: new OTLPLogExporter({
+                    url,
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }),
             }),
-        ),
+        ],
     });
 
     await Promise.resolve(sdk.start());
