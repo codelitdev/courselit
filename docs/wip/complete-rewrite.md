@@ -126,10 +126,15 @@ product, and the admin sign-in page showed developer notes.
 
 ## 2. What visitors and learners see
 
-- [ ] **9. Placeholder content goes live.** The default homepage ships the
+- [x] **9. Placeholder content goes live.** The default homepage ships the
   CourseLit promo video, "Ask user to take action", a "default page created for
   you" notice and generic feature-grid copy. Terms and Privacy are published but
   empty, and checkout links to the Terms. _(QA)_
+  - Fixed 2026-11-03 (64265100), checked on QA 2026-11-11. A new school's
+    homepage is built only from blocks that fill themselves from the school
+    (hero, published offers, newsletter signup), with no copy baked in. Terms
+    and Privacy start as unpublished drafts, and the site and checkout don't
+    link to them until they're published. What's left is item 19a.
 - [ ] **10. The site isn't branded with the school.**
   - The footer shows CourseLit's tagline and copyright.
   - Product cards use the CourseLit logo as the placeholder image.
@@ -159,10 +164,22 @@ product, and the admin sign-in page showed developer notes.
 
 ## 3. A creator's first hour
 
-- [ ] **19. No onboarding.** A new account lands on an empty stats board with no
+- [x] **19. No onboarding.** A new account lands on an empty stats board with no
   getting-started checklist. Creating a school doesn't open it. The creator's
   name defaults to the email prefix. See `docs/wip/admin-onboarding-journey.md`.
   _(QA)_
+  - Fixed 2026-11-03 (64265100), checked on QA 2026-11-11. A new account opens
+    the setup wizard, which asks for the creator's name first, then the
+    school, first offer, site, email and plan, and the dashboard shows an
+    onboarding checklist.
+  - Also fixed 2026-11-11 (5fce57d4, Platform 0.9.0), checked on QA: the plan
+    step failed with "Authentication is required" for anyone who had been
+    signed in for more than 15 minutes, which is most people finishing the
+    wizard. Billing actions no longer ask for a recent sign-in; the
+    single-use grant already stops replay and CSRF.
+- [ ] **19a. Terms and Privacy start empty.** Onboarding asks the creator to
+  fill them in, but the drafts are blank. Start them with short editable
+  text. _(QA 2026-11-11)_
 - [ ] **20. Email can go out unedited.** New emails default to "Start writing
   here" with no guard. The mailing address is required, but nothing prompts for
   it during setup. _(QA)_
