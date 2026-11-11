@@ -135,14 +135,15 @@ product, and the admin sign-in page showed developer notes.
     (hero, published offers, newsletter signup), with no copy baked in. Terms
     and Privacy start as unpublished drafts, and the site and checkout don't
     link to them until they're published. What's left is item 19a.
-- [ ] **10. The site isn't branded with the school.**
-  - The footer shows CourseLit's tagline and copyright.
-  - Product cards use the CourseLit logo as the placeholder image.
-  - The learner sidebar says "CourseLit / Storefront".
-  - The certificate header says "CourseLit".
-  - The sign-in code email is titled "Your CourseLit Sign-in Code".
+- [ ] **10. Two learner-facing places still say CourseLit instead of the school.**
+  - The learner sign-in code email is titled "Your CourseLit Sign-in Code" and
+    headed "CourseLit Security Code" (`apps/api/src/auth/options.ts`). Fine for
+    the admin; a learner should see the school's name.
+  - The certificate verification page header says "CourseLit".
 
-  _(QA)_
+  The site itself is branded with the school (checked on QA 2026-11-11): the
+  header, footer, product placeholders and learner sidebar use its name, logo
+  and tagline. _(QA)_
 - [ ] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
 - [ ] **12. Free courses show "$0.00"** in the catalogue instead of "Free".
