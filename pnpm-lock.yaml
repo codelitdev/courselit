@@ -276,8 +276,8 @@ importers:
         specifier: ^6.21.0
         version: 6.21.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       mongoose:
-        specifier: ^8.22.1
-        version: 8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
+        specifier: ^8.24.7
+        version: 8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       nodemailer:
         specifier: ^10.4.0
         version: 10.4.0
@@ -514,8 +514,8 @@ importers:
         specifier: ^6.21.0
         version: 6.21.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       mongoose:
-        specifier: ^8.22.1
-        version: 8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
+        specifier: ^8.24.7
+        version: 8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       next:
         specifier: ^16.4.5
         version: 16.4.5(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(@types/node@17.0.21)(babel-plugin-macros@3.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -671,8 +671,8 @@ importers:
         specifier: ^9.0.3
         version: 9.0.3
       mongoose:
-        specifier: ^8.22.1
-        version: 8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
+        specifier: ^8.24.7
+        version: 8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
     devDependencies:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
@@ -1009,8 +1009,8 @@ importers:
         specifier: workspace:^
         version: link:../utils
       mongoose:
-        specifier: ^8.22.1
-        version: 8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
+        specifier: ^8.24.7
+        version: 8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
     devDependencies:
       '@types/node':
         specifier: ^26.0.0
@@ -1219,8 +1219,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0
       mongoose:
-        specifier: ^8.22.1
-        version: 8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
+        specifier: ^8.24.7
+        version: 8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
     devDependencies:
       '@courselit/common-models':
         specifier: workspace:^
@@ -5223,6 +5223,9 @@ packages:
   '@smithy/core@3.29.6':
     resolution: {integrity: sha512-TO3w25cdGWBeYqKNDaqH3v4O3jjMPpKwf39YlG5X5xhqWfpOWJbi5gQi1lrllukuwohdhY0TPB8jBEv6UC50Vg==}
     engines: {node: '>=18.0.0'}
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with this
+        version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.4.11':
     resolution: {integrity: sha512-6CUvZwS0tCcVCrcvh2TpwTXxmAkuY6JGNPeKODYRLjHtUUhFLGS3dNkNdRvT/ttJyqimqnhFMTS2nqp4pDZ7oQ==}
@@ -7103,6 +7106,7 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
+    deprecated: v4 is no longer maintained, upgrade to v5
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -7755,6 +7759,7 @@ packages:
   eslint@9.39.1:
     resolution: {integrity: sha512-BhHmn2yNOFA9H9JmmIVKJmd288g9hrVRDkdoIgRCRuSySRUHH7r/DI6aAXW9T1WwUuY3DFgrcaqB+deURBLR5g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -9838,8 +9843,8 @@ packages:
       socks:
         optional: true
 
-  mongoose@8.23.1:
-    resolution: {integrity: sha512-gHSPD8qEwRmiXapK17hEnFWZdcFENMegHTcw5XIIg2+7R8eXQvdwSiMpD/A2oG8tKzFLLHyRXd8/eaDPAVwZgQ==}
+  mongoose@8.24.8:
+    resolution: {integrity: sha512-p6g/mvvW2PJlC3lgzQJ7PECArfaOTKWJVG/KHf67WYU3MvJ72ZWdv5u7syFRe881IjALMZpKwffNE97G10HTzg==}
     engines: {node: '>=16.20.1'}
 
   motion-dom@12.38.0:
@@ -9866,8 +9871,8 @@ packages:
     resolution: {integrity: sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==}
     engines: {node: '>=4.0.0'}
 
-  mquery@5.0.0:
-    resolution: {integrity: sha512-iQMncpmEK8R8ncT8HJGsGc9Dsp8xcgYMVSbs5jgnm1lFHTZqMJTUWTDx1LBO8+mK3tPNZWFLBghQEIOULSTHZg==}
+  mquery@5.0.1:
+    resolution: {integrity: sha512-C99lWV0TFI34pS008jBsi3JrE2xZPnTgUw5yApQR71nRP0hxLy8D5m1Lbbk83c8AQWJwdJ0329HzFtZ1MRTUIw==}
     engines: {node: '>=14.0.0'}
 
   mri@1.2.0:
@@ -9971,6 +9976,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@8.7.0:
     resolution: {integrity: sha512-9MdFxmkKaOYVTV+XVRG8ArDwwQ77XIgIPyKASB1k3JPq3M8fGQQQE3YpMOrKm6g//Ktx8ivZr8xo1Qmtqub+GA==}
@@ -20977,7 +20983,7 @@ snapshots:
       '@humanfs/node': 0.16.8
       '@humanwhocodes/module-importer': 1.0.1
       '@humanwhocodes/retry': 0.4.3
-      '@types/estree': 1.0.9
+      '@types/estree': 1.0.10
       ajv: 6.15.0
       chalk: 4.1.2
       cross-spawn: 7.0.6
@@ -23810,13 +23816,13 @@ snapshots:
       '@aws-sdk/credential-providers': 3.797.0
       socks: 2.8.4
 
-  mongoose@8.23.1(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4):
+  mongoose@8.24.8(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4):
     dependencies:
       bson: 6.10.4
       kareem: 2.6.3
       mongodb: 6.20.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       mpath: 0.9.0
-      mquery: 5.0.0
+      mquery: 5.0.1
       ms: 2.1.3
       sift: 17.1.3
     transitivePeerDependencies:
@@ -23845,7 +23851,7 @@ snapshots:
 
   mpath@0.9.0: {}
 
-  mquery@5.0.0:
+  mquery@5.0.1:
     dependencies:
       debug: 4.4.3
     transitivePeerDependencies:
