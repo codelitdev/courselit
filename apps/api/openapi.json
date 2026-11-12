@@ -82765,6 +82765,9 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "viewInBrowser": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": true

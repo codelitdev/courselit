@@ -1,28 +1,30 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { CalendarClock, Check, Clock3, Pencil, Pause, Send } from "lucide-react";
-import { ContactFilterBuilder, EmailPreview, SequenceAnalytics, type ContactFilterWithAggregator, type Email } from "@sendlit/email-blocks";
 import { Badge } from "@codelitdev/design-system";
 import {
-  fromStoredAudienceFilter,
-  toContactFilterSet,
-  toStoredAudienceFilter,
-} from "@/lib/contact-filters";
-import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
+  ContactFilterBuilder,
+  type ContactFilterWithAggregator,
+  type Email,
+  EmailPreview,
+} from "@sendlit/email-blocks";
+import { marketingPreviewContext } from "@sendlit/email-blocks/footer";
+import { CalendarClock, Check, Clock3, Pause, Pencil, Send } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { CourseLitLoading } from "@/components/loading";
-import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
-import { Button } from "@/components/ui/codelit/button";
+import { MailPerformance } from "@/components/mails/mail-performance";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
+import { ViewInBrowserSetting } from "@/components/mails/view-in-browser-setting";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
   DialogContent,
@@ -37,16 +39,16 @@ import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
-import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
-import { isMailingAddressRequiredError } from "@/lib/mail-errors";
-import { emailReadinessMessage } from "@/lib/email-readiness";
 import {
-  MailingAddressNotice,
-  useMailingAddressMissing,
-} from "@/components/mails/mailing-address-notice";
-import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
+  fromStoredAudienceFilter,
+  toContactFilterSet,
+  toStoredAudienceFilter,
+} from "@/lib/contact-filters";
+import { MARKETING_EMAIL_BLOCKS } from "@/lib/email-editor-blocks";
+import { emailReadinessMessage } from "@/lib/email-readiness";
+import { isMailingAddressRequiredError } from "@/lib/mail-errors";
 import { hasSchoolPermission } from "@/lib/school-permissions";
-import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
+import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
 
 type School = {
   id: string;
@@ -69,6 +71,7 @@ type Broadcast = {
   type: string;
   status: string;
   filter?: ContactFilterWithAggregator | null;
+  viewInBrowser: boolean;
   report?: { broadcast?: { lockedAt?: number | null } };
   emails: BroadcastEmail[];
 };
@@ -137,7 +140,6 @@ export default function BroadcastDetailsPage({
   const [activeDialog, setActiveDialog] = useState<BroadcastDialog>(null);
   const [scheduleDateTime, setScheduleDateTime] = useState("");
   const [scheduleMinimum, setScheduleMinimum] = useState("");
-  const [stats, setStats] = useState<MailStats | null>(null);
 
   const editable = broadcast?.status === "draft" || broadcast?.status === "paused";
   const canWrite = hasSchoolPermission(school, "contacts:write");
@@ -153,7 +155,8 @@ export default function BroadcastDetailsPage({
   const filterKey = useMemo(() => JSON.stringify(filter), [filter]);
   const titleChanged = title !== (broadcast?.title ?? "");
   const filterChanged =
-    filterKey !== JSON.stringify(fromStoredAudienceFilter(broadcast?.filter ?? EVERYONE_FILTER));
+    filterKey !==
+    JSON.stringify(fromStoredAudienceFilter(broadcast?.filter ?? EVERYONE_FILTER));
   const hasChanges = titleChanged || filterChanged;
 
   useSetBreadcrumb([
@@ -177,7 +180,8 @@ export default function BroadcastDetailsPage({
         const schoolBody = (await schoolResponse.json()) as { items?: School[] };
         const selectedSchool =
           schoolBody.items?.find((item) => item.selected) ?? schoolBody.items?.[0];
-        if (!selectedSchool) throw new Error("Select a school before editing broadcasts.");
+        if (!selectedSchool)
+          throw new Error("Select a school before editing broadcasts.");
         if (cancelled) return;
         setSchool(selectedSchool);
 
@@ -189,29 +193,18 @@ export default function BroadcastDetailsPage({
             headers: { "x-school-id": selectedSchool.id },
           },
         );
-        if (!response.ok) throw new Error(await responseError(response, "Unable to load broadcast."));
+        if (!response.ok)
+          throw new Error(await responseError(response, "Unable to load broadcast."));
         const data = (await response.json()) as Broadcast;
         if (cancelled) return;
         setBroadcast(data);
         setTitle(data.title || "Untitled broadcast");
         setFilter(fromStoredAudienceFilter(data.filter ?? EVERYONE_FILTER));
-        if (data.status === "active" || data.status === "completed" || data.status === "paused") {
-          const statsResponse = await fetch(
-            `/api/v1/school/mails/sequences/${encodeURIComponent(broadcastId)}/stats`,
-            {
-              credentials: "include",
-              cache: "no-store",
-              headers: { "x-school-id": selectedSchool.id },
-            },
-          ).catch(() => null);
-          if (statsResponse?.ok && !cancelled) {
-            const body = (await statsResponse.json()) as MailStats;
-            if (typeof body.sent === "number") setStats(body);
-          }
-        }
       } catch (caught) {
         if (!cancelled) {
-          setError(caught instanceof Error ? caught.message : "Unable to load broadcast.");
+          setError(
+            caught instanceof Error ? caught.message : "Unable to load broadcast.",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -286,7 +279,10 @@ export default function BroadcastDetailsPage({
           }),
         },
       );
-      if (!response.ok) throw new Error(await responseError(response, "Unable to save broadcast details."));
+      if (!response.ok)
+        throw new Error(
+          await responseError(response, "Unable to save broadcast details."),
+        );
       const updated = (await response.json()) as Broadcast;
       setBroadcast((current) => (current ? { ...current, ...updated } : updated));
       setTitle(updated.title || title.trim());
@@ -295,7 +291,9 @@ export default function BroadcastDetailsPage({
       window.setTimeout(() => setSaved(false), 2200);
       return true;
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to save broadcast details.");
+      setError(
+        caught instanceof Error ? caught.message : "Unable to save broadcast details.",
+      );
       return false;
     } finally {
       setSaving(false);
@@ -306,7 +304,9 @@ export default function BroadcastDetailsPage({
     if (!school || !broadcast || !email || !canWrite) return;
     if (recipientCount === null) {
       setActiveDialog(null);
-      setError("The eligible recipient count is unavailable. Try again before sending.");
+      setError(
+        "The eligible recipient count is unavailable. Try again before sending.",
+      );
       return;
     }
     if (recipientCount === 0) {
@@ -335,7 +335,9 @@ export default function BroadcastDetailsPage({
         },
       );
       if (!emailResponse.ok) {
-        throw new Error(await responseError(emailResponse, "Unable to save the delivery time."));
+        throw new Error(
+          await responseError(emailResponse, "Unable to save the delivery time."),
+        );
       }
 
       setBroadcast((current) =>
@@ -343,7 +345,9 @@ export default function BroadcastDetailsPage({
           ? {
               ...current,
               emails: current.emails.map((item, index) =>
-                index === 0 ? { ...item, delayInMillis: sendAt, published: true } : item,
+                index === 0
+                  ? { ...item, delayInMillis: sendAt, published: true }
+                  : item,
               ),
             }
           : current,
@@ -358,9 +362,13 @@ export default function BroadcastDetailsPage({
         },
       );
       if (!startResponse.ok) {
-        throw new Error(await responseError(startResponse, "Unable to start this broadcast."));
+        throw new Error(
+          await responseError(startResponse, "Unable to start this broadcast."),
+        );
       }
-      const started = (await startResponse.json().catch(() => null)) as Broadcast | null;
+      const started = (await startResponse
+        .json()
+        .catch(() => null)) as Broadcast | null;
       setBroadcast((current) =>
         current
           ? {
@@ -368,7 +376,9 @@ export default function BroadcastDetailsPage({
               ...started,
               status: started?.status || "active",
               emails: current.emails.map((item, index) =>
-                index === 0 ? { ...item, delayInMillis: sendAt, published: true } : item,
+                index === 0
+                  ? { ...item, delayInMillis: sendAt, published: true }
+                  : item,
               ),
             }
           : current,
@@ -376,9 +386,7 @@ export default function BroadcastDetailsPage({
       setActiveDialog(null);
     } catch (caught) {
       const message =
-        caught instanceof Error
-          ? caught.message
-          : "Unable to start this broadcast.";
+        caught instanceof Error ? caught.message : "Unable to start this broadcast.";
       if (isMailingAddressRequiredError(message)) {
         setError(null);
         setActiveDialog("mailing-address");
@@ -404,13 +412,18 @@ export default function BroadcastDetailsPage({
           headers: { "x-school-id": school.id },
         },
       );
-      if (!response.ok) throw new Error(await responseError(response, "Unable to cancel this send."));
+      if (!response.ok)
+        throw new Error(await responseError(response, "Unable to cancel this send."));
       const paused = (await response.json().catch(() => null)) as Broadcast | null;
       setBroadcast((current) =>
-        current ? { ...current, ...paused, status: paused?.status || "paused" } : current,
+        current
+          ? { ...current, ...paused, status: paused?.status || "paused" }
+          : current,
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to cancel this send.");
+      setError(
+        caught instanceof Error ? caught.message : "Unable to cancel this send.",
+      );
     } finally {
       setWorking(false);
     }
@@ -439,22 +452,24 @@ export default function BroadcastDetailsPage({
     router.push(`/marketing/editor/${encodeURIComponent(broadcastId)}`);
   }
 
-  const statusLabel = broadcast?.status === "completed"
-    ? "Sent"
-    : scheduled
-      ? "Scheduled"
-      : broadcast?.status === "active"
-        ? "Sending"
-        : broadcast?.status === "paused"
-          ? "Paused"
-          : "Draft";
-  const statusVariant = broadcast?.status === "completed"
-    ? "success"
-    : scheduled
-      ? "warning"
-      : broadcast?.status === "active"
-        ? "default"
-        : "neutral";
+  const statusLabel =
+    broadcast?.status === "completed"
+      ? "Sent"
+      : scheduled
+        ? "Scheduled"
+        : broadcast?.status === "active"
+          ? "Sending"
+          : broadcast?.status === "paused"
+            ? "Paused"
+            : "Draft";
+  const statusVariant =
+    broadcast?.status === "completed"
+      ? "success"
+      : scheduled
+        ? "warning"
+        : broadcast?.status === "active"
+          ? "default"
+          : "neutral";
 
   return (
     <AuthGate>
@@ -462,7 +477,10 @@ export default function BroadcastDetailsPage({
         {loading ? (
           <CourseLitLoading label="Loading broadcast…" />
         ) : error && !broadcast ? (
-          <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          <div
+            role="alert"
+            className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+          >
             {error}
           </div>
         ) : broadcast ? (
@@ -472,7 +490,12 @@ export default function BroadcastDetailsPage({
               description={
                 <span className="flex items-center gap-2">
                   <Badge variant={statusVariant}>{statusLabel}</Badge>
-                  {saved ? <span className="inline-flex items-center gap-1 text-emerald-700"><Check className="size-3.5" />Saved</span> : null}
+                  {saved ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700">
+                      <Check className="size-3.5" />
+                      Saved
+                    </span>
+                  ) : null}
                 </span>
               }
               action={
@@ -481,7 +504,12 @@ export default function BroadcastDetailsPage({
                     <Clock3 className="size-4" />
                     Scheduled for {scheduledAt?.toLocaleString()}
                     {canWrite ? (
-                      <Button variant="outline" size="sm" onClick={() => void cancelSchedule()} disabled={working}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void cancelSchedule()}
+                        disabled={working}
+                      >
                         <Pause className="mr-1.5 size-4" />
                         {working ? "Canceling…" : "Cancel send"}
                       </Button>
@@ -489,53 +517,110 @@ export default function BroadcastDetailsPage({
                   </span>
                 ) : editable && canWrite ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" onClick={openScheduleDialog} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0 || Boolean(unreadyReason)} title={unreadyReason ?? undefined}>
-                      <CalendarClock className="mr-1.5 size-4" />Schedule
+                    <Button
+                      variant="outline"
+                      onClick={openScheduleDialog}
+                      disabled={
+                        saving ||
+                        working ||
+                        loadingRecipients ||
+                        recipientCount === null ||
+                        recipientCount === 0 ||
+                        Boolean(unreadyReason)
+                      }
+                      title={unreadyReason ?? undefined}
+                    >
+                      <CalendarClock className="mr-1.5 size-4" />
+                      Schedule
                     </Button>
-                    <Button onClick={() => setActiveDialog("send")} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0 || Boolean(unreadyReason)} title={unreadyReason ?? undefined}>
-                      <Send className="mr-1.5 size-4" />Send now
+                    <Button
+                      onClick={() => setActiveDialog("send")}
+                      disabled={
+                        saving ||
+                        working ||
+                        loadingRecipients ||
+                        recipientCount === null ||
+                        recipientCount === 0 ||
+                        Boolean(unreadyReason)
+                      }
+                      title={unreadyReason ?? undefined}
+                    >
+                      <Send className="mr-1.5 size-4" />
+                      Send now
                     </Button>
                   </div>
                 ) : null
               }
             />
 
-            {error ? <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div> : null}
+            {error ? (
+              <div
+                role="alert"
+                className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive"
+              >
+                {error}
+              </div>
+            ) : null}
 
             {editable && canWrite ? (
-              <MailingAddressNotice missing={mailingAddressMissing} action="send this broadcast" />
+              <MailingAddressNotice
+                missing={mailingAddressMissing}
+                action="send this broadcast"
+              />
             ) : null}
 
             {editable && canWrite && unreadyReason ? (
-              <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              <div
+                role="status"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+              >
                 <p className="min-w-0 flex-1">{unreadyReason}</p>
                 <Button asChild type="button" size="sm" variant="outline">
-                  <Link href={`/marketing/editor/${encodeURIComponent(broadcastId)}`}>Edit email</Link>
+                  <Link href={`/marketing/editor/${encodeURIComponent(broadcastId)}`}>
+                    Edit email
+                  </Link>
                 </Button>
               </div>
             ) : null}
 
             {scheduledAt && !scheduled ? (
-              <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              <div
+                role="status"
+                className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+              >
                 {recipientCount === 0 ? (
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="min-w-0 flex-1">
-                      Delivery time saved for {scheduledAt.toLocaleString()}, but this broadcast is not scheduled because no contacts match its audience. Nothing will be sent. Collect subscriber opt-ins or adjust the audience; Schedule and Send now unlock when recipients are available.
+                      Delivery time saved for {scheduledAt.toLocaleString()}, but this
+                      broadcast is not scheduled because no contacts match its audience.
+                      Nothing will be sent. Collect subscriber opt-ins or adjust the
+                      audience; Schedule and Send now unlock when recipients are
+                      available.
                     </p>
                     <Button asChild type="button" size="sm" variant="outline">
                       <Link href="/contacts">Review contacts</Link>
                     </Button>
                   </div>
                 ) : recipientCount === null ? (
-                  <>Delivery time saved for {scheduledAt.toLocaleString()}, but the recipient count could not be checked. Refresh and try again before scheduling.</>
+                  <>
+                    Delivery time saved for {scheduledAt.toLocaleString()}, but the
+                    recipient count could not be checked. Refresh and try again before
+                    scheduling.
+                  </>
                 ) : (
-                  <>Delivery time saved for {scheduledAt.toLocaleString()}, but the broadcast is still a draft. Choose Schedule to activate it.</>
+                  <>
+                    Delivery time saved for {scheduledAt.toLocaleString()}, but the
+                    broadcast is still a draft. Choose Schedule to activate it.
+                  </>
                 )}
               </div>
             ) : null}
 
-            {stats ? (
-              <SequenceAnalytics title="Performance" metrics={mailStatsMetrics(stats)} />
+            {school &&
+            (broadcast?.status === "active" ||
+              broadcast?.status === "completed" ||
+              broadcast?.status === "paused") ? (
+              <MailPerformance schoolId={school.id} sequenceId={broadcastId} />
             ) : null}
 
             <Card>
@@ -573,15 +658,44 @@ export default function BroadcastDetailsPage({
                     disabled={!editable || !canWrite || saving || working}
                     defaultSegmentLabel="Everyone"
                   />
-                  {loadingRecipients ? <p className="text-xs text-muted-foreground">Updating recipient count…</p> : null}
-                  {!loadingRecipients && recipientCount === null ? <p className="text-xs text-destructive">Recipient count is unavailable. Refresh the page or try again.</p> : null}
+                  {loadingRecipients ? (
+                    <p className="text-xs text-muted-foreground">
+                      Updating recipient count…
+                    </p>
+                  ) : null}
+                  {!loadingRecipients && recipientCount === null ? (
+                    <p className="text-xs text-destructive">
+                      Recipient count is unavailable. Refresh the page or try again.
+                    </p>
+                  ) : null}
                   {recipientCount === 0 ? (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-700">
-                      <p>No contacts match this audience. Broadcasts require at least one subscribed contact to activate.</p>
-                      <Link href="/contacts" className="font-medium underline underline-offset-2">Review contacts</Link>
+                      <p>
+                        No contacts match this audience. Broadcasts require at least one
+                        subscribed contact to activate.
+                      </p>
+                      <Link
+                        href="/contacts"
+                        className="font-medium underline underline-offset-2"
+                      >
+                        Review contacts
+                      </Link>
                     </div>
                   ) : null}
                 </div>
+                {school && broadcast ? (
+                  <ViewInBrowserSetting
+                    schoolId={school.id}
+                    sequenceId={broadcastId}
+                    checked={broadcast.viewInBrowser}
+                    disabled={!canWrite || working}
+                    onSaved={(viewInBrowser) =>
+                      setBroadcast((current) =>
+                        current ? { ...current, viewInBrowser } : current,
+                      )
+                    }
+                  />
+                ) : null}
               </CardContent>
             </Card>
 
@@ -607,7 +721,8 @@ export default function BroadcastDetailsPage({
                       onClick={() => void openEmailEditor()}
                       disabled={saving || working}
                     >
-                      <Pencil className="mr-1.5 size-4" />Edit content
+                      <Pencil className="mr-1.5 size-4" />
+                      Edit content
                     </Button>
                   ) : null}
                 </div>
@@ -616,7 +731,9 @@ export default function BroadcastDetailsPage({
                 {emailContent ? (
                   <EmailPreview
                     blocks={MARKETING_EMAIL_BLOCKS}
-                    renderContext={MARKETING_PREVIEW_CONTEXT}
+                    renderContext={marketingPreviewContext({
+                      viewInBrowser: broadcast?.viewInBrowser,
+                    })}
                     content={emailContent}
                     minHeight="420px"
                     iframeTitle={`${title || "Broadcast"} email preview`}
@@ -643,11 +760,14 @@ export default function BroadcastDetailsPage({
                 <DialogHeader>
                   <DialogTitle>Schedule this broadcast?</DialogTitle>
                   <DialogDescription>
-                    “{title || "Untitled broadcast"}” will be sent to {recipientCount ?? "eligible"} recipients at the selected time.
+                    “{title || "Untitled broadcast"}” will be sent to{" "}
+                    {recipientCount ?? "eligible"} recipients at the selected time.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-1.5 py-2">
-                  <Label htmlFor="broadcast-schedule-time">Delivery date &amp; time</Label>
+                  <Label htmlFor="broadcast-schedule-time">
+                    Delivery date &amp; time
+                  </Label>
                   <Input
                     id="broadcast-schedule-time"
                     type="datetime-local"
@@ -658,8 +778,19 @@ export default function BroadcastDetailsPage({
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setActiveDialog(null)} disabled={working}>Cancel</Button>
-                  <Button type="button" onClick={() => void confirmSchedule()} disabled={!scheduleDateTime || working || saving}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveDialog(null)}
+                    disabled={working}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void confirmSchedule()}
+                    disabled={!scheduleDateTime || working || saving}
+                  >
                     {working ? "Scheduling…" : "Schedule broadcast"}
                   </Button>
                 </DialogFooter>
@@ -669,12 +800,25 @@ export default function BroadcastDetailsPage({
                 <DialogHeader>
                   <DialogTitle>Send this broadcast now?</DialogTitle>
                   <DialogDescription>
-                    “{title || "Untitled broadcast"}” will be sent to {recipientCount ?? "eligible"} recipients immediately. This action cannot be undone.
+                    “{title || "Untitled broadcast"}” will be sent to{" "}
+                    {recipientCount ?? "eligible"} recipients immediately. This action
+                    cannot be undone.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setActiveDialog(null)} disabled={working}>Cancel</Button>
-                  <Button type="button" onClick={() => void startBroadcast(Date.now())} disabled={working || saving}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveDialog(null)}
+                    disabled={working}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void startBroadcast(Date.now())}
+                    disabled={working || saving}
+                  >
                     {working ? "Sending…" : "Send now"}
                   </Button>
                 </DialogFooter>
@@ -684,8 +828,8 @@ export default function BroadcastDetailsPage({
                 <DialogHeader>
                   <DialogTitle>Add your mailing address</DialogTitle>
                   <DialogDescription>
-                    Add a mailing address in Mail settings before sending this broadcast.
-                    It will be included in your email footers.
+                    Add a mailing address in Mail settings before sending this
+                    broadcast. It will be included in your email footers.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

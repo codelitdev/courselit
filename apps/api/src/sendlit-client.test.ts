@@ -14,6 +14,7 @@ import {
   sendSendLitSequenceEmailTest,
   trackSendLitEvent,
   updateSendLitGeneralSettings,
+  updateSendLitSequence,
 } from "./sendlit-client.js";
 
 describe("sendlit-client", () => {
@@ -255,6 +256,35 @@ describe("sendlit-client", () => {
       { config: { server: "http://127.0.0.1:4101", provisioningApiKey: null }, fetcher },
     );
     expect(templates.items[0].title).toBe("Default Template");
+  });
+
+  it("turns a sequence's view-in-browser link on or off", async () => {
+    let request: { url: string; method?: string; body?: unknown } | undefined;
+    const fetcher: FetchLike = async (input, init) => {
+      request = {
+        url: String(input),
+        method: init?.method,
+        body: JSON.parse(String(init?.body)),
+      };
+      return new Response(
+        JSON.stringify({ sequenceId: "seq_1", type: "sequence", viewInBrowser: true }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    };
+
+    const sequence = await updateSendLitSequence(
+      "team_key",
+      "seq_1",
+      { viewInBrowser: true },
+      { config: { server: "http://127.0.0.1:4101", provisioningApiKey: null }, fetcher },
+    );
+
+    expect(request).toEqual({
+      url: "http://127.0.0.1:4101/sequences/seq_1",
+      method: "PATCH",
+      body: { viewInBrowser: true },
+    });
+    expect(sequence.viewInBrowser).toBe(true);
   });
 
   it("sends sequence email tests and custom events with the team key", async () => {

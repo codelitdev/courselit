@@ -321,6 +321,16 @@ describe("SendLit Service", () => {
         emailsOrder: ["em_1"],
       });
 
+      const viewInBrowserOff = await updateSequence(runtime.db, schoolId, clock, "seq_1", {
+        viewInBrowser: false,
+      });
+      expect(viewInBrowserOff.ok).toBe(true);
+      expect(
+        fetchCalls.filter(
+          (call) => call.url.endsWith("/sequences/seq_1") && call.method === "PATCH",
+        ).at(-1)?.body,
+      ).toEqual({ viewInBrowser: false });
+
       const seqEmail = await addSequenceEmail(runtime.db, schoolId, clock, "seq_1", {
         subject: "Day 1 Welcome",
         templateId: "system:blank",

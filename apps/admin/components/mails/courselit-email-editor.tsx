@@ -1,12 +1,9 @@
 "use client";
 
+import { marketingPreviewContext } from "@sendlit/email-blocks/footer";
 import { type Email, EmailEditor } from "@sendlit/email-editor";
 import { useEffect, useState } from "react";
-import {
-  MARKETING_EMAIL_BLOCKS,
-  MARKETING_PREVIEW_CONTEXT,
-  MARKETING_VARIABLES,
-} from "@/lib/email-editor-blocks";
+import { MARKETING_EMAIL_BLOCKS, MARKETING_VARIABLES } from "@/lib/email-editor-blocks";
 
 type SchoolsBody = { items?: Array<{ name?: string; selected?: boolean }> } | null;
 
@@ -49,6 +46,7 @@ export function CourseLitEmailEditor({
   subject,
   onSubjectChange,
   marketing = true,
+  viewInBrowser,
 }: {
   email: Email;
   onChange: (email: Email) => void;
@@ -56,6 +54,8 @@ export function CourseLitEmailEditor({
   subject?: string;
   onSubjectChange?: (subject: string) => void;
   marketing?: boolean;
+  /** The broadcast's or sequence's setting; off hides the footer link. */
+  viewInBrowser?: boolean;
 }) {
   const senderName = useSelectedSchoolName();
   return (
@@ -68,7 +68,7 @@ export function CourseLitEmailEditor({
       {...(marketing
         ? {
             blocks: MARKETING_EMAIL_BLOCKS,
-            renderContext: MARKETING_PREVIEW_CONTEXT,
+            renderContext: marketingPreviewContext({ viewInBrowser }),
             variables: MARKETING_VARIABLES,
           }
         : {})}

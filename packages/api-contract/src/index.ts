@@ -2034,6 +2034,9 @@ export const updateMailSequenceBodySchema = z
     filter: z.unknown().optional(),
     excludeFilter: z.unknown().optional(),
     emailsOrder: z.array(z.string()).optional(),
+    /** Off leaves the "View in browser" link out of emails and takes down the
+     * hosted copies behind links already sent. */
+    viewInBrowser: z.boolean().optional(),
   })
   .passthrough();
 export const createMailSequenceEmailBodySchema = z

@@ -1,16 +1,23 @@
 "use client";
 
-import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { defaultTemplateEmail } from "@sendlit/email-blocks";
+import { defaultEmail, type Email } from "@sendlit/email-editor";
+import { ArrowLeft, Calendar, Check, Pause, RefreshCw, Send } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Calendar, Check, Pause, RefreshCw, Send } from "lucide-react";
-import { defaultEmail, type Email } from "@sendlit/email-editor";
-import { defaultTemplateEmail } from "@sendlit/email-blocks";
-import { Button } from "@/components/ui/codelit/button";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
-import { Input } from "@/components/ui/codelit/input";
-import { Label } from "@/components/ui/codelit/label";
+import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
+import {
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
+import {
+  EditorBackButton,
+  useUnsavedChangesWarning,
+} from "@/components/mails/unsaved-changes";
+import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
   DialogContent,
@@ -19,17 +26,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import { Input } from "@/components/ui/codelit/input";
+import { Label } from "@/components/ui/codelit/label";
 import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
-import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
-import { EditorBackButton, useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
 import { emailReadinessMessage } from "@/lib/email-readiness";
-import {
-  MailingAddressNotice,
-  useMailingAddressMissing,
-} from "@/components/mails/mailing-address-notice";
 
 type BroadcastEmail = {
   emailId: string;
@@ -46,6 +49,7 @@ type SequenceDetail = {
   status?: string;
   report?: { broadcast?: { lockedAt?: number | string | null } };
   emails?: BroadcastEmail[];
+  viewInBrowser?: boolean;
 };
 
 async function getResponseError(response: Response, fallback: string): Promise<string> {
@@ -61,7 +65,6 @@ function toLocalInputValue(date: Date): string {
   const offset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
-
 
 function cloneEmail(email: Email): Email {
   return JSON.parse(JSON.stringify(email)) as Email;
@@ -85,7 +88,6 @@ function parseEmailBody(raw: unknown): Email {
   }
   return cloneEmail(defaultTemplateEmail || defaultEmail);
 }
-
 
 export default function EmailBroadcastEditorPage({
   params,
@@ -184,7 +186,9 @@ export default function EmailBroadcastEditorPage({
 
         const initialSubject =
           targetEmail?.subject ||
-          (isSequenceEmailEditor ? "Untitled email" : data.title || "Untitled broadcast");
+          (isSequenceEmailEditor
+            ? "Untitled email"
+            : data.title || "Untitled broadcast");
         subjectRef.current = initialSubject;
         setSubject(initialSubject);
 
@@ -227,7 +231,9 @@ export default function EmailBroadcastEditorPage({
 
       const currentSubject =
         subjectRef.current.trim() ||
-        (isSequenceEmailEditor ? "Untitled email" : sequence?.title || "Untitled broadcast");
+        (isSequenceEmailEditor
+          ? "Untitled email"
+          : sequence?.title || "Untitled broadcast");
       const payloadString = JSON.stringify({
         subject: currentSubject,
         content: bodyRef.current,
@@ -273,20 +279,30 @@ export default function EmailBroadcastEditorPage({
         lastSavedPayload.current = payloadString;
         // Still dirty if edited again while this save was in flight.
         setDirty(
-          JSON.stringify({ subject: subjectRef.current.trim() || currentSubject, content: bodyRef.current }) !==
-            payloadString,
+          JSON.stringify({
+            subject: subjectRef.current.trim() || currentSubject,
+            content: bodyRef.current,
+          }) !== payloadString,
         );
         setSaved(true);
         window.setTimeout(() => setSaved(false), 2500);
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to save broadcast draft.");
+        setError(
+          err instanceof Error ? err.message : "Failed to save broadcast draft.",
+        );
         return false;
       } finally {
         setSaving(false);
       }
     },
-    [broadcastId, emailId, isScheduledBroadcast, isSequenceEmailEditor, sequence?.title],
+    [
+      broadcastId,
+      emailId,
+      isScheduledBroadcast,
+      isSequenceEmailEditor,
+      sequence?.title,
+    ],
   );
 
   const handleBodyChange = useCallback((newEmail: Email) => {
@@ -319,13 +335,18 @@ export default function EmailBroadcastEditorPage({
         },
       );
       if (!emailRes.ok) {
-        throw new Error(await getResponseError(emailRes, "Failed to prepare broadcast."));
+        throw new Error(
+          await getResponseError(emailRes, "Failed to prepare broadcast."),
+        );
       }
 
-      const startRes = await fetch(`/api/v1/school/mails/sequences/${broadcastId}/start`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const startRes = await fetch(
+        `/api/v1/school/mails/sequences/${broadcastId}/start`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
       if (!startRes.ok) {
         throw new Error(await getResponseError(startRes, "Failed to send broadcast."));
@@ -383,9 +404,9 @@ export default function EmailBroadcastEditorPage({
         );
       }
 
-      const startedSequence = (await startResponse.json().catch(() => null)) as
-        | SequenceDetail
-        | null;
+      const startedSequence = (await startResponse
+        .json()
+        .catch(() => null)) as SequenceDetail | null;
       setSequence((current) =>
         current
           ? {
@@ -402,7 +423,9 @@ export default function EmailBroadcastEditorPage({
       );
       setScheduleConfirmOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to schedule this broadcast.");
+      setError(
+        err instanceof Error ? err.message : "Unable to schedule this broadcast.",
+      );
     } finally {
       setScheduling(false);
     }
@@ -417,7 +440,9 @@ export default function EmailBroadcastEditorPage({
         { method: "POST", credentials: "include" },
       );
       if (!response.ok) {
-        throw new Error(await getResponseError(response, "Unable to cancel this schedule."));
+        throw new Error(
+          await getResponseError(response, "Unable to cancel this schedule."),
+        );
       }
       setSequence((current) => (current ? { ...current, status: "paused" } : current));
     } catch (err) {
@@ -442,7 +467,11 @@ export default function EmailBroadcastEditorPage({
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background p-6">
         <CourseLitLoading
-          label={isSequenceEmailEditor ? "Loading email editor…" : "Loading broadcast editor…"}
+          label={
+            isSequenceEmailEditor
+              ? "Loading email editor…"
+              : "Loading broadcast editor…"
+          }
         />
       </div>
     );
@@ -452,7 +481,9 @@ export default function EmailBroadcastEditorPage({
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background p-6">
         <div className="w-full max-w-md space-y-4 rounded-xl border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-destructive">Unable to open editor</h2>
+          <h2 className="text-lg font-semibold text-destructive">
+            Unable to open editor
+          </h2>
           <p className="text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline">
             <Link
@@ -513,12 +544,17 @@ export default function EmailBroadcastEditorPage({
               sequenceId={broadcastId}
               emailId={emailId}
               disabled={saving || sending || scheduling}
-              beforeSend={() => (isScheduledBroadcast ? Promise.resolve(true) : save(true))}
+              beforeSend={() =>
+                isScheduledBroadcast ? Promise.resolve(true) : save(true)
+              }
             />
           ) : null}
           {!isSequenceEmailEditor ? (
             isScheduledBroadcast ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+              <div
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+                role="status"
+              >
                 <Calendar className="size-4" />
                 <span className="whitespace-nowrap">
                   Scheduled for {futureDeliveryDate?.toLocaleString()}
@@ -539,7 +575,8 @@ export default function EmailBroadcastEditorPage({
               <>
                 {futureDeliveryDate ? (
                   <span className="text-xs text-amber-700" role="status">
-                    Delivery time saved · not active ({futureDeliveryDate.toLocaleString()})
+                    Delivery time saved · not active (
+                    {futureDeliveryDate.toLocaleString()})
                   </span>
                 ) : null}
                 <Button
@@ -598,7 +635,10 @@ export default function EmailBroadcastEditorPage({
 
       {!isSequenceEmailEditor && !isScheduledBroadcast ? (
         <div className="space-y-2 border-b px-4 py-2 empty:hidden">
-          <MailingAddressNotice missing={mailingAddressMissing} action="send this broadcast" />
+          <MailingAddressNotice
+            missing={mailingAddressMissing}
+            action="send this broadcast"
+          />
           {unreadyReason ? (
             <p role="status" className="text-xs font-medium text-amber-700">
               {unreadyReason}
@@ -613,13 +653,16 @@ export default function EmailBroadcastEditorPage({
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
           {emailBody ? (
             <div
-              className={isScheduledBroadcast ? "pointer-events-none opacity-80" : undefined}
+              className={
+                isScheduledBroadcast ? "pointer-events-none opacity-80" : undefined
+              }
               aria-disabled={isScheduledBroadcast}
               inert={isScheduledBroadcast}
             >
               <CourseLitEmailEditor
                 email={emailBody}
                 onChange={handleBodyChange}
+                viewInBrowser={sequence?.viewInBrowser}
                 subject={subject}
                 onSubjectChange={(next) => {
                   subjectRef.current = next;
@@ -638,8 +681,9 @@ export default function EmailBroadcastEditorPage({
           <DialogHeader>
             <DialogTitle>Send this broadcast?</DialogTitle>
             <DialogDescription>
-              Your broadcast &ldquo;{subject || sequence?.title || "Untitled"}&rdquo; will be saved
-              and sent immediately to all eligible audience contacts. This action cannot be undone.
+              Your broadcast &ldquo;{subject || sequence?.title || "Untitled"}&rdquo;
+              will be saved and sent immediately to all eligible audience contacts. This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -651,11 +695,7 @@ export default function EmailBroadcastEditorPage({
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              onClick={() => void handleSend()}
-              disabled={sending}
-            >
+            <Button type="button" onClick={() => void handleSend()} disabled={sending}>
               {sending ? "Sending…" : "Send broadcast"}
             </Button>
           </DialogFooter>

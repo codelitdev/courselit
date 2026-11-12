@@ -819,6 +819,7 @@ export async function updateSequence(
     filter?: unknown;
     excludeFilter?: unknown;
     emailsOrder?: string[];
+    viewInBrowser?: boolean;
   },
   config?: SendLitConfig,
 ): Promise<Result<SendLitSequence, PlatformError>> {

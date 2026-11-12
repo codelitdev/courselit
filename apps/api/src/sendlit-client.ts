@@ -163,6 +163,8 @@ export type SendLitSequence = {
   filter?: unknown;
   excludeFilter?: unknown;
   emailsOrder?: string[];
+  /** Whether emails link to a hosted copy of themselves. */
+  viewInBrowser?: boolean;
   entrantsCount?: number;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -935,6 +937,7 @@ export async function updateSendLitSequence(
     filter?: unknown;
     excludeFilter?: unknown;
     emailsOrder?: string[];
+    viewInBrowser?: boolean;
   },
   options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
 ): Promise<SendLitSequence> {

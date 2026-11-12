@@ -1,5 +1,14 @@
 "use client";
 
+import { Badge } from "@codelitdev/design-system";
+import {
+  type EmailTemplate as ChooserEmailTemplate,
+  defaultTemplateEmail,
+  EmailPreview,
+  type SystemTemplateSummary,
+  TemplateChooser,
+} from "@sendlit/email-blocks";
+import type { Email } from "@sendlit/email-editor";
 import {
   Clock,
   Copy,
@@ -16,21 +25,11 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  EmailPreview,
-  TemplateChooser,
-  type EmailTemplate as ChooserEmailTemplate,
-  type SystemTemplateSummary,
-  defaultTemplateEmail,
-} from "@sendlit/email-blocks";
-import type { Email } from "@sendlit/email-editor";
-import { BUILTIN_SYSTEM_TEMPLATES } from "@/lib/system-email-templates";
 import { AuthGate } from "@/components/auth-gate";
 import { EmptyState } from "@/components/empty-state";
-import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@codelitdev/design-system";
 import { CourseLitLoading } from "@/components/loading";
+import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import {
   Card,
   CardContent,
@@ -50,13 +49,13 @@ import {
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
-import { hasSchoolPermission } from "@/lib/school-permissions";
+import { getBroadcastDelivery, isBroadcastScheduled } from "@/lib/broadcast-status";
 import {
-  getBroadcastSentAt,
-  getFutureBroadcastDeliveryDate,
-  isBroadcastScheduled,
-} from "@/lib/broadcast-status";
-import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
+  MARKETING_EMAIL_BLOCKS,
+  MARKETING_PREVIEW_CONTEXT,
+} from "@/lib/email-editor-blocks";
+import { hasSchoolPermission } from "@/lib/school-permissions";
+import { BUILTIN_SYSTEM_TEMPLATES } from "@/lib/system-email-templates";
 
 type School = {
   id: string;
@@ -83,7 +82,9 @@ type BroadcastItem = {
   templateId?: string;
   emails?: BroadcastEmail[];
   entrantsCount?: number;
-  report?: { broadcast?: { lockedAt?: number | null; sentAt?: number | string | null } };
+  report?: {
+    broadcast?: { lockedAt?: number | null; sentAt?: number | string | null };
+  };
   updatedAt?: string;
 };
 
@@ -123,44 +124,19 @@ function isMailsTab(value: string): value is MailsTab {
   return MAILS_TABS.includes(value as MailsTab);
 }
 
+/** The badge for a broadcast; when it goes out is shown in its own column. */
 function getBroadcastStatus(broadcast: BroadcastItem): {
   label: "Draft" | "Scheduled" | "Sending" | "Sent";
   variant: "neutral" | "warning" | "default" | "success";
-  scheduledAt?: Date;
-  scheduleNote?: string;
 } {
-  const deliveryDate = getFutureBroadcastDeliveryDate(broadcast);
   const sequenceStatus = String(broadcast.status ?? "").toLowerCase();
-
-  if (sequenceStatus === "completed") {
-    return {
-      label: "Sent",
-      variant: "success",
-    };
-  }
+  if (sequenceStatus === "completed") return { label: "Sent", variant: "success" };
   if (sequenceStatus === "active") {
-    if (isBroadcastScheduled(broadcast)) {
-      return {
-        label: "Scheduled",
-        variant: "warning",
-        scheduledAt: deliveryDate ?? undefined,
-      };
-    }
-    return {
-      label: "Sending",
-      variant: "default",
-    };
+    return isBroadcastScheduled(broadcast)
+      ? { label: "Scheduled", variant: "warning" }
+      : { label: "Sending", variant: "default" };
   }
-  return {
-    label: "Draft",
-    variant: "neutral",
-    ...(deliveryDate
-      ? {
-          scheduledAt: deliveryDate,
-          scheduleNote: "Delivery time saved · not active",
-        }
-      : {}),
-  };
+  return { label: "Draft", variant: "neutral" };
 }
 
 async function getResponseError(response: Response, fallback: string): Promise<string> {
@@ -176,9 +152,7 @@ export default function MailsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const pathTab = pathname.split("/")[2] ?? "broadcasts";
-  const selectedTab = isMailsTab(pathTab)
-    ? pathTab
-    : "broadcasts";
+  const selectedTab = isMailsTab(pathTab) ? pathTab : "broadcasts";
   const pageDetails = {
     broadcasts: {
       title: "Broadcasts",
@@ -186,7 +160,8 @@ export default function MailsPage() {
     },
     sequences: {
       title: "Sequences",
-      description: "Emails that go out on their own when someone buys, joins or gets a tag.",
+      description:
+        "Emails that go out on their own when someone buys, joins or gets a tag.",
     },
     templates: {
       title: "Templates",
@@ -208,7 +183,9 @@ export default function MailsPage() {
     BUILTIN_SYSTEM_TEMPLATES,
   );
   const [savingBroadcast, setSavingBroadcast] = useState(false);
-  const [broadcastToDelete, setBroadcastToDelete] = useState<BroadcastItem | null>(null);
+  const [broadcastToDelete, setBroadcastToDelete] = useState<BroadcastItem | null>(
+    null,
+  );
   const [deletingBroadcast, setDeletingBroadcast] = useState(false);
   const [broadcastDeleteError, setBroadcastDeleteError] = useState<string | null>(null);
 
@@ -372,9 +349,7 @@ export default function MailsPage() {
               item.emailsCount ??
               (Array.isArray(item.emails) ? item.emails.length : undefined),
             entrantsCount:
-              typeof item.entrantsCount === "number"
-                ? item.entrantsCount
-                : 0,
+              typeof item.entrantsCount === "number" ? item.entrantsCount : 0,
           }));
           setSequences(normalizedSequences);
           return normalizedSequences;
@@ -615,7 +590,9 @@ export default function MailsPage() {
         },
       );
       if (!response.ok) {
-        throw new Error(await getResponseError(response, "Unable to delete broadcast."));
+        throw new Error(
+          await getResponseError(response, "Unable to delete broadcast."),
+        );
       }
       setBroadcasts((prev) =>
         prev.filter((b) => (b.sequenceId || b.id) !== sequenceId),
@@ -663,20 +640,20 @@ export default function MailsPage() {
       const refreshedSequences = await loadTabData(school, "sequences");
       const createdId = created?.sequenceId || created?.id;
       const createdSequenceFromId = refreshedSequences?.find(
-        (sequence) =>
-          sequence.sequenceId === createdId || sequence.id === createdId,
+        (sequence) => sequence.sequenceId === createdId || sequence.id === createdId,
       );
       const createdSequenceFromTitle = refreshedSequences
         ?.filter((sequence) => sequence.title === titleToCreate)
         .sort((left, right) => {
           const leftCreatedAt = Date.parse(left.createdAt ?? "");
           const rightCreatedAt = Date.parse(right.createdAt ?? "");
-          return (Number.isFinite(rightCreatedAt) ? rightCreatedAt : 0) -
-            (Number.isFinite(leftCreatedAt) ? leftCreatedAt : 0);
+          return (
+            (Number.isFinite(rightCreatedAt) ? rightCreatedAt : 0) -
+            (Number.isFinite(leftCreatedAt) ? leftCreatedAt : 0)
+          );
         })[0];
       const newSequenceId =
-        createdSequenceFromId?.sequenceId ||
-        createdSequenceFromTitle?.sequenceId;
+        createdSequenceFromId?.sequenceId || createdSequenceFromTitle?.sequenceId;
       if (!newSequenceId) {
         throw new Error(
           "Sequence was created, but it could not be found in the refreshed sequence list. Return to Sequences and try opening it from there.",
@@ -872,28 +849,30 @@ export default function MailsPage() {
         <PageHeader
           title={pageDetails.title}
           description={pageDetails.description}
-          action={canWriteMails ? (
-            <div className="flex items-center gap-2">
-              {selectedTab === "broadcasts" ? (
-                <Button size="sm" onClick={() => setNewBroadcastOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New broadcast
-                </Button>
-              ) : null}
-              {selectedTab === "sequences" ? (
-                <Button size="sm" onClick={() => setNewSequenceOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New sequence
-                </Button>
-              ) : null}
-              {selectedTab === "templates" ? (
-                <Button size="sm" onClick={() => setNewTemplateOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New template
-                </Button>
-              ) : null}
-            </div>
-          ) : undefined}
+          action={
+            canWriteMails ? (
+              <div className="flex items-center gap-2">
+                {selectedTab === "broadcasts" ? (
+                  <Button size="sm" onClick={() => setNewBroadcastOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New broadcast
+                  </Button>
+                ) : null}
+                {selectedTab === "sequences" ? (
+                  <Button size="sm" onClick={() => setNewSequenceOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New sequence
+                  </Button>
+                ) : null}
+                {selectedTab === "templates" ? (
+                  <Button size="sm" onClick={() => setNewTemplateOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New template
+                  </Button>
+                ) : null}
+              </div>
+            ) : undefined
+          }
         />
 
         <EmailDeliveryNotice schoolId={school?.id ?? null} />
@@ -924,111 +903,129 @@ export default function MailsPage() {
           ) : (
             <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
               <div className="max-w-full overflow-x-auto">
-                    <table className={MAIL_TABLE_CLASS}>
-                      <caption className="sr-only">Email broadcasts</caption>
-                      <thead className={MAIL_TABLE_HEAD_CLASS}>
-                        <tr>
-                          <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
-                            Title
-                          </th>
-                          <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            className={MAIL_TABLE_HEADING_CLASS}
+                <table className={MAIL_TABLE_CLASS}>
+                  <caption className="sr-only">Email broadcasts</caption>
+                  <thead className={MAIL_TABLE_HEAD_CLASS}>
+                    <tr>
+                      <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
+                        Title
+                      </th>
+                      <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className={MAIL_TABLE_HEADING_CLASS}
+                        title="When the broadcast went out, or is scheduled to"
+                      >
+                        Sent
+                      </th>
+                      <th
+                        scope="col"
+                        className={MAIL_TABLE_HEADING_CLASS}
+                        title="Recipients captured for this broadcast"
+                      >
+                        Recipients
+                      </th>
+                      <th
+                        scope="col"
+                        className={`${MAIL_TABLE_HEADING_CLASS} text-right`}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {broadcasts.map((b) => {
+                      const broadcastId = b.sequenceId || (b as any).id || "";
+                      const status = getBroadcastStatus(b);
+                      const subject = b.emails?.[0]?.subject || "No subject";
+                      const delivery = getBroadcastDelivery(b);
+
+                      return (
+                        <tr
+                          key={broadcastId}
+                          className={`${MAIL_TABLE_ROW_CLASS} ${canWriteMails ? "cursor-pointer" : ""}`}
+                          onClick={
+                            canWriteMails
+                              ? () =>
+                                  router.push(
+                                    `/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`,
+                                  )
+                              : undefined
+                          }
+                        >
+                          <td className={`${MAIL_TABLE_CELL_CLASS} min-w-0`}>
+                            <Link
+                              href={`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`}
+                              onClick={(event) => event.stopPropagation()}
+                              className="block max-w-[36rem] truncate font-medium hover:underline"
+                              title={b.title || "Untitled Broadcast"}
+                            >
+                              {b.title || "Untitled Broadcast"}
+                            </Link>
+                            <p
+                              className="mt-0.5 max-w-[36rem] truncate text-xs text-muted-foreground"
+                              title={subject}
+                            >
+                              {subject}
+                            </p>
+                          </td>
+                          <td className={MAIL_TABLE_CELL_CLASS}>
+                            <Badge variant={status.variant}>{status.label}</Badge>
+                          </td>
+                          <td className={`${MAIL_TABLE_CELL_CLASS} whitespace-nowrap`}>
+                            {delivery.kind === "none" ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              <span className="flex flex-col">
+                                <span className="flex items-center gap-1.5">
+                                  {delivery.kind === "sent" ? null : (
+                                    <Clock className="size-3.5 text-muted-foreground" />
+                                  )}
+                                  {delivery.at.toLocaleString()}
+                                </span>
+                                {delivery.kind === "scheduled" ? (
+                                  <span className="text-xs text-muted-foreground">
+                                    Scheduled
+                                  </span>
+                                ) : delivery.kind === "saved" ? (
+                                  <span className="text-xs text-muted-foreground">
+                                    Time saved, not scheduled
+                                  </span>
+                                ) : null}
+                              </span>
+                            )}
+                          </td>
+                          <td
+                            className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}
                             title="Recipients captured for this broadcast"
                           >
-                            Recipients
-                          </th>
-                          <th
-                            scope="col"
-                            className={`${MAIL_TABLE_HEADING_CLASS} text-right`}
-                          >
-                            Actions
-                          </th>
+                            {b.entrantsCount ?? 0}
+                          </td>
+                          <td className={`${MAIL_TABLE_CELL_CLASS} text-right`}>
+                            {canWriteMails ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openBroadcastDeleteDialog(b);
+                                  }}
+                                  aria-label="Delete broadcast"
+                                  title="Delete broadcast"
+                                >
+                                  <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                              </div>
+                            ) : null}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {broadcasts.map((b) => {
-                          const broadcastId = b.sequenceId || (b as any).id || "";
-                          const status = getBroadcastStatus(b);
-                          const subject = b.emails?.[0]?.subject || "No subject";
-                          const sentAt = getBroadcastSentAt(b);
-
-                          return (
-                            <tr
-                              key={broadcastId}
-                              className={`${MAIL_TABLE_ROW_CLASS} ${canWriteMails ? "cursor-pointer" : ""}`}
-                              onClick={
-                                canWriteMails
-                                  ? () => router.push(`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`)
-                                  : undefined
-                              }
-                            >
-                              <td className={`${MAIL_TABLE_CELL_CLASS} min-w-0`}>
-                                <Link
-                                  href={`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`}
-                                  onClick={(event) => event.stopPropagation()}
-                                  className="block max-w-[36rem] truncate font-medium hover:underline"
-                                  title={b.title || "Untitled Broadcast"}
-                                >
-                                  {b.title || "Untitled Broadcast"}
-                                </Link>
-                                <p
-                                  className="mt-0.5 max-w-[36rem] truncate text-xs text-muted-foreground"
-                                  title={subject}
-                                >
-                                  {subject}
-                                </p>
-                              </td>
-                              <td className={MAIL_TABLE_CELL_CLASS}>
-                                <div className="flex flex-col items-start gap-1">
-                                  <Badge variant={status.variant}>{status.label}</Badge>
-                                  {status.scheduledAt ? (
-                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <Clock className="size-3.5" />
-                                      {status.scheduleNote
-                                        ? `${status.scheduleNote}: ${status.scheduledAt.toLocaleString()}`
-                                        : status.scheduledAt.toLocaleString()}
-                                    </span>
-                                  ) : sentAt ? (
-                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <Clock className="size-3.5" />
-                                      Sent {sentAt.toLocaleString()}
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </td>
-                              <td
-                                className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}
-                                title="Recipients captured for this broadcast"
-                              >
-                                {b.entrantsCount ?? 0}
-                              </td>
-                              <td className={`${MAIL_TABLE_CELL_CLASS} text-right`}>
-                                {canWriteMails ? (
-                                  <div className="flex items-center justify-end gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        openBroadcastDeleteDialog(b);
-                                      }}
-                                      aria-label="Delete broadcast"
-                                      title="Delete broadcast"
-                                    >
-                                      <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                                    </Button>
-                                  </div>
-                                ) : null}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )
@@ -1054,122 +1051,123 @@ export default function MailsPage() {
           ) : (
             <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
               <div className="max-w-full overflow-x-auto">
-                    <table className={MAIL_TABLE_CLASS}>
-                      <caption className="sr-only">Email sequences</caption>
-                      <thead className={MAIL_TABLE_HEAD_CLASS}>
-                        <tr>
-                          <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
-                            Title
-                          </th>
-                          <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
-                            Status
-                          </th>
-                          <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
-                            Emails
-                          </th>
-                          <th
-                            scope="col"
-                            className={MAIL_TABLE_HEADING_CLASS}
-                            title="Contacts currently enrolled in the sequence"
-                          >
-                            Entrants
-                          </th>
-                          <th
-                            scope="col"
-                            className={`${MAIL_TABLE_HEADING_CLASS} text-right`}
-                          >
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sequences.map((seq) => {
-                          const seqId = seq.sequenceId || seq.id || "";
-                          return (
-                            <tr
-                              key={seqId}
-                              className={`${MAIL_TABLE_ROW_CLASS} cursor-pointer`}
-                              onClick={() =>
-                                router.push(`/marketing/sequences/${encodeURIComponent(seqId)}/edit`)
+                <table className={MAIL_TABLE_CLASS}>
+                  <caption className="sr-only">Email sequences</caption>
+                  <thead className={MAIL_TABLE_HEAD_CLASS}>
+                    <tr>
+                      <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
+                        Title
+                      </th>
+                      <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
+                        Status
+                      </th>
+                      <th scope="col" className={MAIL_TABLE_HEADING_CLASS}>
+                        Emails
+                      </th>
+                      <th
+                        scope="col"
+                        className={MAIL_TABLE_HEADING_CLASS}
+                        title="Contacts currently enrolled in the sequence"
+                      >
+                        Entrants
+                      </th>
+                      <th
+                        scope="col"
+                        className={`${MAIL_TABLE_HEADING_CLASS} text-right`}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sequences.map((seq) => {
+                      const seqId = seq.sequenceId || seq.id || "";
+                      return (
+                        <tr
+                          key={seqId}
+                          className={`${MAIL_TABLE_ROW_CLASS} cursor-pointer`}
+                          onClick={() =>
+                            router.push(
+                              `/marketing/sequences/${encodeURIComponent(seqId)}/edit`,
+                            )
+                          }
+                        >
+                          <td className={MAIL_TABLE_CELL_CLASS}>
+                            <Link
+                              href={`/marketing/sequences/${encodeURIComponent(seqId)}/edit`}
+                              onClick={(event) => event.stopPropagation()}
+                              className="block max-w-[36rem] truncate font-medium hover:underline"
+                              title={seq.title || "Untitled Sequence"}
+                            >
+                              {seq.title || "Untitled Sequence"}
+                            </Link>
+                          </td>
+                          <td className={MAIL_TABLE_CELL_CLASS}>
+                            <Badge
+                              variant={
+                                seq.status === "active"
+                                  ? "success"
+                                  : seq.status === "paused"
+                                    ? "warning"
+                                    : "neutral"
                               }
                             >
-                              <td className={MAIL_TABLE_CELL_CLASS}>
-                                <Link
-                                  href={`/marketing/sequences/${encodeURIComponent(seqId)}/edit`}
-                                  onClick={(event) => event.stopPropagation()}
-                                  className="block max-w-[36rem] truncate font-medium hover:underline"
-                                  title={seq.title || "Untitled Sequence"}
-                                >
-                                  {seq.title || "Untitled Sequence"}
-                                </Link>
-                              </td>
-                              <td className={MAIL_TABLE_CELL_CLASS}>
-                                <Badge
-                                  variant={
+                              {seq.status.charAt(0).toUpperCase() + seq.status.slice(1)}
+                            </Badge>
+                          </td>
+                          <td className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}>
+                            {seq.emailsCount ?? 0}
+                          </td>
+                          <td
+                            className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}
+                            title="Contacts currently enrolled in this sequence"
+                          >
+                            {seq.entrantsCount ?? 0}
+                          </td>
+                          <td className={`${MAIL_TABLE_CELL_CLASS} text-right`}>
+                            {canWriteMails ? (
+                              <div
+                                className="flex items-center justify-end gap-1"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => void toggleSequenceStatus(seq)}
+                                  aria-label={
                                     seq.status === "active"
-                                      ? "success"
-                                      : seq.status === "paused"
-                                        ? "warning"
-                                        : "neutral"
+                                      ? "Pause sequence"
+                                      : "Activate sequence"
+                                  }
+                                  title={
+                                    seq.status === "active"
+                                      ? "Pause sequence"
+                                      : "Activate sequence"
                                   }
                                 >
-                                  {seq.status.charAt(0).toUpperCase() +
-                                    seq.status.slice(1)}
-                                </Badge>
-                              </td>
-                              <td className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}>
-                                {seq.emailsCount ?? 0}
-                              </td>
-                              <td
-                                className={`${MAIL_TABLE_CELL_CLASS} tabular-nums`}
-                                title="Contacts currently enrolled in this sequence"
-                              >
-                                {seq.entrantsCount ?? 0}
-                              </td>
-                              <td className={`${MAIL_TABLE_CELL_CLASS} text-right`}>
-                                {canWriteMails ? (
-                                  <div
-                                    className="flex items-center justify-end gap-1"
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => void toggleSequenceStatus(seq)}
-                                      aria-label={
-                                        seq.status === "active"
-                                          ? "Pause sequence"
-                                          : "Activate sequence"
-                                      }
-                                      title={
-                                        seq.status === "active"
-                                          ? "Pause sequence"
-                                          : "Activate sequence"
-                                      }
-                                    >
-                                      {seq.status === "active" ? (
-                                        <Pause className="size-4 text-muted-foreground" />
-                                      ) : (
-                                        <Play className="size-4 text-primary" />
-                                      )}
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => void handleDeleteSequence(seqId)}
-                                      aria-label="Delete sequence"
-                                      title="Delete sequence"
-                                    >
-                                      <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                                    </Button>
-                                  </div>
-                                ) : null}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                  {seq.status === "active" ? (
+                                    <Pause className="size-4 text-muted-foreground" />
+                                  ) : (
+                                    <Play className="size-4 text-primary" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => void handleDeleteSequence(seqId)}
+                                  aria-label="Delete sequence"
+                                  title="Delete sequence"
+                                >
+                                  <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )
@@ -1193,61 +1191,61 @@ export default function MailsPage() {
               }
             />
           ) : (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    {templates.map((tmpl) => (
-                      <Card key={tmpl.id} className="relative">
-                        <Link
-                          href={`/marketing/templates/${encodeURIComponent(tmpl.id)}/edit`}
-                          aria-label={`Edit email template ${tmpl.name}`}
-                          className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        />
-                        <CardHeader className="pointer-events-none relative z-10 px-4 pb-2">
-                          <CardTitle className="text-base">{tmpl.name}</CardTitle>
-                          {tmpl.subject ? (
-                            <CardDescription>Subject: {tmpl.subject}</CardDescription>
-                          ) : null}
-                        </CardHeader>
-                        <CardContent className="space-y-3 px-4 pt-0">
-                          <div className="pointer-events-none relative z-10">
-                            {selectedTab === "templates" ? (
-                              tmpl.content ? (
-                                <EmailPreview
-                                  blocks={MARKETING_EMAIL_BLOCKS}
-                                  renderContext={MARKETING_PREVIEW_CONTEXT}
-                                  key={`${tmpl.id}-${tmpl.updatedAt ?? ""}`}
-                                  content={tmpl.content}
-                                  className="w-full"
-                                  iframeTitle={`${tmpl.name} preview`}
-                                />
-                              ) : (
-                                <div className="flex h-60 items-center justify-center rounded-md border bg-muted/20 text-sm text-muted-foreground">
-                                  Preview unavailable
-                                </div>
-                              )
-                            ) : null}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {templates.map((tmpl) => (
+                <Card key={tmpl.id} className="relative">
+                  <Link
+                    href={`/marketing/templates/${encodeURIComponent(tmpl.id)}/edit`}
+                    aria-label={`Edit email template ${tmpl.name}`}
+                    className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                  <CardHeader className="pointer-events-none relative z-10 px-4 pb-2">
+                    <CardTitle className="text-base">{tmpl.name}</CardTitle>
+                    {tmpl.subject ? (
+                      <CardDescription>Subject: {tmpl.subject}</CardDescription>
+                    ) : null}
+                  </CardHeader>
+                  <CardContent className="space-y-3 px-4 pt-0">
+                    <div className="pointer-events-none relative z-10">
+                      {selectedTab === "templates" ? (
+                        tmpl.content ? (
+                          <EmailPreview
+                            blocks={MARKETING_EMAIL_BLOCKS}
+                            renderContext={MARKETING_PREVIEW_CONTEXT}
+                            key={`${tmpl.id}-${tmpl.updatedAt ?? ""}`}
+                            content={tmpl.content}
+                            className="w-full"
+                            iframeTitle={`${tmpl.name} preview`}
+                          />
+                        ) : (
+                          <div className="flex h-60 items-center justify-center rounded-md border bg-muted/20 text-sm text-muted-foreground">
+                            Preview unavailable
                           </div>
-                          {canWriteMails ? (
-                            <div className="relative z-20 flex items-center justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => void handleDuplicateTemplate(tmpl.id)}
-                              >
-                                <Copy className="size-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => openTemplateDeleteDialog(tmpl)}
-                              >
-                                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                              </Button>
-                            </div>
-                          ) : null}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                        )
+                      ) : null}
+                    </div>
+                    {canWriteMails ? (
+                      <div className="relative z-20 flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void handleDuplicateTemplate(tmpl.id)}
+                        >
+                          <Copy className="size-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openTemplateDeleteDialog(tmpl)}
+                        >
+                          <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                        </Button>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )
         ) : null}
 
@@ -1497,8 +1495,8 @@ export default function MailsPage() {
             <DialogHeader>
               <DialogTitle>Delete “{templateToDelete?.name}”?</DialogTitle>
               <DialogDescription>
-                This will permanently delete this email template. This action cannot
-                be undone.
+                This will permanently delete this email template. This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
             {templateDeleteError ? (

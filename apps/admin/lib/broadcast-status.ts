@@ -42,3 +42,26 @@ export function isBroadcastScheduled(
     getFutureBroadcastDeliveryDate(broadcast, now) !== null
   );
 }
+
+export type BroadcastDelivery =
+  /** It went out at `at`. */
+  | { kind: "sent"; at: Date }
+  /** It is scheduled to go out at `at`. */
+  | { kind: "scheduled"; at: Date }
+  /** A draft with a delivery time saved but not scheduled yet. */
+  | { kind: "saved"; at: Date }
+  | { kind: "none" };
+
+/** When a broadcast went out, or is set to, for the broadcasts list. */
+export function getBroadcastDelivery(
+  broadcast: BroadcastSchedule | null | undefined,
+  now = Date.now(),
+): BroadcastDelivery {
+  const sentAt = getBroadcastSentAt(broadcast);
+  if (sentAt) return { kind: "sent", at: sentAt };
+  const deliveryDate = getFutureBroadcastDeliveryDate(broadcast, now);
+  if (!deliveryDate) return { kind: "none" };
+  return isBroadcastScheduled(broadcast, now)
+    ? { kind: "scheduled", at: deliveryDate }
+    : { kind: "saved", at: deliveryDate };
+}

@@ -2,27 +2,36 @@
 
 import {
   ContactFilterBuilder,
-  EmailPreview,
-  SequenceAnalytics,
-  SequenceEmailList,
-  TagEditor,
-  TriggerPicker,
+  type ContactFilterWithAggregator,
   defaultEmail,
   type Email,
-  type ContactFilterWithAggregator,
   type EmailActionType,
+  EmailPreview,
   type EmailTemplate,
   type SequenceEmail,
+  SequenceEmailList,
   type SystemTemplateSummary,
+  TagEditor,
   type TriggerOption,
+  TriggerPicker,
   type TriggerPickerChange,
 } from "@sendlit/email-blocks";
+import { marketingPreviewContext } from "@sendlit/email-blocks/footer";
 import { ArrowLeft, Pause, Pencil, Play, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
+import { MailPerformance } from "@/components/mails/mail-performance";
+import {
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
+import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
+import { SequenceSubscribers } from "@/components/mails/sequence-subscribers";
+import { useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
+import { ViewInBrowserSetting } from "@/components/mails/view-in-browser-setting";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -42,24 +51,16 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
-import { SequenceSubscribers } from "@/components/mails/sequence-subscribers";
-import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
-import { useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
-import { isEmailNotReadyError, isMailingAddressRequiredError } from "@/lib/mail-errors";
-import { sequenceReadinessMessage } from "@/lib/email-readiness";
-import {
-  MailingAddressNotice,
-  useMailingAddressMissing,
-} from "@/components/mails/mailing-address-notice";
-import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
-import { hasSchoolPermission } from "@/lib/school-permissions";
-import { truncateText } from "@/lib/truncate";
 import {
   fromStoredAudienceFilter,
   toStoredAudienceFilter,
 } from "@/lib/contact-filters";
+import { MARKETING_EMAIL_BLOCKS } from "@/lib/email-editor-blocks";
+import { sequenceReadinessMessage } from "@/lib/email-readiness";
+import { isEmailNotReadyError, isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { hasSchoolPermission } from "@/lib/school-permissions";
+import { truncateText } from "@/lib/truncate";
 import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
-import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type School = {
   id: string;
@@ -80,6 +81,7 @@ type SequenceDocument = {
   excludeFilter: ContactFilterWithAggregator;
   emailsOrder: string[];
   emails: SequenceEmail[];
+  viewInBrowser: boolean;
 };
 
 type ApiSequenceEmail = Partial<SequenceEmail> & {
@@ -200,8 +202,7 @@ function getSequenceStatusError(message: string, action: "activate" | "pause") {
   if (/no published emails/i.test(message)) {
     return {
       title: "Publish an email first",
-      description:
-        "Publish at least one email before activating this sequence.",
+      description: "Publish at least one email before activating this sequence.",
     };
   }
   if (isEmailNotReadyError(message)) {
@@ -285,12 +286,15 @@ function normalizeSequence(raw: Record<string, unknown>): SequenceDocument {
           ? ANY_PRODUCT
           : null,
     triggerFilter: (raw.triggerFilter ?? null) as SequenceDocument["triggerFilter"],
-    filter: isFilter(raw.filter) ? fromStoredAudienceFilter(raw.filter) : EVERYONE_FILTER,
+    filter: isFilter(raw.filter)
+      ? fromStoredAudienceFilter(raw.filter)
+      : EVERYONE_FILTER,
     excludeFilter: isFilter(raw.excludeFilter)
       ? fromStoredAudienceFilter(raw.excludeFilter)
       : EVERYONE_FILTER,
     emailsOrder,
     emails,
+    viewInBrowser: raw.viewInBrowser === true,
   };
 }
 
@@ -316,7 +320,6 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [mailingAddressDialogOpen, setMailingAddressDialogOpen] = useState(false);
   const [products, setProducts] = useState<ProductOption[]>([]);
-  const [stats, setStats] = useState<MailStats | null>(null);
   const [sequenceStatusError, setSequenceStatusError] = useState<{
     title: string;
     description: string;
@@ -342,7 +345,11 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
 
   const triggers = useMemo<TriggerOption[]>(() => {
     const options: TriggerOption[] = [
-      { value: "subscriber:added", label: "A new contact subscribes", needsData: false },
+      {
+        value: "subscriber:added",
+        label: "A new contact subscribes",
+        needsData: false,
+      },
       {
         value: "tag:added",
         label: "A tag is added to a contact",
@@ -371,8 +378,16 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           ],
         },
       },
-      { value: "community:joined", label: "A learner joins the community", needsData: false },
-      { value: "community:left", label: "A learner leaves the community", needsData: false },
+      {
+        value: "community:joined",
+        label: "A learner joins the community",
+        needsData: false,
+      },
+      {
+        value: "community:left",
+        label: "A learner leaves the community",
+        needsData: false,
+      },
     ];
     // Keep triggers set up outside CourseLit, such as other custom events,
     // visible and editable.
@@ -467,17 +482,24 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
         };
         if (snapshot.triggerType !== null) {
           metadata.triggerType = snapshot.triggerType;
-          if (!snapshot.triggerType.startsWith("event:") && !snapshot.triggerType.startsWith("contact:")) {
+          if (
+            !snapshot.triggerType.startsWith("event:") &&
+            !snapshot.triggerType.startsWith("contact:")
+          ) {
             metadata.triggerFilter = null;
           }
         }
         if (snapshot.triggerData !== null) {
           metadata.triggerData =
-            ENTITY_TRIGGERS.has(snapshot.triggerType ?? "") && snapshot.triggerData === ANY_PRODUCT
+            ENTITY_TRIGGERS.has(snapshot.triggerType ?? "") &&
+            snapshot.triggerData === ANY_PRODUCT
               ? ""
               : snapshot.triggerData;
         }
-        if (snapshot.triggerFilter !== undefined && metadata.triggerFilter === undefined) {
+        if (
+          snapshot.triggerFilter !== undefined &&
+          metadata.triggerFilter === undefined
+        ) {
           metadata.triggerFilter = snapshot.triggerFilter;
         }
         metadata.filter = toStoredAudienceFilter(snapshot.filter);
@@ -583,27 +605,23 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           selectedSchool.id,
           "/api/v1/school/mails/system-templates",
         ).catch(() => null);
-        const productsPromise = apiRequest<{ items?: Array<{ id: string; title: string }> }>(
-          selectedSchool.id,
-          "/api/v1/products?limit=50",
-        ).catch(() => null);
-        const statsPromise = apiRequest<MailStats>(
-          selectedSchool.id,
-          `/api/v1/school/mails/sequences/${encodeURIComponent(sequenceId)}/stats`,
-        ).catch(() => null);
-        const [rawSequence, rawTemplates, rawSystemTemplates, rawProducts, rawStats] =
+        const productsPromise = apiRequest<{
+          items?: Array<{ id: string; title: string }>;
+        }>(selectedSchool.id, "/api/v1/products?limit=50").catch(() => null);
+        const [rawSequence, rawTemplates, rawSystemTemplates, rawProducts] =
           await Promise.all([
             sequencePromise,
             templatesPromise,
             systemTemplatesPromise,
             productsPromise,
-            statsPromise,
           ]);
         if (!active) return;
         setProducts(
-          (rawProducts?.items ?? []).map((item) => ({ id: item.id, title: item.title })),
+          (rawProducts?.items ?? []).map((item) => ({
+            id: item.id,
+            title: item.title,
+          })),
         );
-        setStats(rawStats && typeof rawStats.sent === "number" ? rawStats : null);
 
         const nextSequence = normalizeSequence(rawSequence);
         sequenceRef.current = nextSequence;
@@ -703,9 +721,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
         markDirty();
       }
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Unable to add an email.",
-      );
+      setError(caught instanceof Error ? caught.message : "Unable to add an email.");
     }
   }
 
@@ -844,7 +860,9 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 saving ||
                 (sequence.status !== "active" && Boolean(unreadyReason))
               }
-              title={sequence.status !== "active" ? (unreadyReason ?? undefined) : undefined}
+              title={
+                sequence.status !== "active" ? (unreadyReason ?? undefined) : undefined
+              }
             >
               {sequence.status === "active" ? (
                 <Pause className="size-4" />
@@ -856,11 +874,17 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           </div>
 
           {canWrite && sequence.status !== "active" ? (
-            <MailingAddressNotice missing={mailingAddressMissing} action="activate this sequence" />
+            <MailingAddressNotice
+              missing={mailingAddressMissing}
+              action="activate this sequence"
+            />
           ) : null}
 
           {canWrite && sequence.status !== "active" && unreadyReason ? (
-            <p role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            <p
+              role="status"
+              className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+            >
               {unreadyReason}
             </p>
           ) : null}
@@ -911,7 +935,11 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                   valueOptions={
                     sequence.triggerType === "event:custom" ||
                     sequence.triggerType === "contact:property_changed"
-                      ? { [sequence.triggerType]: sequence.triggerData ? [sequence.triggerData] : [] }
+                      ? {
+                          [sequence.triggerType]: sequence.triggerData
+                            ? [sequence.triggerData]
+                            : [],
+                        }
                       : undefined
                   }
                   onChange={(value) =>
@@ -939,7 +967,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
               <div className="space-y-1.5">
                 <Label>Exclude</Label>
                 <p className="text-xs text-muted-foreground">
-                  Contacts who match these filters never enter, even if they match the audience.
+                  Contacts who match these filters never enter, even if they match the
+                  audience.
                 </p>
                 <ContactFilterBuilder
                   value={sequence.excludeFilter}
@@ -949,15 +978,25 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                   defaultSegmentLabel="Nobody"
                 />
               </div>
+              {school ? (
+                <ViewInBrowserSetting
+                  schoolId={school.id}
+                  sequenceId={sequenceId}
+                  checked={sequence.viewInBrowser}
+                  disabled={!canWrite}
+                  onSaved={(viewInBrowser) => {
+                    // Saved on its own, so the sequence stays as clean or
+                    // dirty as it was.
+                    const current = sequenceRef.current;
+                    if (current) replaceSequence({ ...current, viewInBrowser });
+                  }}
+                />
+              ) : null}
             </div>
-
           </section>
 
-          {stats && sequence.status !== "draft" ? (
-            <SequenceAnalytics
-              title="Performance"
-              metrics={mailStatsMetrics(stats, "Subscribers")}
-            />
+          {school && sequence.status !== "draft" ? (
+            <MailPerformance schoolId={school.id} sequenceId={sequenceId} />
           ) : null}
 
           {school && sequence.status !== "draft" ? (
@@ -1076,7 +1115,9 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                           type="number"
                           min={0}
                           step={0.25}
-                          value={Number((selectedEmail.delayInMillis / 86_400_000).toFixed(2))}
+                          value={Number(
+                            (selectedEmail.delayInMillis / 86_400_000).toFixed(2),
+                          )}
                           onChange={(event) => {
                             const days = Math.max(0, Number(event.target.value) || 0);
                             updateEmail(selectedEmail.emailId, {
@@ -1147,7 +1188,9 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                       </div>
                       <EmailPreview
                         blocks={MARKETING_EMAIL_BLOCKS}
-                        renderContext={MARKETING_PREVIEW_CONTEXT}
+                        renderContext={marketingPreviewContext({
+                          viewInBrowser: sequence.viewInBrowser,
+                        })}
                         content={selectedEmail.content}
                         className="w-full"
                         minHeight="420px"
@@ -1180,8 +1223,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           <DialogHeader>
             <DialogTitle>Add your mailing address</DialogTitle>
             <DialogDescription>
-              Add a mailing address in Mail settings before activating this sequence.
-              It will be included in your email footers.
+              Add a mailing address in Mail settings before activating this sequence. It
+              will be included in your email footers.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
