@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPlanPrice } from "@/lib/price";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
@@ -111,24 +112,8 @@ function ProductDescription({
   );
 }
 
-function formatPlanAmount(plan: Plan) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(plan.amountMinor / 100);
-}
-
 function formatPlan(plan: Plan) {
-  const amount = formatPlanAmount(plan);
-  if (plan.kind === "subscription" && plan.billingInterval) {
-    return `${amount} / ${plan.billingInterval}`;
-  }
-  if (plan.kind === "installment" && plan.installmentCount) {
-    return `${amount} × ${plan.installmentCount}`;
-  }
-  return amount;
+  return formatPlanPrice(plan, { wholeAmounts: true });
 }
 
 function AccessActions({

@@ -153,11 +153,19 @@ product, and the admin sign-in page showed developer notes.
     sender name, which replaces "CourseLit Shared". Checked on the local stack
     2026-11-11. On the next QA deploy, QA's existing teams still need their sender name set once,
     because CourseLit's SendLit key can't update teams (`teams:manage`).
-- [ ] **11. The public header shows "Join" when the learner is already signed
+- [x] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
-- [ ] **12. Free courses show "$0.00"** in the catalogue instead of "Free".
+  - Fixed 2026-11-12, checked locally. Public pages are cached, so the server
+    renders the signed-out header and the browser swaps "Log in" and "Join" for
+    a single "Dashboard" once the learner's session is confirmed.
+- [x] **12. Free courses show "$0.00"** in the catalogue instead of "Free".
   Checkout for a free product also shows "$0.00" and "Complete Purchase".
   _(QA)_
+  - Fixed 2026-11-12, checked locally. The storefront formats every price
+    through one helper (`apps/storefront/lib/price.ts`) that shows "Free" for a
+    zero price: the catalogue card, product and community plans, the course
+    page and checkout. Checkout's button reads "Get for free" for free plans,
+    as on `main`.
 - [ ] **13. Signed-out checkout is misleading.** It says "This community is not
   available for checkout yet" until the learner signs in. _(QA)_
 - [ ] **14. A pending join request isn't acknowledged.** After asking to join,

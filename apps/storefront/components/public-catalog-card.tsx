@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/price";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { MediaRef } from "@courselit/api-contract";
@@ -18,10 +19,7 @@ export function formatCatalogPrice(
   currency: string,
 ): string {
   if (priceMinor === null) return "Free access";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-  }).format(priceMinor / 100);
+  return formatPrice(priceMinor, currency);
 }
 
 export function PublicCatalogCard({

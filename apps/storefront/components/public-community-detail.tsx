@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPlanPrice } from "@/lib/price";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type {
   communityPaymentPlanSchema,
@@ -26,18 +27,7 @@ type PublicCommunity = z.infer<typeof communitySchema>;
 type CommunityPlan = z.infer<typeof communityPaymentPlanSchema>;
 
 function planPrice(plan: CommunityPlan): string {
-  if (plan.amountMinor === 0) return "Free";
-  const price = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-  }).format(plan.amountMinor / 100);
-  if (plan.type === "subscription" && plan.billingInterval) {
-    return `${price} / ${plan.billingInterval}`;
-  }
-  if (plan.type === "emi" && plan.installmentCount) {
-    return `${price} × ${plan.installmentCount}`;
-  }
-  return price;
+  return formatPlanPrice(plan);
 }
 
 function richText(value: string): TextEditorContent | null {

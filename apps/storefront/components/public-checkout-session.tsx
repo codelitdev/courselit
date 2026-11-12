@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPlanPrice, formatPrice, isFreePlan } from "@/lib/price";
 import { publicApiPath, useLegalPages, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import {
@@ -108,24 +109,6 @@ type Learner = {
 };
 
 type MembershipStatus = "active" | "rejected" | null;
-
-function formatMoney(amountMinor: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-  }).format(amountMinor / 100);
-}
-
-function formatPlanPrice(plan: Plan) {
-  const price = formatMoney(plan.amountMinor, plan.currency);
-  if (plan.type === "subscription" && plan.billingInterval) {
-    return `${price} / ${plan.billingInterval}`;
-  }
-  if (plan.type === "emi" && plan.installmentCount) {
-    return `${price} × ${plan.installmentCount}`;
-  }
-  return price;
-}
 
 function fallbackPlan(session: CheckoutSession): Plan {
   return {
@@ -498,7 +481,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             joiningReason:
               session.resourceType === "community" &&
               product?.autoAcceptMembers === false &&
-              (selectedPlan.type === "free" || selectedPlan.amountMinor === 0)
+              isFreePlan(selectedPlan)
                 ? joiningReason.trim()
                 : "",
           }),
@@ -562,11 +545,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   if (!session) {
     return <Text2 theme={theme}>{error ?? "Checkout is unavailable."}</Text2>;
   }
-  const isFreePlan = selectedPlan?.type === "free" || selectedPlan?.amountMinor === 0;
+  const freePlan = selectedPlan ? isFreePlan(selectedPlan) : false;
   const needsJoiningReason =
     session.resourceType === "community" &&
     product?.autoAcceptMembers === false &&
-    isFreePlan;
+    freePlan;
 
   // A checkout this session already started shows its own result, even once
   // the purchase has made the learner a member.
@@ -748,7 +731,9 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
               ? "Please wait…"
               : needsJoiningReason
                 ? "Request to join"
-                : "Complete Purchase"}
+                : freePlan
+                  ? "Get for free"
+                  : "Complete Purchase"}
           </Button>
         </section>
       </main>
@@ -793,8 +778,8 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
               </div>
               <Text2 theme={theme} component="span" className="text-lg font-semibold">
                 {selectedPlan
-                  ? formatMoney(selectedPlan.amountMinor, selectedPlan.currency)
-                  : formatMoney(session.amountMinor, session.currency)}
+                  ? formatPrice(selectedPlan.amountMinor, selectedPlan.currency)
+                  : formatPrice(session.amountMinor, session.currency)}
               </Text2>
             </div>
           </PageCardContent>

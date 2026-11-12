@@ -1,3 +1,4 @@
+import { formatPlanPrice } from "@/lib/price";
 import type { ThemeStyle } from "@frontlit/page-builder/models";
 import {
   Badge,
@@ -37,18 +38,7 @@ type ProductCurriculum = {
 };
 
 export function formatProductPlanPrice(plan: ProductPlan): string {
-  if (plan.type === "free") return "Free";
-  const price = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-  }).format(plan.amountMinor / 100);
-  if (plan.type === "subscription" && plan.billingInterval) {
-    return `${price} / ${plan.billingInterval}`;
-  }
-  if (plan.type === "emi" && plan.installmentCount) {
-    return `${price} × ${plan.installmentCount}`;
-  }
-  return price;
+  return formatPlanPrice(plan);
 }
 
 /** CourseLit-owned curriculum block injected into a product sales page. */
