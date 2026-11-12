@@ -6,6 +6,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import { majorToMinor, minorToMajor, priceDecimals } from "@courselit/api-contract/money";
 import { and, asc, eq, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
@@ -118,14 +119,20 @@ export function kindForSourceType(type: SourcePlanType): TargetPlanKind {
   }
 }
 
-function majorAmountToMinor(value: number): number | null {
+/**
+ * A price in major units as an integer in the school currency's minor unit,
+ * or null when it is negative, too large, or has more decimals than the
+ * currency can be charged in (¥10.5, $10.555).
+ */
+function majorAmountToMinor(value: number, currency: string): number | null {
   if (!Number.isFinite(value) || value < 0) return null;
-  const minor = Math.round(value * 100);
-  return Number.isSafeInteger(minor) ? minor : null;
+  const scaled = value * 10 ** priceDecimals(currency);
+  if (Math.abs(scaled - Math.round(scaled)) > 1e-6) return null;
+  return majorToMinor(value, currency);
 }
 
-function minorAmountToMajor(value: number): number {
-  return Number((value / 100).toFixed(2));
+function minorAmountToMajor(value: number, currency: string): number {
+  return minorToMajor(value, currency);
 }
 
 export function sourceAmountsForRow(
@@ -141,9 +148,10 @@ export function sourceAmountsForRow(
     | "billingInterval"
     | "installmentCount"
   >,
+  currency: string,
 ) {
   const type = sourceTypeForKind(row.kind);
-  const fallback = minorAmountToMajor(row.amountMinor);
+  const fallback = minorAmountToMajor(row.amountMinor, currency);
   return {
     oneTimeAmount: row.oneTimeAmount ?? (type === "onetime" ? fallback : null),
     emiAmount: row.emiAmount ?? (type === "emi" ? fallback : null),
@@ -164,9 +172,21 @@ export function sourceAmountsForRow(
  * fallback for rows created before source amount columns were introduced.
  */
 export function amountMinorForPlan(
-  row: typeof schema.storefrontPlans.$inferSelect,
+  row: Pick<
+    typeof schema.storefrontPlans.$inferSelect,
+    | "kind"
+    | "amountMinor"
+    | "oneTimeAmount"
+    | "emiAmount"
+    | "emiTotalInstallments"
+    | "subscriptionMonthlyAmount"
+    | "subscriptionYearlyAmount"
+    | "billingInterval"
+    | "installmentCount"
+  >,
+  currency: string,
 ): number {
-  const amounts = sourceAmountsForRow(row);
+  const amounts = sourceAmountsForRow(row, currency);
   const sourceAmount =
     row.kind === "one_time"
       ? amounts.oneTimeAmount
@@ -175,7 +195,8 @@ export function amountMinorForPlan(
         : row.kind === "subscription"
           ? (amounts.subscriptionMonthlyAmount ?? amounts.subscriptionYearlyAmount)
           : 0;
-  const normalized = sourceAmount === null ? null : majorAmountToMinor(sourceAmount);
+  const normalized =
+    sourceAmount === null ? null : majorAmountToMinor(sourceAmount, currency);
   return normalized ?? row.amountMinor;
 }
 
@@ -186,7 +207,7 @@ function planToDto(
   currency: string,
 ): StorefrontPlanDto {
   const sourceType = sourceTypeForKind(row.kind);
-  const sourceAmounts = sourceAmountsForRow(row);
+  const sourceAmounts = sourceAmountsForRow(row, currency);
   return {
     id: row.publicId,
     schoolId: publicSchoolId,
@@ -199,7 +220,8 @@ function planToDto(
     kind: row.kind,
     currency,
     ...sourceAmounts,
-    amountMinor: row.amountMinor,
+    // What checkout charges, in the school currency's minor unit.
+    amountMinor: amountMinorForPlan(row, currency),
     billingInterval: row.billingInterval,
     installmentCount: row.installmentCount,
     status: row.status,
@@ -220,6 +242,7 @@ function invalidPlan(reason: string): { ok: false; error: PlatformError } {
 
 function normalizePlanInput(
   input: PlanInput,
+  currency: string,
 ): { ok: true; value: NormalizedPlan } | { ok: false; error: PlatformError } {
   const type = input.type ?? (input.kind ? sourceTypeForKind(input.kind) : null);
   if (!type) return invalidPlan("invalid_plan_type");
@@ -234,9 +257,11 @@ function normalizePlanInput(
   }
 
   const amountFromMinor =
-    input.amountMinor === undefined ? null : minorAmountToMajor(input.amountMinor);
+    input.amountMinor === undefined
+      ? null
+      : minorAmountToMajor(input.amountMinor, currency);
   const amountMinor = (value: number | null | undefined) => {
-    if (value !== undefined && value !== null) return majorAmountToMinor(value);
+    if (value !== undefined && value !== null) return majorAmountToMinor(value, currency);
     return input.amountMinor ?? null;
   };
 
@@ -347,8 +372,8 @@ function normalizePlanInput(
       : input.billingInterval === "year"
         ? amountFromMinor
         : null;
-  const monthlyMinor = monthly == null ? null : majorAmountToMinor(monthly);
-  const yearlyMinor = yearly == null ? null : majorAmountToMinor(yearly);
+  const monthlyMinor = monthly == null ? null : majorAmountToMinor(monthly, currency);
+  const yearlyMinor = yearly == null ? null : majorAmountToMinor(yearly, currency);
   const monthlyValid = monthlyMinor !== null && monthlyMinor > 0;
   const yearlyValid = yearlyMinor !== null && yearlyMinor > 0;
   if (monthlyValid === yearlyValid || input.installmentCount != null) {
@@ -373,7 +398,7 @@ function normalizePlanInput(
 
 export function validatePlan(
   input: PlanInput,
-  options: { allowIncludedProducts?: boolean } = {},
+  options: { currency: string; allowIncludedProducts?: boolean },
 ): { ok: true; value: NormalizedPlan } | { ok: false; error: PlatformError } {
   const name = input.name.trim();
   if (!name || name.length > 200) {
@@ -399,7 +424,7 @@ export function validatePlan(
   ) {
     return invalidPlan("invalid_provider_product_id");
   }
-  return normalizePlanInput(input);
+  return normalizePlanInput(input, options.currency);
 }
 
 function duplicatePlanError(): { ok: false; error: PlatformError } {
@@ -414,6 +439,7 @@ function duplicatePlanError(): { ok: false; error: PlatformError } {
 function isDuplicatePlan(
   candidate: NormalizedPlan,
   existing: typeof schema.storefrontPlans.$inferSelect,
+  currency: string,
   currentPlanId?: string,
 ): boolean {
   if (currentPlanId && existing.id === currentPlanId) return false;
@@ -424,7 +450,7 @@ function isDuplicatePlan(
     return false;
   }
   if (candidate.type !== "subscription") return true;
-  const existingAmounts = sourceAmountsForRow(existing);
+  const existingAmounts = sourceAmountsForRow(existing, currency);
   return candidate.subscriptionMonthlyAmount !== null
     ? existingAmounts.subscriptionMonthlyAmount !== null
     : existingAmounts.subscriptionYearlyAmount !== null;
@@ -533,7 +559,7 @@ export async function createPlan(
   const product = await loadProduct(db, ctx.tenantId!, productPublicId);
   if (!product) return { ok: false, error: createPlatformError("not_found") };
   const currency = await loadSchoolCurrency(db, ctx.tenantId!);
-  const checked = validatePlan(input);
+  const checked = validatePlan(input, { currency });
   if (!checked.ok) return checked;
   const now = clock.now();
   try {
@@ -560,7 +586,7 @@ export async function createPlan(
             eq(schema.storefrontPlans.status, "active"),
           ),
         );
-      if (existingPlans.some((plan) => isDuplicatePlan(checked.value, plan))) {
+      if (existingPlans.some((plan) => isDuplicatePlan(checked.value, plan, currency))) {
         return duplicatePlanError();
       }
       const row = {
@@ -686,7 +712,8 @@ export async function updatePlan(
       input.kind ?? (input.type ? kindForSourceType(input.type) : row.plan.kind);
     const currentType = sourceTypeForKind(row.plan.kind);
     const preserveCurrentPlanFields = nextType === currentType;
-    const currentAmounts = sourceAmountsForRow(row.plan);
+    const currency = normalizeSchoolCurrency(row.school.currency);
+    const currentAmounts = sourceAmountsForRow(row.plan, currency);
     const candidate: PlanInput = {
       name: input.name?.trim() ?? row.plan.name,
       description: input.description ?? row.plan.description,
@@ -741,7 +768,7 @@ export async function updatePlan(
           ? row.plan.providerProductId
           : input.providerProductId,
     };
-    const checked = validatePlan(candidate);
+    const checked = validatePlan(candidate, { currency });
     if (!checked.ok) return { ok: false as const, error: checked.error };
     const existingPlans = await tx
       .select()
@@ -755,7 +782,7 @@ export async function updatePlan(
       );
     if (
       existingPlans.some((plan) =>
-        isDuplicatePlan(checked.value, plan, row.plan.id),
+        isDuplicatePlan(checked.value, plan, currency, row.plan.id),
       )
     ) {
       return duplicatePlanError();

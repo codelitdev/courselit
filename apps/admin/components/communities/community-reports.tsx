@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Flag, RotateCcw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import {
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
 import { Textarea } from "@/components/ui/codelit/textarea";
+import { cn } from "@/lib/utils";
 import {
   CommunityGifPreview,
   CommunityMediaPreview,
@@ -56,38 +57,60 @@ export function CommunityReports({
   const [reports, setReports] = useState<Report[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** False until the first page arrives; later reloads keep the list on screen. */
+  const [loaded, setLoaded] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toKeep, setToKeep] = useState<Report | null>(null);
   const [keepReason, setKeepReason] = useState("");
 
-  const load = useCallback(
-    async (cursor?: string | null) => {
-      const body = await request<{ items?: Report[]; nextCursor?: string | null }>(
+  // Callers often pass inline callbacks. Reading them through a ref keeps a
+  // parent re-render from reloading the list.
+  const setErrorRef = useRef(setError);
+  useEffect(() => {
+    setErrorRef.current = setError;
+  });
+
+  const fetchPage = useCallback(
+    (cursor?: string | null) =>
+      request<{ items?: Report[]; nextCursor?: string | null }>(
         communityPagePath(reportsPath, cursor, {
           status: filter === "all" ? undefined : filter,
         }),
-      );
-      setReports((items) =>
-        cursor ? [...items, ...(body.items ?? [])] : (body.items ?? []),
-      );
-      setNextCursor(body.nextCursor ?? null);
-    },
+      ),
     [filter, reportsPath, request],
   );
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
-    void load()
-      .catch((caught) => setError(errorMessage(caught, "Unable to load reports.")))
-      .finally(() => setLoading(false));
-  }, [load, setError]);
+    void fetchPage()
+      .then((body) => {
+        if (!active) return;
+        setReports(body.items ?? []);
+        setNextCursor(body.nextCursor ?? null);
+      })
+      .catch((caught) => {
+        if (active) setErrorRef.current(errorMessage(caught, "Unable to load reports."));
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+        setLoaded(true);
+      });
+    // A response for a filter the user already left is dropped.
+    return () => {
+      active = false;
+    };
+  }, [fetchPage]);
 
   async function loadMore() {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      await load(nextCursor);
+      const body = await fetchPage(nextCursor);
+      setReports((items) => [...items, ...(body.items ?? [])]);
+      setNextCursor(body.nextCursor ?? null);
     } catch (caught) {
       setError(errorMessage(caught, "Unable to load more reports."));
     } finally {
@@ -157,7 +180,11 @@ export function CommunityReports({
           who reported it.
         </p>
       </div>
-      {loading ? (
+      <div
+        aria-busy={loading}
+        className={cn("transition-opacity", loading && loaded && "opacity-60")}
+      >
+      {loading && !loaded ? (
         <div className="rounded-xl border bg-card p-12 text-center">
           <CourseLitLoading />
         </div>
@@ -277,6 +304,7 @@ export function CommunityReports({
           })}
         </div>
       )}
+      </div>
       {nextCursor ? (
         <div className="flex justify-center">
           <Button

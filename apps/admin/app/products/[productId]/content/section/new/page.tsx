@@ -1,9 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { SectionAuthoring } from "@/components/products/section-authoring";
-
-export default function NewSectionPage() {
-  const params = useParams<{ productId: string }>();
-  return <SectionAuthoring productId={params.productId} mode="new" />;
+/** Sections are added and edited inline on the Content tab. */
+export default async function SectionPage({
+  params,
+}: {
+  params: Promise<{ productId: string }>;
+}) {
+  const { productId } = await params;
+  redirect(`/products/${encodeURIComponent(productId)}/content`);
 }

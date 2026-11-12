@@ -15,6 +15,7 @@ import {
   courseViewerHref,
 } from "@/components/layout/course-viewer-sidebar";
 import {
+  LearnerBadge,
   LearnerButton as Button,
   LearnerLink,
   LearnerText2,
@@ -81,6 +82,12 @@ export function CourseViewerShell({
   const exitHref = courseViewerExitHref(productSlug, entryPoint);
   const discussionOpen = searchParams.get("discussion") === "open";
   const [discussionPostId, setDiscussionPostId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // The shell stays mounted across lessons; start each lesson at the top.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset on lesson change
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [currentLessonId]);
   const currentLesson = currentLessonId
     ? product.lessons.find((lesson) => lesson.id === currentLessonId)
     : null;
@@ -157,6 +164,9 @@ export function CourseViewerShell({
             </nav>
           </div>
           <div className="flex items-center gap-2">
+            {previewToken ? (
+              <LearnerBadge variant="secondary">Preview</LearnerBadge>
+            ) : null}
             <ThemeModeSwitcher
               resolved={mounted ? mode : "light"}
               onToggle={toggle}
@@ -164,14 +174,6 @@ export function CourseViewerShell({
               size="sm"
               variant="outline"
             />
-            {previewToken ? (
-              <LearnerText2
-                component="span"
-                className="rounded-md border bg-muted px-2 py-1 text-muted-foreground"
-              >
-                Preview
-              </LearnerText2>
-            ) : null}
             {canUseDiscussions ? (
               <Button
                 aria-label="Open discussions"
@@ -195,7 +197,10 @@ export function CourseViewerShell({
             </Button>
           </div>
         </header>
-        <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 md:p-8">
+        <div
+          ref={scrollRef}
+          className="flex min-h-0 flex-1 flex-col overflow-auto p-4 md:p-8"
+        >
           {children}
         </div>
       </SidebarInset>

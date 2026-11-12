@@ -28,8 +28,6 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   // /products/new
   // /products/:productId
   // /products/:productId/content
-  // /products/:productId/content/section/new
-  // /products/:productId/content/section/:sectionId
   // /products/:productId/content/section/:sectionId/lesson
   // /products/:productId/manage
   if (clean === "/products") {
@@ -59,22 +57,15 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       }
       crumbs.push({ label: "Content", href: contentRoot });
 
-      if (parts[3] === "section") {
-        if (parts[4] === "new") {
-          crumbs.push({ label: "New Section" });
-          return crumbs;
-        }
-        const sectionId = parts[4];
-        const sectionRoot = `${contentRoot}/section/${sectionId}`;
-        if (parts.length === 5) {
-          crumbs.push({ label: "Edit Section" });
-          return crumbs;
-        }
-        if (parts[5] === "lesson") {
-          crumbs.push({ label: "Edit Section", href: sectionRoot });
-          crumbs.push({ label: "Lesson" });
-          return crumbs;
-        }
+      // Sections are edited inline on Content; only their lessons and
+      // unlock emails have pages of their own.
+      if (parts[3] === "section" && parts[5] === "lesson") {
+        crumbs.push({ label: "Lesson" });
+        return crumbs;
+      }
+      if (parts[3] === "section" && parts[5] === "email") {
+        crumbs.push({ label: "Unlock email" });
+        return crumbs;
       }
     } else if (parts[2] === "customers") {
       crumbs.push({ label: "Customers" });

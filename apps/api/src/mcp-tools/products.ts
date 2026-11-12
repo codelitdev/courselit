@@ -56,6 +56,7 @@ export const productTools: McpToolModule = (deps) => [
         title: string;
         slug?: string;
         description: string;
+        leadMagnet?: boolean;
       };
       const result = await createProduct(
         deps.db,

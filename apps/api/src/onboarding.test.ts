@@ -66,6 +66,31 @@ describe("school onboarding", () => {
     expect(done(state, "course")).toBe(false);
     expect(done(state, "learners")).toBe(false);
     expect(done(state, "team")).toBe(false);
+    // The legal pages start with starter text but stay to do until published.
+    expect(done(state, "legal")).toBe(false);
+    const [school] = await runtime.db
+      .select({ id: schema.schools.id })
+      .from(schema.schools)
+      .where(eq(schema.schools.publicId, schoolId));
+    const legalPages = await runtime.db
+      .select({ publicId: schema.websitePages.publicId, slug: schema.websitePages.slug })
+      .from(schema.websitePages)
+      .where(eq(schema.websitePages.schoolId, school!.id));
+    for (const slug of ["terms", "privacy"]) {
+      const page = legalPages.find((row) => row.slug === slug)!;
+      const published = await dispatch(runtime, {
+        method: "POST",
+        path: `/v1/school/website/pages/${page.publicId}/publish`,
+        headers: owner(world, schoolId),
+      });
+      expect(published.status).toBe(200);
+    }
+    const afterLegal = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/onboarding",
+      headers: owner(world, schoolId),
+    });
+    expect(done(afterLegal.body as Onboarding, "legal")).toBe(true);
 
     await dispatch(runtime, {
       method: "PATCH",

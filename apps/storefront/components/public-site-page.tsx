@@ -1,3 +1,4 @@
+import { communityPlansIncludingProduct } from "@/lib/community-plans";
 import { hasOwnCopyright, schoolCopyright } from "@courselit/page-blocks/copyright";
 import { loadDataSlots } from "@frontlit/page-builder/data-slots";
 import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
@@ -115,6 +116,12 @@ export async function PublicSitePage({
   const siteCommunityPlans = siteCommunity
     ? await getPublicCommunityPlans(schoolId, siteCommunity.id)
     : [];
+  // Community plans that unlock this product: every plan when the product
+  // comes with the community, else the plans that list it.
+  const productCommunityPlans =
+    salesProduct && siteCommunity
+      ? communityPlansIncludingProduct(salesProduct, siteCommunityPlans)
+      : [];
 
   const pageData: PageData = {
     pageType: "site",
@@ -133,10 +140,9 @@ export async function PublicSitePage({
               ...salesProduct,
               plans: salesPlans,
               includedWithCommunity: salesProduct.includedWithCommunity,
-              community:
-                salesProduct.includedWithCommunity && siteCommunity
-                  ? { id: siteCommunity.id, plans: siteCommunityPlans }
-                  : null,
+              community: productCommunityPlans.length
+                ? { id: siteCommunity!.id, plans: productCommunityPlans }
+                : null,
             },
           },
         }

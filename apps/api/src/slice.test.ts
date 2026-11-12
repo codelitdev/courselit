@@ -459,9 +459,7 @@ describe.serial("first vertical slice", () => {
       },
     });
     expect(productDetail.status).toBe(200);
-    expect(productDetail.body).toMatchObject({
-      sections: [{ title: "First section", position: 1 }],
-    });
+    expect(productDetail.body).toMatchObject({ sections: [], lessons: [] });
 
     const lessonCreated = await dispatch(runtime, {
       method: "POST",

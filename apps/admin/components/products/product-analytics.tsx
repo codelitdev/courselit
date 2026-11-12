@@ -6,9 +6,8 @@ import { useEffect, useState } from "react";
 import { Resources } from "@/components/resources";
 import { CourseLitInlineLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
+import { type AnalyticsRange, formatMinorCurrency } from "@/lib/analytics";
 import type { Product, School } from "./product-types";
-
-export type AnalyticsRange = "7d" | "30d" | "90d" | "1y";
 
 type Metric = { count: number; growth: number };
 type Analytics = {
@@ -25,20 +24,7 @@ type Analytics = {
   downloads: Metric;
 };
 
-export const ANALYTICS_RANGES: Array<{ value: AnalyticsRange; label: string }> = [
-  { value: "7d", label: "1 week" },
-  { value: "30d", label: "30 days" },
-  { value: "90d", label: "90 days" },
-  { value: "1y", label: "1 year" },
-];
 
-function formatCurrency(amountMinor: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amountMinor / 100);
-}
 
 function formatGrowth(value: number) {
   return `${value > 0 ? "+" : ""}${value}% from previous period`;
@@ -55,28 +41,31 @@ function MetricCard({
   title: string;
   icon: typeof DollarSign;
   value: string;
-  growth: number;
+  /** Hidden when null: lifetime has no earlier period to compare with. */
+  growth: number | null;
   loading: boolean;
   href?: string;
 }) {
   const card = (
-    <div className="rounded-xl border bg-card p-5">
-      <div className="flex items-center justify-between gap-4">
+    <div className="h-full rounded-xl border bg-card p-5">
+      <div className="flex items-start justify-between gap-4">
         <h2 className="text-sm font-medium">{title}</h2>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       </div>
       {loading ? (
         <CourseLitInlineLoading label={`Loading ${title}…`} className="mt-4 justify-start" />
       ) : (
         <>
           <p className="mt-3 text-2xl font-semibold">{value}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{formatGrowth(growth)}</p>
+          {growth === null ? null : (
+            <p className="mt-1 text-xs text-muted-foreground">{formatGrowth(growth)}</p>
+          )}
         </>
       )}
     </div>
   );
   return href ? (
-    <Link href={href} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <Link href={href} className="block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
       {card}
     </Link>
   ) : (
@@ -125,7 +114,7 @@ function SalesChart({
               aria-hidden="true"
             >
               {gridY.map((y, index) => (
-                <span key={y}>{formatCurrency(axisValues[index] ?? 0, currency)}</span>
+                <span key={y}>{formatMinorCurrency(axisValues[index] ?? 0, currency)}</span>
               ))}
             </div>
             <svg
@@ -171,7 +160,7 @@ function SalesChart({
             {points
               .map(
                 (point) =>
-                  `${point.date}: ${formatCurrency(point.amountMinor, currency)}`,
+                  `${point.date}: ${formatMinorCurrency(point.amountMinor, currency)}`,
               )
               .join(", ")}
           </p>
@@ -232,7 +221,8 @@ export function ProductAnalytics({
   }, [productId, range, school.id]);
 
   const currency = data?.currency ?? school.currency ?? "USD";
-  const salesValue = data ? formatCurrency(data.sales.amountMinor, currency) : "—";
+  const salesValue = data ? formatMinorCurrency(data.sales.amountMinor, currency) : "—";
+  const compare = range !== "lifetime";
   const completionMetric =
     productKind === "course" ? data?.completions : data?.downloads;
   const completionTitle =
@@ -260,19 +250,19 @@ export function ProductAnalytics({
           </Button>
         </div>
       ) : null}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard
           title="Sales"
           icon={DollarSign}
           value={salesValue}
-          growth={data?.sales.growth ?? 0}
+          growth={compare ? (data?.sales.growth ?? 0) : null}
           loading={loading}
         />
         <MetricCard
           title="Customers"
           icon={Users}
           value={data?.customers.count.toLocaleString() ?? "—"}
-          growth={data?.customers.growth ?? 0}
+          growth={compare ? (data?.customers.growth ?? 0) : null}
           loading={loading}
           href={`/products/${encodeURIComponent(productId)}/customers`}
         />
@@ -280,7 +270,7 @@ export function ProductAnalytics({
           title={completionTitle}
           icon={CompletionIcon}
           value={completionMetric?.count.toLocaleString() ?? "—"}
-          growth={completionMetric?.growth ?? 0}
+          growth={compare ? (completionMetric?.growth ?? 0) : null}
           loading={loading}
         />
       </div>

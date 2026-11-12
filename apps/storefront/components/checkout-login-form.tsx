@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { LearnerNameStep } from "@/components/learner-name-step";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import { ExternalLoginButton } from "@/components/auth/external-login-button";
 import {
@@ -33,7 +34,7 @@ export function CheckoutLoginForm({
   ssoProviderId?: string | null;
   onComplete: (learner: Learner) => void;
 }) {
-  const [otpStep, setOtpStep] = useState<"email" | "otp">("email");
+  const [otpStep, setOtpStep] = useState<"email" | "otp" | "name">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +75,12 @@ export function CheckoutLoginForm({
     setError(null);
     setLoading(true);
     try {
-      await verifyEmailCode(email, otp);
+      const { needsName } = await verifyEmailCode(email, otp);
+      if (needsName) {
+        // A first sign-in: ask what to call them before going on to pay.
+        setOtpStep("name");
+        return;
+      }
       await completeFromSession();
     } catch (caught) {
       setError(
@@ -93,7 +99,19 @@ export function CheckoutLoginForm({
 
   return (
     <div className="flex flex-col gap-4">
-      {showEmail ? (
+      {otpStep === "name" ? (
+        <LearnerNameStep
+          onDone={() =>
+            void completeFromSession().catch((caught) =>
+              setError(
+                caught instanceof Error
+                  ? caught.message
+                  : "Unable to establish your learner session.",
+              ),
+            )
+          }
+        />
+      ) : showEmail ? (
         otpStep === "email" ? (
           <form onSubmit={requestOtp} className="flex flex-col gap-3">
             <LearnerInput

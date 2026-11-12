@@ -1,5 +1,5 @@
-import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import type { MediaRef } from "@courselit/api-contract";
+import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 
 export type ProductKind = "course" | "download";
 
@@ -34,6 +34,8 @@ export type Product = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
+  /** Status a new lesson starts with. */
+  newLessonStatus?: ProductStatus;
   kind: ProductKind;
   status: ProductStatus;
   slug: string;
@@ -41,7 +43,8 @@ export type Product = {
   createdAt?: string;
   updatedAt?: string;
   currency?: string;
-  sales?: number;
+  /** Lifetime revenue in the currency's minor unit (product list only). */
+  salesAmountMinor?: number;
   customers?: number;
   sections?: Section[];
   lessons?: Lesson[];

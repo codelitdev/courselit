@@ -74,8 +74,14 @@ export const productSchema = z.object({
   leadMagnet: z.boolean(),
   certificate: z.boolean(),
   discussions: z.boolean(),
+  /** Status a new lesson gets when it is created without one. */
+  newLessonStatus: z.enum(["draft", "published"]),
   includedWithCommunity: z.boolean(),
   discussionSpaceId: z.string().nullable(),
+  /**
+   * When the product first went live. Kept when it goes back to draft, so
+   * "offline" can be told apart from "never launched".
+   */
   publishedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -83,7 +89,8 @@ export const productSchema = z.object({
 
 export const productListItemSchema = productSchema.extend({
   currency: z.string(),
-  sales: z.number().int().nonnegative(),
+  /** Lifetime revenue from succeeded payments, in the currency's minor unit. */
+  salesAmountMinor: z.number().int().nonnegative(),
   customers: z.number().int().nonnegative(),
 });
 
@@ -158,6 +165,8 @@ export const createProductBodySchema = z.object({
   slug: z.string().trim().min(1).max(200).optional(),
   title: z.string().min(1).max(200),
   description: z.string().max(8000).default(""),
+  /** Downloads only: free for an email address. Also creates its one free plan. */
+  leadMagnet: z.boolean().optional(),
 });
 
 export const updateProductBodySchema = z.object({
@@ -170,6 +179,7 @@ export const updateProductBodySchema = z.object({
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
+  newLessonStatus: z.enum(["draft", "published"]).optional(),
   includedWithCommunity: z.boolean().optional(),
 });
 
@@ -222,7 +232,7 @@ export const storefrontPlanSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export const productAnalyticsRangeSchema = z.enum(["7d", "30d", "90d", "1y"]);
+export const productAnalyticsRangeSchema = z.enum(["1d", "7d", "30d", "90d", "1y", "lifetime"]);
 export const activityRangeSchema = productAnalyticsRangeSchema;
 const productAnalyticsMetricSchema = z.object({
   count: z.number().int().nonnegative(),
@@ -1568,6 +1578,12 @@ export const learnerSchema = z.object({
   image: z.string().url().nullable(),
   bio: z.string(),
   emailUpdatesEnabled: z.boolean(),
+});
+/** A learner just signed in with an emailed code. */
+export const learnerSignInSchema = learnerSchema.extend({
+  /** True while the name is still the placeholder made from the email
+   * address, so the site can ask for a real one. */
+  needsName: z.boolean(),
 });
 export const adminLearnerSchema = z.object({
   id: z.string(),
@@ -4003,7 +4019,7 @@ export const contract = c.router({
     summary: "Sign a learner in to this school with an emailed code",
     body: learnerVerifyEmailCodeBodySchema,
     responses: {
-      200: learnerSchema,
+      200: learnerSignInSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,

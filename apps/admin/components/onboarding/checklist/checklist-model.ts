@@ -53,9 +53,9 @@ export const CHECKLIST_GROUPS: ChecklistGroupDefinition[] = [
       },
       {
         key: "legal",
-        title: "Write your Terms of use and Privacy policy",
-        why: "They're unpublished drafts. Your footer and checkout link to them once they're published.",
-        cta: "Write them",
+        title: "Review and publish your Terms of use and Privacy policy",
+        why: "They start as drafts with basic text. Make them fit your school, then publish: your footer and checkout link to them once they're published.",
+        cta: "Review them",
       },
     ],
   },

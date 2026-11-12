@@ -9,6 +9,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
+import { privacyPolicyDoc, termsOfServiceDoc } from "./legal-templates.js";
 import {
   deleteUnreferencedMedia,
   type MediaLitClient,
@@ -135,32 +136,44 @@ export const HOME_PAGE_TEMPLATE: readonly WebsiteWidgetRow[] = [
   }),
 ];
 
-/** System pages every school starts with. Their slugs are fixed. */
-const SYSTEM_PAGES: ReadonlyArray<{
+/** System pages every school starts with. Their slugs are fixed. The legal
+ * pages start as unpublished drafts holding starter text that names the
+ * school; the site links to them only once the school publishes them. */
+function systemPages(schoolName: string | null | undefined): ReadonlyArray<{
   slug: string;
   name: string;
   title: string;
   body: readonly WebsiteWidgetRow[];
-  /** Legal pages start as unpublished drafts; the site links to them only
-   * once the school publishes them. */
   published: boolean;
-}> = [
-  { slug: "", name: "Homepage", title: "", body: HOME_PAGE_TEMPLATE, published: true },
-  {
-    slug: "terms",
-    name: "Terms of Service",
-    title: "Terms of Service",
-    body: [],
-    published: false,
-  },
-  {
-    slug: "privacy",
-    name: "Privacy policy",
-    title: "Privacy policy",
-    body: [],
-    published: false,
-  },
-];
+}> {
+  return [
+    { slug: "", name: "Homepage", title: "", body: HOME_PAGE_TEMPLATE, published: true },
+    {
+      slug: "terms",
+      name: "Terms of Service",
+      title: "Terms of Service",
+      body: [
+        bodyWidget("courselit-terms-text", "rich-text", {
+          text: termsOfServiceDoc(schoolName),
+          alignment: "left",
+        }),
+      ],
+      published: false,
+    },
+    {
+      slug: "privacy",
+      name: "Privacy policy",
+      title: "Privacy policy",
+      body: [
+        bodyWidget("courselit-privacy-text", "rich-text", {
+          text: privacyPolicyDoc(schoolName),
+          alignment: "left",
+        }),
+      ],
+      published: false,
+    },
+  ];
+}
 
 // ---------------------------------------------------------------------------
 // Layout helpers
@@ -502,7 +515,7 @@ export async function provisionWebsite(
     updatedAt: now,
   });
   await db.insert(schema.websitePages).values(
-    SYSTEM_PAGES.map((page) => {
+    systemPages(school?.name).map((page) => {
       const layout = pageLayout(clock, page.body);
       return {
         id: uuidv7(clock),

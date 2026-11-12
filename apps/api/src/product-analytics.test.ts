@@ -67,6 +67,34 @@ describe.serial("product analytics", () => {
       (yearRange.body as { sales: { points: unknown[] } }).sales.points,
     ).toHaveLength(366);
 
+    // Like main: today only, and everything since the school was created.
+    const today = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${world.noteA.publicId}/analytics?range=1d`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(today.status).toBe(200);
+    expect((today.body as { sales: { points: unknown[] } }).sales.points).toEqual([
+      { date: "2026-03-05", amountMinor: 0 },
+    ]);
+    const lifetime = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${world.noteA.publicId}/analytics?range=lifetime`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(lifetime.status).toBe(200);
+    // The seeded school was created on the frozen clock's day.
+    expect(lifetime.body).toMatchObject({ range: "lifetime", sales: { growth: 0 } });
+    expect((lifetime.body as { sales: { points: unknown[] } }).sales.points).toEqual([
+      { date: "2026-03-05", amountMinor: 0 },
+    ]);
+
     await runtime.close();
   });
 
@@ -225,7 +253,7 @@ describe.serial("product analytics", () => {
       providerCheckoutId: "checkout_analytics",
       providerCheckoutUrl: null,
       status: "paid",
-      currency: "USD",
+      currency: "INR",
       amountMinor: 1250,
       createdAt: eventDate,
       updatedAt: eventDate,
@@ -238,12 +266,32 @@ describe.serial("product analytics", () => {
       providerPaymentId: "payment_analytics",
       kind: "one_time",
       status: "succeeded",
-      currency: "USD",
+      currency: "INR",
       amountMinor: 1250,
       occurredAt: eventDate,
       createdAt: eventDate,
       updatedAt: eventDate,
     });
+    // Money in another currency (from before a currency change) and a refund
+    // don't add to the INR sales figure.
+    for (const [suffix, currency, status] of [
+      ["usd", "USD", "succeeded"],
+      ["refunded", "INR", "refunded"],
+    ] as const) {
+      await runtime.db.insert(schema.storefrontPayments).values({
+        id: uuidv7(clock),
+        publicId: createPublicId("pay", clock),
+        checkoutId,
+        providerPaymentId: `payment_analytics_${suffix}`,
+        kind: "one_time",
+        status,
+        currency,
+        amountMinor: 9999,
+        occurredAt: eventDate,
+        createdAt: eventDate,
+        updatedAt: eventDate,
+      });
+    }
 
     await runtime.db
       .update(schema.schools)

@@ -19,6 +19,10 @@
     "./page-blocks": {
       "types": "./src/page-blocks.ts",
       "import": "./src/page-blocks.ts"
+    },
+    "./money": {
+      "types": "./src/money.ts",
+      "import": "./src/money.ts"
     }
   },
   "scripts": {

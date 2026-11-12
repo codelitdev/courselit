@@ -8,7 +8,6 @@ import {
   Headphones,
   HelpCircle,
   Package,
-  Save,
   Trash2,
   Tv,
   Video,
@@ -17,8 +16,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ComponentProps, type FormEvent, useEffect, useId, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
-import { CourseLitLoading } from "@/components/loading";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
+import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -30,9 +29,16 @@ import {
 } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
-import { Separator } from "@/components/ui/separator";
+import { truncateText } from "@/lib/truncate";
 import { MediaPicker } from "./media-picker";
 import type {
   Lesson,
@@ -45,7 +51,6 @@ import type {
 import { QuizEditor } from "./quiz-editor";
 import { RichTextEditor } from "./rich-text-editor";
 import { ScormLessonUpload } from "./scorm-lesson-upload";
-import { truncateText } from "@/lib/truncate";
 
 type ProductDetail = Product & { sections: Section[]; lessons: Lesson[] };
 
@@ -72,7 +77,7 @@ const lessonTypes: Array<{
   { value: "scorm", label: "SCORM", icon: Package },
 ];
 
-function LessonTypeCards({
+function LessonTypeChips({
   value: selectedValue,
   onChange,
   disabled = false,
@@ -82,45 +87,31 @@ function LessonTypeCards({
   disabled?: boolean;
 }) {
   return (
-    <div
-      role="radiogroup"
-      aria-label="Lesson type"
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7"
-    >
+    <div role="radiogroup" aria-label="Lesson type" className="flex flex-wrap gap-1.5">
       {lessonTypes.map(({ value, label, icon: Icon }) => {
         const selected = value === selectedValue;
         return (
-          <label
+          <button
             key={value}
-            htmlFor={`lesson-type-${value}`}
-            className={`flex min-h-24 flex-col items-center justify-center rounded-md border-2 bg-card p-4 transition-colors ${
-              selected ? "border-primary" : "border-muted"
-            } ${
-              disabled
-                ? "cursor-not-allowed opacity-50"
-                : "cursor-pointer hover:bg-muted"
-            }`}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            disabled={disabled && !selected}
+            onClick={() => onChange(value)}
+            className={`inline-flex h-9 items-center gap-1.5 rounded-[var(--radius)] border px-3 text-[13.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+              selected
+                ? "border-primary bg-[var(--primary-soft)] font-semibold text-[var(--primary-ink)]"
+                : "bg-card font-medium hover:bg-muted"
+            } ${disabled ? "cursor-default disabled:opacity-50" : ""}`}
           >
-            <input
-              id={`lesson-type-${value}`}
-              type="radio"
-              name="lesson-type"
-              value={value}
-              checked={selected}
-              disabled={disabled}
-              onChange={() => onChange(value)}
-              className="sr-only"
-            />
-            <Icon className="mb-2 size-6" />
-            <span className="flex items-center gap-2">
-              {label}
-              {value === "scorm" ? (
-                <span className="rounded border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Alpha
-                </span>
-              ) : null}
-            </span>
-          </label>
+            <Icon className="size-4" aria-hidden="true" />
+            {label}
+            {value === "scorm" ? (
+              <span className="rounded border px-1 text-[10px] font-medium text-muted-foreground">
+                Alpha
+              </span>
+            ) : null}
+          </button>
         );
       })}
     </div>
@@ -372,6 +363,7 @@ export function LessonAuthoring({
   const [downloadable, setDownloadable] = useState(false);
   const [requiresEnrollment, setRequiresEnrollment] = useState(true);
   const [status, setStatus] = useState<Lesson["status"]>("draft");
+  const [sectionChoice, setSectionChoice] = useState(sectionId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -417,6 +409,7 @@ export function LessonAuthoring({
           const defaultType: LessonType = detail.kind === "download" ? "file" : "text";
           setType(defaultType);
           setContent(emptyContent(defaultType));
+          setStatus(detail.newLessonStatus ?? "draft");
         }
         setSchool(selected);
         setProduct(detail);
@@ -433,7 +426,10 @@ export function LessonAuthoring({
     };
   }, [lessonId, productId, sectionId]);
 
-  async function save(event: FormEvent<HTMLFormElement>) {
+  async function save(
+    event: FormEvent<HTMLFormElement>,
+    nextStatus: Lesson["status"] = status,
+  ) {
     event.preventDefault();
     if (saving) return;
     const nextFieldErrors = validateLesson(title, type, content);
@@ -461,8 +457,8 @@ export function LessonAuthoring({
             mediaId,
             downloadable,
             requiresEnrollment,
-            sectionId,
-            status,
+            sectionId: sectionChoice,
+            status: nextStatus,
           }),
         },
       );
@@ -486,7 +482,7 @@ export function LessonAuthoring({
       ].includes(type);
       if (!editing && usesSeparateMediaSection && saved.id) {
         router.replace(
-          `${productRoot}/content/section/${encodeURIComponent(sectionId)}/lesson?id=${encodeURIComponent(saved.id)}`,
+          `${productRoot}/content/section/${encodeURIComponent(sectionChoice)}/lesson?id=${encodeURIComponent(saved.id)}`,
         );
       } else {
         router.replace(`${productRoot}/content`);
@@ -548,35 +544,59 @@ export function LessonAuthoring({
   }
 
   const isDownload = product?.kind === "download";
-  const heading = isDownload
-    ? editing
-      ? "Edit File"
-      : "New File"
-    : editing
-      ? "Edit Lesson"
-      : "New Lesson";
-
   const itemLabel = isDownload ? "file" : "lesson";
-  const description = editing
-    ? `Modify the details of your existing ${itemLabel}.`
-    : `Create a new ${itemLabel} for this product.`;
+  const heading = editing
+    ? title.trim() || `Untitled ${itemLabel}`
+    : `New ${itemLabel}`;
+  const lessonLive = status === "published";
+  const productLive = product?.status === "published";
+  const contentHref = `${productRoot}/content`;
 
   const breadcrumbItems = [
     { label: "Products", href: "/products" },
     { label: product?.title ?? "Product", href: productRoot },
-    { label: "Content", href: `${productRoot}/content` },
-    { label: heading },
+    { label: isDownload ? "Files" : "Content", href: contentHref },
+    { label: editing ? truncateText(title || "Lesson") : `New ${itemLabel}` },
   ];
 
   useSetBreadcrumb(breadcrumbItems);
+
+  const footNote = !productLive
+    ? `Learners will see it once the ${isDownload ? "download" : "course"} is live.`
+    : lessonLive
+      ? "Learners see changes as soon as you save."
+      : "Making it live shows it to learners right away.";
+
   return (
     <AuthGate>
       <div className="page-shell">
-        <header>
-          <h1 className="truncate text-4xl font-semibold tracking-tight" title={heading}>
-            {truncateText(heading)}
-          </h1>
-          <p className="mt-2 text-muted-foreground">{description}</p>
+        <header className="space-y-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <h1
+              className="min-w-0 truncate text-[28px] font-bold leading-tight tracking-tight"
+              title={heading}
+            >
+              {truncateText(heading)}
+            </h1>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                lessonLive
+                  ? "bg-success-soft text-success-ink"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`size-1.5 rounded-full ${lessonLive ? "bg-success" : "bg-muted-foreground"}`}
+              />
+              {lessonLive ? "Live" : "Draft"}
+            </span>
+          </div>
+          {product ? (
+            <p className="text-sm text-muted-foreground">
+              {isDownload ? "Digital download" : "Course"} · {product.title}
+            </p>
+          ) : null}
         </header>
         {loading ? (
           <CourseLitLoading label="Loading lesson…" className="justify-start" />
@@ -586,202 +606,265 @@ export function LessonAuthoring({
             {error}
           </p>
         ) : null}
-        {!loading && !error ? (
+        {!loading && product ? (
           <>
-            <form onSubmit={save} className="mb-4 space-y-8">
-              {!isDownload ? (
-                <div className="space-y-4">
-                  <Label className="font-semibold">Lesson Type</Label>
-                  <LessonTypeCards
-                    value={type}
-                    onChange={(nextType) => {
-                      if (!editing) {
-                        setType(nextType);
-                        setContent(emptyContent(nextType));
-                        if (nextType === "quiz") setRequiresEnrollment(true);
-                        setError(null);
-                        setFieldErrors({});
-                      }
-                    }}
-                    disabled={editing}
-                  />
+            <form
+              id="lesson-form"
+              onSubmit={(event) => void save(event)}
+              className="space-y-4"
+            >
+              <section className="rounded-xl border bg-card shadow-sm">
+                <div className="px-5 pt-5">
+                  <h2 className="text-base font-bold">
+                    {isDownload ? "File" : "Lesson"}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {lessonLive
+                      ? "Learners can see this lesson."
+                      : "Drafts are hidden from learners until you make them live."}
+                  </p>
                 </div>
-              ) : null}
+                <div className="space-y-5 px-5 pb-5 pt-4">
+                  {!isDownload ? (
+                    <div className="field">
+                      <span>Type</span>
+                      <LessonTypeChips
+                        value={type}
+                        onChange={(nextType) => {
+                          if (!editing) {
+                            setType(nextType);
+                            setContent(emptyContent(nextType));
+                            if (nextType === "quiz") setRequiresEnrollment(true);
+                            setError(null);
+                            setFieldErrors({});
+                          }
+                        }}
+                        disabled={editing}
+                      />
+                      {editing ? (
+                        <p className="text-xs text-muted-foreground">
+                          The type can&apos;t change after a lesson is created.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
-              <div className="space-y-4">
-                <Label htmlFor="lesson-title" className="font-semibold">
-                  Title
-                </Label>
-                <Input
-                  id="lesson-title"
-                  required
-                  autoFocus
-                  maxLength={200}
-                  value={title}
-                  aria-invalid={Boolean(fieldErrors.title)}
-                  className={fieldErrors.title ? "border-destructive" : undefined}
-                  onChange={(event) => {
-                    setTitle(event.target.value);
-                    setFieldErrors((current) => ({ ...current, title: undefined }));
-                  }}
-                  placeholder="Enter lesson title"
-                />
-                {fieldErrors.title ? (
-                  <p className="text-sm text-destructive">{fieldErrors.title}</p>
-                ) : null}
-              </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="field">
+                      <Label htmlFor="lesson-title">Title</Label>
+                      <Input
+                        id="lesson-title"
+                        required
+                        autoFocus
+                        maxLength={200}
+                        value={title}
+                        aria-invalid={Boolean(fieldErrors.title)}
+                        className={fieldErrors.title ? "border-destructive" : undefined}
+                        onChange={(event) => {
+                          setTitle(event.target.value);
+                          setFieldErrors((current) => ({
+                            ...current,
+                            title: undefined,
+                          }));
+                        }}
+                        placeholder={`Enter ${itemLabel} title`}
+                      />
+                      {fieldErrors.title ? (
+                        <p className="text-sm text-destructive">{fieldErrors.title}</p>
+                      ) : null}
+                    </div>
+                    <div className="field">
+                      <Label htmlFor="lesson-section">Section</Label>
+                      <Select value={sectionChoice} onValueChange={setSectionChoice}>
+                        <SelectTrigger id="lesson-section" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {product.sections.map((section) => (
+                            <SelectItem key={section.id} value={section.id}>
+                              {section.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-              <div className="space-y-4">
-                {type === "text" && school ? (
-                  <>
-                    <Label className="font-semibold">Content</Label>
-                    <RichTextEditor
-                      school={school}
-                      purpose="lesson_content"
-                      key={type}
-                      initialContent={editorContent(content)}
-                      onChange={(document) => {
-                        setContent(document as LessonContent);
-                        setFieldErrors((current) => ({
-                          ...current,
-                          content: undefined,
-                        }));
-                      }}
-                      placeholder="Write something…"
-                      className="rounded-md border bg-card"
-                      contentClassName="max-w-none"
-                      editorClassName="min-h-[260px]"
-                    />
-                  </>
-                ) : null}
-                {type === "embed" ? (
-                  <>
-                    <Label htmlFor="lesson-embed" className="font-semibold">
-                      Embed code
-                    </Label>
-                    <Textarea
-                      id="lesson-embed"
-                      value={typeof content.value === "string" ? content.value : ""}
-                      onChange={(event) => {
-                        setContent({ value: event.target.value });
-                        setFieldErrors((current) => ({
-                          ...current,
-                          content: undefined,
-                        }));
-                      }}
-                      placeholder="e.g. a YouTube URL or iframe code"
-                    />
-                    <EmbedPreview
-                      value={typeof content.value === "string" ? content.value : ""}
-                    />
-                  </>
-                ) : null}
-                {type === "quiz" ? (
-                  <>
-                    <Label className="font-semibold">Content</Label>
-                    <QuizEditor
-                      key={type}
-                      value={content}
-                      onChange={(next) => {
-                        setContent(next);
-                        setFieldErrors((current) => ({
-                          ...current,
-                          content: undefined,
-                        }));
-                      }}
-                    />
-                  </>
-                ) : null}
-                {fieldErrors.content ? (
-                  <p className="text-sm text-destructive">{fieldErrors.content}</p>
-                ) : null}
-                {!isDownload && type !== "quiz" ? (
-                  <ToggleRow
-                    id="lesson-preview"
-                    label="Preview"
-                    description="Allow students to preview this lesson without enrolling"
-                    checked={!requiresEnrollment}
-                    onChange={(checked) => setRequiresEnrollment(!checked)}
-                  />
-                ) : null}
-                <ToggleRow
-                  id="lesson-visibility"
-                  label="Visibility"
-                  description="When unpublished, this lesson is hidden from enrolled learners."
-                  checked={status === "published"}
-                  statusLabel={status === "published" ? "Unpublish" : "Publish"}
-                  onChange={(checked) => setStatus(checked ? "published" : "draft")}
-                />
-              </div>
+                  {type === "text" && school ? (
+                    <div className="field">
+                      <span>Content</span>
+                      <RichTextEditor
+                        school={school}
+                        purpose="lesson_content"
+                        key={type}
+                        initialContent={editorContent(content)}
+                        onChange={(document) => {
+                          setContent(document as LessonContent);
+                          setFieldErrors((current) => ({
+                            ...current,
+                            content: undefined,
+                          }));
+                        }}
+                        placeholder="Write something…"
+                        className="rounded-md border bg-card"
+                        contentClassName="max-w-none"
+                        editorClassName="min-h-[260px]"
+                      />
+                    </div>
+                  ) : null}
+                  {type === "embed" ? (
+                    <div className="field">
+                      <Label htmlFor="lesson-embed">Embed code</Label>
+                      <Textarea
+                        id="lesson-embed"
+                        value={typeof content.value === "string" ? content.value : ""}
+                        onChange={(event) => {
+                          setContent({ value: event.target.value });
+                          setFieldErrors((current) => ({
+                            ...current,
+                            content: undefined,
+                          }));
+                        }}
+                        placeholder="e.g. a YouTube URL or iframe code"
+                      />
+                      <EmbedPreview
+                        value={typeof content.value === "string" ? content.value : ""}
+                      />
+                    </div>
+                  ) : null}
+                  {type === "quiz" ? (
+                    <div className="field">
+                      <span>Content</span>
+                      <QuizEditor
+                        key={type}
+                        value={content}
+                        onChange={(next) => {
+                          setContent(next);
+                          setFieldErrors((current) => ({
+                            ...current,
+                            content: undefined,
+                          }));
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  {fieldErrors.content ? (
+                    <p className="text-sm text-destructive">{fieldErrors.content}</p>
+                  ) : null}
 
-              <div className="flex items-center justify-between gap-3 pt-6">
+                  {type === "video" ||
+                  type === "audio" ||
+                  type === "pdf" ||
+                  type === "file" ? (
+                    <div className="field">
+                      <span>Media</span>
+                      {editing && school ? (
+                        <MediaPicker
+                          school={school}
+                          lessonType={type}
+                          value={mediaId}
+                          onChange={(nextMediaId) => void saveMedia(nextMediaId)}
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Save the {itemLabel} first, then select a reusable media
+                          library asset.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {type === "scorm" ? (
+                    <div className="field">
+                      <span>SCORM package</span>
+                      {editing && school && lessonId ? (
+                        <ScormLessonUpload
+                          school={school}
+                          lessonId={lessonId}
+                          content={content}
+                          onUploadComplete={(nextContent, nextMediaId) => {
+                            setContent(nextContent);
+                            setMediaId(nextMediaId);
+                          }}
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Save the lesson first, then upload its SCORM package.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {!isDownload && type !== "quiz" ? (
+                    <ToggleRow
+                      id="lesson-preview"
+                      label="Free preview"
+                      description="Anyone can open this lesson from the sales page without joining."
+                      checked={!requiresEnrollment}
+                      onChange={(checked) => setRequiresEnrollment(!checked)}
+                    />
+                  ) : null}
+                </div>
+              </section>
+
+              <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3 shadow-[var(--shadow-popover)]">
                 {editing ? (
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
                     disabled={saving}
                     onClick={() => setDeleteDialogOpen(true)}
                   >
                     <Trash2 className="size-4" /> Delete
                   </Button>
+                ) : null}
+                <span className="min-w-0 flex-[1_1_220px] text-[13.5px] text-muted-foreground">
+                  {footNote}
+                </span>
+                <Button asChild variant="ghost">
+                  <Link href={contentHref}>Cancel</Link>
+                </Button>
+                {lessonLive ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={saving}
+                      onClick={(event) =>
+                        void save(
+                          event as unknown as FormEvent<HTMLFormElement>,
+                          "draft",
+                        )
+                      }
+                    >
+                      Move to drafts
+                    </Button>
+                    <Button type="submit" disabled={saving}>
+                      {saving ? "Saving…" : "Save changes"}
+                    </Button>
+                  </>
                 ) : (
-                  <span />
+                  <>
+                    <Button type="submit" variant="outline" disabled={saving}>
+                      {saving ? "Saving…" : "Save draft"}
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={saving}
+                      onClick={(event) =>
+                        void save(
+                          event as unknown as FormEvent<HTMLFormElement>,
+                          "published",
+                        )
+                      }
+                    >
+                      Save and make live
+                    </Button>
+                  </>
                 )}
-                <div className="flex items-center gap-3">
-                  <Button asChild variant="outline">
-                    <Link href={`${productRoot}/content`}>Cancel</Link>
-                  </Button>
-                  <Button type="submit" disabled={saving}>
-                    <Save className="size-4" />{" "}
-                    {saving
-                      ? "Saving…"
-                      : `${editing ? "Update" : "Save"} ${isDownload ? "File" : "Lesson"}`}
-                  </Button>
-                </div>
               </div>
             </form>
-
-            {type === "video" ||
-            type === "audio" ||
-            type === "pdf" ||
-            type === "file" ? (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <Label className="font-semibold">Media</Label>
-                  {editing && school ? (
-                    <MediaPicker
-                      school={school}
-                      lessonType={type}
-                      value={mediaId}
-                      onChange={(nextMediaId) => void saveMedia(nextMediaId)}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Save the lesson first, then select a reusable media library asset.
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : null}
-
-            {type === "scorm" && editing && school && lessonId ? (
-              <>
-                <Separator />
-                <section className="space-y-2">
-                  <Label className="font-semibold">SCORM package</Label>
-                  <ScormLessonUpload
-                    school={school}
-                    lessonId={lessonId}
-                    content={content}
-                    onUploadComplete={(nextContent, nextMediaId) => {
-                      setContent(nextContent);
-                      setMediaId(nextMediaId);
-                    }}
-                  />
-                </section>
-              </>
-            ) : null}
           </>
         ) : null}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

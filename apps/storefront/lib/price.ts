@@ -3,18 +3,17 @@
  * nothing reads "Free", never "$0.00".
  */
 
+import { formatMoney } from "@courselit/api-contract/money";
+
 export function formatPrice(
   amountMinor: number,
   currency: string,
   { wholeAmounts = false }: { wholeAmounts?: boolean } = {},
 ): string {
   if (amountMinor === 0) return "Free";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    // Drop ".00" where a compact price reads better, e.g. "$20" not "$20.00".
-    ...(wholeAmounts ? { minimumFractionDigits: 0, maximumFractionDigits: 2 } : {}),
-  }).format(amountMinor / 100);
+  // `wholeAmounts` drops ".00" where a compact price reads better ("$20", not
+  // "$20.00"), but keeps the cents of "$20.50".
+  return formatMoney(amountMinor, currency, { compact: wholeAmounts });
 }
 
 export type PricedPlan = {

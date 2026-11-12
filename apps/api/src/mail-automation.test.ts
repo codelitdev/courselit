@@ -290,13 +290,13 @@ describe("membership events", () => {
 describe("section drip emails", () => {
   it("emails each learner once when their dripped section unlocks", async () => {
     const { runtime, adminHeaders, productId } = await setUp();
-    const detail = await dispatch(runtime, {
-      method: "GET",
-      path: `/v1/products/${productId}`,
+    const createdSection = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/sections`,
       headers: adminHeaders,
+      body: { title: "First section" },
     });
-    const sectionId = (detail.body as { sections: Array<{ id: string }> }).sections[0]!
-      .id;
+    const sectionId = (createdSection.body as { id: string }).id;
     await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/sections/${sectionId}`,

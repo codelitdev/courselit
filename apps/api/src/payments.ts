@@ -200,6 +200,21 @@ function verifyDigest(actualValue: string, expectedValue: string, errorCode: str
   }
 }
 
+/**
+ * Stripe takes amounts in the currency's minor unit, except ISK and UGX: both
+ * have no decimals, yet Stripe still expects them in hundredths (5 ISK is 500).
+ * https://docs.stripe.com/currencies#special-cases
+ */
+const STRIPE_HUNDREDTHS = new Set(["ISK", "UGX"]);
+
+export function toStripeAmount(amountMinor: number, currency: string): number {
+  return STRIPE_HUNDREDTHS.has(currency.toUpperCase()) ? amountMinor * 100 : amountMinor;
+}
+
+export function fromStripeAmount(amount: number, currency: string): number {
+  return STRIPE_HUNDREDTHS.has(currency.toUpperCase()) ? Math.round(amount / 100) : amount;
+}
+
 class StripePayment implements PaymentProvider {
   readonly name = "stripe" as const;
   constructor(private readonly settings: NonNullable<StoredPaymentSettings["stripe"]>) {}
@@ -220,7 +235,10 @@ class StripePayment implements PaymentProvider {
         // reject a payment the learner already made.
         "line_items[0][quantity]": 1,
         "line_items[0][price_data][currency]": input.currency.toLowerCase(),
-        "line_items[0][price_data][unit_amount]": input.paymentPlan.amountMinor,
+        "line_items[0][price_data][unit_amount]": toStripeAmount(
+          input.paymentPlan.amountMinor,
+          input.currency,
+        ),
         "line_items[0][price_data][product_data][name]": input.product.title,
         ...(recurring
           ? {
@@ -363,6 +381,15 @@ class StripePayment implements PaymentProvider {
     const cancelAt = isSubscriptionObject
       ? isoDate(object.cancel_at) ?? (object.cancel_at_period_end === true ? periodEnd : null)
       : null;
+    const stripeCurrency = stringValue(object.currency)?.toUpperCase();
+    const rawAmount =
+      integerValue(object.amount_total) ??
+      integerValue(object.amount_paid) ??
+      integerValue(object.amount);
+    const stripeAmount =
+      rawAmount === null || !stripeCurrency
+        ? rawAmount
+        : fromStripeAmount(rawAmount, stripeCurrency);
     const data: Record<string, unknown> = {
       ...object,
       metadata: { ...subscriptionMetadata, ...objectMetadata },
@@ -371,8 +398,8 @@ class StripePayment implements PaymentProvider {
         stringValue(object.subscription) ??
         stringValue(subscriptionDetails.subscription) ??
         (isSubscriptionObject ? stringValue(object.id) : null),
-      amount: integerValue(object.amount_total) ?? integerValue(object.amount_paid) ?? integerValue(object.amount),
-      currency: stringValue(object.currency)?.toUpperCase(),
+      amount: stripeAmount,
+      currency: stripeCurrency,
       // A subscription-mode checkout session and the first invoice share the
       // invoice id; a charge carries it as `invoice` on older API versions.
       invoice_id: isInvoiceObject ? stringValue(object.id) : stringValue(object.invoice),

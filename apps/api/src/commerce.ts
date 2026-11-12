@@ -312,7 +312,7 @@ function checkoutSessionToDto(row: {
     planDescription: row.plan.description,
     planType: sourceTypeForKind(row.plan.kind),
     currency: row.school.currency.toUpperCase(),
-    amountMinor: amountMinorForPlan(row.plan),
+    amountMinor: amountMinorForPlan(row.plan, row.school.currency),
     billingInterval: row.plan.billingInterval,
     installmentCount: row.plan.installmentCount,
     status: row.session.status,
@@ -806,7 +806,7 @@ export async function startLearnerCheckout(
     providerCheckoutUrl: null,
     status: "pending" as const,
     currency: selected.school.currency.toUpperCase(),
-    amountMinor: amountMinorForPlan(selected.plan),
+    amountMinor: amountMinorForPlan(selected.plan, selected.school.currency),
     createdAt: now,
     updatedAt: now,
     completedAt: null,
@@ -870,7 +870,7 @@ export async function startLearnerCheckout(
     checkout = await paymentProvider!.createCheckout({
       paymentPlan: {
         kind: selected.plan.kind,
-        amountMinor: amountMinorForPlan(selected.plan),
+        amountMinor: amountMinorForPlan(selected.plan, selected.school.currency),
         billingInterval: selected.plan.billingInterval,
         installmentCount: selected.plan.installmentCount,
         providerProductId: selected.plan.providerProductId,

@@ -16,6 +16,16 @@ describe("formatPrice", () => {
   it("formats other prices in their currency", () => {
     expect(formatPrice(2000, "USD")).toBe(usd(2000));
     expect(formatPrice(2000, "USD", { wholeAmounts: true })).not.toContain(".00");
+    // A compact price keeps its cents: $20.50, never $20.5.
+    expect(formatPrice(2050, "USD", { wholeAmounts: true })).toContain("20.50");
+  });
+
+  it("uses each currency's own minor unit", () => {
+    // Yen have no decimals, so 1500 is ¥1,500 rather than ¥15.00.
+    expect(formatPrice(1500, "JPY")).toContain("1,500");
+    expect(formatPrice(1500, "JPY")).not.toContain(".");
+    // Dinar have three decimals.
+    expect(formatPrice(12500, "KWD")).toContain("12.500");
   });
 });
 

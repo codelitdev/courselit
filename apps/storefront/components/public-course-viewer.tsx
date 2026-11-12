@@ -1,6 +1,10 @@
 "use client";
 
 import { formatPlanPrice } from "@/lib/price";
+import {
+  communityAccessNote,
+  communityPlansIncludingProduct,
+} from "@/lib/community-plans";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
@@ -32,6 +36,7 @@ import {
   LearnerHeader1,
   LearnerHeader2,
   LearnerHeader4,
+  LearnerLink,
   LearnerSelect,
   LearnerSelectContent,
   LearnerSelectItem,
@@ -73,7 +78,53 @@ type Product = CourseViewerProduct & {
   certificate: boolean;
   featuredImage: MediaRef | null;
   plans: Plan[];
+  includedWithCommunity?: boolean;
 };
+
+type CommunityPlanSummary = { name: string; includedProducts?: string[] };
+
+/** Tells a visitor who doesn't have the course that a community plan also
+ * unlocks it, with the way in. */
+function CommunityAccessNote({ product }: { product: Product }) {
+  const schoolId = useSchoolId();
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const [community, plans] = await Promise.all([
+        fetch(publicApiPath(schoolId, "/communities/community"), {
+          cache: "no-store",
+        }).then((response) => (response.ok ? response.json() : null)),
+        fetch(publicApiPath(schoolId, "/communities/community/plans"), {
+          cache: "no-store",
+        }).then((response) => (response.ok ? response.json() : null)),
+      ]);
+      if (!active || !community?.name) return;
+      const items = (plans?.items ?? []) as CommunityPlanSummary[];
+      setNote(
+        communityAccessNote(
+          community.name,
+          product,
+          communityPlansIncludingProduct(product, items),
+        ),
+      );
+    })().catch(() => {
+      // The course can still be bought on its own.
+    });
+    return () => {
+      active = false;
+    };
+  }, [product, schoolId]);
+
+  if (!note) return null;
+  return (
+    <LearnerText2 className="text-muted-foreground">
+      {note}{" "}
+      <LearnerLink href="/join">Join the community</LearnerLink>
+    </LearnerText2>
+  );
+}
 
 function hasLessonContent(lesson: LearnerLesson): boolean {
   return Boolean(
@@ -260,6 +311,7 @@ function CourseOverview({
           />
         </div>
       ) : null}
+      {!product.enrolled && !previewToken ? <CommunityAccessNote product={product} /> : null}
 
       {product.featuredImage ? (
         <div className="flex justify-center">
@@ -308,7 +360,7 @@ function CourseOverview({
       ) : null}
 
       {previewToken && !product.enrolled ? (
-        <LearnerBadge variant="outline" className="w-fit bg-muted">
+        <LearnerBadge variant="secondary" className="w-fit">
           Preview mode
         </LearnerBadge>
       ) : null}
@@ -628,6 +680,13 @@ export function PublicCourseViewer({
     [lessonId, product],
   );
 
+  // The viewer stays mounted across lessons, so a lesson's error must not follow
+  // the learner to the next one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset on lesson change
+  useEffect(() => {
+    setActionError(null);
+  }, [lessonId]);
+
   async function completeLesson() {
     if (!lesson) return;
     setActionError(null);
@@ -719,6 +778,7 @@ export function PublicCourseViewer({
     >
       {lesson ? (
         <LessonPage
+          key={lesson.id}
           product={product}
           productSlug={productSlug}
           lesson={lesson}

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { type Clock, uuidv7 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
+import { amountMinorForPlan } from "../storefront.js";
 import type { AppDb } from "../types.js";
 
 const SOURCE_SYSTEM = "courselit-mongo";
@@ -590,6 +591,17 @@ export async function importLegacyPaymentPlans(
     }
 
     if (mode === "apply") {
+      // main stores prices in major units; the minor unit depends on the currency.
+      const currencyBySchool = new Map<string, string>();
+      for (const plan of candidates) {
+        if (currencyBySchool.has(plan.schoolId)) continue;
+        const [school] = await db
+          .select({ currency: schema.schools.currency })
+          .from(schema.schools)
+          .where(eq(schema.schools.id, plan.schoolId))
+          .limit(1);
+        currencyBySchool.set(plan.schoolId, (school?.currency ?? "USD").toUpperCase());
+      }
       for (const plan of candidates) {
         await db.transaction(async (tx) => {
           const planId = uuidv7(input.clock);
@@ -609,7 +621,10 @@ export async function importLegacyPaymentPlans(
             emiTotalInstallments: plan.emiTotalInstallments,
             subscriptionMonthlyAmount: plan.subscriptionMonthlyAmount,
             subscriptionYearlyAmount: plan.subscriptionYearlyAmount,
-            amountMinor: plan.amountMinor,
+            amountMinor: amountMinorForPlan(
+              { ...plan, kind: plan.kind },
+              currencyBySchool.get(plan.schoolId) ?? "USD",
+            ),
             billingInterval: plan.billingInterval,
             installmentCount: plan.installmentCount,
             status: plan.status,

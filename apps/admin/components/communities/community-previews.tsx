@@ -11,42 +11,33 @@ import {
   relativeDay,
   type StorefrontPlan,
 } from "./community-shared";
-
-function money(amountMajor: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: amountMajor % 1 === 0 ? 0 : 2,
-  }).format(amountMajor);
-}
+import { formatMoney } from "@courselit/api-contract/money";
 
 /** Price, its unit and a one-line summary, as learners see a plan on the sales page. */
 export function planSummary(plan: StorefrontPlan, currency: string) {
-  const amount = plan.amountMinor / 100;
+  // The plan's amount is what checkout charges, in the currency's minor unit.
+  const price = formatMoney(plan.amountMinor, currency, { compact: true });
   switch (plan.kind) {
     case "free":
       return { price: "Free", unit: "", detail: plan.description || "No payment needed" };
     case "one_time":
       return {
-        price: money(plan.oneTimeAmount ?? amount, currency),
+        price,
         unit: "one time",
         detail: plan.description || "Pay once, keep access",
       };
     case "installment": {
       const count = plan.emiTotalInstallments ?? plan.installmentCount ?? 0;
       return {
-        price: money(plan.emiAmount ?? amount, currency),
+        price,
         unit: `× ${count}`,
         detail: plan.description || `${count} monthly payments`,
       };
     }
     default: {
       const yearly = plan.billingInterval === "year";
-      const value = yearly
-        ? (plan.subscriptionYearlyAmount ?? amount)
-        : (plan.subscriptionMonthlyAmount ?? amount);
       return {
-        price: money(value, currency),
+        price,
         unit: yearly ? "per year" : "per month",
         detail: plan.description || "Cancel any time",
       };

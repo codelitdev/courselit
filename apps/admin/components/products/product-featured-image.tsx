@@ -2,6 +2,7 @@
 
 import type { MediaRef } from "@courselit/api-contract";
 import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
+import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
@@ -59,57 +60,73 @@ export function ProductFeaturedImage({
   }
 
   return (
-    <section className="card stack">
-      <div>
-        <h2 className="font-semibold">Featured image</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The hero image for your product. Images are selected from the media library.
-        </p>
-      </div>
-      {value ? (
-        <div className="flex flex-wrap items-start gap-4">
+    <div className="field">
+      <span>
+        Featured image{" "}
+        <em className="ml-1 text-xs font-normal not-italic text-muted-foreground">
+          1200 × 630 works best
+        </em>
+      </span>
+      <div className="flex flex-wrap items-center gap-3.5 rounded-[var(--radius)] border border-dashed border-input px-4 py-3.5">
+        {value ? (
           <Image
             src={value.thumbnailUrl ?? value.url}
             alt={value.alt || "Product featured image"}
-            width={176}
-            height={112}
+            width={128}
+            height={68}
             unoptimized
-            className="h-28 w-44 rounded-md border object-cover"
+            className="h-[68px] w-32 rounded-md border object-cover"
           />
-          <div className="space-y-2 text-sm">
-            {/* Never show the storage URL: it is infrastructure, not something the
-                creator chose. Older references may have no name at all. */}
-            {imageLabel(value) ? (
-              <p className="font-medium">{imageLabel(value)}</p>
-            ) : null}
+        ) : (
+          <span
+            aria-hidden="true"
+            className="grid size-10 place-items-center rounded-[12px] bg-muted text-muted-foreground"
+          >
+            <ImageIcon className="size-5" />
+          </span>
+        )}
+        <span className="flex min-w-0 flex-[1_1_220px] flex-col gap-0.5">
+          {/* Never show the storage URL: it is infrastructure, not something the
+              creator chose. Older references may have no name at all. */}
+          <b className="truncate text-sm font-semibold">
+            {value
+              ? (imageLabel(value) ?? "Featured image")
+              : "Choose from your media library"}
+          </b>
+          <span className="text-[13px] text-muted-foreground">
+            Shown on the sales page and when people share the link.
+          </span>
+        </span>
+        <span className="flex flex-wrap items-center gap-2">
+          {value ? (
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => onChange(null)}
             >
-              Remove image
+              Remove
             </Button>
-          </div>
-        </div>
-      ) : null}
-      <ImageUploadDialog<CourseLitMedia>
-        {...filteredAdapters}
-        title="Select featured image"
-        acceptedTypes={PRODUCT_IMAGE_ACCEPTED_TYPES}
-        allowUnsplash={false}
-        metadataMode="alt"
-        onSelect={selectImage}
-      >
-        <Button type="button" variant="outline" size="sm" className="w-fit">
-          {value ? "Change image" : "Select an image"}
-        </Button>
-      </ImageUploadDialog>
+          ) : null}
+          <ImageUploadDialog<CourseLitMedia>
+            {...filteredAdapters}
+            title="Select featured image"
+            acceptedTypes={PRODUCT_IMAGE_ACCEPTED_TYPES}
+            allowUnsplash={false}
+            metadataMode="alt"
+            onSelect={selectImage}
+          >
+            <Button type="button" variant="outline" size="sm">
+              {value ? "Change image" : "Choose image"}
+            </Button>
+          </ImageUploadDialog>
+        </span>
+      </div>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       ) : null}
-    </section>
+    </div>
   );
 }

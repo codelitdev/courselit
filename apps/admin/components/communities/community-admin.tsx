@@ -1,6 +1,13 @@
 "use client";
 
-import { ExternalLink, LayoutTemplate, MoreHorizontal } from "lucide-react";
+import {
+  ExternalLink,
+  Flag,
+  LayoutGrid,
+  MoreHorizontal,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -279,19 +286,33 @@ export function CommunityAdmin() {
     }
 
     const tabs = [
-      { value: "details", label: "Details", href: "/community", count: null },
+      {
+        value: "details",
+        label: "Details",
+        href: "/community",
+        count: null,
+        icon: Settings,
+      },
       {
         value: "memberships",
         label: "Members",
         href: "/community/memberships",
         count: pendingMembers,
+        icon: Users,
       },
-      { value: "spaces", label: "Spaces", href: "/community/spaces", count: null },
+      {
+        value: "spaces",
+        label: "Spaces",
+        href: "/community/spaces",
+        count: null,
+        icon: LayoutGrid,
+      },
       {
         value: "reports",
         label: "Reports",
         href: "/community/reports",
         count: pendingReports,
+        icon: Flag,
       },
     ] as const;
     const activeSection = section === "setup" ? "details" : section;
@@ -328,9 +349,7 @@ export function CommunityAdmin() {
             ) : null}
             {salesPageEditorHref ? (
               <Button asChild variant="outline">
-                <Link href={salesPageEditorHref}>
-                  <LayoutTemplate /> Edit sales page
-                </Link>
+                <Link href={salesPageEditorHref}>Edit sales page</Link>
               </Button>
             ) : null}
             {canWrite && community.enabled ? (
@@ -357,28 +376,31 @@ export function CommunityAdmin() {
             ) : null}
           </div>
         </div>
-        <nav aria-label="Community" className="-mt-2 flex gap-6 border-b">
+        {/* Same pill tabs as a product's Overview, Content and Settings. */}
+        <nav aria-label="Community" className="-mt-1 flex gap-1.5 overflow-x-auto">
           {tabs.map((tab) => {
             const active = tab.value === activeSection;
             if (tab.value === "details" && !canWrite) return null;
             if (tab.value === "memberships" && !canWrite) return null;
             if (tab.value === "spaces" && !canWrite) return null;
             if (tab.value === "reports" && !canModerate) return null;
+            const Icon = tab.icon;
             return (
               <Link
                 key={tab.value}
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "-mb-px inline-flex items-center gap-2 border-b-2 px-1 pb-3 text-sm transition-colors",
+                  "inline-flex h-11 flex-none items-center gap-2 rounded-[var(--radius)] px-3.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   active
-                    ? "border-primary font-medium text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
+                    ? "bg-[var(--primary-soft)] font-semibold text-foreground"
+                    : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
+                <Icon className="size-[17px]" aria-hidden="true" />
                 {tab.label}
                 {tab.count ? (
-                  <span className="rounded-full bg-[var(--primary-soft)] px-1.5 text-xs text-primary">
+                  <span className="rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
                     {tab.count}
                   </span>
                 ) : null}

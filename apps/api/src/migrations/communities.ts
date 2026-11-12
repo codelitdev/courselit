@@ -3,6 +3,7 @@ import { type Clock, uuidv7 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import { communityGifUrls } from "../communities.js";
 import * as schema from "../db/schema/index.js";
+import { majorToMinor } from "@courselit/api-contract/money";
 import type { AppDb } from "../types.js";
 
 const SOURCE_SYSTEM = "courselit-mongo";
@@ -145,11 +146,11 @@ function numberValue(value: unknown): number | null {
   return value;
 }
 
-function amountMinor(value: unknown): number | null {
+/** A major amount from main as an integer in the currency's minor unit. */
+function amountMinor(value: unknown, currency: string): number | null {
   const number = numberValue(value);
-  if (number === null || number < 0) return null;
-  const result = Math.round(number * 100);
-  return Number.isSafeInteger(result) ? result : null;
+  if (number === null) return null;
+  return majorToMinor(number, currency);
 }
 
 function slugValue(value: unknown, name: string): string | null {
@@ -212,6 +213,15 @@ async function findMapping(
     )
     .limit(1);
   return rows[0] ?? null;
+}
+
+async function schoolCurrency(db: AppDb, schoolId: string): Promise<string> {
+  const [school] = await db
+    .select({ currency: schema.schools.currency })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  return (school?.currency ?? "USD").toUpperCase();
 }
 
 async function schoolFor(
@@ -778,7 +788,7 @@ export async function importLegacyCommunities(
       const emiAmount = numberValue(record.emiAmount);
       const subscriptionMonthlyAmount = numberValue(record.subscriptionMonthlyAmount);
       const subscriptionYearlyAmount = numberValue(record.subscriptionYearlyAmount);
-      const amount = record.amountMinor !== undefined ? numberValue(record.amountMinor) : amountMinor(record.amount ?? record.price);
+      const amount = record.amountMinor !== undefined ? numberValue(record.amountMinor) : amountMinor(record.amount ?? record.price, await schoolCurrency(db, communityRow.schoolId));
       if (amount === null && kind !== "free") {
         addRejection(rejection(COLLECTIONS.plans, sourceId, "invalid_amount"));
         continue;

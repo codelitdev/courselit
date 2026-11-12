@@ -15,6 +15,7 @@ import {
   issueSchoolSession,
   type LearnerDto,
   type LearnerSession,
+  learnerNameIsPlaceholder,
   signInLearnerWithIdentity,
 } from "./learners.js";
 import { queueSchoolEmail, renderSchoolEmail } from "./school-emails.js";
@@ -145,7 +146,15 @@ export async function verifyLearnerEmailCode(
   db: AppDb,
   input: { schoolPublicId: string; email: string; code: string },
   clock: Clock,
-): Promise<Result<{ dto: LearnerDto; token: string; session: LearnerSession }>> {
+): Promise<
+  Result<{
+    dto: LearnerDto;
+    token: string;
+    session: LearnerSession;
+    /** True while the learner's name is still the one made from their email. */
+    needsName: boolean;
+  }>
+> {
   const school = await loadSchoolByPublicId(db, input.schoolPublicId);
   if (!school) return { ok: false, error: createPlatformError("tenant_required") };
   const email = normalizeEmail(input.email);
@@ -202,7 +211,12 @@ export async function verifyLearnerEmailCode(
   if (!signedIn.ok) return signedIn;
   return {
     ok: true,
-    value: { dto: signedIn.value, token: signedIn.token, session: signedIn.session },
+    value: {
+      dto: signedIn.value,
+      token: signedIn.token,
+      session: signedIn.session,
+      needsName: learnerNameIsPlaceholder(signedIn.value.name, email),
+    },
   };
 }
 

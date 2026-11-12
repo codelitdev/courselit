@@ -676,6 +676,7 @@ CREATE TABLE "products" (
 	"lead_magnet" boolean DEFAULT false NOT NULL,
 	"certificate" boolean DEFAULT false NOT NULL,
 	"discussions" boolean DEFAULT false NOT NULL,
+	"new_lesson_status" text DEFAULT 'draft' NOT NULL,
 	"included_with_community" boolean DEFAULT false NOT NULL,
 	"discussion_space_id" uuid,
 	"created_by" text NOT NULL,

@@ -1,16 +1,15 @@
 "use client";
 
-import {
-  defaultEmail,
-  type Email,
-  renderEmailToHtml,
-} from "@sendlit/email-editor";
+import { defaultEmail, type Email, renderEmailToHtml } from "@sendlit/email-editor";
 import { ArrowLeft, Check, Save } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
-import { EditorBackButton, useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
+import {
+  EditorBackButton,
+  useUnsavedChangesWarning,
+} from "@/components/mails/unsaved-changes";
 import { Button } from "@/components/ui/codelit/button";
 import { Label } from "@/components/ui/codelit/label";
 import { Switch } from "@/components/ui/codelit/switch";
@@ -90,7 +89,8 @@ export function DripEmailEditor({
   const revisionRef = useRef(0);
   const savingRef = useRef(false);
   const pendingPatchRef = useRef<{ enabled?: boolean } | null>(null);
-  const sectionPath = `/products/${encodeURIComponent(productId)}/content/section/${encodeURIComponent(sectionId)}`;
+  // Sections are edited inline on the Content tab, so the email returns there.
+  const sectionPath = `/products/${encodeURIComponent(productId)}/content`;
   const apiPath = `/api/v1/sections/${encodeURIComponent(sectionId)}/drip-email`;
 
   useEffect(() => {
@@ -219,7 +219,7 @@ export function DripEmailEditor({
           <Button asChild variant="outline">
             <Link href={sectionPath}>
               <ArrowLeft className="mr-2 size-4" />
-              Back to section
+              Back to content
             </Link>
           </Button>
         </div>
@@ -233,7 +233,7 @@ export function DripEmailEditor({
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <EditorBackButton
             href={sectionPath}
-            label="Section"
+            label="Content"
             dirty={edited}
             onSave={() => save()}
             disabled={saving}

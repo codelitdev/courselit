@@ -11,6 +11,7 @@ import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { productFeaturedImageFor } from "./products.js";
 import {
+  amountMinorForPlan,
   kindForSourceType,
   type PlanInput,
   type StorefrontContext,
@@ -96,7 +97,7 @@ export function communityPlanToDto(
   communityPublicId: string,
   currency: string,
 ): CommunityPlanDto {
-  const sourceAmounts = sourceAmountsForRow(row);
+  const sourceAmounts = sourceAmountsForRow(row, currency);
   return {
     id: row.publicId,
     schoolId: schoolPublicId,
@@ -109,7 +110,8 @@ export function communityPlanToDto(
     kind: row.kind,
     currency,
     ...sourceAmounts,
-    amountMinor: row.amountMinor,
+    // What checkout charges, in the school currency's minor unit.
+    amountMinor: amountMinorForPlan(row, currency),
     billingInterval: row.billingInterval,
     installmentCount: row.installmentCount,
     status: row.status,
@@ -290,7 +292,10 @@ export async function createCommunityPlan(
   const school = await loadSchool(db, context.tenantId!);
   if (!community || !school)
     return { ok: false, error: createPlatformError("not_found") };
-  const checked = validatePlan(input, { allowIncludedProducts: true });
+  const checked = validatePlan(input, {
+    currency: normalizeCurrency(school.currency),
+    allowIncludedProducts: true,
+  });
   if (!checked.ok) return checked;
   if (
     !(await validateIncludedProducts(db, context.tenantId!, input.includedProducts))
@@ -401,7 +406,8 @@ export async function updateCommunityPlan(
   const school = await loadSchool(db, context.tenantId!);
   if (!community || !school)
     return { ok: false, error: createPlatformError("not_found") };
-  const current = sourceAmountsForRow(existing);
+  const currency = normalizeCurrency(school.currency);
+  const current = sourceAmountsForRow(existing, currency);
   const nextType =
     input.type ??
     (input.kind ? sourceTypeForKind(input.kind) : sourceTypeForKind(existing.kind));
@@ -444,7 +450,7 @@ export async function updateCommunityPlan(
             ? existing.installmentCount
             : null,
     },
-    { allowIncludedProducts: true },
+    { currency, allowIncludedProducts: true },
   );
   if (!checked.ok) return checked;
   if (

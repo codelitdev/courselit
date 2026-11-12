@@ -22918,6 +22918,13 @@
                           "discussions": {
                             "type": "boolean"
                           },
+                          "newLessonStatus": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "published"
+                            ]
+                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -23028,6 +23035,7 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
+                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
@@ -24863,6 +24871,13 @@
                           "discussions": {
                             "type": "boolean"
                           },
+                          "newLessonStatus": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "published"
+                            ]
+                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -24883,7 +24898,7 @@
                           "currency": {
                             "type": "string"
                           },
-                          "sales": {
+                          "salesAmountMinor": {
                             "type": "integer",
                             "minimum": 0
                           },
@@ -24905,13 +24920,14 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
+                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
                           "updatedAt",
                           "currency",
-                          "sales",
+                          "salesAmountMinor",
                           "customers"
                         ]
                       }
@@ -25141,6 +25157,9 @@
                     "default": "",
                     "type": "string",
                     "maxLength": 8000
+                  },
+                  "leadMagnet": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -25255,6 +25274,13 @@
                     "discussions": {
                       "type": "boolean"
                     },
+                    "newLessonStatus": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -25286,6 +25312,7 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
+                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -25630,6 +25657,13 @@
                           "discussions": {
                             "type": "boolean"
                           },
+                          "newLessonStatus": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "published"
+                            ]
+                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -25669,6 +25703,7 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
+                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
@@ -36593,6 +36628,13 @@
                   "discussions": {
                     "type": "boolean"
                   },
+                  "newLessonStatus": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "published"
+                    ]
+                  },
                   "includedWithCommunity": {
                     "type": "boolean"
                   }
@@ -36706,6 +36748,13 @@
                     "discussions": {
                       "type": "boolean"
                     },
+                    "newLessonStatus": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -36737,6 +36786,7 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
+                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -37367,6 +37417,13 @@
                     "discussions": {
                       "type": "boolean"
                     },
+                    "newLessonStatus": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -37538,6 +37595,7 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
+                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -43183,6 +43241,13 @@
                     "discussions": {
                       "type": "boolean"
                     },
+                    "newLessonStatus": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -43354,6 +43419,7 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
+                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -43910,10 +43976,12 @@
               "default": "7d",
               "type": "string",
               "enum": [
+                "1d",
                 "7d",
                 "30d",
                 "90d",
-                "1y"
+                "1y",
+                "lifetime"
               ]
             }
           }
@@ -43932,10 +44000,12 @@
                     "range": {
                       "type": "string",
                       "enum": [
+                        "1d",
                         "7d",
                         "30d",
                         "90d",
-                        "1y"
+                        "1y",
+                        "lifetime"
                       ]
                     },
                     "currency": {
@@ -45884,10 +45954,12 @@
               "default": "7d",
               "type": "string",
               "enum": [
+                "1d",
                 "7d",
                 "30d",
                 "90d",
-                "1y"
+                "1y",
+                "lifetime"
               ]
             }
           }
@@ -45903,10 +45975,12 @@
                     "range": {
                       "type": "string",
                       "enum": [
+                        "1d",
                         "7d",
                         "30d",
                         "90d",
-                        "1y"
+                        "1y",
+                        "lifetime"
                       ]
                     },
                     "currency": {
@@ -46672,6 +46746,13 @@
                     "discussions": {
                       "type": "boolean"
                     },
+                    "newLessonStatus": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -46843,6 +46924,7 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
+                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -55405,6 +55487,9 @@
                     },
                     "emailUpdatesEnabled": {
                       "type": "boolean"
+                    },
+                    "needsName": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -55415,7 +55500,8 @@
                     "avatarMediaId",
                     "image",
                     "bio",
-                    "emailUpdatesEnabled"
+                    "emailUpdatesEnabled",
+                    "needsName"
                   ]
                 }
               }

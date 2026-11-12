@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
+import { formatMoney } from "@courselit/api-contract/money";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { cn } from "@/lib/utils";
 
@@ -79,41 +80,21 @@ type ProductUnlockDraft = {
 function planSubtitle(plan: AccessPlan): string {
   const currency = plan.currency || "USD";
   if (plan.type === "free" || plan.kind === "free") return "Free";
-  const oneTimeAmount =
-    plan.oneTimeAmount ?? (plan.amountMinor != null ? plan.amountMinor / 100 : null);
-  const emiAmount =
-    plan.emiAmount ?? (plan.amountMinor != null ? plan.amountMinor / 100 : null);
-  const subscriptionAmount =
-    plan.subscriptionMonthlyAmount ??
-    plan.subscriptionYearlyAmount ??
-    (plan.amountMinor != null ? plan.amountMinor / 100 : null);
-
-  const formatAmount = (amt: number | null) => {
-    if (amt == null) return "";
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-    }).format(amt);
-  };
-
-  if (plan.type === "onetime" || plan.kind === "one_time") {
-    return formatAmount(oneTimeAmount);
-  }
+  if (plan.amountMinor == null) return "";
+  // The plan's amount is what checkout charges, in the currency's minor unit.
+  const amount = formatMoney(plan.amountMinor, currency);
   if (plan.type === "emi" || plan.kind === "installment") {
     const installments = plan.emiTotalInstallments ?? plan.installmentCount ?? 0;
-    return `${formatAmount(emiAmount)} × ${installments}`;
+    return `${amount} × ${installments}`;
   }
   if (plan.type === "subscription" || plan.kind === "subscription") {
     const interval =
       plan.subscriptionYearlyAmount != null || plan.billingInterval === "year"
         ? "yr"
         : "mo";
-    return `${formatAmount(subscriptionAmount)}/${interval}`;
+    return `${amount}/${interval}`;
   }
-  if (plan.amountMinor != null) {
-    return formatAmount(plan.amountMinor / 100);
-  }
-  return "";
+  return amount;
 }
 
 function PlanOption({

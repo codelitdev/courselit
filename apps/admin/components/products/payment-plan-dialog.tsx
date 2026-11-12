@@ -28,6 +28,12 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
+import {
+  formatMoney,
+  majorToMinor,
+  minorToMajor,
+  priceDecimals,
+} from "@courselit/api-contract/money";
 import type { School, StorefrontPlan } from "./product-types";
 
 export type PlanRequest = <T>(path: string, init?: RequestInit) => Promise<T>;
@@ -96,7 +102,7 @@ export function hasConfiguredPaymentProvider(settings: PaymentSettings): boolean
   return false;
 }
 
-function initialAmount(plan: StorefrontPlan | null) {
+function initialAmount(plan: StorefrontPlan | null, currency: string) {
   if (!plan) return "0";
   const amount =
     plan.kind === "one_time"
@@ -108,7 +114,9 @@ function initialAmount(plan: StorefrontPlan | null) {
             ? plan.subscriptionYearlyAmount
             : plan.subscriptionMonthlyAmount
           : null;
-  return (amount ?? plan.amountMinor / 100).toFixed(2);
+  return (amount ?? minorToMajor(plan.amountMinor, currency)).toFixed(
+    priceDecimals(currency),
+  );
 }
 
 function getCurrencySymbol(currency: string) {
@@ -142,14 +150,16 @@ function MoneyInput({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  // A step of one smallest chargeable amount: 0.01 for USD, 1 for JPY.
+  const step = String(10 ** -priceDecimals(currency));
   return (
     <InputGroup>
       <InputGroupInput
         id={id}
         aria-label={`${placeholder} (${currency})`}
         type="number"
-        min="0.01"
-        step="0.01"
+        min={step}
+        step={step}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
@@ -197,11 +207,11 @@ export function PaymentPlanDialog({
     setIncludedProducts(plan?.includedProducts ?? []);
     setDescription(plan?.description ?? "");
     setKind(plan?.kind ?? initialKind);
-    setAmount(initialAmount(plan));
+    setAmount(initialAmount(plan, school.currency || "USD"));
     setInterval(plan?.billingInterval ?? "month");
     setInstallments(String(plan?.installmentCount ?? 3));
     setError(null);
-  }, [open, plan, initialKind]);
+  }, [open, plan, initialKind, school.currency]);
 
   useEffect(() => {
     if (!open) return;
@@ -278,6 +288,16 @@ export function PaymentPlanDialog({
       setError("Enter a valid amount greater than zero.");
       return;
     }
+    const decimals = priceDecimals(currency);
+    const scaled = parsedAmount * 10 ** decimals;
+    if (Math.abs(scaled - Math.round(scaled)) > 1e-6) {
+      setError(
+        decimals === 0
+          ? `${currency} prices are whole numbers.`
+          : `Use at most ${decimals} decimal places for ${currency}.`,
+      );
+      return;
+    }
     if (
       kind === "installment" &&
       (typeof parsedInstallments !== "number" ||
@@ -303,7 +323,7 @@ export function PaymentPlanDialog({
         kind === "subscription" && interval === "month" ? Number(parsedAmount) : null,
       subscriptionYearlyAmount:
         kind === "subscription" && interval === "year" ? Number(parsedAmount) : null,
-      amountMinor: Math.round(parsedAmount * 100),
+      amountMinor: majorToMinor(parsedAmount, currency) ?? 0,
       billingInterval:
         // CourseLit's source EMI model is monthly payments without a
         // separately persisted frequency. The API keeps its historical
@@ -509,8 +529,11 @@ export function PaymentPlanDialog({
                 <p className="text-sm text-muted-foreground">
                   Total:{" "}
                   <span className="font-medium text-foreground">
-                    {symbol}
-                    {((Number(amount) || 0) * (Number(installments) || 0)).toFixed(2)}
+                    {formatMoney(
+                      (majorToMinor(Number(amount) || 0, currency) ?? 0) *
+                        (Number(installments) || 0),
+                      currency,
+                    )}
                   </span>
                 </p>
               </div>

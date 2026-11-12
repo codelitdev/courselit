@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPrice } from "@/lib/price";
 import type { learnerPurchaseSchema } from "@courselit/api-contract";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -11,6 +12,7 @@ import {
 } from "@/components/communities/learner-community";
 import { CourseLitLoading } from "@/components/course-lit-loader";
 import { LearnerShell } from "@/components/layout/learner-shell";
+import { manageSubscriptionLink } from "@/lib/purchase-actions";
 import {
   LearnerBadge,
   LearnerButton,
@@ -38,15 +40,7 @@ const STATUS_LABELS: Record<Purchase["status"], string> = {
 };
 
 function formatAmount(purchase: Purchase) {
-  if (purchase.amountMinor === 0) return "Free";
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: purchase.currency,
-    }).format(purchase.amountMinor / 100);
-  } catch {
-    return `${purchase.currency} ${(purchase.amountMinor / 100).toFixed(2)}`;
-  }
+  return formatPrice(purchase.amountMinor, purchase.currency);
 }
 
 function purchaseHref(purchase: Purchase) {
@@ -55,6 +49,7 @@ function purchaseHref(purchase: Purchase) {
 }
 
 function PurchaseCard({ purchase }: { purchase: Purchase }) {
+  const manage = manageSubscriptionLink(purchase);
   return (
     <LearnerCard>
       <LearnerCardContent className="flex flex-wrap items-start justify-between gap-4">
@@ -86,6 +81,11 @@ function PurchaseCard({ purchase }: { purchase: Purchase }) {
                     ? "Open download"
                     : "Open course"}
               </Link>
+            </LearnerButton>
+          ) : null}
+          {manage ? (
+            <LearnerButton asChild size="sm" variant="ghost">
+              <Link href={manage.href}>{manage.label}</Link>
             </LearnerButton>
           ) : null}
         </div>

@@ -32,6 +32,11 @@ export const products = pgTable(
     leadMagnet: boolean("lead_magnet").notNull().default(false),
     certificate: boolean("certificate").notNull().default(false),
     discussions: boolean("discussions").notNull().default(false),
+    /** Status a lesson gets when it is created without one. */
+    newLessonStatus: text("new_lesson_status")
+      .$type<"draft" | "published">()
+      .notNull()
+      .default("draft"),
     includedWithCommunity: boolean("included_with_community").notNull().default(false),
     discussionSpaceId: uuid("discussion_space_id"),
     createdBy: text("created_by")

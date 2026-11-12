@@ -5,7 +5,7 @@ import { seedWorld } from "./seed.js";
 import { textDoc } from "./test-content.js";
 
 describe.serial("product sections", () => {
-  it("creates the first authoring section when a product is created", async () => {
+  it("starts a course blank and gives a download its one section", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
@@ -35,7 +35,9 @@ describe.serial("product sections", () => {
       expect(detail.body).toMatchObject({
         id: productId,
         kind,
-        sections: [{ title: "First section", position: 1 }],
+        // A course's Content tab starts with "Add a section"; a download
+        // always keeps one section for its files.
+        sections: kind === "course" ? [] : [{ title: "First section", position: 1 }],
         lessons: [],
       });
     }

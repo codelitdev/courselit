@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPrice } from "@/lib/price";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 // Course viewing is protected, except for explicit preview tokens.
@@ -340,7 +341,7 @@ export default function CoursePage() {
                     {(product?.plans ?? []).map((plan) => (
                       <div className="flex gap-2 items-center" key={plan.id}>
                         <LearnerText2 component="span">
-                          {plan.name} · {plan.currency} {plan.amountMinor / 100}
+                          {plan.name} · {formatPrice(plan.amountMinor, plan.currency)}
                           {plan.kind === "subscription" && plan.billingInterval
                             ? ` / ${plan.billingInterval}`
                             : plan.kind === "installment" && plan.installmentCount

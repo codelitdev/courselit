@@ -1006,7 +1006,7 @@ export async function dispatch(
       });
       return {
         status: 200,
-        body: result.value.dto,
+        body: { ...result.value.dto, needsName: result.value.needsName },
         headers: { "Set-Cookie": learnerSessionCookieHeader(result.value.token) },
       };
     }

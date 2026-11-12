@@ -164,6 +164,8 @@ export interface PublicCommunityPlan {
   billingInterval: "month" | "year" | null;
   installmentCount: number | null;
   isDefault: boolean;
+  /** Products this plan unlocks besides the community. */
+  includedProducts?: string[];
 }
 
 export function getPublicProduct(

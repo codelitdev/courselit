@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
 import { requestJson } from "@/lib/request-json";
+import { publicApiPath, useSchoolId } from "@/components/school-context";
+import {
+  type CommunityWithViewerMembership,
+  pendingCommunityName,
+} from "@/lib/community-membership";
 import {
   LearnerAlertDialog,
   LearnerAlertDialogAction,
@@ -27,6 +32,7 @@ import { toast } from "@/components/themed-sonner";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 
 type LearnerCommunityMembership = z.infer<typeof learnerCommunityMembershipSchema>;
+
 
 /**
  * What happens when the learner leaves. Leaving cancels any running billing
@@ -50,7 +56,11 @@ export function leaveCommunityDescription(community: LearnerCommunityMembership)
  */
 export function LearnerCommunityMembershipBar() {
   const router = useRouter();
+  const schoolId = useSchoolId();
   const [community, setCommunity] = useState<LearnerCommunityMembership | null>(null);
+  // A learner who asked to join lands here straight after; say the request
+  // is with the school instead of showing an empty feed with no explanation.
+  const [pendingName, setPendingName] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -59,8 +69,16 @@ export function LearnerCommunityMembershipBar() {
     void requestJson<{ items: LearnerCommunityMembership[] }>(
       "/api/v1/learner/communities?limit=1",
     )
-      .then((body) => {
-        if (active) setCommunity(body.items[0] ?? null);
+      .then(async (body) => {
+        if (!active) return;
+        const membership = body.items[0] ?? null;
+        setCommunity(membership);
+        if (membership) return;
+        // The school's one community, looked up the way `/join` does.
+        const detail = await requestJson<CommunityWithViewerMembership>(
+          publicApiPath(schoolId, "/communities/community"),
+        );
+        if (active) setPendingName(pendingCommunityName(detail));
       })
       .catch(() => {
         // Without the membership there is nothing to leave; the feed still works.
@@ -68,9 +86,17 @@ export function LearnerCommunityMembershipBar() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [schoolId]);
 
-  if (!community) return null;
+  if (!community) {
+    if (!pendingName) return null;
+    return (
+      <LearnerText2 className="text-muted-foreground" role="status">
+        Your request to join {pendingName} is waiting for approval. We&apos;ll let
+        you know.
+      </LearnerText2>
+    );
+  }
 
   async function leave(target: LearnerCommunityMembership) {
     setLeaving(true);

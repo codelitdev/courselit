@@ -978,7 +978,7 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
     {
       key: "site",
       name: "Website",
-      desc: "Your homepage, plus Terms and Privacy drafts to fill in",
+      desc: "Your homepage, plus Terms and Privacy drafts to review",
     },
     { key: "community", name: "Community", desc: "Ready for when you switch it on" },
     { key: "email", name: "Email", desc: "So you can send to your contacts" },
@@ -989,7 +989,7 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
     const base: Record<LiveKey, { name: string; desc: string }> = {
       site: {
         name: "Website",
-        desc: "Your homepage, plus Terms and Privacy drafts to fill in",
+        desc: "Your homepage, plus Terms and Privacy drafts to review",
       },
       community: {
         name: "Community",

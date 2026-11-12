@@ -418,6 +418,7 @@ export async function listLearnerProducts(
         leadMagnet: product.leadMagnet,
         certificate: product.certificate,
         discussions: product.discussions,
+        newLessonStatus: product.newLessonStatus,
         includedWithCommunity: product.includedWithCommunity,
         discussionSpaceId: discussionSpaceRows[0]?.publicId ?? null,
         publishedAt: product.publishedAt ? serializeDate(product.publishedAt) : null,
@@ -694,6 +695,15 @@ export async function issueSchoolSession(
 function learnerNameFromEmail(email: string): string {
   const localPart = email.split("@", 1)[0]?.trim();
   return (localPart || "Learner").slice(0, 200);
+}
+
+/**
+ * Whether a learner still has the placeholder name made from their email
+ * address, which no one chose. Sign-in asks them for a real one.
+ */
+export function learnerNameIsPlaceholder(name: string, email: string): boolean {
+  const trimmed = name.trim();
+  return !trimmed || trimmed === learnerNameFromEmail(normalizeEmail(email));
 }
 
 export async function enqueueLearnerContactSync(

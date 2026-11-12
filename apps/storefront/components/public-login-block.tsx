@@ -4,6 +4,7 @@ import { publicApiPath, useLegalPages, useSchoolId } from "@/components/school-c
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
+import { LearnerNameStep } from "@/components/learner-name-step";
 import { ExternalLoginButton } from "@/components/auth/external-login-button";
 import {
   LearnerButton,
@@ -24,7 +25,7 @@ import {
 import { readSignedInHint } from "@/lib/header-account";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
-type OtpStep = "email" | "otp";
+type OtpStep = "email" | "otp" | "name";
 
 function destinationAfterLogin() {
   if (typeof window === "undefined") return "/dashboard";
@@ -119,7 +120,7 @@ export function PublicLoginBlock() {
     setError(null);
     setLoading(true);
     try {
-      await verifyEmailCode(email, otp);
+      const { needsName } = await verifyEmailCode(email, otp);
       const meHeaders = learnerHeaders();
       if (identityLinkToken) meHeaders.set("x-learner-identity-link", identityLinkToken);
       const meRes = await fetch("/api/v1/learner/me", {
@@ -137,8 +138,12 @@ export function PublicLoginBlock() {
         );
       }
       clearLearnerIdentityLink();
-      // Replace, not push: Back after signing in should not land on this form.
-      window.location.replace(destinationAfterLogin());
+      if (needsName) {
+        // A first sign-in: ask what to call them before moving on.
+        setOtpStep("name");
+        return;
+      }
+      leaveAfterSignIn();
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to verify the sign-in code.",
@@ -146,6 +151,11 @@ export function PublicLoginBlock() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function leaveAfterSignIn() {
+    // Replace, not push: Back after signing in should not land on this form.
+    window.location.replace(destinationAfterLogin());
   }
 
   function handleGoogleSignIn() {
@@ -161,11 +171,13 @@ export function PublicLoginBlock() {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 py-12">
-      <LearnerText2>
-        {otpStep === "email"
-          ? "Enter your email to sign in or create an account"
-          : `Enter the six-digit code sent to ${email}.`}
-      </LearnerText2>
+      {otpStep === "name" ? null : (
+        <LearnerText2>
+          {otpStep === "email"
+            ? "Enter your email to sign in or create an account"
+            : `Enter the six-digit code sent to ${email}.`}
+        </LearnerText2>
+      )}
 
       {identityLinkToken ? (
         <LearnerText2>
@@ -174,7 +186,9 @@ export function PublicLoginBlock() {
         </LearnerText2>
       ) : null}
 
-      {showEmail ? (
+      {otpStep === "name" ? (
+        <LearnerNameStep onDone={leaveAfterSignIn} />
+      ) : showEmail ? (
         otpStep === "email" ? (
           <form onSubmit={requestOtp} className="flex flex-col gap-3">
             <LearnerLabel theme={theme} htmlFor="login-email" className="sr-only">

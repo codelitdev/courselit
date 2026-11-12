@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPrice } from "@/lib/price";
 import type {
   communityCommentSchema,
   communityPaymentPlanSchema,
@@ -78,6 +79,7 @@ import {
   MAX_POST_GIFS,
   withGif,
 } from "./learner-gif-picker";
+import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
@@ -982,6 +984,9 @@ export function LearnerCommunity({
           : "Your community membership is being processed.",
       );
       await load();
+      // The sidebar lists the spaces this membership opens; tell it to reload
+      // instead of waiting for the learner to refresh the page.
+      window.dispatchEvent(new Event(LEARNER_ACCESS_CHANGED));
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to join this community.",
@@ -1566,12 +1571,7 @@ export function LearnerCommunity({
                                   ) : null}
                                 </div>
                                 <LearnerText2 component="span" className="font-medium">
-                                  {plan.amountMinor === 0
-                                    ? "Free"
-                                    : new Intl.NumberFormat(undefined, {
-                                        style: "currency",
-                                        currency: plan.currency,
-                                      }).format(plan.amountMinor / 100)}
+                                  {formatPrice(plan.amountMinor, plan.currency)}
                                 </LearnerText2>
                               </div>
                               <Button

@@ -24,16 +24,13 @@ import {
 } from "../components/ui/chart";
 import { OnboardingVisibilityMenu } from "../components/onboarding/checklist/onboarding-menu";
 import { useOnboarding } from "../components/onboarding/checklist/use-onboarding";
+import {
+  ANALYTICS_RANGES,
+  type AnalyticsRange,
+  formatMinorCurrency,
+} from "../lib/analytics";
 import { storefrontUrl } from "../lib/storefront-url";
 
-type OverviewRange = "7d" | "30d" | "90d" | "1y";
-
-const OVERVIEW_RANGES: Array<{ value: OverviewRange; label: string }> = [
-  { value: "7d", label: "1 week" },
-  { value: "30d", label: "30 days" },
-  { value: "90d", label: "90 days" },
-  { value: "1y", label: "1 year" },
-];
 
 const SALES_CHART_CONFIG = {
   amountMinor: {
@@ -43,7 +40,7 @@ const SALES_CHART_CONFIG = {
 } satisfies ChartConfig;
 
 type SchoolOverview = {
-  range: OverviewRange;
+  range: AnalyticsRange;
   currency: string;
   sales: {
     amountMinor: number;
@@ -62,7 +59,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<SchoolOverview | null>(null);
   const onboarding = useOnboarding();
-  const [overviewRange, setOverviewRange] = useState<OverviewRange>("7d");
+  const [overviewRange, setAnalyticsRange] = useState<AnalyticsRange>("7d");
 
   const selected = schools.find((school) => school.selected) ?? schools[0] ?? null;
   const selectedSchoolId = selected?.id;
@@ -118,13 +115,13 @@ export default function HomePage() {
                 ) : null}
                 <Select
                   value={overviewRange}
-                  onValueChange={(value) => setOverviewRange(value as OverviewRange)}
+                  onValueChange={(value) => setAnalyticsRange(value as AnalyticsRange)}
                 >
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Select time range" />
                   </SelectTrigger>
                   <SelectContent>
-                    {OVERVIEW_RANGES.map((range) => (
+                    {ANALYTICS_RANGES.map((range) => (
                       <SelectItem key={range.value} value={range.value}>
                         {range.label}
                       </SelectItem>
@@ -140,29 +137,29 @@ export default function HomePage() {
                   <OverviewMetric
                     title="Sales"
                     icon={<DollarSign className="size-4 text-muted-foreground" />}
-                    value={formatCurrency(
+                    value={formatMinorCurrency(
                       overview.sales.amountMinor,
                       overview.currency,
                     )}
-                    growth={overview.sales.growth}
+                    growth={overviewRange === "lifetime" ? null : overview.sales.growth}
                   />
                   <OverviewMetric
                     title="Customers"
                     icon={<UserPlus className="size-4 text-muted-foreground" />}
                     value={overview.customers.count}
-                    growth={overview.customers.growth}
+                    growth={overviewRange === "lifetime" ? null : overview.customers.growth}
                   />
                   <OverviewMetric
                     title="New community members"
                     icon={<Users className="size-4 text-muted-foreground" />}
                     value={overview.communityMembers.count}
-                    growth={overview.communityMembers.growth}
+                    growth={overviewRange === "lifetime" ? null : overview.communityMembers.growth}
                   />
                   <OverviewMetric
                     title="Subscribers"
                     icon={<Mail className="size-4 text-muted-foreground" />}
                     value={overview.subscribers.count}
-                    growth={overview.subscribers.growth}
+                    growth={overviewRange === "lifetime" ? null : overview.subscribers.growth}
                   />
                 </div>
                 <SalesActivityChart
@@ -180,13 +177,6 @@ export default function HomePage() {
   );
 }
 
-function formatCurrency(amountMinor: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amountMinor / 100);
-}
 
 function formatDate(date: string) {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString(undefined, {
@@ -205,7 +195,8 @@ function OverviewMetric({
   title: string;
   icon: ReactNode;
   value: string | number;
-  growth: number;
+  /** Hidden when null: lifetime has no earlier period to compare with. */
+  growth: number | null;
 }) {
   return (
     <div className="rounded-xl border bg-card p-5">
@@ -214,10 +205,12 @@ function OverviewMetric({
         {icon}
       </div>
       <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {growth > 0 ? "+" : ""}
-        {growth}% from previous period
-      </p>
+      {growth === null ? null : (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {growth > 0 ? "+" : ""}
+          {growth}% from previous period
+        </p>
+      )}
     </div>
   );
 }
@@ -257,7 +250,7 @@ function SalesActivityChart({
               axisLine={false}
               tickMargin={8}
               width={56}
-              tickFormatter={(value) => formatCurrency(Number(value), currency)}
+              tickFormatter={(value) => formatMinorCurrency(Number(value), currency)}
             />
             <ChartTooltip
               cursor={false}
@@ -265,7 +258,7 @@ function SalesActivityChart({
                 <ChartTooltipContent
                   indicator="line"
                   labelFormatter={(value) => formatDate(String(value))}
-                  formatter={(value) => formatCurrency(Number(value), currency)}
+                  formatter={(value) => formatMinorCurrency(Number(value), currency)}
                 />
               }
             />

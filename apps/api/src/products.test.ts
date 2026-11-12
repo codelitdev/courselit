@@ -52,6 +52,141 @@ describe.serial("product listing", () => {
     });
     expect(withPlan.status).toBe(200);
     expect(withPlan.body).toMatchObject({ id: productId, status: "published" });
+    const firstPublishedAt = (withPlan.body as { publishedAt: string }).publishedAt;
+    expect(firstPublishedAt).toBeTruthy();
+
+    // Going back to draft keeps publishedAt, so admins can tell an offline
+    // product from one that never went live.
+    const offline = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers,
+      body: { status: "draft" },
+    });
+    expect(offline.status).toBe(200);
+    expect(offline.body).toMatchObject({
+      status: "draft",
+      publishedAt: firstPublishedAt,
+    });
+
+    await runtime.close();
+  });
+
+  it("creates a download as a lead magnet with its one free plan", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    const headers = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { kind: "download", title: "Palette guide", leadMagnet: true },
+    });
+    expect(created.status).toBe(201);
+    expect(created.body).toMatchObject({ kind: "download", leadMagnet: true });
+    const productId = (created.body as { id: string }).id;
+    const plans = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${productId}/plans`,
+      headers,
+    });
+    expect(plans.status).toBe(200);
+    const items = (plans.body as { items: Array<Record<string, unknown>> }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ kind: "free", status: "active", isDefault: true });
+
+    // The lead magnet stays valid: it can be saved again without changes.
+    const resaved = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers,
+      body: { leadMagnet: true },
+    });
+    expect(resaved.status).toBe(200);
+
+    // A plain download starts without plans, and a course can't be a lead magnet.
+    const plain = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { kind: "download", title: "Paid guide" },
+    });
+    expect(plain.body).toMatchObject({ leadMagnet: false });
+    const plainPlans = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${(plain.body as { id: string }).id}/plans`,
+      headers,
+    });
+    expect((plainPlans.body as { items: unknown[] }).items).toHaveLength(0);
+    const course = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { kind: "course", title: "Not a magnet", leadMagnet: true },
+    });
+    expect(course.status).toBe(400);
+  });
+
+  it("gives new lessons the product's default status", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    const headers = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { kind: "course", title: "Default lesson status" },
+    });
+    expect(created.status).toBe(201);
+    const productId = (created.body as { id: string }).id;
+    expect(created.body).toMatchObject({ newLessonStatus: "draft", publishedAt: null });
+
+    const draftLesson = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/lessons`,
+      headers,
+      body: { title: "Starts as a draft" },
+    });
+    expect(draftLesson.status).toBe(201);
+    expect(draftLesson.body).toMatchObject({ status: "draft" });
+
+    const updated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers,
+      body: { newLessonStatus: "published" },
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body).toMatchObject({ newLessonStatus: "published" });
+
+    const liveLesson = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/lessons`,
+      headers,
+      body: { title: "Starts live" },
+    });
+    expect(liveLesson.status).toBe(201);
+    expect(liveLesson.body).toMatchObject({ status: "published" });
+    expect(
+      (liveLesson.body as { publishedAt: string | null }).publishedAt,
+    ).toBeTruthy();
+
+    // An explicit status still wins over the default.
+    const explicitDraft = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/lessons`,
+      headers,
+      body: { title: "Explicit draft", status: "draft" },
+    });
+    expect(explicitDraft.body).toMatchObject({ status: "draft" });
 
     await runtime.close();
   });
@@ -124,6 +259,67 @@ describe.serial("product listing", () => {
       updatedAt: clock.now(),
     });
 
+    // One paid sale and one free sign-up: only the money counts as sales.
+    const [note] = await runtime.db
+      .select({ id: schema.products.id })
+      .from(schema.products)
+      .where(eq(schema.products.publicId, world.noteA.publicId));
+    for (const [index, amountMinor] of [1250, 0].entries()) {
+      const planId = uuidv7(clock);
+      const checkoutId = uuidv7(clock);
+      await runtime.db.insert(schema.storefrontPlans).values({
+        id: planId,
+        publicId: createPublicId("pln", clock),
+        schoolId: world.schoolA.id,
+        entityType: "product",
+        entityId: world.noteA.publicId,
+        name: amountMinor ? "Paid" : "Free",
+        description: "",
+        includedProducts: [],
+        providerProductId: null,
+        kind: amountMinor ? "one_time" : "free",
+        amountMinor,
+        billingInterval: null,
+        installmentCount: null,
+        status: "active",
+        isDefault: index === 0,
+        createdBy: world.owner.id,
+        createdAt: clock.now(),
+        updatedAt: clock.now(),
+      });
+      await runtime.db.insert(schema.storefrontCheckoutAttempts).values({
+        id: checkoutId,
+        publicId: createPublicId("chk", clock),
+        schoolId: world.schoolA.id,
+        schoolAccountId: learnerId,
+        productId: note!.id,
+        planId,
+        provider: "stripe",
+        idempotencyKey: `list-sales-${index}`,
+        providerCheckoutId: `checkout_list_${index}`,
+        providerCheckoutUrl: null,
+        status: "paid",
+        currency: "USD",
+        amountMinor,
+        createdAt: clock.now(),
+        updatedAt: clock.now(),
+        completedAt: clock.now(),
+      });
+      await runtime.db.insert(schema.storefrontPayments).values({
+        id: uuidv7(clock),
+        publicId: createPublicId("pay", clock),
+        checkoutId,
+        providerPaymentId: `payment_list_${index}`,
+        kind: "one_time",
+        status: "succeeded",
+        currency: "USD",
+        amountMinor,
+        occurredAt: clock.now(),
+        createdAt: clock.now(),
+        updatedAt: clock.now(),
+      });
+    }
+
     const firstPage = await dispatch(runtime, {
       method: "GET",
       path: "/v1/products?limit=1",
@@ -137,7 +333,7 @@ describe.serial("product listing", () => {
       items: Array<{
         id: string;
         currency: string;
-        sales: number;
+        salesAmountMinor: number;
         customers: number;
       }>;
       nextCursor: string | null;
@@ -171,7 +367,7 @@ describe.serial("product listing", () => {
       items: Array<{
         id: string;
         currency: string;
-        sales: number;
+        salesAmountMinor: number;
         customers: number;
       }>;
     };
@@ -179,7 +375,7 @@ describe.serial("product listing", () => {
     expect(courseBody.items[0]).toMatchObject({
       id: world.noteA.publicId,
       currency: "USD",
-      sales: 0,
+      salesAmountMinor: 1250,
       customers: 1,
     });
 

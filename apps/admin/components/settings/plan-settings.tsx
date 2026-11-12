@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@courselit/api-contract/money";
 import { Badge } from "@codelitdev/design-system";
 import { CalendarClock, CreditCard } from "lucide-react";
 import Link from "next/link";
@@ -53,10 +54,7 @@ function formatDate(value: string | null): string | null {
 
 function formatPrice(plan: SchoolPlan): string | null {
   if (plan.amountMinor === null || !plan.currency || !plan.interval) return null;
-  const amount = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency,
-  }).format(plan.amountMinor / 100);
+  const amount = formatMoney(plan.amountMinor, plan.currency);
   return `${amount} / ${plan.interval === "month" ? "month" : "year"}`;
 }
 

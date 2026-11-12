@@ -35,8 +35,12 @@ export async function requestEmailCode(email: string): Promise<void> {
   }
 }
 
-/** Sign in to this school with the emailed code. */
-export async function verifyEmailCode(email: string, code: string): Promise<void> {
+/** Sign in to this school with the emailed code. `needsName` is true while
+ * the learner's name is still the placeholder made from their email. */
+export async function verifyEmailCode(
+  email: string,
+  code: string,
+): Promise<{ needsName: boolean }> {
   const response = await fetch("/api/v1/learner/auth/email-code/verify", {
     method: "POST",
     headers: learnerHeaders({ "content-type": "application/json" }),
@@ -47,6 +51,21 @@ export async function verifyEmailCode(email: string, code: string): Promise<void
     throw new Error(await errorMessage(response, "Invalid or expired code."));
   }
   writeSignedInHint(true);
+  const body = (await response.json().catch(() => null)) as { needsName?: boolean } | null;
+  return { needsName: body?.needsName === true };
+}
+
+/** Save the name the learner wants to be called by. */
+export async function saveLearnerName(name: string): Promise<void> {
+  const response = await fetch("/api/v1/learner/me", {
+    method: "PATCH",
+    headers: learnerHeaders({ "content-type": "application/json" }),
+    credentials: "include",
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, "Unable to save your name."));
+  }
 }
 
 /** Leave for Google sign-in; the learner comes back to `next` on this site. */

@@ -25,6 +25,7 @@ import {
   type PaymentProvider,
   type PaymentWebhookScope,
 } from "./payments.js";
+import { amountMinorForPlan } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
 type CommunityCheckoutStatus =
@@ -115,7 +116,7 @@ function completedMembershipCheckoutDto(
         : "free",
     status: "paid",
     currency,
-    amountMinor: plan.amountMinor,
+    amountMinor: amountMinorForPlan(plan, currency),
     checkoutUrl: null,
     checkoutData: null,
     createdAt: serializeDate(membership.createdAt),
@@ -661,7 +662,7 @@ export async function startLearnerCommunityCheckout(
     providerCheckoutUrl: null,
     status: "pending" as const,
     currency: selected.school.currency.toUpperCase(),
-    amountMinor: selected.plan.amountMinor,
+    amountMinor: amountMinorForPlan(selected.plan, selected.school.currency),
     createdAt: now,
     updatedAt: now,
     completedAt: null,
@@ -717,7 +718,7 @@ export async function startLearnerCommunityCheckout(
     checkout = await paymentProvider!.createCheckout({
       paymentPlan: {
         kind: selected.plan.kind,
-        amountMinor: selected.plan.amountMinor,
+        amountMinor: row.amountMinor,
         billingInterval: selected.plan.billingInterval,
         installmentCount: selected.plan.installmentCount,
         providerProductId: selected.plan.providerProductId,

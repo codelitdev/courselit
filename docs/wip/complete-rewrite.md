@@ -166,19 +166,40 @@ product, and the admin sign-in page showed developer notes.
     zero price: the catalogue card, product and community plans, the course
     page and checkout. Checkout's button reads "Get for free" for free plans,
     as on `main`.
-- [ ] **13. Signed-out checkout is misleading.** It says "This community is not
+- [x] **13. Signed-out checkout is misleading.** It says "This community is not
   available for checkout yet" until the learner signs in. _(QA)_
-- [ ] **14. A pending join request isn't acknowledged.** After asking to join,
+  - Fixed 2026-11-12, checked locally. Checkout showed that message while its
+    plans were still loading. It now says "Loading plans…" until they arrive,
+    signed in or not.
+- [x] **14. A pending join request isn't acknowledged.** After asking to join,
   the learner lands on the feed with the members' welcome banner and "You do not
   have access to any spaces yet". Nothing says the request is pending. _(QA)_
-- [ ] **15. The learner sidebar is stale after joining** until a reload. _(QA)_
-- [ ] **16. The course page doesn't say it is included with the community
+  - Fixed 2026-11-12, checked locally. The feed now says "Your request to join
+    <community> is waiting for approval. We'll let you know." `/join` already
+    said so.
+- [x] **15. The learner sidebar is stale after joining** until a reload. _(QA)_
+  - Fixed 2026-11-12, checked locally. Joining through `/join` and checkout ends
+    in a full page load, so the sidebar is fresh. Joining from inside the
+    dashboard now tells the sidebar to reload its spaces, as leaving already did.
+- [x] **16. The course page doesn't say it is included with the community
   plan.** _(QA)_
-- [ ] **17. A learner can't find where to cancel a subscription.** Purchases
+  - Fixed 2026-11-12, checked locally. A course counts as included when a
+    community plan lists it, not only when it is marked "included with the
+    community". Its sales page now offers those plans, and the course page says
+    "Also included in <community> with the <plan> plan" with a link to join.
+- [x] **17. A learner can't find where to cancel a subscription.** Purchases
   lists it with no action; cancelling is only on My products.
   _(QA 2026-11-10)_
-- [ ] **18. The learner's name is the email prefix.** No name is collected at
+  - Fixed 2026-11-12, checked locally. Subscriptions on Purchases have "Manage
+    subscription", which goes to the product's card on My products with its
+    Cancel button. Community subscriptions get "Manage membership", which goes to
+    the feed, where leaving cancels billing.
+- [x] **18. The learner's name is the email prefix.** No name is collected at
   sign-up. _(QA)_
+  - Fixed 2026-11-12, checked locally. While a learner's name is still the one
+    made from their email, signing in with a code asks "What should we call
+    you?" (on the login page and at checkout). It can be skipped; the name can
+    also be changed on the profile.
 
 ## 3. A creator's first hour
 
@@ -195,9 +216,14 @@ product, and the admin sign-in page showed developer notes.
     signed in for more than 15 minutes, which is most people finishing the
     wizard. Billing actions no longer ask for a recent sign-in; the
     single-use grant already stops replay and CSRF.
-- [ ] **19a. Terms and Privacy start empty.** Onboarding asks the creator to
+- [x] **19a. Terms and Privacy start empty.** Onboarding asks the creator to
   fill them in, but the drafts are blank. Start them with short editable
   text. _(QA 2026-11-11)_
+  - Fixed 2026-11-12, checked locally. A new school's Terms and Privacy drafts
+    start with a short rich-text block that names the school (account,
+    purchases, refunds, conduct; what's collected, how it's used, payments,
+    sharing). They stay unpublished until the creator reviews and publishes
+    them, and the checklist item now reads "Review and publish".
 - [x] **20. Email can go out unedited.** New emails default to "Start writing
   here" with no guard. The mailing address is required, but nothing prompts for
   it during setup. _(QA)_

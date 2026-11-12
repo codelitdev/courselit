@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { and, eq } from "drizzle-orm";
-import * as schema from "./db/schema/index.js";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { and, eq } from "drizzle-orm";
+import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createExpressApp } from "./express-app.js";
 import {
@@ -11,6 +11,7 @@ import {
   startLearnerGoogleSignIn,
   verifyLearnerEmailCode,
 } from "./learner-sign-in.js";
+import { learnerNameIsPlaceholder } from "./learners.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
@@ -157,6 +158,8 @@ describe.serial("learner authentication", () => {
     });
     expect(signedIn.status).toBe(200);
     expect(signedIn.body).toMatchObject({ email, schoolId: world.schoolA.publicId });
+    // A brand-new learner's name is made from their email, so the site asks.
+    expect(signedIn.body).toMatchObject({ needsName: true });
     expect(signedIn.headers?.["Set-Cookie"]).toContain("courselit.learner.session=");
     expect(signedIn.headers?.["Set-Cookie"]).not.toContain("courselit.session_token");
 
@@ -462,5 +465,16 @@ describe.serial("learner authentication", () => {
       if (savedEnv.secret === undefined) delete process.env.GOOGLE_CLIENT_SECRET;
       else process.env.GOOGLE_CLIENT_SECRET = savedEnv.secret;
     }
+  });
+});
+
+describe("learnerNameIsPlaceholder", () => {
+  it("is true for the name made from the email address, or no name", () => {
+    expect(learnerNameIsPlaceholder("ada", "Ada@Example.com")).toBe(true);
+    expect(learnerNameIsPlaceholder("  ", "ada@example.com")).toBe(true);
+  });
+
+  it("is false once the learner has a name of their own", () => {
+    expect(learnerNameIsPlaceholder("Ada Lovelace", "ada@example.com")).toBe(false);
   });
 });

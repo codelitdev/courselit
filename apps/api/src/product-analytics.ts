@@ -1,10 +1,12 @@
-import { and, eq, gte, isNotNull, lt } from "drizzle-orm";
+import { and, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createPlatformError, type Clock, type PlatformError } from "@codelitdev/platform";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
 import type { AppDb } from "./types.js";
 
-export type AnalyticsRange = "7d" | "30d" | "90d" | "1y";
+import { type AnalyticsRange, analyticsWindow } from "./analytics-range.js";
+
+export type { AnalyticsRange };
 
 type Context = {
   tenantId?: string | null;
@@ -12,33 +14,10 @@ type Context = {
 };
 
 type Event = { date: Date; value: number };
-const DAY_MS = 86_400_000;
 
 function normalizeCurrency(value: string | null | undefined) {
   const currency = value?.trim().toUpperCase();
   return currency && /^[A-Z]{3}$/.test(currency) ? currency : "USD";
-}
-
-function windowFor(range: AnalyticsRange, now: Date) {
-  const currentStart = new Date(now);
-  currentStart.setUTCHours(0, 0, 0, 0);
-  if (range === "1y") {
-    const previousStart = new Date(currentStart);
-    previousStart.setUTCFullYear(previousStart.getUTCFullYear() - 2);
-    const currentPeriodStart = new Date(currentStart);
-    currentPeriodStart.setUTCFullYear(currentPeriodStart.getUTCFullYear() - 1);
-    return {
-      currentPeriodStart,
-      previousStart,
-      pointCount: Math.floor((currentStart.getTime() - currentPeriodStart.getTime()) / DAY_MS) + 1,
-    };
-  }
-  const days = Number(range.slice(0, -1));
-  const currentPeriodStart = new Date(currentStart);
-  currentPeriodStart.setUTCDate(currentPeriodStart.getUTCDate() - (days - 1));
-  const previousStart = new Date(currentPeriodStart);
-  previousStart.setUTCDate(previousStart.getUTCDate() - days);
-  return { currentPeriodStart, previousStart, pointCount: days };
 }
 
 function growth(current: number, previous: number) {
@@ -118,11 +97,17 @@ export async function getProductAnalytics(
   if (!product) return { ok: false, error: createPlatformError("not_found") };
 
   const school = await db
-    .select({ currency: schema.schools.currency })
+    .select({ currency: schema.schools.currency, createdAt: schema.schools.createdAt })
     .from(schema.schools)
     .where(eq(schema.schools.id, ctx.tenantId))
     .limit(1);
-  const { currentPeriodStart, previousStart, pointCount } = windowFor(range, clock.now());
+  const now = clock.now();
+  const currency = normalizeCurrency(school[0]?.currency);
+  const {
+    currentStart: currentPeriodStart,
+    previousStart,
+    pointCount,
+  } = analyticsWindow(range, now, school[0]?.createdAt ?? now);
 
   const salesRows = await db
     .select({ amountMinor: schema.storefrontPayments.amountMinor, date: schema.storefrontPayments.occurredAt })
@@ -136,6 +121,8 @@ export async function getProductAnalytics(
         eq(schema.storefrontCheckoutAttempts.schoolId, ctx.tenantId),
         eq(schema.storefrontCheckoutAttempts.productId, product.id),
         eq(schema.storefrontPayments.status, "succeeded"),
+        // Only money in the school's currency adds up to its sales figure.
+        eq(sql`upper(${schema.storefrontPayments.currency})`, currency),
         gte(schema.storefrontPayments.occurredAt, previousStart),
       ),
     );
@@ -227,7 +214,7 @@ export async function getProductAnalytics(
     value: {
       productId: product.publicId,
       range,
-      currency: normalizeCurrency(school[0]?.currency),
+      currency,
       sales: salesMetric(
         salesRows.map((row) => ({ date: row.date, value: row.amountMinor })),
         currentPeriodStart,

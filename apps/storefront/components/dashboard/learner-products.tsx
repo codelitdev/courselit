@@ -5,6 +5,7 @@ import { BadgeCheck, BookOpen, Download } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
+import { productCardAnchor } from "@/lib/purchase-actions";
 import { requestJson } from "@/components/communities/learner-community";
 import { CourseLitLoading } from "@/components/course-lit-loader";
 import { courseViewerHref } from "@/components/layout/course-viewer-sidebar";
@@ -197,7 +198,10 @@ function LearnerProductCard({
   // The card holds the subscription's cancel button, which can't sit inside
   // a link, so only the image and details link to the course.
   return (
-    <LearnerCard isLink className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg">
+    <LearnerCard
+      id={productCardAnchor(product.id)}
+      isLink
+      className="group scroll-mt-20 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg">
       <Link
         href={courseViewerHref(
           `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`,

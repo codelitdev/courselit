@@ -1,7 +1,7 @@
 "use client";
 
 import { Archive, Package, Plus, Star } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -11,36 +11,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import { cn } from "@/lib/utils";
 import { PaymentPlanDialog, type PlanRequest } from "./payment-plan-dialog";
+import { formatMoney } from "@courselit/api-contract/money";
 import type { School, StorefrontPlan } from "./product-types";
 
-function formatAmount(amountMajor: number | null, currency: string, showFree = true) {
-  if (!amountMajor && showFree) return "Free";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-  }).format(amountMajor ?? 0);
-}
-
+/**
+ * What a learner pays, from the plan's amount in the minor unit (what checkout
+ * charges), so it reads the same as checkout for every currency.
+ */
 function formatPlan(plan: StorefrontPlan, currency: string) {
   if (plan.type === "free" || plan.kind === "free") return "Free";
-  const oneTimeAmount = plan.oneTimeAmount ?? plan.amountMinor / 100;
-  const emiAmount = plan.emiAmount ?? plan.amountMinor / 100;
-  const subscriptionAmount =
-    plan.subscriptionMonthlyAmount ??
-    plan.subscriptionYearlyAmount ??
-    plan.amountMinor / 100;
-
-  if (plan.type === "onetime" || plan.kind === "one_time") {
-    return formatAmount(oneTimeAmount, currency);
-  }
+  const amount = formatMoney(plan.amountMinor, currency);
   if (plan.type === "emi" || plan.kind === "installment") {
-    return `${formatAmount(emiAmount, currency)} × ${
-      plan.emiTotalInstallments ?? plan.installmentCount ?? 0
-    }`;
+    return `${amount} × ${plan.emiTotalInstallments ?? plan.installmentCount ?? 0}`;
   }
-
-  const amount = formatAmount(subscriptionAmount, currency);
   return amount;
 }
 
@@ -72,6 +57,10 @@ export function PaymentPlanList({
   title = "Pricing",
   description = "Manage your product's pricing plans",
   entityLabel = "product",
+  id,
+  highlighted,
+  badge,
+  children,
 }: {
   listPath: string;
   createPath: string;
@@ -85,6 +74,12 @@ export function PaymentPlanList({
   title?: string;
   description?: string;
   entityLabel?: "product" | "community";
+  id?: string;
+  highlighted?: boolean;
+  /** Shown after the title, e.g. "Needed to go live". */
+  badge?: ReactNode;
+  /** Shown under the list, e.g. a payments notice. */
+  children?: ReactNode;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<StorefrontPlan | null>(null);
@@ -159,9 +154,18 @@ export function PaymentPlanList({
 
   return (
     <>
-      <section className="card stack">
+      <section
+        id={id}
+        className={cn(
+          "scroll-mt-24 space-y-4 rounded-xl border bg-card p-5 shadow-sm transition-[box-shadow,border-color] duration-300",
+          highlighted && "border-primary shadow-[0_0_0_3px_var(--primary-soft)]",
+        )}
+      >
         <div>
-          <h2 className="font-semibold">{title}</h2>
+          <h2 className="flex flex-wrap items-center gap-2 font-semibold">
+            {title}
+            {badge}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         {error ? (
@@ -169,86 +173,100 @@ export function PaymentPlanList({
             {error}
           </p>
         ) : null}
-        <div className="w-full space-y-2">
-          {activePlans.map((plan) => (
-            <div
-              key={plan.id}
-              className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 transition-colors hover:border-primary/50"
-            >
-              <div className="min-w-0">
+        <div className="flex flex-col gap-2">
+          {activePlans.map((plan) => {
+            const shownFirst = plan.isDefault && activePlans.length > 1;
+            return (
+              <div
+                key={plan.id}
+                className="flex items-center gap-1.5 rounded-[var(--radius)] border bg-card py-1.5 pl-1 pr-2"
+              >
                 <button
                   type="button"
-                  className="block min-w-0 truncate text-left text-sm font-medium hover:underline"
+                  className="flex min-w-0 flex-1 flex-col items-start gap-1 rounded-md px-2.5 py-2 text-left hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-label={`Edit ${plan.name}`}
                   onClick={() => openEdit(plan)}
                 >
-                  {plan.name}
-                </button>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{formatPlan(plan, currency)}</span>
-                  <span className="rounded-full border px-1.5 leading-[14px]">
-                    {planTypeLabel(plan)}
-                  </span>
-                  {plan.includedProducts.length > 0 ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border px-1.5 leading-[14px]">
-                      <Package className="size-3" /> +{plan.includedProducts.length}{" "}
-                      products
+                  <b className="max-w-full truncate text-[15px] font-semibold">
+                    {plan.name}
+                  </b>
+                  <span className="flex flex-wrap items-center gap-1.5 text-[13.5px] tabular-nums text-muted-foreground">
+                    {formatPlan(plan, currency)}
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                      {planTypeLabel(plan)}
                     </span>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
+                    {shownFirst ? (
+                      <span className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--primary-ink)]">
+                        Shown first
+                      </span>
+                    ) : null}
+                    {plan.includedProducts.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                        <Package className="size-3" /> +{plan.includedProducts.length}{" "}
+                        products
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2"
-                  title={plan.isDefault ? "Recommended plan" : "Make recommended"}
+                  className={cn(
+                    "w-8 px-0",
+                    plan.isDefault ? "text-primary" : "text-muted-foreground",
+                  )}
+                  title={
+                    plan.isDefault
+                      ? "Shown first on the sales page"
+                      : "Show this plan first"
+                  }
+                  aria-label={
+                    plan.isDefault
+                      ? "Shown first on the sales page"
+                      : `Show ${plan.name} first`
+                  }
+                  aria-pressed={plan.isDefault}
                   onClick={() => void makeDefault(plan)}
-                  disabled={busy || plan.isDefault}
+                  disabled={busy}
                 >
-                  <Star className={plan.isDefault ? "fill-current text-primary" : ""} />
-                  <span className="sr-only">Make recommended</span>
+                  <Star className={plan.isDefault ? "fill-current" : ""} />
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2"
-                  title="Archive plan"
+                  className="w-8 px-0 text-muted-foreground"
+                  title="Archive plan. People already on it keep access."
+                  aria-label={`Archive ${plan.name}`}
                   onClick={() => setArchivePlan(plan)}
                   disabled={busy}
                 >
                   <Archive />
-                  <span className="sr-only">Archive plan</span>
                 </Button>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {activePlans.length === 0 ? (
-            <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-              No payment plans yet.
+            <p className="rounded-[var(--radius)] border border-dashed border-input px-4 py-3.5 text-sm text-muted-foreground">
+              No payment plans yet. Learners need at least one to join.
             </p>
           ) : null}
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="h-auto w-full justify-between border-dashed p-3"
             onClick={openCreate}
+            className="flex w-full items-center gap-3 rounded-[var(--radius)] border border-dashed border-input px-3.5 py-3 text-left transition-colors hover:border-primary hover:bg-[var(--primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
+            <Plus className="size-4 text-[var(--primary-ink)]" aria-hidden="true" />
             <span>
-              <span className="block text-left text-sm font-medium">New Plan</span>
-              <span className="block text-left text-xs text-muted-foreground">
-                {formatAmount(0, school.currency || "USD", false)}
+              <span className="block text-[14.5px] font-semibold">Add a plan</span>
+              <span className="block text-[13px] text-muted-foreground">
+                Free, one time, subscription or EMI
               </span>
             </span>
-            <span className="flex items-center gap-2">
-              <span className="rounded-full border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                Payment frequency
-              </span>
-              <Plus />
-            </span>
-          </Button>
+          </button>
         </div>
+        {children}
       </section>
 
       <PaymentPlanDialog

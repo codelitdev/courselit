@@ -249,6 +249,9 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   const [session, setSession] = useState<CheckoutSession | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  // Until the plans arrive an empty list means "still loading", not "nothing
+  // to buy"; telling visitors it isn't available yet sent them away.
+  const [plansLoaded, setPlansLoaded] = useState(false);
   const [learner, setLearner] = useState<Learner | null>(null);
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
   const [googleProviderId, setGoogleProviderId] = useState<string | null>("google");
@@ -378,6 +381,9 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
       })
       .catch(() => {
         if (active) setPlans([fallbackPlan(session)]);
+      })
+      .finally(() => {
+        if (active) setPlansLoaded(true);
       });
     return () => {
       active = false;
@@ -688,9 +694,13 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
                 );
               })}
             </LearnerRadioGroup>
-          ) : (
+          ) : plansLoaded ? (
             <Text2 theme={theme}>
               This {session.resourceType} is not available for checkout yet.
+            </Text2>
+          ) : (
+            <Text2 theme={theme} className="text-muted-foreground">
+              Loading plans…
             </Text2>
           )}
 
@@ -732,7 +742,9 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
               : needsJoiningReason
                 ? "Request to join"
                 : freePlan
-                  ? "Get for free"
+                  ? session.resourceType === "community"
+                    ? "Join for free"
+                    : "Get for free"
                   : "Complete Purchase"}
           </Button>
         </section>

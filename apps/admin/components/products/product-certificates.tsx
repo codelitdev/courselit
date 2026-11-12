@@ -2,8 +2,8 @@
 
 import { ChevronDown, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/codelit/button";
 import { CourseLitInlineLoading } from "@/components/loading";
+import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
   DialogContent,
@@ -211,13 +211,12 @@ export function ProductCertificates({
   }).format(new Date());
 
   return (
-    <section className="card stack">
+    <section className="stack rounded-xl border bg-card p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="font-semibold">Certificates</h2>
-          <p className="mt-1 font-semibold">Issue certificates</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Enable certificate for this course.
+            Learners get a certificate when they finish every lesson.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -267,7 +266,10 @@ export function ProductCertificates({
           <CollapsibleContent className="stack pt-5">
             <form onSubmit={(event) => void saveTemplate(event)} className="stack">
               {loading ? (
-                <CourseLitInlineLoading label="Loading template…" className="justify-start" />
+                <CourseLitInlineLoading
+                  label="Loading template…"
+                  className="justify-start"
+                />
               ) : null}
               <div className="space-y-4">
                 <div className="space-y-1.5">

@@ -1,4 +1,5 @@
 import { type Clock, uuidv7 } from "@codelitdev/platform";
+import { formatMoney } from "@courselit/api-contract/money";
 import { and, count, eq, gt } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { schoolSiteUrl } from "./membership-events.js";
@@ -10,14 +11,9 @@ import type { AppDb } from "./types.js";
 /** Staff notification type for a new product purchase or paid community join. */
 export const NEW_SALE_NOTIFICATION_TYPE = "new_sale";
 
-export function formatMoney(amountMinor: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      amountMinor / 100,
-    );
-  } catch {
-    return `${currency} ${(amountMinor / 100).toFixed(2)}`;
-  }
+/** Emails use one fixed locale so they read the same for every recipient. */
+function formatAmount(amountMinor: number, currency: string): string {
+  return formatMoney(amountMinor, currency, { locale: "en-US" });
 }
 
 function formatDate(date: Date): string {
@@ -214,7 +210,7 @@ async function queuePurchaseReceipt(tx: AppDb, purchase: Purchase, clock: Clock)
   if (!origin) return;
 
   const free = purchase.amountMinor === 0;
-  const amount = free ? "Free" : formatMoney(purchase.amountMinor, purchase.currency);
+  const amount = free ? "Free" : formatAmount(purchase.amountMinor, purchase.currency);
   const details = [
     `Item: ${purchase.title} (${purchase.planName})`,
     `Amount: ${amount}`,
@@ -306,7 +302,7 @@ async function createSaleAlerts(tx: AppDb, purchase: Purchase, clock: Clock) {
     .where(eq(schema.schoolAccounts.id, purchase.schoolAccountId))
     .limit(1);
   const who = buyer?.displayName?.trim() || buyer?.email || "A learner";
-  const amount = formatMoney(purchase.amountMinor, purchase.currency);
+  const amount = formatAmount(purchase.amountMinor, purchase.currency);
   const recipients = await saleAlertRecipients(
     tx,
     purchase.schoolId,

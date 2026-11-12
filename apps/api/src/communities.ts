@@ -59,6 +59,7 @@ import type { PaymentProvider } from "./payments.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
 import { accessibleSpaceIds, moderatesSpace } from "./space-access.js";
+import { amountMinorForPlan } from "./storefront.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -1714,12 +1715,7 @@ export async function listPublicCommunities(
     page.length === 0
       ? []
       : await db
-          .select({
-            communityPublicId: schema.storefrontPlans.entityId,
-            amountMinor: schema.storefrontPlans.amountMinor,
-            isDefault: schema.storefrontPlans.isDefault,
-            createdAt: schema.storefrontPlans.createdAt,
-          })
+          .select()
           .from(schema.storefrontPlans)
           .where(
             and(
@@ -1736,13 +1732,14 @@ export async function listPublicCommunities(
             desc(schema.storefrontPlans.isDefault),
             asc(schema.storefrontPlans.createdAt),
           );
+  const currency = normalizeCurrency(school.currency);
+  // The price shown is what checkout charges for the plan shown first.
   const priceByCommunity = new Map<string, number>();
   for (const plan of planRows) {
-    if (!priceByCommunity.has(plan.communityPublicId)) {
-      priceByCommunity.set(plan.communityPublicId, plan.amountMinor);
+    if (!priceByCommunity.has(plan.entityId)) {
+      priceByCommunity.set(plan.entityId, amountMinorForPlan(plan, currency));
     }
   }
-  const currency = normalizeCurrency(school.currency);
 
   return {
     ok: true,

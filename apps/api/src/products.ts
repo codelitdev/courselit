@@ -32,6 +32,7 @@ import {
 import { removeSchoolTeamMember } from "./team.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
+import { amountMinorForPlan, validatePlan } from "./storefront.js";
 import {
   enableProductDiscussionSpace,
   syncIncludedProductMemberships,
@@ -52,6 +53,7 @@ export type ProductDto = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
+  newLessonStatus: "draft" | "published";
   includedWithCommunity: boolean;
   discussionSpaceId: string | null;
   publishedAt: string | null;
@@ -61,7 +63,7 @@ export type ProductDto = {
 
 export type ProductListItemDto = ProductDto & {
   currency: string;
-  sales: number;
+  salesAmountMinor: number;
   customers: number;
 };
 
@@ -117,6 +119,7 @@ async function toDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
+    newLessonStatus: row.newLessonStatus,
     includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: row.discussionSpaceId
       ? ((
@@ -179,12 +182,13 @@ export async function listProducts(
     .limit(input.limit + 1);
   const page = rows.slice(0, input.limit);
   const productIds = page.map((row) => row.id);
-  const [schoolRows, customerRows, salesRows] = await Promise.all([
-    db
-      .select({ currency: schema.schools.currency })
-      .from(schema.schools)
-      .where(eq(schema.schools.id, ctx.tenantId!))
-      .limit(1),
+  const schoolRows = await db
+    .select({ currency: schema.schools.currency })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, ctx.tenantId!))
+    .limit(1);
+  const currency = normalizeCurrency(schoolRows[0]?.currency);
+  const [customerRows, salesRows] = await Promise.all([
     productIds.length === 0
       ? Promise.resolve([])
       : db
@@ -209,7 +213,7 @@ export async function listProducts(
       : db
           .select({
             productId: schema.storefrontCheckoutAttempts.productId,
-            count: count(schema.storefrontPayments.id),
+            amountMinor: sql<string>`coalesce(sum(${schema.storefrontPayments.amountMinor}), 0)`,
           })
           .from(schema.storefrontPayments)
           .innerJoin(
@@ -224,6 +228,8 @@ export async function listProducts(
               eq(schema.storefrontCheckoutAttempts.schoolId, ctx.tenantId!),
               inArray(schema.storefrontCheckoutAttempts.productId, productIds),
               eq(schema.storefrontPayments.status, "succeeded"),
+              // Only money in the school's currency adds up to its sales.
+              eq(sql`upper(${schema.storefrontPayments.currency})`, currency),
             ),
           )
           .groupBy(schema.storefrontCheckoutAttempts.productId),
@@ -231,17 +237,18 @@ export async function listProducts(
   const customersByProduct = new Map(
     customerRows.map((row) => [row.productId, Number(row.count)]),
   );
+  // Revenue, like main's product card: what succeeded payments brought in.
+  // Free sign-ups are payments of 0, so they don't count as sales.
   const salesByProduct = new Map(
-    salesRows.map((row) => [row.productId, Number(row.count)]),
+    salesRows.map((row) => [row.productId, Number(row.amountMinor)]),
   );
-  const currency = normalizeCurrency(schoolRows[0]?.currency);
   return {
     ok: true,
     value: await Promise.all(
       page.map(async (row) => ({
         ...(await toDto(db, row, publicSchoolId)),
         currency,
-        sales: salesByProduct.get(row.id) ?? 0,
+        salesAmountMinor: salesByProduct.get(row.id) ?? 0,
         customers: customersByProduct.get(row.publicId) ?? 0,
       })),
     ),
@@ -309,12 +316,7 @@ export async function listPublicProducts(
     productIds.length === 0
       ? []
       : await db
-          .select({
-            productPublicId: schema.storefrontPlans.entityId,
-            amountMinor: schema.storefrontPlans.amountMinor,
-            isDefault: schema.storefrontPlans.isDefault,
-            createdAt: schema.storefrontPlans.createdAt,
-          })
+          .select()
           .from(schema.storefrontPlans)
           .where(
             and(
@@ -331,13 +333,14 @@ export async function listPublicProducts(
             desc(schema.storefrontPlans.isDefault),
             asc(schema.storefrontPlans.createdAt),
           );
+  const currency = normalizeCurrency(school.currency);
+  // The price shown is what checkout charges for the plan shown first.
   const priceByProduct = new Map<string, number>();
   for (const plan of planRows) {
-    if (!priceByProduct.has(plan.productPublicId)) {
-      priceByProduct.set(plan.productPublicId, plan.amountMinor);
+    if (!priceByProduct.has(plan.entityId)) {
+      priceByProduct.set(plan.entityId, amountMinorForPlan(plan, currency));
     }
   }
-  const currency = normalizeCurrency(school.currency);
 
   return {
     ok: true,
@@ -402,6 +405,14 @@ export async function createProduct(
   if (!ctx.permissions.has("products:write")) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
+  if (input.leadMagnet && input.kind !== "download") {
+    return {
+      ok: false,
+      error: createPlatformError("validation_failed", {
+        safeDetails: { reason: "lead_magnet_invalid_settings" },
+      }),
+    };
+  }
   const now = clock.now();
   const publicId = createPublicId("prd", clock);
   const requestedSlug = input.slug?.trim();
@@ -442,6 +453,7 @@ export async function createProduct(
     leadMagnet: input.leadMagnet ?? false,
     certificate: input.certificate ?? false,
     discussions: false,
+    newLessonStatus: "draft" as const,
     includedWithCommunity: false,
     discussionSpaceId: null,
     publishedAt: null,
@@ -465,21 +477,23 @@ export async function createProduct(
       },
       clock,
     );
-    // The production CourseLit setup creates its first group immediately for
-    // both courses and digital downloads. Keep the rewritten product shape
-    // aligned so a new course opens with an authoring section ready to use.
-    const firstSection = {
-      id: uuidv7(clock),
-      publicId: createPublicId("sec", clock),
-      schoolId: ctx.tenantId!,
-      productId: row.id,
-      title: "First section",
-      position: 1,
-      createdBy: ctx.principalId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await tx.insert(schema.productSections).values(firstSection);
+    // A course starts blank: its Content tab asks the creator to add a first
+    // section. A digital download always keeps one section for its files.
+    const firstSection =
+      row.kind === "download"
+        ? {
+            id: uuidv7(clock),
+            publicId: createPublicId("sec", clock),
+            schoolId: ctx.tenantId!,
+            productId: row.id,
+            title: "First section",
+            position: 1,
+            createdBy: ctx.principalId,
+            createdAt: now,
+            updatedAt: now,
+          }
+        : null;
+    if (firstSection) await tx.insert(schema.productSections).values(firstSection);
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: ctx.tenantId,
@@ -490,16 +504,60 @@ export async function createProduct(
       requestId: ctx.requestId,
       createdAt: now,
     });
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: ctx.tenantId,
-      actorId: ctx.principalId,
-      action: "section.created",
-      resourceType: "product_section",
-      resourceId: firstSection.publicId,
-      requestId: ctx.requestId,
-      createdAt: now,
-    });
+    if (firstSection) {
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: ctx.tenantId,
+        actorId: ctx.principalId,
+        action: "section.created",
+        resourceType: "product_section",
+        resourceId: firstSection.publicId,
+        requestId: ctx.requestId,
+        createdAt: now,
+      });
+    }
+    // A lead magnet needs exactly one free plan, so it starts with one.
+    if (row.leadMagnet) {
+      // A free plan has no amounts, so the currency doesn't change it.
+      const free = validatePlan({ name: "Free", type: "free" }, { currency: "USD" });
+      if (!free.ok) throw new Error("The free plan shape is invalid.");
+      const plan = {
+        id: uuidv7(clock),
+        publicId: createPublicId("pln", clock),
+        schoolId: row.schoolId,
+        entityType: "product" as const,
+        entityId: row.publicId,
+        name: "Free",
+        description: "",
+        includedProducts: [],
+        kind: free.value.kind,
+        oneTimeAmount: free.value.oneTimeAmount,
+        emiAmount: free.value.emiAmount,
+        emiTotalInstallments: free.value.emiTotalInstallments,
+        subscriptionMonthlyAmount: free.value.subscriptionMonthlyAmount,
+        subscriptionYearlyAmount: free.value.subscriptionYearlyAmount,
+        amountMinor: free.value.amountMinor,
+        billingInterval: free.value.billingInterval,
+        installmentCount: free.value.installmentCount,
+        providerProductId: null,
+        status: "active" as const,
+        isDefault: true,
+        createdBy: ctx.principalId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await tx.insert(schema.storefrontPlans).values(plan);
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: ctx.tenantId,
+        actorId: ctx.principalId,
+        action: "storefront_plan.created",
+        resourceType: "storefront_plan",
+        resourceId: plan.publicId,
+        requestId: ctx.requestId,
+        createdAt: now,
+      });
+    }
   });
   return { ok: true, value: await toDto(db, row, publicSchoolId, null) };
 }
@@ -519,6 +577,7 @@ export async function updateProduct(
     leadMagnet?: boolean;
     certificate?: boolean;
     discussions?: boolean;
+    newLessonStatus?: "draft" | "published";
     includedWithCommunity?: boolean;
   },
   clock: Clock,
@@ -703,9 +762,11 @@ export async function updateProduct(
       leadMagnet,
       certificate,
       discussions: input.discussions ?? row.discussions,
+      newLessonStatus: input.newLessonStatus ?? row.newLessonStatus,
       includedWithCommunity: input.includedWithCommunity ?? row.includedWithCommunity,
       ...(input.featuredImage !== undefined ? { featuredImage } : {}),
-      publishedAt: status === "published" ? (row.publishedAt ?? now) : null,
+      // Kept when going back to draft: it records that the product was live once.
+      publishedAt: status === "published" ? (row.publishedAt ?? now) : row.publishedAt,
       updatedAt: now,
     };
     let discussionSpaceId = row.discussionSpaceId;

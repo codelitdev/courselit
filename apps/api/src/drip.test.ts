@@ -51,13 +51,13 @@ describe.serial("lesson drip access", () => {
       headers: adminHeaders,
       body: { status: "published" },
     });
-    const productDetail = await dispatch(runtime, {
-      method: "GET",
-      path: `/v1/products/${productId}`,
+    const createdSection = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/sections`,
       headers: adminHeaders,
+      body: { title: "First section" },
     });
-    const sectionId = (productDetail.body as { sections: Array<{ id: string }> })
-      .sections[0]!.id;
+    const sectionId = (createdSection.body as { id: string }).id;
     const scheduledSection = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/sections/${sectionId}`,

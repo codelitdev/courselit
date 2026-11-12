@@ -102,6 +102,24 @@ describe.serial("school website", () => {
       }
       expect((await publicGet("/v1/public/site/pages?slug=terms")).status).toBe(404);
 
+      // The legal drafts hold editable starter text that names the school.
+      for (const [slug, heading] of [
+        ["terms", "Refunds"],
+        ["privacy", "What we collect"],
+      ] as const) {
+        const legal = (
+          await admin("GET", `/v1/school/website/pages/${await pageBySlug(runtime, world, slug)}`)
+        ).body as PageBody;
+        expect(legal.layout.map((widget) => widget.name)).toEqual([
+          "header",
+          "rich-text",
+          "footer",
+        ]);
+        const legalJson = JSON.stringify(legal.layout[1]!.settings);
+        expect(legalJson).toContain(heading);
+        expect(legalJson).toContain("School A");
+      }
+
       const salesPage = await admin(
         "GET",
         `/v1/sales-pages/product/${world.noteA.publicId}`,

@@ -34,28 +34,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/codelit/tooltip";
 import { AuthGate } from "../../components/auth-gate";
+import { formatMinorCurrency } from "@/lib/analytics";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 
 type ProductFilter = "all" | ProductKind;
 const ITEMS_PER_PAGE = 9;
 function kindLabel(kind: ProductKind) {
   return kind === "course" ? "Course" : "Digital download";
-}
-
-function currencySymbol(currency: string) {
-  try {
-    return (
-      new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency,
-        currencyDisplay: "narrowSymbol",
-      })
-        .formatToParts(0)
-        .find((part) => part.type === "currency")?.value ?? currency
-    );
-  } catch {
-    return currency;
-  }
 }
 
 function ProductCard({
@@ -106,8 +91,7 @@ function ProductCard({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <span>
-          <span className="text-base">{currencySymbol(currency)} </span>
-          {(product.sales ?? 0).toLocaleString()} sales
+          {formatMinorCurrency(product.salesAmountMinor ?? 0, currency)} sales
         </span>
         <span className="inline-flex items-center gap-1.5">
           <Users className="size-4" />

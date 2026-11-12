@@ -1,21 +1,4 @@
-import { PublicCourseViewer } from "@/components/public-course-viewer";
-
-export default async function CourseLessonPage({
-  params,
-}: {
-  params: Promise<{
-    schoolId: string;
-    productSlug: string;
-    productId: string;
-    lessonId: string;
-  }>;
-}) {
-  const { productSlug, productId, lessonId } = await params;
-  return (
-    <PublicCourseViewer
-      productSlug={productSlug}
-      productId={productId}
-      lessonId={lessonId}
-    />
-  );
+// The course viewer is rendered by the layout, so it survives lesson changes.
+export default function CourseLessonPage() {
+  return null;
 }
