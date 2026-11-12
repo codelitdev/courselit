@@ -15,6 +15,7 @@ import {
 } from "@codelitdev/platform";
 import { and, asc, desc, eq, isNull, or, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { queueSendLitContactSync } from "./contacts.js";
 import { parsePermissions } from "./permissions.js";
 import type { AppDb } from "./types.js";
 
@@ -262,6 +263,13 @@ export async function updateSchoolTeamMember(
       };
     }
 
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: ctx.tenantId!,
+      schoolAccountId: target.schoolAccount.id,
+      reason: "team.permissions_changed",
+      clock,
+    });
+
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: ctx.tenantId,
@@ -370,6 +378,13 @@ export async function removeSchoolTeamMember(
 
     await tx.delete(schema.memberships).where(eq(schema.memberships.id, target.membership.id));
 
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: ctx.tenantId!,
+      schoolAccountId: target.schoolAccount.id,
+      reason: "team.member_removed",
+      clock,
+    });
+
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: ctx.tenantId,
@@ -427,6 +442,13 @@ export async function leaveSchoolTeam(
     }
 
     await tx.delete(schema.memberships).where(eq(schema.memberships.id, actor.membership.id));
+
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: ctx.tenantId!,
+      schoolAccountId: actor.schoolAccount.id,
+      reason: "team.member_left",
+      clock,
+    });
 
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -536,6 +558,20 @@ export async function transferSchoolOwnership(
         updatedAt: now,
       })
       .where(eq(schema.memberships.id, target.membership.id));
+
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: schoolId,
+      schoolAccountId: currentOwner.schoolAccount.id,
+      reason: "team.ownership_transferred",
+      clock,
+    });
+
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: schoolId,
+      schoolAccountId: target.schoolAccount.id,
+      reason: "team.ownership_transferred",
+      clock,
+    });
 
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),

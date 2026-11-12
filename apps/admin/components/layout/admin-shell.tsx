@@ -14,6 +14,7 @@ import { CourseLitLoadingIcon } from "@/components/loading";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { shouldOfferResume } from "@/components/onboarding/wizard/session";
 import {
   persistInvitationToken,
   readInvitationTokenFromHash,
@@ -238,8 +239,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               });
               if (cancelled) return;
               if (onboardingResponse.ok) {
-                const onboarding = (await onboardingResponse.json()) as { status?: string };
-                if (onboarding.status === "in_progress") {
+                const onboarding = (await onboardingResponse.json()) as {
+                  status?: string;
+                  resumePromptHidden?: boolean;
+                };
+                if (shouldOfferResume(onboarding)) {
                   router.replace("/onboarding/setup?resume=1");
                   return;
                 }

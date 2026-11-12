@@ -831,6 +831,7 @@ CREATE TABLE "school_onboarding" (
 	"step" text DEFAULT 'school' NOT NULL,
 	"draft" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"checklist_hidden" boolean DEFAULT false NOT NULL,
+	"resume_prompt_hidden" boolean DEFAULT false NOT NULL,
 	"manual_done" text[] DEFAULT '{}'::text[] NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL

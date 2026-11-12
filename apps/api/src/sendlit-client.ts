@@ -1090,6 +1090,32 @@ export async function getSendLitSequenceStats(
   );
 }
 
+/** The mailing service reports a sequence's recipients as contact ids only. */
+export async function listSendLitSequenceSubscribers(
+  teamApiKey: string,
+  sequenceId: string,
+  query: { page?: number; limit?: number } = {},
+  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+): Promise<string[]> {
+  const config = options.config ?? sendLitConfig();
+  const search = new URLSearchParams();
+  if (query.page !== undefined) search.set("page", String(query.page));
+  if (query.limit !== undefined) search.set("limit", String(query.limit));
+  const qs = search.toString();
+  const raw = await requestJson<unknown>(
+    config,
+    `/sequences/${encodeURIComponent(sequenceId)}/subscribers${qs ? `?${qs}` : ""}`,
+    { method: "GET", teamApiKey },
+    options.fetcher,
+  );
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { items?: unknown })?.items)
+      ? (raw as { items: unknown[] }).items
+      : [];
+  return list.filter((id): id is string => typeof id === "string" && id !== "");
+}
+
 export async function sendSendLitSequenceEmailTest(
   teamApiKey: string,
   sequenceId: string,

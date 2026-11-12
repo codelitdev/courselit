@@ -34,6 +34,7 @@ export type SchoolOnboardingDto = {
   step: OnboardingStep;
   draft: Record<string, unknown>;
   checklistHidden: boolean;
+  resumePromptHidden: boolean;
   checklist: Array<{ key: OnboardingChecklistKey; done: boolean }>;
   billing: { required: boolean; entitled: boolean };
   updatedAt: string;
@@ -51,6 +52,7 @@ export async function insertSchoolOnboarding(
     step: "school",
     draft: {},
     checklistHidden: false,
+    resumePromptHidden: false,
     manualDone: [],
     createdAt: now,
     updatedAt: now,
@@ -74,6 +76,7 @@ async function loadRow(db: AppDb, schoolId: string, clock: Clock) {
       step: "school",
       draft: {},
       checklistHidden: false,
+      resumePromptHidden: false,
       manualDone: [],
       createdAt: now,
       updatedAt: now,
@@ -269,6 +272,7 @@ async function toDto(
     step: row.step as OnboardingStep,
     draft: row.draft,
     checklistHidden: row.checklistHidden,
+    resumePromptHidden: row.resumePromptHidden,
     checklist: await computeChecklist(
       db,
       {
@@ -294,6 +298,7 @@ export async function updateSchoolOnboarding(
       step?: OnboardingStep;
       draft?: Record<string, unknown>;
       checklistHidden?: boolean;
+      resumePromptHidden?: boolean;
       markDone?: OnboardingChecklistKey[];
     };
   },
@@ -308,6 +313,7 @@ export async function updateSchoolOnboarding(
       step: patch.step ?? row.step,
       draft: patch.draft ? { ...row.draft, ...patch.draft } : row.draft,
       checklistHidden: patch.checklistHidden ?? row.checklistHidden,
+      resumePromptHidden: patch.resumePromptHidden ?? row.resumePromptHidden,
       manualDone: patch.markDone
         ? [...new Set([...row.manualDone, ...patch.markDone])]
         : row.manualDone,

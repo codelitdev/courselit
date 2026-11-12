@@ -438,6 +438,49 @@ describe.serial("school website", () => {
     }
   });
 
+  it("tells the storefront when learners have something to sign in to", async () => {
+    const { runtime, world, admin, publicGet } = await setup();
+    const setCommunityLive = (enabled: boolean) =>
+      runtime.db
+        .update(schema.communities)
+        .set({ enabled })
+        .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const hasPublishedOffers = async () =>
+      ((await publicGet("/v1/public/site/settings")).body as { hasPublishedOffers: boolean })
+        .hasPublishedOffers;
+    try {
+      expect(await hasPublishedOffers()).toBe(false);
+
+      // The school's community (seeded switched off) counts only while it is live.
+      await setCommunityLive(true);
+      expect(await hasPublishedOffers()).toBe(true);
+      await setCommunityLive(false);
+      expect(await hasPublishedOffers()).toBe(false);
+
+      // A draft product doesn't count; a published one does even when hidden,
+      // because it is still sold through direct links.
+      const product = await admin("POST", "/v1/products", {
+        title: "Hidden course",
+        kind: "course",
+      });
+      const productId = (product.body as { id: string }).id;
+      expect(await hasPublishedOffers()).toBe(false);
+      await admin("POST", `/v1/products/${productId}/plans`, {
+        name: "Free access",
+        kind: "free",
+        amountMinor: 0,
+      });
+      const published = await admin("PATCH", `/v1/products/${productId}`, {
+        status: "published",
+        privacy: "unlisted",
+      });
+      expect(published.status).toBe(200);
+      expect(await hasPublishedOffers()).toBe(true);
+    } finally {
+      await runtime.close();
+    }
+  });
+
   it("drafts, publishes, and serves blog posts with their author", async () => {
     const { runtime, admin, publicGet } = await setup();
     try {

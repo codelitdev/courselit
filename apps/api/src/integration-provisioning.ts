@@ -1,10 +1,15 @@
 import type { Clock } from "@codelitdev/platform";
+import {
+  COURSELIT_PERMISSIONS,
+  computeEffectiveCourseLitPermissions,
+} from "@courselit/api-contract";
 import { and, asc, eq, inArray, lt, lte, sql } from "drizzle-orm";
 import type { Logger } from "pino";
 import * as schema from "./db/schema/index.js";
 import {
   COURSELIT_IS_COMMUNITY_MEMBER_FIELD,
   COURSELIT_LAST_ACTIVE_FIELD,
+  COURSELIT_PERMISSIONS_FIELD,
   COURSELIT_PRODUCT_IDS_FIELD,
   COURSELIT_SIGNED_UP_FIELD,
 } from "./contact-filters.js";
@@ -34,6 +39,19 @@ import {
 } from "./utils/integration-secrets.js";
 
 const MAX_ERROR_LENGTH = 2000;
+
+/**
+ * The permissions a contact holds as a team member, for the permission filter.
+ * Owners hold every permission, other members what their grants imply, and a
+ * contact who is not on the team holds none.
+ */
+export function effectiveTeamPermissions(
+  membership: { isOwner: boolean; permissions: readonly string[] } | undefined,
+): string[] {
+  if (!membership) return [];
+  if (membership.isOwner) return [...COURSELIT_PERMISSIONS];
+  return [...computeEffectiveCourseLitPermissions(membership.permissions)];
+}
 
 export type SendLitOperations = {
   provisionTeam: typeof provisionSendLitTeam;
@@ -369,6 +387,20 @@ async function syncSendLitContactJob(
       .limit(1);
     const isCommunityMember = activeCommunity.length > 0;
 
+    const [teamMembership] = await db
+      .select({
+        isOwner: schema.memberships.isOwner,
+        permissions: schema.memberships.permissions,
+      })
+      .from(schema.memberships)
+      .where(
+        and(
+          eq(schema.memberships.schoolId, job.schoolId),
+          eq(schema.memberships.schoolAccountId, schoolAccount.id),
+        ),
+      )
+      .limit(1);
+
     const lastActive = schoolAccount.lastActiveAt
       ? schoolAccount.lastActiveAt.toISOString()
       : undefined;
@@ -380,6 +412,7 @@ async function syncSendLitContactJob(
       ...(currentContact?.customFields ?? {}),
       [COURSELIT_PRODUCT_IDS_FIELD]: productIds,
       [COURSELIT_IS_COMMUNITY_MEMBER_FIELD]: isCommunityMember ? "true" : "false",
+      [COURSELIT_PERMISSIONS_FIELD]: effectiveTeamPermissions(teamMembership),
       ...(lastActive ? { [COURSELIT_LAST_ACTIVE_FIELD]: lastActive } : {}),
       [COURSELIT_SIGNED_UP_FIELD]: signedUp,
     };

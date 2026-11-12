@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Check, Clock3, Pencil, Pause, Send } from "lucide-react";
 import { ContactFilterBuilder, EmailPreview, SequenceAnalytics, type ContactFilterWithAggregator, type Email } from "@sendlit/email-blocks";
 import { Badge } from "@codelitdev/design-system";
+import {
+  fromStoredAudienceFilter,
+  toContactFilterSet,
+  toStoredAudienceFilter,
+} from "@/lib/contact-filters";
+import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
 import { AuthGate } from "@/components/auth-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { CourseLitLoading } from "@/components/loading";
@@ -33,6 +39,11 @@ import {
 } from "@/lib/broadcast-status";
 import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import { isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { emailReadinessMessage } from "@/lib/email-readiness";
+import {
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
 import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
@@ -112,6 +123,7 @@ export default function BroadcastDetailsPage({
   const { broadcastId } = use(params);
   const router = useRouter();
   const [school, setSchool] = useState<School | null>(null);
+  const filterDefinitions = useContactFilterDefinitions(school?.id);
   const [broadcast, setBroadcast] = useState<Broadcast | null>(null);
   const [title, setTitle] = useState("");
   const [filter, setFilter] = useState<ContactFilterWithAggregator>(EVERYONE_FILTER);
@@ -133,9 +145,15 @@ export default function BroadcastDetailsPage({
   const scheduled = isBroadcastScheduled(broadcast);
   const email = broadcast?.emails?.[0];
   const emailContent = getEmailContent(email?.content);
+  const mailingAddressMissing = useMailingAddressMissing(school?.id);
+  // Explains why Send and Schedule are off; the API enforces the same rule.
+  const unreadyReason = email
+    ? emailReadinessMessage(email)
+    : "Write the email's content before sending it.";
   const filterKey = useMemo(() => JSON.stringify(filter), [filter]);
   const titleChanged = title !== (broadcast?.title ?? "");
-  const filterChanged = filterKey !== JSON.stringify(broadcast?.filter ?? EVERYONE_FILTER);
+  const filterChanged =
+    filterKey !== JSON.stringify(fromStoredAudienceFilter(broadcast?.filter ?? EVERYONE_FILTER));
   const hasChanges = titleChanged || filterChanged;
 
   useSetBreadcrumb([
@@ -176,7 +194,7 @@ export default function BroadcastDetailsPage({
         if (cancelled) return;
         setBroadcast(data);
         setTitle(data.title || "Untitled broadcast");
-        setFilter(data.filter ?? EVERYONE_FILTER);
+        setFilter(fromStoredAudienceFilter(data.filter ?? EVERYONE_FILTER));
         if (data.status === "active" || data.status === "completed" || data.status === "paused") {
           const statsResponse = await fetch(
             `/api/v1/school/mails/sequences/${encodeURIComponent(broadcastId)}/stats`,
@@ -221,7 +239,11 @@ export default function BroadcastDetailsPage({
             "content-type": "application/json",
             "x-school-id": school.id,
           },
-          body: JSON.stringify({ filter, page: 1, rowsPerPage: 1 }),
+          body: JSON.stringify({
+            filter: toContactFilterSet(filter),
+            page: 1,
+            rowsPerPage: 1,
+          }),
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("Unable to count eligible recipients.");
@@ -258,14 +280,17 @@ export default function BroadcastDetailsPage({
             "Content-Type": "application/json",
             "x-school-id": school.id,
           },
-          body: JSON.stringify({ title: title.trim(), filter }),
+          body: JSON.stringify({
+            title: title.trim(),
+            filter: toStoredAudienceFilter(filter),
+          }),
         },
       );
       if (!response.ok) throw new Error(await responseError(response, "Unable to save broadcast details."));
       const updated = (await response.json()) as Broadcast;
       setBroadcast((current) => (current ? { ...current, ...updated } : updated));
       setTitle(updated.title || title.trim());
-      setFilter(updated.filter ?? filter);
+      setFilter(updated.filter ? fromStoredAudienceFilter(updated.filter) : filter);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2200);
       return true;
@@ -433,7 +458,7 @@ export default function BroadcastDetailsPage({
 
   return (
     <AuthGate>
-      <main className="page-shell space-y-6">
+      <main className="page-shell">
         {loading ? (
           <CourseLitLoading label="Loading broadcast…" />
         ) : error && !broadcast ? (
@@ -464,10 +489,10 @@ export default function BroadcastDetailsPage({
                   </span>
                 ) : editable && canWrite ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" onClick={openScheduleDialog} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0}>
+                    <Button variant="outline" onClick={openScheduleDialog} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0 || Boolean(unreadyReason)} title={unreadyReason ?? undefined}>
                       <CalendarClock className="mr-1.5 size-4" />Schedule
                     </Button>
-                    <Button onClick={() => setActiveDialog("send")} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0}>
+                    <Button onClick={() => setActiveDialog("send")} disabled={saving || working || loadingRecipients || recipientCount === null || recipientCount === 0 || Boolean(unreadyReason)} title={unreadyReason ?? undefined}>
                       <Send className="mr-1.5 size-4" />Send now
                     </Button>
                   </div>
@@ -476,6 +501,19 @@ export default function BroadcastDetailsPage({
             />
 
             {error ? <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div> : null}
+
+            {editable && canWrite ? (
+              <MailingAddressNotice missing={mailingAddressMissing} action="send this broadcast" />
+            ) : null}
+
+            {editable && canWrite && unreadyReason ? (
+              <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+                <p className="min-w-0 flex-1">{unreadyReason}</p>
+                <Button asChild type="button" size="sm" variant="outline">
+                  <Link href={`/marketing/editor/${encodeURIComponent(broadcastId)}`}>Edit email</Link>
+                </Button>
+              </div>
+            ) : null}
 
             {scheduledAt && !scheduled ? (
               <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
@@ -528,6 +566,7 @@ export default function BroadcastDetailsPage({
                   <Label>Audience</Label>
                   <ContactFilterBuilder
                     value={filter}
+                    filterDefinitions={filterDefinitions}
                     onChange={setFilter}
                     count={recipientCount ?? undefined}
                     countLabel="recipients"
@@ -548,14 +587,9 @@ export default function BroadcastDetailsPage({
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">Content</CardTitle>
-                  {email ? (
-                    <Badge variant={email.published ? "success" : "neutral"}>
-                      {email.published ? "Published" : "Not published"}
-                    </Badge>
-                  ) : null}
-                </div>
+                {/* No published badge: a broadcast's one email is always
+                    published on save; the broadcast's status is what counts. */}
+                <CardTitle className="text-base">Content</CardTitle>
                 <div className="flex items-center gap-2">
                   {email && school && canWrite ? (
                     <SendTestEmailButton

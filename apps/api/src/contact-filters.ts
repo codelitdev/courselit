@@ -1,10 +1,15 @@
-import type { ContactFilter, ContactFilterSet } from "@courselit/api-contract";
+import {
+  COURSELIT_PERMISSIONS,
+  type ContactFilter,
+  type ContactFilterSet,
+} from "@courselit/api-contract";
 import type { SendLitFilterCondition, SendLitSegmentFilter } from "./sendlit-client.js";
 
 export const COURSELIT_PRODUCT_IDS_FIELD = "courselit.productIds";
 export const COURSELIT_IS_COMMUNITY_MEMBER_FIELD = "courselit.isCommunityMember";
 export const COURSELIT_LAST_ACTIVE_FIELD = "courselit.lastActive";
 export const COURSELIT_SIGNED_UP_FIELD = "courselit.signedUp";
+export const COURSELIT_PERMISSIONS_FIELD = "courselit.permissions";
 
 function normalizeDateToIsoUtc(input: string): string {
   const d = new Date(input);
@@ -133,6 +138,20 @@ export function toSendLitFilter(filterSet: ContactFilterSet): SendLitSegmentFilt
         });
         break;
       }
+      case "permission": {
+        let condition: "has" | "not_has";
+        if (filter.condition === "Has") condition = "has";
+        else if (filter.condition === "Does not have") condition = "not_has";
+        else throw new Error(`Unsupported permission condition: ${(filter as any).condition}`);
+
+        filters.push({
+          name: "customField",
+          key: COURSELIT_PERMISSIONS_FIELD,
+          condition,
+          value: filter.value,
+        });
+        break;
+      }
       default:
         throw new Error(`Unknown filter name: ${(filter as any).name}`);
     }
@@ -222,6 +241,19 @@ export function fromSendLitFilter(
             value,
             ...(valueLabel ? { valueLabel } : {}),
           });
+        } else {
+          return { ok: false, error: "unsupported_segment_filter" };
+        }
+      } else if (
+        key === COURSELIT_PERMISSIONS_FIELD &&
+        typeof value === "string" &&
+        (COURSELIT_PERMISSIONS as readonly string[]).includes(value)
+      ) {
+        const permission = value as (typeof COURSELIT_PERMISSIONS)[number];
+        if (condition === "has") {
+          filters.push({ name: "permission", condition: "Has", value: permission });
+        } else if (condition === "not_has") {
+          filters.push({ name: "permission", condition: "Does not have", value: permission });
         } else {
           return { ok: false, error: "unsupported_segment_filter" };
         }

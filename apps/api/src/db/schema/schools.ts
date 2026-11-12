@@ -48,6 +48,7 @@ export const schoolOnboarding = pgTable("school_onboarding", {
     .notNull()
     .default(sql`'{}'::jsonb`),
   checklistHidden: boolean("checklist_hidden").notNull().default(false),
+  resumePromptHidden: boolean("resume_prompt_hidden").notNull().default(false),
   manualDone: text("manual_done")
     .array()
     .notNull()

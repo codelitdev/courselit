@@ -77,7 +77,7 @@ import {
   WirePreview,
 } from "./previews";
 import { ResumeDialog } from "./resume-dialog";
-import { markResumePrompted } from "./session";
+import { markResumePrompted, shouldOfferResume } from "./session";
 import {
   AboutStep,
   BrandStep,
@@ -348,7 +348,7 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
         } else {
           setStep(target);
           setResumeStep(target);
-          if (resume && onboarding.status === "in_progress") setShowResume(true);
+          if (resume && shouldOfferResume(onboarding)) setShowResume(true);
         }
         setBooting(false);
         hydrated.current = true;
@@ -1516,6 +1516,16 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
         }}
         onDashboard={() => {
           markResumePrompted();
+          window.location.assign("/");
+        }}
+        onNeverAgain={async () => {
+          markResumePrompted();
+          const current = schoolRef.current;
+          if (current) {
+            await patchOnboarding(current.id, { resumePromptHidden: true }).catch(
+              () => undefined,
+            );
+          }
           window.location.assign("/");
         }}
       />

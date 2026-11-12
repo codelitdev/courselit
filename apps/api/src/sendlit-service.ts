@@ -30,6 +30,7 @@ import {
   getSendLitSegment,
   getSendLitSequence,
   getSendLitSequenceStats,
+  listSendLitSequenceSubscribers,
   getSendLitTemplate,
   listSendLitContacts,
   listSendLitSegments,
@@ -63,6 +64,11 @@ import {
   type SendLitTemplate,
   type SendLitTemplateContent,
 } from "./sendlit-client.js";
+import {
+  EMAIL_READINESS_REASONS,
+  emailReadinessProblem,
+  type EmailReadinessProblem,
+} from "./email-readiness.js";
 import { fromSendLitTrigger, toSendLitTrigger } from "./mail-triggers.js";
 import type { AppDb } from "./types.js";
 import {
@@ -94,6 +100,18 @@ class MailingAddressRequiredError extends Error {
   }
 }
 
+/** Raised when an email that is about to go out has no subject or still
+ * carries the template's placeholder body. */
+class EmailNotReadyError extends Error {
+  constructor(
+    readonly problem: EmailReadinessProblem,
+    readonly emailId: string | null,
+    readonly position: number | null,
+  ) {
+    super(`email_not_ready:${problem}`);
+  }
+}
+
 const MAILING_ADDRESS_REQUIRED =
   "Add your mailing address in Marketing → Settings before sending email.";
 
@@ -103,6 +121,17 @@ function mapSendLitError(error: unknown): PlatformError {
   if (error instanceof MailingAddressRequiredError) {
     return createPlatformError("conflict", {
       safeDetails: { reason: MAILING_ADDRESS_REQUIRED },
+      cause: error,
+    });
+  }
+  if (error instanceof EmailNotReadyError) {
+    const reason = EMAIL_READINESS_REASONS[error.problem];
+    return createPlatformError("validation_failed", {
+      safeDetails: {
+        reason: error.position === null ? reason : `Email ${error.position}: ${reason}`,
+        problem: error.problem,
+        ...(error.emailId ? { emailId: error.emailId } : {}),
+      },
       cause: error,
     });
   }
@@ -866,10 +895,26 @@ export async function updateSequenceEmail(
     db,
     schoolId,
     clock,
-    (auth, cfg) =>
-      updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input, {
+    async (auth, cfg) => {
+      // Publishing into a sequence that is already sending would mail the
+      // email straight away, so it has to be ready. Drafts may stay rough.
+      if (input.published === true) {
+        const sequence = await getSendLitSequence(auth.teamApiKey, sequenceId, {
+          config: cfg,
+        });
+        const existing = sequence.emails?.find((item) => item.emailId === emailId);
+        if (sequence.status === "active" && existing) {
+          const problem = emailReadinessProblem({
+            subject: input.subject ?? existing.subject,
+            content: input.content ?? existing.content,
+          });
+          if (problem) throw new EmailNotReadyError(problem, emailId, null);
+        }
+      }
+      return updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input, {
         config: cfg,
-      }),
+      });
+    },
     config,
   );
 }
@@ -913,6 +958,31 @@ export async function sendSequenceEmailTest(
   );
 }
 
+/**
+ * Refuses to start a sequence whose emails would go out unedited. A broadcast
+ * is its one email, so that email must be ready; in a sequence only published
+ * emails are sent, so drafts may still be placeholders.
+ */
+export function assertSequenceEmailsReady(
+  sequence: Pick<SendLitSequence, "type" | "emails">,
+): void {
+  const emails = sequence.emails ?? [];
+  if (sequence.type === "broadcast" && emails.length === 0) {
+    throw new EmailNotReadyError("body_empty", null, null);
+  }
+  emails.forEach((email, index) => {
+    if (sequence.type === "sequence" && !email.published) return;
+    const problem = emailReadinessProblem(email);
+    if (problem) {
+      throw new EmailNotReadyError(
+        problem,
+        email.emailId || null,
+        sequence.type === "sequence" ? index + 1 : null,
+      );
+    }
+  });
+}
+
 export async function startSequence(
   db: AppDb,
   schoolId: string,
@@ -929,6 +999,9 @@ export async function startSequence(
         config: cfg,
       });
       if (!settings.mailingAddress?.trim()) throw new MailingAddressRequiredError();
+      assertSequenceEmailsReady(
+        await getSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
+      );
       return fromSendLitTrigger(
         await startSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
       );
@@ -969,6 +1042,79 @@ export async function getSequenceStats(
     clock,
     (auth, cfg) =>
       getSendLitSequenceStats(auth.teamApiKey, sequenceId, { config: cfg }),
+    config,
+  );
+}
+
+export type SequenceSubscriber = {
+  contactId: string;
+  email: string | null;
+  name: string | null;
+  subscribed: boolean | null;
+};
+
+/** The contacts who have received a sequence, a page at a time. The mailing
+ * service lists them as ids, so each is resolved to a contact; one that can no
+ * longer be read (deleted since) stays in its place with no email or name. */
+export async function listSequenceSubscribers(
+  db: AppDb,
+  schoolId: string,
+  clock: Clock,
+  sequenceId: string,
+  query: { page?: number; limit?: number } = {},
+  config?: SendLitConfig,
+): Promise<
+  Result<
+    { items: SequenceSubscriber[]; total: number; page: number; limit: number },
+    PlatformError
+  >
+> {
+  const page = Math.max(1, Math.floor(query.page ?? 1));
+  const limit = Math.min(100, Math.max(1, Math.floor(query.limit ?? 25)));
+  return withSendLitAuth(
+    db,
+    schoolId,
+    clock,
+    async (auth, cfg) => {
+      const [ids, stats] = await Promise.all([
+        listSendLitSequenceSubscribers(
+          auth.teamApiKey,
+          sequenceId,
+          { page, limit },
+          { config: cfg },
+        ),
+        getSendLitSequenceStats(auth.teamApiKey, sequenceId, { config: cfg }),
+      ]);
+      const items = await Promise.all(
+        ids.map(async (contactId): Promise<SequenceSubscriber> => {
+          try {
+            const contact = await getSendLitContact(auth.teamApiKey, contactId, {
+              config: cfg,
+            });
+            return {
+              contactId,
+              email: contact.email ?? null,
+              name: contact.name ?? null,
+              subscribed:
+                typeof contact.subscribed === "boolean" ? contact.subscribed : null,
+            };
+          } catch (error) {
+            // Only a contact deleted since is shown as such; any other
+            // failure fails the page rather than mislabelling the row.
+            if (error instanceof SendLitApiError && error.status === 404) {
+              return { contactId, email: null, name: null, subscribed: null };
+            }
+            throw error;
+          }
+        }),
+      );
+      return {
+        items,
+        total: Math.max(stats.subscribersCount ?? 0, 0),
+        page,
+        limit,
+      };
+    },
     config,
   );
 }

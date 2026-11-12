@@ -54,6 +54,21 @@ describe("starting a sequence", () => {
       if (url.includes("/settings/general") && (init?.method ?? "GET") === "GET") {
         return new Response(JSON.stringify({ mailingAddress }));
       }
+      if (url.endsWith("/sequences/seq_1") && (init?.method ?? "GET") === "GET") {
+        return new Response(
+          JSON.stringify({
+            sequenceId: "seq_1",
+            type: "broadcast",
+            emails: [
+              {
+                emailId: "e1",
+                subject: "Hello",
+                content: { content: [{ blockType: "text", settings: { content: "Hi all" } }] },
+              },
+            ],
+          }),
+        );
+      }
       if (url.includes("/start")) {
         started.push(url);
         return new Response(JSON.stringify({ status: "active" }));

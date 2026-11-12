@@ -6,7 +6,7 @@ import { PublicBlogFeed } from "@/components/public-blog-feed";
 import { PublicCommunitiesCatalog } from "@/components/public-communities-catalog";
 import { PublicProductsCatalog } from "@/components/public-products-catalog";
 import { SitePageRenderer, SitePageSection } from "@/components/site-page-renderer";
-import { withLoginLink } from "@/lib/header-account";
+import { learnersCanSignIn, withLoginLink } from "@/lib/header-account";
 import { siteLogoAlt, siteLogoUrl } from "@/lib/site-branding";
 import {
   getPageBySlug,
@@ -228,7 +228,10 @@ export async function PublicSitePage({
             links,
             ...(hasCommunity ? {} : { ctaLabel: "", ctaHref: "" }),
           },
-          { sellsSomething: hasOffers, onLoginPage: systemRoute === "login" },
+          {
+            sellsSomething: learnersCanSignIn(settings, hasOffers),
+            onLoginPage: systemRoute === "login",
+          },
         ),
       };
     }

@@ -7837,6 +7837,13 @@
           "notNull": true,
           "default": false
         },
+        "resume_prompt_hidden": {
+          "name": "resume_prompt_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "manual_done": {
           "name": "manual_done",
           "type": "text[]",

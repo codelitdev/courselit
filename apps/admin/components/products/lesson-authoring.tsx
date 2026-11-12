@@ -45,6 +45,7 @@ import type {
 import { QuizEditor } from "./quiz-editor";
 import { RichTextEditor } from "./rich-text-editor";
 import { ScormLessonUpload } from "./scorm-lesson-upload";
+import { truncateText } from "@/lib/truncate";
 
 type ProductDetail = Product & { sections: Section[]; lessons: Lesson[] };
 
@@ -572,7 +573,9 @@ export function LessonAuthoring({
     <AuthGate>
       <div className="page-shell">
         <header>
-          <h1 className="text-4xl font-semibold tracking-tight">{heading}</h1>
+          <h1 className="truncate text-4xl font-semibold tracking-tight" title={heading}>
+            {truncateText(heading)}
+          </h1>
           <p className="mt-2 text-muted-foreground">{description}</p>
         </header>
         {loading ? (

@@ -50,6 +50,18 @@ export function withLoginLink<T extends HeaderSettings>(
   };
 }
 
+/**
+ * Whether learners have something to sign in to: any published product,
+ * hidden ones included (they are sold through direct links), or a live
+ * community. Falls back to the public catalogue when the API doesn't say.
+ */
+export function learnersCanSignIn(
+  settings: { hasPublishedOffers?: boolean } | null | undefined,
+  hasPublicOffers: boolean,
+): boolean {
+  return settings?.hasPublishedOffers ?? hasPublicOffers;
+}
+
 /** Whether the header offers a learner sign-in, i.e. the school sells something. */
 export function headerHasAccountEntry(settings: HeaderSettings | undefined): boolean {
   return settings?.[HEADER_ACCOUNT_FLAG] === true;

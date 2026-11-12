@@ -42,10 +42,23 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
+import { SequenceSubscribers } from "@/components/mails/sequence-subscribers";
 import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
-import { isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
+import { isEmailNotReadyError, isMailingAddressRequiredError } from "@/lib/mail-errors";
+import { sequenceReadinessMessage } from "@/lib/email-readiness";
+import {
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
 import { type MailStats, mailStatsMetrics } from "@/lib/mail-stats";
 import { hasSchoolPermission } from "@/lib/school-permissions";
+import { truncateText } from "@/lib/truncate";
+import {
+  fromStoredAudienceFilter,
+  toStoredAudienceFilter,
+} from "@/lib/contact-filters";
+import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
 import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
 
 type School = {
@@ -109,7 +122,6 @@ function isFilter(value: unknown): value is ContactFilterWithAggregator {
 }
 
 type ProductOption = { id: string; title: string };
-const MAX_SEQUENCE_TITLE_DISPLAY_LENGTH = 80;
 
 const DEFAULT_BLANK_TEMPLATE: SystemTemplateSummary = {
   templateId: "system:blank",
@@ -119,15 +131,6 @@ const DEFAULT_BLANK_TEMPLATE: SystemTemplateSummary = {
   requiredVariables: [],
   content: defaultEmail,
 };
-
-function truncateSequenceTitle(title: string): string {
-  const characters = Array.from(title);
-  if (characters.length <= MAX_SEQUENCE_TITLE_DISPLAY_LENGTH) return title;
-  return `${characters
-    .slice(0, MAX_SEQUENCE_TITLE_DISPLAY_LENGTH - 1)
-    .join("")
-    .trimEnd()}…`;
-}
 
 function cloneEmail(email: Email): Email {
   return JSON.parse(JSON.stringify(email)) as Email;
@@ -200,6 +203,9 @@ function getSequenceStatusError(message: string, action: "activate" | "pause") {
       description:
         "Publish at least one email before activating this sequence.",
     };
+  }
+  if (isEmailNotReadyError(message)) {
+    return { title: "Finish your email first", description: message };
   }
   if (/mailing address/i.test(message)) {
     return {
@@ -279,8 +285,10 @@ function normalizeSequence(raw: Record<string, unknown>): SequenceDocument {
           ? ANY_PRODUCT
           : null,
     triggerFilter: (raw.triggerFilter ?? null) as SequenceDocument["triggerFilter"],
-    filter: isFilter(raw.filter) ? raw.filter : EVERYONE_FILTER,
-    excludeFilter: isFilter(raw.excludeFilter) ? raw.excludeFilter : EVERYONE_FILTER,
+    filter: isFilter(raw.filter) ? fromStoredAudienceFilter(raw.filter) : EVERYONE_FILTER,
+    excludeFilter: isFilter(raw.excludeFilter)
+      ? fromStoredAudienceFilter(raw.excludeFilter)
+      : EVERYONE_FILTER,
     emailsOrder,
     emails,
   };
@@ -319,9 +327,15 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   const dirtyEmailsRef = useRef(new Set<string>());
   const revisionRef = useRef(0);
   const savingRef = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Edits are kept until Save (or an action that needs them saved, like
+  // Activate or Edit content); nothing is saved in the background.
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const canWrite = hasSchoolPermission(school, "contacts:write");
+  const mailingAddressMissing = useMailingAddressMissing(school?.id);
+  const filterDefinitions = useContactFilterDefinitions(school?.id);
+  // Explains why Activate is off; the API enforces the same rule.
+  const unreadyReason = sequence ? sequenceReadinessMessage(sequence.emails) : null;
   const selectedEmail = sequence?.emails.find(
     (email) => email.emailId === selectedEmailId,
   );
@@ -398,19 +412,14 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
     setSequence(next);
   }
 
-  function queueSave() {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      saveTimerRef.current = null;
-      void saveChanges();
-    }, 900);
-  }
-
   function markDirty() {
     revisionRef.current += 1;
     setError(null);
-    queueSave();
+    setHasUnsavedChanges(true);
   }
+
+  // Leaving the page would drop unsaved edits; let the browser ask first.
+  useUnsavedChangesWarning(hasUnsavedChanges);
 
   function updateMetadata(patch: Partial<SequenceDocument>) {
     const current = sequenceRef.current;
@@ -434,10 +443,6 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   }
 
   async function saveChanges(): Promise<boolean> {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
-    }
     const current = sequenceRef.current;
     if (!school || !current) return false;
     if (savingRef.current) return false;
@@ -475,8 +480,11 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
         if (snapshot.triggerFilter !== undefined && metadata.triggerFilter === undefined) {
           metadata.triggerFilter = snapshot.triggerFilter;
         }
-        metadata.filter = snapshot.filter;
-        metadata.excludeFilter = snapshot.excludeFilter.filters.length > 0 ? snapshot.excludeFilter : null;
+        metadata.filter = toStoredAudienceFilter(snapshot.filter);
+        metadata.excludeFilter =
+          snapshot.excludeFilter.filters.length > 0
+            ? toStoredAudienceFilter(snapshot.excludeFilter)
+            : null;
         updates.push(
           apiRequest(
             school.id,
@@ -517,8 +525,12 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
       if (revision === revisionRef.current) {
         dirtyMetadataRef.current = false;
         emailIds.forEach((emailId) => dirtyEmailsRef.current.delete(emailId));
+        setHasUnsavedChanges(
+          dirtyMetadataRef.current || dirtyEmailsRef.current.size > 0,
+        );
         return true;
       }
+      // Edited again while saving: those edits wait for the next Save.
       return false;
     } catch (caught) {
       setError(
@@ -528,7 +540,6 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
     } finally {
       savingRef.current = false;
       setSaving(false);
-      if (revision !== revisionRef.current) queueSave();
     }
   }
 
@@ -541,6 +552,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
     sequenceRef.current = null;
     dirtyMetadataRef.current = false;
     dirtyEmailsRef.current.clear();
+    setHasUnsavedChanges(false);
     setSelectedEmailId(undefined);
 
     async function load() {
@@ -651,7 +663,6 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
     void load();
     return () => {
       active = false;
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [sequenceId]);
 
@@ -712,6 +723,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
       const nextOrder = current.emailsOrder.filter((id) => id !== emailId);
       replaceSequence({ ...current, emails: nextEmails, emailsOrder: nextOrder });
       dirtyEmailsRef.current.delete(emailId);
+      setHasUnsavedChanges(dirtyMetadataRef.current || dirtyEmailsRef.current.size > 0);
       if (selectedEmailId === emailId)
         setSelectedEmailId(nextOrder[0] || nextEmails[0]?.emailId);
     } catch (caught) {
@@ -817,7 +829,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 className="min-w-0 flex-1 truncate text-2xl font-semibold"
                 title={sequence.title}
               >
-                {truncateSequenceTitle(sequence.title)}
+                {truncateText(sequence.title)}
               </h1>
               <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground">
                 {sequence.status}
@@ -827,7 +839,12 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
               type="button"
               size="sm"
               onClick={() => void changeSequenceStatus()}
-              disabled={!canWrite || saving}
+              disabled={
+                !canWrite ||
+                saving ||
+                (sequence.status !== "active" && Boolean(unreadyReason))
+              }
+              title={sequence.status !== "active" ? (unreadyReason ?? undefined) : undefined}
             >
               {sequence.status === "active" ? (
                 <Pause className="size-4" />
@@ -837,6 +854,16 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
               {sequence.status === "active" ? "Pause" : "Activate"}
             </Button>
           </div>
+
+          {canWrite && sequence.status !== "active" ? (
+            <MailingAddressNotice missing={mailingAddressMissing} action="activate this sequence" />
+          ) : null}
+
+          {canWrite && sequence.status !== "active" && unreadyReason ? (
+            <p role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {unreadyReason}
+            </p>
+          ) : null}
 
           <section className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -851,7 +878,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 size="sm"
                 variant="outline"
                 onClick={() => void saveChanges()}
-                disabled={!canWrite || saving}
+                disabled={!canWrite || saving || !hasUnsavedChanges}
               >
                 <Save className="size-4" />
                 Save
@@ -903,6 +930,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 </p>
                 <ContactFilterBuilder
                   value={sequence.filter}
+                  filterDefinitions={filterDefinitions}
                   onChange={(filter) => updateMetadata({ filter })}
                   disabled={!canWrite}
                   defaultSegmentLabel="Everyone"
@@ -915,6 +943,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                 </p>
                 <ContactFilterBuilder
                   value={sequence.excludeFilter}
+                  filterDefinitions={filterDefinitions}
                   onChange={(excludeFilter) => updateMetadata({ excludeFilter })}
                   disabled={!canWrite}
                   defaultSegmentLabel="Nobody"
@@ -929,6 +958,10 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
               title="Performance"
               metrics={mailStatsMetrics(stats, "Subscribers")}
             />
+          ) : null}
+
+          {school && sequence.status !== "draft" ? (
+            <SequenceSubscribers schoolId={school.id} sequenceId={sequenceId} />
           ) : null}
 
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -999,7 +1032,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
                         type="button"
                         size="sm"
                         onClick={() => void saveChanges()}
-                        disabled={!canWrite || saving}
+                        disabled={!canWrite || saving || !hasUnsavedChanges}
                       >
                         <Save className="size-4" />
                         Save

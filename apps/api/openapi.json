@@ -27874,6 +27874,9 @@
                     "canonicalHost": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "hasPublishedOffers": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -27884,7 +27887,8 @@
                     "theme",
                     "codeInjectionHead",
                     "codeInjectionBody",
-                    "canonicalHost"
+                    "canonicalHost",
+                    "hasPublishedOffers"
                   ]
                 }
               }
@@ -31781,6 +31785,67 @@
                                 "condition",
                                 "value"
                               ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "enum": [
+                                    "permission"
+                                  ]
+                                },
+                                "condition": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Has",
+                                    "Does not have"
+                                  ]
+                                },
+                                "value": {
+                                  "type": "string",
+                                  "enum": [
+                                    "members:read",
+                                    "members:invite",
+                                    "members:manage",
+                                    "school:read",
+                                    "school:write",
+                                    "products:read",
+                                    "products:write",
+                                    "products:publish",
+                                    "products:delete",
+                                    "communities:read",
+                                    "communities:write",
+                                    "communities:moderate",
+                                    "storefront:read",
+                                    "storefront:write",
+                                    "storefront:publish",
+                                    "commerce:read",
+                                    "commerce:manage",
+                                    "commerce:refund",
+                                    "contacts:read",
+                                    "contacts:write",
+                                    "contacts:delete",
+                                    "mails:read",
+                                    "mails:write",
+                                    "mails:send",
+                                    "media:read",
+                                    "media:write",
+                                    "media:delete",
+                                    "certificates:read",
+                                    "certificates:write",
+                                    "analytics:read",
+                                    "billing:read",
+                                    "integrations:read",
+                                    "integrations:manage"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "condition",
+                                "value"
+                              ]
                             }
                           ]
                         }
@@ -31985,6 +32050,67 @@
                                   },
                                   "value": {
                                     "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "condition",
+                                  "value"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "permission"
+                                    ]
+                                  },
+                                  "condition": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Has",
+                                      "Does not have"
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "enum": [
+                                      "members:read",
+                                      "members:invite",
+                                      "members:manage",
+                                      "school:read",
+                                      "school:write",
+                                      "products:read",
+                                      "products:write",
+                                      "products:publish",
+                                      "products:delete",
+                                      "communities:read",
+                                      "communities:write",
+                                      "communities:moderate",
+                                      "storefront:read",
+                                      "storefront:write",
+                                      "storefront:publish",
+                                      "commerce:read",
+                                      "commerce:manage",
+                                      "commerce:refund",
+                                      "contacts:read",
+                                      "contacts:write",
+                                      "contacts:delete",
+                                      "mails:read",
+                                      "mails:write",
+                                      "mails:send",
+                                      "media:read",
+                                      "media:write",
+                                      "media:delete",
+                                      "certificates:read",
+                                      "certificates:write",
+                                      "analytics:read",
+                                      "billing:read",
+                                      "integrations:read",
+                                      "integrations:manage"
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -32583,6 +32709,67 @@
                                         "condition",
                                         "value"
                                       ]
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "enum": [
+                                            "permission"
+                                          ]
+                                        },
+                                        "condition": {
+                                          "type": "string",
+                                          "enum": [
+                                            "Has",
+                                            "Does not have"
+                                          ]
+                                        },
+                                        "value": {
+                                          "type": "string",
+                                          "enum": [
+                                            "members:read",
+                                            "members:invite",
+                                            "members:manage",
+                                            "school:read",
+                                            "school:write",
+                                            "products:read",
+                                            "products:write",
+                                            "products:publish",
+                                            "products:delete",
+                                            "communities:read",
+                                            "communities:write",
+                                            "communities:moderate",
+                                            "storefront:read",
+                                            "storefront:write",
+                                            "storefront:publish",
+                                            "commerce:read",
+                                            "commerce:manage",
+                                            "commerce:refund",
+                                            "contacts:read",
+                                            "contacts:write",
+                                            "contacts:delete",
+                                            "mails:read",
+                                            "mails:write",
+                                            "mails:send",
+                                            "media:read",
+                                            "media:write",
+                                            "media:delete",
+                                            "certificates:read",
+                                            "certificates:write",
+                                            "analytics:read",
+                                            "billing:read",
+                                            "integrations:read",
+                                            "integrations:manage"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "name",
+                                        "condition",
+                                        "value"
+                                      ]
                                     }
                                   ]
                                 }
@@ -32993,6 +33180,67 @@
                                 "condition",
                                 "value"
                               ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "enum": [
+                                    "permission"
+                                  ]
+                                },
+                                "condition": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Has",
+                                    "Does not have"
+                                  ]
+                                },
+                                "value": {
+                                  "type": "string",
+                                  "enum": [
+                                    "members:read",
+                                    "members:invite",
+                                    "members:manage",
+                                    "school:read",
+                                    "school:write",
+                                    "products:read",
+                                    "products:write",
+                                    "products:publish",
+                                    "products:delete",
+                                    "communities:read",
+                                    "communities:write",
+                                    "communities:moderate",
+                                    "storefront:read",
+                                    "storefront:write",
+                                    "storefront:publish",
+                                    "commerce:read",
+                                    "commerce:manage",
+                                    "commerce:refund",
+                                    "contacts:read",
+                                    "contacts:write",
+                                    "contacts:delete",
+                                    "mails:read",
+                                    "mails:write",
+                                    "mails:send",
+                                    "media:read",
+                                    "media:write",
+                                    "media:delete",
+                                    "certificates:read",
+                                    "certificates:write",
+                                    "analytics:read",
+                                    "billing:read",
+                                    "integrations:read",
+                                    "integrations:manage"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "condition",
+                                "value"
+                              ]
                             }
                           ]
                         }
@@ -33193,6 +33441,67 @@
                                   },
                                   "value": {
                                     "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "condition",
+                                  "value"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "permission"
+                                    ]
+                                  },
+                                  "condition": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Has",
+                                      "Does not have"
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "enum": [
+                                      "members:read",
+                                      "members:invite",
+                                      "members:manage",
+                                      "school:read",
+                                      "school:write",
+                                      "products:read",
+                                      "products:write",
+                                      "products:publish",
+                                      "products:delete",
+                                      "communities:read",
+                                      "communities:write",
+                                      "communities:moderate",
+                                      "storefront:read",
+                                      "storefront:write",
+                                      "storefront:publish",
+                                      "commerce:read",
+                                      "commerce:manage",
+                                      "commerce:refund",
+                                      "contacts:read",
+                                      "contacts:write",
+                                      "contacts:delete",
+                                      "mails:read",
+                                      "mails:write",
+                                      "mails:send",
+                                      "media:read",
+                                      "media:write",
+                                      "media:delete",
+                                      "certificates:read",
+                                      "certificates:write",
+                                      "analytics:read",
+                                      "billing:read",
+                                      "integrations:read",
+                                      "integrations:manage"
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -33661,6 +33970,67 @@
                                   },
                                   "value": {
                                     "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "condition",
+                                  "value"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "permission"
+                                    ]
+                                  },
+                                  "condition": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Has",
+                                      "Does not have"
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "enum": [
+                                      "members:read",
+                                      "members:invite",
+                                      "members:manage",
+                                      "school:read",
+                                      "school:write",
+                                      "products:read",
+                                      "products:write",
+                                      "products:publish",
+                                      "products:delete",
+                                      "communities:read",
+                                      "communities:write",
+                                      "communities:moderate",
+                                      "storefront:read",
+                                      "storefront:write",
+                                      "storefront:publish",
+                                      "commerce:read",
+                                      "commerce:manage",
+                                      "commerce:refund",
+                                      "contacts:read",
+                                      "contacts:write",
+                                      "contacts:delete",
+                                      "mails:read",
+                                      "mails:write",
+                                      "mails:send",
+                                      "media:read",
+                                      "media:write",
+                                      "media:delete",
+                                      "certificates:read",
+                                      "certificates:write",
+                                      "analytics:read",
+                                      "billing:read",
+                                      "integrations:read",
+                                      "integrations:manage"
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -34188,6 +34558,67 @@
                                 "condition",
                                 "value"
                               ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "enum": [
+                                    "permission"
+                                  ]
+                                },
+                                "condition": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Has",
+                                    "Does not have"
+                                  ]
+                                },
+                                "value": {
+                                  "type": "string",
+                                  "enum": [
+                                    "members:read",
+                                    "members:invite",
+                                    "members:manage",
+                                    "school:read",
+                                    "school:write",
+                                    "products:read",
+                                    "products:write",
+                                    "products:publish",
+                                    "products:delete",
+                                    "communities:read",
+                                    "communities:write",
+                                    "communities:moderate",
+                                    "storefront:read",
+                                    "storefront:write",
+                                    "storefront:publish",
+                                    "commerce:read",
+                                    "commerce:manage",
+                                    "commerce:refund",
+                                    "contacts:read",
+                                    "contacts:write",
+                                    "contacts:delete",
+                                    "mails:read",
+                                    "mails:write",
+                                    "mails:send",
+                                    "media:read",
+                                    "media:write",
+                                    "media:delete",
+                                    "certificates:read",
+                                    "certificates:write",
+                                    "analytics:read",
+                                    "billing:read",
+                                    "integrations:read",
+                                    "integrations:manage"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "condition",
+                                "value"
+                              ]
                             }
                           ]
                         }
@@ -34384,6 +34815,67 @@
                                   },
                                   "value": {
                                     "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "condition",
+                                  "value"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "permission"
+                                    ]
+                                  },
+                                  "condition": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Has",
+                                      "Does not have"
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "enum": [
+                                      "members:read",
+                                      "members:invite",
+                                      "members:manage",
+                                      "school:read",
+                                      "school:write",
+                                      "products:read",
+                                      "products:write",
+                                      "products:publish",
+                                      "products:delete",
+                                      "communities:read",
+                                      "communities:write",
+                                      "communities:moderate",
+                                      "storefront:read",
+                                      "storefront:write",
+                                      "storefront:publish",
+                                      "commerce:read",
+                                      "commerce:manage",
+                                      "commerce:refund",
+                                      "contacts:read",
+                                      "contacts:write",
+                                      "contacts:delete",
+                                      "mails:read",
+                                      "mails:write",
+                                      "mails:send",
+                                      "media:read",
+                                      "media:write",
+                                      "media:delete",
+                                      "certificates:read",
+                                      "certificates:write",
+                                      "analytics:read",
+                                      "billing:read",
+                                      "integrations:read",
+                                      "integrations:manage"
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -35268,6 +35760,67 @@
                                       },
                                       "value": {
                                         "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "name",
+                                      "condition",
+                                      "value"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "name": {
+                                        "type": "string",
+                                        "enum": [
+                                          "permission"
+                                        ]
+                                      },
+                                      "condition": {
+                                        "type": "string",
+                                        "enum": [
+                                          "Has",
+                                          "Does not have"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": "string",
+                                        "enum": [
+                                          "members:read",
+                                          "members:invite",
+                                          "members:manage",
+                                          "school:read",
+                                          "school:write",
+                                          "products:read",
+                                          "products:write",
+                                          "products:publish",
+                                          "products:delete",
+                                          "communities:read",
+                                          "communities:write",
+                                          "communities:moderate",
+                                          "storefront:read",
+                                          "storefront:write",
+                                          "storefront:publish",
+                                          "commerce:read",
+                                          "commerce:manage",
+                                          "commerce:refund",
+                                          "contacts:read",
+                                          "contacts:write",
+                                          "contacts:delete",
+                                          "mails:read",
+                                          "mails:write",
+                                          "mails:send",
+                                          "media:read",
+                                          "media:write",
+                                          "media:delete",
+                                          "certificates:read",
+                                          "certificates:write",
+                                          "analytics:read",
+                                          "billing:read",
+                                          "integrations:read",
+                                          "integrations:manage"
+                                        ]
                                       }
                                     },
                                     "required": [
@@ -59929,6 +60482,9 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "schoolName": {
+                      "type": "string"
+                    },
                     "title": {
                       "type": "string"
                     },
@@ -59966,6 +60522,7 @@
                     "productTitle",
                     "issuedAt",
                     "revokedAt",
+                    "schoolName",
                     "title",
                     "subtitle",
                     "description",
@@ -76694,6 +77251,9 @@
                     "checklistHidden": {
                       "type": "boolean"
                     },
+                    "resumePromptHidden": {
+                      "type": "boolean"
+                    },
                     "checklist": {
                       "type": "array",
                       "items": {
@@ -76748,6 +77308,7 @@
                     "step",
                     "draft",
                     "checklistHidden",
+                    "resumePromptHidden",
                     "checklist",
                     "billing",
                     "updatedAt"
@@ -76912,6 +77473,9 @@
                   "checklistHidden": {
                     "type": "boolean"
                   },
+                  "resumePromptHidden": {
+                    "type": "boolean"
+                  },
                   "markDone": {
                     "type": "array",
                     "items": {
@@ -76972,6 +77536,9 @@
                     "checklistHidden": {
                       "type": "boolean"
                     },
+                    "resumePromptHidden": {
+                      "type": "boolean"
+                    },
                     "checklist": {
                       "type": "array",
                       "items": {
@@ -77026,6 +77593,7 @@
                     "step",
                     "draft",
                     "checklistHidden",
+                    "resumePromptHidden",
                     "checklist",
                     "billing",
                     "updatedAt"
@@ -82679,6 +83247,314 @@
                   "type": "object",
                   "properties": {},
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/school/mails/sequences/{sequenceId}/subscribers": {
+      "get": {
+        "summary": "List the contacts who have received a broadcast or sequence",
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [
+          {
+            "name": "sequenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {},
+                        "additionalProperties": true
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "limit"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }

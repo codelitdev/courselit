@@ -158,6 +158,114 @@ describe.serial("school team memberships and permissions", () => {
     await runtime.close();
   });
 
+  it("queues a contact sync so the permission filter sees team changes", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const headers = (cookie: string) => ({
+      cookie,
+      "x-school-id": world.schoolA.publicId,
+    });
+    const syncedAccounts = async () => {
+      const jobs = await runtime.db
+        .select()
+        .from(schema.integrationOutboxJobs)
+        .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
+      return new Set(
+        jobs.map((job) => (job.payload as { schoolAccountId: string }).schoolAccountId),
+      );
+    };
+    const clearJobs = () =>
+      runtime.db
+        .delete(schema.integrationOutboxJobs)
+        .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
+
+    // Changing a member's permissions re-syncs that member.
+    await clearJobs();
+    const updated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/school/team/members/${world.member.id}`,
+      headers: headers(world.owner.sessionCookie),
+      body: { permissions: ["products:read"], expectedVersion: 1 },
+    });
+    expect(updated.status).toBe(200);
+    const afterUpdate = await syncedAccounts();
+    expect(afterUpdate.size).toBe(1);
+
+    // Leaving the team re-syncs the same contact.
+    await clearJobs();
+    const left = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/school/team/leave",
+      headers: headers(world.member.sessionCookie),
+    });
+    expect(left.status).toBe(204);
+    expect(await syncedAccounts()).toEqual(afterUpdate);
+
+    await runtime.close();
+  });
+
+  it("queues a contact sync for a removed member", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const syncJobCount = async () =>
+      (
+        await runtime.db
+          .select()
+          .from(schema.integrationOutboxJobs)
+          .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"))
+      ).length;
+    const clearJobs = () =>
+      runtime.db
+        .delete(schema.integrationOutboxJobs)
+        .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
+
+    await clearJobs();
+    const removed = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/school/team/members/${world.member.id}`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(removed.status).toBe(204);
+    expect(await syncJobCount()).toBe(1);
+
+    await runtime.close();
+  });
+
+  it("queues contact syncs for both sides of an ownership transfer", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+
+    await runtime.db
+      .delete(schema.integrationOutboxJobs)
+      .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
+    const transferred = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/school/team/transfer-ownership",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { targetMemberId: world.member.id },
+    });
+    expect(transferred.status).toBe(200);
+    const jobs = await runtime.db
+      .select()
+      .from(schema.integrationOutboxJobs)
+      .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
+    expect(
+      new Set(jobs.map((job) => (job.payload as { schoolAccountId: string }).schoolAccountId))
+        .size,
+    ).toBe(2);
+
+    await runtime.close();
+  });
+
   it("allows a non-owner member to leave the school", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });

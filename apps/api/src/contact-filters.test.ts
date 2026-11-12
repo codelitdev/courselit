@@ -164,6 +164,64 @@ describe("contact-filters translation", () => {
     expect(back).toEqual({ ok: true, value: courselit });
   });
 
+  it("translates permission filters forward and back", () => {
+    const courselit: ContactFilterSet = {
+      version: 1,
+      aggregator: "and",
+      filters: [
+        { name: "permission", condition: "Has", value: "contacts:write" },
+        { name: "permission", condition: "Does not have", value: "billing:read" },
+      ],
+    };
+
+    const wire = toSendLitFilter(courselit);
+    expect(wire.filters).toEqual([
+      {
+        name: "customField",
+        key: "courselit.permissions",
+        condition: "has",
+        value: "contacts:write",
+      },
+      {
+        name: "customField",
+        key: "courselit.permissions",
+        condition: "not_has",
+        value: "billing:read",
+      },
+    ]);
+
+    expect(fromSendLitFilter(wire)).toEqual({ ok: true, value: courselit });
+  });
+
+  it("rejects permission wire filters with an unknown permission or condition", () => {
+    const wire = (condition: string, value: string) => ({
+      aggregator: "and",
+      filters: [
+        { name: "customField", key: "courselit.permissions", condition, value },
+      ],
+    });
+    expect(fromSendLitFilter(wire("has", "not:a-permission"))).toEqual({
+      ok: false,
+      error: "unsupported_segment_filter",
+    });
+    expect(fromSendLitFilter(wire("is", "contacts:read"))).toEqual({
+      ok: false,
+      error: "unsupported_segment_filter",
+    });
+  });
+
+  it("throws on an unsupported permission condition", () => {
+    expect(() =>
+      toSendLitFilter({
+        version: 1,
+        aggregator: "and",
+        filters: [
+          { name: "permission", condition: "Maybe", value: "contacts:read" } as any,
+        ],
+      }),
+    ).toThrow("Unsupported permission condition");
+  });
+
   it("rejects unsupported filters on reverse translation", () => {
     const unknownFieldWire = {
       aggregator: "and",

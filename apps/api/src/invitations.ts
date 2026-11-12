@@ -17,6 +17,7 @@ import {
 } from "@courselit/api-contract/team-permissions";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { queueSendLitContactSync } from "./contacts.js";
 import { ensureSchoolAccount } from "./learners.js";
 import { parsePermissions } from "./permissions.js";
 import type { AppDb } from "./types.js";
@@ -528,6 +529,13 @@ export async function acceptTeamInvitation(
       version: 1,
       createdAt: now,
       updatedAt: now,
+    });
+
+    await queueSendLitContactSync(tx as unknown as AppDb, {
+      schoolId: invitation.schoolId,
+      schoolAccountId: schoolAccount.id,
+      reason: "team.invitation_accepted",
+      clock,
     });
 
     // 6. Update invitation status

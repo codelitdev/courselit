@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
+import { COURSELIT_PERMISSIONS } from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
+  effectiveTeamPermissions,
   processNextIntegrationJob,
   type SendLitOperations,
 } from "./integration-provisioning.js";
@@ -11,6 +13,29 @@ import { createSchool } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { SendLitApiError } from "./sendlit-client.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+
+describe("effectiveTeamPermissions", () => {
+  it("gives a contact outside the team no permissions", () => {
+    expect(effectiveTeamPermissions(undefined)).toEqual([]);
+  });
+
+  it("gives an owner every permission", () => {
+    expect(effectiveTeamPermissions({ isOwner: true, permissions: [] })).toEqual([
+      ...COURSELIT_PERMISSIONS,
+    ]);
+  });
+
+  it("gives a member their grants plus what they imply", () => {
+    const permissions = effectiveTeamPermissions({
+      isOwner: false,
+      permissions: ["contacts:write"],
+    });
+    expect(permissions).toEqual(
+      expect.arrayContaining(["contacts:write", "contacts:read"]),
+    );
+    expect(permissions).not.toContain("contacts:delete");
+  });
+});
 
 describe("CourseLit website provisioning", () => {
   it("creates the website in the school transaction without an integration job", async () => {
@@ -317,6 +342,7 @@ describe("CourseLit SendLit provisioning", () => {
       subscribed: true,
       customFields: expect.objectContaining({
         "courselit.isCommunityMember": "false",
+        "courselit.permissions": [],
         "courselit.productIds": [],
       }),
     });

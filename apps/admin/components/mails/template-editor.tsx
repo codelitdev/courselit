@@ -1,14 +1,15 @@
 "use client";
 
 import { defaultTemplateEmail } from "@sendlit/email-blocks";
-import { defaultEmail, EmailEditor, type Email } from "@sendlit/email-editor";
+import { defaultEmail, type Email } from "@sendlit/email-editor";
 import { ArrowLeft, Check, Save } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import { Input } from "@/components/ui/codelit/input";
-import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
+import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
+import { EditorBackButton, useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
 
 type MailTemplate = {
   id: string;
@@ -63,9 +64,9 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
   const [error, setError] = useState<string | null>(null);
   const nameRef = useRef("");
   const emailRef = useRef<Email | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revisionRef = useRef(0);
   const savingRef = useRef(false);
+  useUnsavedChangesWarning(!saved && Boolean(email));
 
   useEffect(() => {
     let active = true;
@@ -128,31 +129,18 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
     void loadTemplate();
     return () => {
       active = false;
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [templateId]);
 
-  function queueSave() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null;
-      void saveTemplate();
-    }, 800);
-  }
-
+  // Edits wait for Save; nothing is saved in the background.
   function markChanged() {
     revisionRef.current += 1;
     setSaved(false);
     setError(null);
-    queueSave();
   }
 
-  async function saveTemplate() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (!schoolId || !emailRef.current || savingRef.current) return;
+  async function saveTemplate(): Promise<boolean> {
+    if (!schoolId || !emailRef.current || savingRef.current) return false;
 
     const revision = revisionRef.current;
     savingRef.current = true;
@@ -177,13 +165,15 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
       if (!response.ok) {
         throw new Error(await errorMessage(response, "Unable to save email template."));
       }
+      // Edited again while saving: those edits wait for the next Save.
       if (revision === revisionRef.current) setSaved(true);
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save email template.");
+      return false;
     } finally {
       savingRef.current = false;
       setSaving(false);
-      if (revision !== revisionRef.current) queueSave();
     }
   }
 
@@ -228,12 +218,13 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
     <div className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-background">
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-card px-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Button asChild variant="outline" size="sm" className="shrink-0">
-            <Link href="/marketing/templates">
-              <ArrowLeft className="mr-1.5 size-4" />
-              Templates
-            </Link>
-          </Button>
+          <EditorBackButton
+            href="/marketing/templates"
+            label="Templates"
+            dirty={!saved && Boolean(email)}
+            onSave={saveTemplate}
+            disabled={saving}
+          />
           <Input
             aria-label="Template name"
             value={templateName}
@@ -258,7 +249,12 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
               <span>Unsaved changes</span>
             )}
           </div>
-          <Button type="button" size="sm" onClick={() => void saveTemplate()} disabled={saving}>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => void saveTemplate()}
+            disabled={saving || saved}
+          >
             <Save className="size-4" />
             Save
           </Button>
@@ -270,12 +266,7 @@ export function MailTemplateEditor({ templateId }: { templateId: string }) {
         </div>
       ) : null}
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/10">
-        <EmailEditor
-          email={email}
-          onChange={changeEmail}
-          blocks={MARKETING_EMAIL_BLOCKS}
-          renderContext={MARKETING_PREVIEW_CONTEXT}
-        />
+        <CourseLitEmailEditor email={email} onChange={changeEmail} />
       </main>
     </div>
   );

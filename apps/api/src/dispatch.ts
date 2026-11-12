@@ -89,6 +89,7 @@ import {
   updateContactSegmentBodySchema,
   createMailSequenceBodySchema,
   createMailSequenceEmailBodySchema,
+  mailSequenceSubscribersQuerySchema,
   mailTemplateBodySchema,
   updateMailingSettingsBodySchema,
   updateMailSequenceBodySchema,
@@ -112,7 +113,7 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getSchoolOverview } from "./activities.js";
 import {
   apiKeyDisplayPrefix,
@@ -378,6 +379,7 @@ import {
   getMailingSettings,
   getSequence,
   getSequenceStats,
+  listSequenceSubscribers,
   getTemplate,
   listSequences,
   listSystemTemplates,
@@ -744,11 +746,37 @@ export async function dispatch(
               ),
             )
             .limit(1);
+          // Hidden products count: they are still sold through direct links,
+          // and their buyers need a way to sign in from the header.
+          const [[publishedProduct], [liveCommunity]] = await Promise.all([
+            deps.db
+              .select({ id: schema.products.id })
+              .from(schema.products)
+              .where(
+                and(
+                  eq(schema.products.schoolId, school.id),
+                  eq(schema.products.status, "published"),
+                ),
+              )
+              .limit(1),
+            deps.db
+              .select({ id: schema.communities.id })
+              .from(schema.communities)
+              .where(
+                and(
+                  eq(schema.communities.schoolId, school.id),
+                  isNull(schema.communities.deletedAt),
+                  eq(schema.communities.enabled, true),
+                ),
+              )
+              .limit(1),
+          ]);
           return ok({
             ...settings,
             codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
             codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
             canonicalHost: verifiedCustomHost?.hostname ?? null,
+            hasPublishedOffers: Boolean(publishedProduct || liveCommunity),
           });
         }
         if (route === "/site/pages") {
@@ -2782,6 +2810,31 @@ export async function dispatch(
         context.tenantId!,
         deps.clock,
         sequenceId,
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const sequenceSubscribersMatch =
+      /^\/v1\/school\/mails\/sequences\/([^/]+)\/subscribers$/.exec(path);
+    if (request.method === "GET" && sequenceSubscribersMatch) {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const parsed = mailSequenceSubscribersQuerySchema.safeParse({
+        page: query.get("page") ?? undefined,
+        limit: query.get("limit") ?? undefined,
+      });
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const result = await listSequenceSubscribers(
+        deps.db,
+        context.tenantId!,
+        deps.clock,
+        decodeURIComponent(sequenceSubscribersMatch[1]!),
+        parsed.data,
       );
       return result.ok
         ? { status: 200, body: result.value }

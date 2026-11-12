@@ -699,6 +699,9 @@ export const publicSiteSettingsSchema = z.object({
   codeInjectionHead: z.string(),
   codeInjectionBody: z.string(),
   canonicalHost: z.string().nullable(),
+  /** The school has a published product (public or hidden) or a live
+   * community, so learners have something to sign in to. */
+  hasPublishedOffers: z.boolean(),
 });
 export const schoolCodeInjectionSchema = z.object({
   codeInjectionHead: z.string(),
@@ -1634,6 +1637,11 @@ export const contactFilterItemSchema = z.union([
     condition: z.enum(["Has", "Does not have"]),
     value: z.string(),
   }),
+  z.object({
+    name: z.literal("permission"),
+    condition: z.enum(["Has", "Does not have"]),
+    value: z.enum(COURSELIT_PERMISSIONS),
+  }),
 ]);
 export type ContactFilter = z.infer<typeof contactFilterItemSchema>;
 
@@ -1915,6 +1923,9 @@ export const schoolOnboardingSchema = z.object({
   /** Wizard-owned JSON (the offer being built, brand choices, skipped steps). */
   draft: z.record(z.string(), z.unknown()),
   checklistHidden: z.boolean(),
+  /** The owner asked not to be offered "Pick up where you left off?" again
+   * for this school. */
+  resumePromptHidden: z.boolean(),
   /** Each item is true only when the work is actually done. */
   checklist: z.array(
     z.object({ key: onboardingChecklistKeySchema, done: z.boolean() }),
@@ -1930,6 +1941,7 @@ export const updateSchoolOnboardingBodySchema = z
     /** Shallow-merged into the stored draft. */
     draft: z.record(z.string(), z.unknown()).optional(),
     checklistHidden: z.boolean().optional(),
+    resumePromptHidden: z.boolean().optional(),
     /** Marks a checklist item done that cannot be derived from data. */
     markDone: z.array(onboardingChecklistKeySchema).optional(),
   })
@@ -1995,6 +2007,10 @@ export const mailSequenceListQuerySchema = z.object({
   type: z.enum(["broadcast", "sequence"]).optional(),
   status: z.string().optional(),
   search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+export const mailSequenceSubscribersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(100000).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 export const mailTemplateListQuerySchema = z.object({
@@ -5094,6 +5110,25 @@ export const contract = c.router({
     pathParams: z.object({ sequenceId: z.string() }),
     responses: {
       200: mailServiceObjectSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listMailSequenceSubscribers: {
+    method: "GET",
+    path: "/v1/school/mails/sequences/:sequenceId/subscribers",
+    summary: "List the contacts who have received a broadcast or sequence",
+    pathParams: z.object({ sequenceId: z.string() }),
+    query: mailSequenceSubscribersQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(mailServiceObjectSchema),
+        total: z.number().int().nonnegative(),
+        page: z.number().int().min(1),
+        limit: z.number().int().min(1),
+      }),
+      400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,

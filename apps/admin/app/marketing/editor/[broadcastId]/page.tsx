@@ -4,8 +4,8 @@ import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Calendar, Check, Copy, Pause, RefreshCw, Send } from "lucide-react";
-import { defaultEmail, EmailEditor, type Email } from "@sendlit/email-editor";
+import { ArrowLeft, Calendar, Check, Pause, RefreshCw, Send } from "lucide-react";
+import { defaultEmail, type Email } from "@sendlit/email-editor";
 import { defaultTemplateEmail } from "@sendlit/email-blocks";
 import { Button } from "@/components/ui/codelit/button";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
@@ -23,7 +23,13 @@ import {
   getFutureBroadcastDeliveryDate,
   isBroadcastScheduled,
 } from "@/lib/broadcast-status";
-import { MARKETING_EMAIL_BLOCKS, MARKETING_PREVIEW_CONTEXT } from "@/lib/email-editor-blocks";
+import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
+import { EditorBackButton, useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
+import { emailReadinessMessage } from "@/lib/email-readiness";
+import {
+  MailingAddressNotice,
+  useMailingAddressMissing,
+} from "@/components/mails/mailing-address-notice";
 
 type BroadcastEmail = {
   emailId: string;
@@ -56,13 +62,6 @@ function toLocalInputValue(date: Date): string {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
-const MARKETING_VARIABLES = [
-  { tag: "{{ subscriber.email }}", description: "Subscriber's email address" },
-  { tag: "{{ subscriber.name }}", description: "Subscriber's name" },
-  { tag: "{{ subscriber.tags }}", description: "Subscriber's assigned tags" },
-  { tag: "{{ address }}", description: "Your school's mailing address" },
-  { tag: "{{ unsubscribe_link }}", description: "Mandatory unsubscribe link" },
-];
 
 function cloneEmail(email: Email): Email {
   return JSON.parse(JSON.stringify(email)) as Email;
@@ -87,38 +86,6 @@ function parseEmailBody(raw: unknown): Email {
   return cloneEmail(defaultTemplateEmail || defaultEmail);
 }
 
-function VariableItem({ tag, description }: { tag: string; description: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(tag);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // ignore
-    }
-  }
-
-  return (
-    <div className="space-y-1 rounded-md border bg-muted/40 p-2.5 text-xs transition-colors hover:bg-muted/70">
-      <div className="flex items-center justify-between gap-2">
-        <code className="font-mono font-semibold text-foreground">{tag}</code>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-          onClick={handleCopy}
-          title="Copy variable"
-        >
-          {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
-        </Button>
-      </div>
-      <p className="text-muted-foreground">{description}</p>
-    </div>
-  );
-}
 
 export default function EmailBroadcastEditorPage({
   params,
@@ -130,6 +97,7 @@ export default function EmailBroadcastEditorPage({
   const searchParams = useSearchParams();
   const sequenceEmailId = searchParams.get("emailId");
   const isSequenceEmailEditor = Boolean(sequenceEmailId);
+  const mailingAddressMissing = useMailingAddressMissing();
 
   const [sequence, setSequence] = useState<SequenceDetail | null>(null);
   const [emailId, setEmailId] = useState<string | null>(null);
@@ -149,10 +117,15 @@ export default function EmailBroadcastEditorPage({
   const bodyRef = useRef<Email | null>(null);
   const subjectRef = useRef("");
   const lastSavedPayload = useRef<string>("");
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  // Edits are kept until Save (or Send, Schedule or Send test, which save
+  // first); nothing is saved in the background.
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChangesWarning(dirty);
 
   const futureDeliveryDate = getFutureBroadcastDeliveryDate(sequence);
   const isScheduledBroadcast = !isSequenceEmailEditor && isBroadcastScheduled(sequence);
+  // Explains why Send and Schedule are off; the API enforces the same rule.
+  const unreadyReason = emailReadinessMessage({ subject, content: emailBody });
 
   // Load sequence & email
   useEffect(() => {
@@ -243,9 +216,6 @@ export default function EmailBroadcastEditorPage({
 
     return () => {
       cancelled = true;
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
     };
   }, [broadcastId, isSequenceEmailEditor, sequenceEmailId]);
 
@@ -301,6 +271,11 @@ export default function EmailBroadcastEditorPage({
         }
 
         lastSavedPayload.current = payloadString;
+        // Still dirty if edited again while this save was in flight.
+        setDirty(
+          JSON.stringify({ subject: subjectRef.current.trim() || currentSubject, content: bodyRef.current }) !==
+            payloadString,
+        );
         setSaved(true);
         window.setTimeout(() => setSaved(false), 2500);
         return true;
@@ -314,21 +289,11 @@ export default function EmailBroadcastEditorPage({
     [broadcastId, emailId, isScheduledBroadcast, isSequenceEmailEditor, sequence?.title],
   );
 
-  // Debounced auto-save on body changes
-  const handleBodyChange = useCallback(
-    (newEmail: Email) => {
-      bodyRef.current = newEmail;
-      setEmailBody(newEmail);
-
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      debounceTimer.current = setTimeout(() => {
-        void save(false);
-      }, 1000);
-    },
-    [save],
-  );
+  const handleBodyChange = useCallback((newEmail: Email) => {
+    bodyRef.current = newEmail;
+    setEmailBody(newEmail);
+    setDirty(true);
+  }, []);
 
   // Send broadcast
   async function handleSend() {
@@ -389,8 +354,6 @@ export default function EmailBroadcastEditorPage({
     setScheduling(true);
     setError(null);
     try {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
       if (!(await save(true))) {
         throw new Error("Could not save changes before scheduling.");
       }
@@ -475,12 +438,6 @@ export default function EmailBroadcastEditorPage({
     setScheduleConfirmOpen(true);
   }
 
-  async function returnToSequence() {
-    if (isSequenceEmailEditor && (await save(true))) {
-      router.push(`/marketing/sequences/${encodeURIComponent(broadcastId)}/edit`);
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background p-6">
@@ -519,44 +476,17 @@ export default function EmailBroadcastEditorPage({
       {/* Top Header Bar */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-card px-4">
         <div className="flex min-w-0 items-center gap-3">
-          {isSequenceEmailEditor ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() => void returnToSequence()}
-              disabled={saving}
-            >
-              <ArrowLeft className="mr-1.5 size-4" />
-              Sequence
-            </Button>
-          ) : (
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`}>
-                <ArrowLeft className="mr-1.5 size-4" />
-                Broadcast
-              </Link>
-            </Button>
-          )}
-          <div className="flex min-w-0 items-center gap-2">
-            <Label htmlFor="editor-broadcast-subject" className="sr-only">
-              {isSequenceEmailEditor ? "Email subject" : "Subject"}
-            </Label>
-            <Input
-              id="editor-broadcast-subject"
-              value={subject}
-              onChange={(e) => {
-                subjectRef.current = e.target.value;
-                setSubject(e.target.value);
-                if (debounceTimer.current) clearTimeout(debounceTimer.current);
-                debounceTimer.current = setTimeout(() => void save(false), 1000);
-              }}
-              placeholder={isSequenceEmailEditor ? "Email subject line" : "Broadcast subject line"}
-              className="h-8 w-64 md:w-96 text-sm font-medium"
-              disabled={saving || sending || isScheduledBroadcast}
-            />
-          </div>
+          <EditorBackButton
+            href={
+              isSequenceEmailEditor
+                ? `/marketing/sequences/${encodeURIComponent(broadcastId)}/edit`
+                : `/marketing/broadcasts/${encodeURIComponent(broadcastId)}/edit`
+            }
+            label={isSequenceEmailEditor ? "Sequence" : "Broadcast"}
+            dirty={dirty}
+            onSave={() => save(true)}
+            disabled={saving}
+          />
         </div>
 
         <div className="flex items-center gap-3">
@@ -617,7 +547,7 @@ export default function EmailBroadcastEditorPage({
                   variant="outline"
                   size="sm"
                   onClick={() => void save(true)}
-                  disabled={saving || sending || scheduling}
+                  disabled={saving || sending || scheduling || !dirty}
                 >
                   Save draft
                 </Button>
@@ -626,7 +556,8 @@ export default function EmailBroadcastEditorPage({
                   variant="outline"
                   size="sm"
                   onClick={openScheduleDialog}
-                  disabled={saving || sending || scheduling}
+                  disabled={saving || sending || scheduling || Boolean(unreadyReason)}
+                  title={unreadyReason ?? undefined}
                   className="gap-1.5"
                 >
                   <Calendar className="size-3.5" />
@@ -636,7 +567,8 @@ export default function EmailBroadcastEditorPage({
                   type="button"
                   size="sm"
                   onClick={() => setSendConfirmOpen(true)}
-                  disabled={saving || sending || scheduling}
+                  disabled={saving || sending || scheduling || Boolean(unreadyReason)}
+                  title={unreadyReason ?? undefined}
                   className="gap-1.5"
                 >
                   <Send className="size-3.5" />
@@ -650,7 +582,7 @@ export default function EmailBroadcastEditorPage({
               variant="outline"
               size="sm"
               onClick={() => void save(true)}
-              disabled={saving || sending || scheduling}
+              disabled={saving || sending || scheduling || !dirty}
             >
               Save
             </Button>
@@ -664,32 +596,19 @@ export default function EmailBroadcastEditorPage({
         </div>
       ) : null}
 
-      {/* Main Workspace (Sidebar + Canvas) */}
+      {!isSequenceEmailEditor && !isScheduledBroadcast ? (
+        <div className="space-y-2 border-b px-4 py-2 empty:hidden">
+          <MailingAddressNotice missing={mailingAddressMissing} action="send this broadcast" />
+          {unreadyReason ? (
+            <p role="status" className="text-xs font-medium text-amber-700">
+              {unreadyReason}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Email canvas: subject, merge tags and checks are inside the editor */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        {/* Variables Sidebar */}
-        <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r bg-muted/20 p-4 md:flex">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold text-foreground">Variables</h2>
-            <p className="text-xs text-muted-foreground">
-              Click any variable to copy it to clipboard. These merge tags are replaced during
-              delivery.
-            </p>
-          </div>
-
-          <div className="mt-4 space-y-2.5">
-            {MARKETING_VARIABLES.map((v) => (
-              <VariableItem key={v.tag} tag={v.tag} description={v.description} />
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-            <p className="font-semibold">Compliance requirement</p>
-            <p className="mt-1 text-[11px] leading-relaxed">
-              Email regulations require an address and unsubscribe link in all broadcasts.
-            </p>
-          </div>
-        </aside>
-
         {/* Email Editor Canvas */}
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
           {emailBody ? (
@@ -698,11 +617,15 @@ export default function EmailBroadcastEditorPage({
               aria-disabled={isScheduledBroadcast}
               inert={isScheduledBroadcast}
             >
-              <EmailEditor
+              <CourseLitEmailEditor
                 email={emailBody}
                 onChange={handleBodyChange}
-                blocks={MARKETING_EMAIL_BLOCKS}
-                renderContext={MARKETING_PREVIEW_CONTEXT}
+                subject={subject}
+                onSubjectChange={(next) => {
+                  subjectRef.current = next;
+                  setSubject(next);
+                  setDirty(true);
+                }}
               />
             </div>
           ) : null}

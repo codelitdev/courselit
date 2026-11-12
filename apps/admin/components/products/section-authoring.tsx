@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/codelit/tooltip";
 import { Separator } from "@/components/ui/separator";
 import type { Product, School, Section } from "./product-types";
+import { truncateText } from "@/lib/truncate";
 
 type AuthoringMode = "new" | "edit";
 type DripType = "relative-date" | "exact-date";
@@ -207,7 +208,9 @@ export function SectionAuthoring({
     <AuthGate>
       <div className="w-full space-y-8">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight">{heading}</h1>
+          <h1 className="truncate text-4xl font-semibold tracking-tight" title={heading}>
+            {truncateText(heading)}
+          </h1>
           <p className="mt-2 text-muted-foreground">
             {mode === "new"
               ? "Add a new section to your course"

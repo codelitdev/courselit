@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/codelit/dropdown-menu";
+import { truncateText } from "@/lib/truncate";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { storefrontUrl } from "@/lib/storefront-url";
 import { cn } from "@/lib/utils";
@@ -298,9 +299,14 @@ export function CommunityAdmin() {
     return (
       <>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight">{community.name}</h1>
+          <div className="min-w-0 max-w-full">
+            <div className="flex min-w-0 items-center gap-3">
+              <h1
+                className="min-w-0 truncate text-2xl font-semibold tracking-tight"
+                title={community.name}
+              >
+                {truncateText(community.name)}
+              </h1>
               {community.enabled ? null : (
                 <StatusBadge tone="muted">Offline</StatusBadge>
               )}

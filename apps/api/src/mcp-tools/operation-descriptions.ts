@@ -203,6 +203,8 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Permanently deletes an email sequence. Confirm with the user first.",
   getMailSequenceStats:
     "Reads a sequence's delivery numbers: sent, opened, clicked and unsubscribed.",
+  listMailSequenceSubscribers:
+    "Lists the contacts (name and email) who have received a sequence, a page at a time.",
   startMailSequence:
     "Starts a sequence, which begins emailing real contacts. Confirm with the user first.",
   pauseMailSequence: "Pauses a running sequence. Emails already sent are not recalled.",

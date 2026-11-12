@@ -16,3 +16,13 @@ export function markResumePrompted(): void {
     // Without storage the prompt can repeat; that is acceptable.
   }
 }
+
+/**
+ * Whether to offer "Pick up where you left off?": only while setup is under
+ * way, and never again once the owner has said so for this school.
+ */
+export function shouldOfferResume(
+  onboarding: { status?: string; resumePromptHidden?: boolean } | null | undefined,
+): boolean {
+  return onboarding?.status === "in_progress" && onboarding.resumePromptHidden !== true;
+}

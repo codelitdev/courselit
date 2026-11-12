@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import "@frontlit/text-editor/styles.css";
+import "@sendlit/email-editor/editor.css";
 import "./globals.css";
 import { BrowserObservabilityProvider } from "../components/browser-observability";
 import { AdminShell } from "../components/layout/admin-shell";

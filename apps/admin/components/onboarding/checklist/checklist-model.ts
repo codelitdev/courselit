@@ -17,6 +17,7 @@ export type SchoolOnboardingState = {
   step: string;
   draft: Record<string, unknown>;
   checklistHidden: boolean;
+  resumePromptHidden: boolean;
   checklist: ChecklistEntry[];
   billing: { required: boolean; entitled: boolean };
   updatedAt: string;

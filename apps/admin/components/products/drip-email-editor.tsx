@@ -3,15 +3,15 @@
 import {
   defaultEmail,
   type Email,
-  EmailEditor,
   renderEmailToHtml,
 } from "@sendlit/email-editor";
 import { ArrowLeft, Check, Save } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
+import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
+import { EditorBackButton, useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
 import { Button } from "@/components/ui/codelit/button";
-import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Switch } from "@/components/ui/codelit/switch";
 
@@ -84,7 +84,9 @@ export function DripEmailEditor({
   const [error, setError] = useState<string | null>(null);
   const subjectRef = useRef("");
   const emailRef = useRef<Email | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Edits wait for Save (or the send toggle); nothing saves in the background.
+  const [edited, setEdited] = useState(false);
+  useUnsavedChangesWarning(edited);
   const revisionRef = useRef(0);
   const savingRef = useRef(false);
   const pendingPatchRef = useRef<{ enabled?: boolean } | null>(null);
@@ -140,30 +142,17 @@ export function DripEmailEditor({
     void load();
     return () => {
       active = false;
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [apiPath]);
-
-  function queueSave() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null;
-      void save();
-    }, 800);
-  }
 
   function markChanged() {
     revisionRef.current += 1;
     setSaved(false);
+    setEdited(true);
     setError(null);
-    queueSave();
   }
 
   async function save(patch: { enabled?: boolean } = {}): Promise<boolean> {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
     if (!schoolId || !emailRef.current) return false;
     if (savingRef.current) {
       // Run a toggle once the save in flight finishes instead of dropping it.
@@ -193,7 +182,11 @@ export function DripEmailEditor({
       }
       const updated = (await response.json()) as DripEmail;
       setEnabled(updated.enabled);
-      if (revision === revisionRef.current) setSaved(true);
+      // Edited again while saving: those edits wait for the next Save.
+      if (revision === revisionRef.current) {
+        setSaved(true);
+        setEdited(false);
+      }
       return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save the email.");
@@ -204,7 +197,6 @@ export function DripEmailEditor({
       const pending = pendingPatchRef.current;
       pendingPatchRef.current = null;
       if (pending) void save(pending);
-      else if (revision !== revisionRef.current) queueSave();
     }
   }
 
@@ -239,22 +231,12 @@ export function DripEmailEditor({
     <div className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-background">
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-card px-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Button asChild variant="outline" size="sm" className="shrink-0">
-            <Link href={sectionPath}>
-              <ArrowLeft className="mr-1.5 size-4" />
-              Section
-            </Link>
-          </Button>
-          <Input
-            aria-label="Subject"
-            value={subject}
-            onChange={(event) => {
-              subjectRef.current = event.target.value;
-              setSubject(event.target.value);
-              markChanged();
-            }}
-            placeholder="Subject, e.g. A new section is available"
-            className="h-8 w-64 max-w-full text-sm font-medium md:w-96"
+          <EditorBackButton
+            href={sectionPath}
+            label="Section"
+            dirty={edited}
+            onSave={() => save()}
+            disabled={saving}
           />
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -288,7 +270,12 @@ export function DripEmailEditor({
               <span>Unsaved changes</span>
             )}
           </div>
-          <Button type="button" size="sm" onClick={() => void save()} disabled={saving}>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => void save()}
+            disabled={saving || (saved && !edited)}
+          >
             <Save className="size-4" />
             Save
           </Button>
@@ -303,11 +290,19 @@ export function DripEmailEditor({
         </div>
       ) : null}
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/10">
-        <EmailEditor
+        {/* Course emails go out as written: no marketing footer or merge tags. */}
+        <CourseLitEmailEditor
+          marketing={false}
           email={email}
           onChange={(nextEmail) => {
             emailRef.current = nextEmail;
             setEmail(nextEmail);
+            markChanged();
+          }}
+          subject={subject}
+          onSubjectChange={(next) => {
+            subjectRef.current = next;
+            setSubject(next);
             markChanged();
           }}
         />

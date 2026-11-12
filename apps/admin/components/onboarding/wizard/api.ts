@@ -93,6 +93,7 @@ export type SchoolOnboarding = {
   step: ServerStep;
   draft: Record<string, unknown>;
   checklistHidden: boolean;
+  resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
   billing: { required: boolean; entitled: boolean };
   updatedAt: string;
@@ -153,6 +154,7 @@ export const patchOnboarding = (
     step?: ServerStep;
     draft?: Record<string, unknown>;
     markDone?: string[];
+    resumePromptHidden?: boolean;
   },
 ) =>
   request<SchoolOnboarding>("/api/v1/school/onboarding", {

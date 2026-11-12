@@ -16,6 +16,7 @@ import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
 import { AuthGate } from "../../components/auth-gate";
 import { fromContactFilterSet, toContactFilterSet } from "@/lib/contact-filters";
+import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
 
 type School = {
   id: string;
@@ -46,6 +47,7 @@ type ContactItem = {
 
 export default function ContactsPage() {
   const [school, setSchool] = useState<School | null>(null);
+  const filterDefinitions = useContactFilterDefinitions(school?.id);
 
   // Contacts state
   const [contacts, setContacts] = useState<ContactItem[]>([]);
@@ -253,6 +255,7 @@ export default function ContactsPage() {
         <div>
           <ContactFilterBuilder
             value={filter}
+            filterDefinitions={filterDefinitions}
             onChange={(next) => {
               setSelectedSegmentId("");
               applyFilter(next);

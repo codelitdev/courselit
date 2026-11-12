@@ -21,6 +21,7 @@ type Onboarding = {
   step: string;
   draft: Record<string, unknown>;
   checklistHidden: boolean;
+  resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
   billing: { required: boolean; entitled: boolean };
 };
@@ -56,6 +57,7 @@ describe("school onboarding", () => {
       step: "school",
       draft: {},
       checklistHidden: false,
+      resumePromptHidden: false,
       billing: { required: true, entitled: false },
     });
     expect(state.checklist.map((item) => item.key)).toEqual([
@@ -83,6 +85,23 @@ describe("school onboarding", () => {
     expect(next.draft).toEqual({ kind: "course", title: "Intro", price: 10 });
     expect(next.checklistHidden).toBe(true);
     expect(done(next, "home")).toBe(true);
+    // Saving other progress leaves the resume prompt as it was.
+    expect(next.resumePromptHidden).toBe(false);
+
+    // "Never show again" sticks for the school and setup stays under way.
+    const hidden = await dispatch(runtime, {
+      method: "PATCH",
+      path: "/v1/school/onboarding",
+      headers: owner(world, schoolId),
+      body: { resumePromptHidden: true },
+    });
+    expect(hidden.body).toMatchObject({ status: "in_progress", resumePromptHidden: true });
+    const reread = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/onboarding",
+      headers: owner(world, schoolId),
+    });
+    expect(reread.body).toMatchObject({ resumePromptHidden: true, step: "offer" });
 
     const invalid = await dispatch(runtime, {
       method: "PATCH",

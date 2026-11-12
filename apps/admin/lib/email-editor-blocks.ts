@@ -2,6 +2,7 @@ import {
   createFooterBlock,
   type SendLitEmailRenderContext,
 } from "@sendlit/email-blocks/footer";
+import type { EditorVariable } from "@sendlit/email-editor";
 import { Image, Link, Separator, Text } from "@sendlit/email-editor/blocks";
 
 /** The managed footer every marketing email carries: the school's mailing
@@ -36,3 +37,12 @@ export const MARKETING_PREVIEW_CONTEXT: SendLitEmailRenderContext = {
     viewInBrowserUrl: "#view-in-browser-preview",
   },
 };
+
+/** Merge tags offered while writing a marketing email (type `{{`). */
+export const MARKETING_VARIABLES: EditorVariable[] = [
+  { tag: "{{ subscriber.email }}", description: "Subscriber's email address" },
+  { tag: "{{ subscriber.name }}", description: "Subscriber's name" },
+  { tag: "{{ subscriber.tags }}", description: "Subscriber's assigned tags" },
+  { tag: "{{ address }}", description: "Your school's mailing address" },
+  { tag: "{{ unsubscribe_link }}", description: "Mandatory unsubscribe link" },
+];

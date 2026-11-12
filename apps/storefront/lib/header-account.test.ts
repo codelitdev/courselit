@@ -4,6 +4,7 @@ import {
   HEADER_DASHBOARD_LINK_ID,
   HEADER_LOGIN_LINK_ID,
   headerHasAccountEntry,
+  learnersCanSignIn,
   signedInHeaderSettings,
   withLoginLink,
 } from "./header-account";
@@ -79,5 +80,20 @@ describe("signed-in header", () => {
   it("does nothing for a header without sign-in", () => {
     const settings = { links: [products], ...join };
     expect(signedInHeaderSettings(settings)).toBe(settings);
+  });
+});
+
+describe("whether learners can sign in", () => {
+  it("follows the API, so a school with only hidden products gets Log in", () => {
+    expect(learnersCanSignIn({ hasPublishedOffers: true }, false)).toBe(true);
+  });
+
+  it("follows the API when nothing is published, even if the catalogue disagrees", () => {
+    expect(learnersCanSignIn({ hasPublishedOffers: false }, true)).toBe(false);
+  });
+
+  it("falls back to the public catalogue when the API doesn't say", () => {
+    expect(learnersCanSignIn({}, true)).toBe(true);
+    expect(learnersCanSignIn(null, false)).toBe(false);
   });
 });

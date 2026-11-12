@@ -14,6 +14,8 @@ export interface PublicSettings {
   codeInjectionHead: string;
   codeInjectionBody: string;
   canonicalHost?: string | null;
+  /** A published product (public or hidden) or a live community exists. */
+  hasPublishedOffers?: boolean;
 }
 
 export interface PublicPage {

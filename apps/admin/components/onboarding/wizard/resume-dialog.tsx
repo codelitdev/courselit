@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Check } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -28,16 +29,29 @@ export function ResumeDialog({
   rows,
   onContinue,
   onDashboard,
+  onNeverAgain,
 }: {
   open: boolean;
   schoolName: string;
   rows: ResumeRow[];
   onContinue: () => void;
   onDashboard: () => void;
+  /** Stops the prompt for this school for good; setup stays saved. */
+  onNeverAgain: () => void | Promise<void>;
 }) {
+  const [hiding, setHiding] = useState(false);
+  const continueRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onContinue())}>
-      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+      <DialogContent
+        className="sm:max-w-md"
+        showCloseButton={false}
+        onOpenAutoFocus={(event) => {
+          // Start on the main action, not the first button in the dialog.
+          event.preventDefault();
+          continueRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <span className="font-mono text-[11.5px] tracking-wide text-muted-foreground">
             Welcome back
@@ -81,10 +95,25 @@ export function ResumeDialog({
           <Button type="button" variant="outline" onClick={onDashboard}>
             Go to dashboard
           </Button>
-          <Button type="button" onClick={onContinue}>
+          <Button ref={continueRef} type="button" onClick={onContinue}>
             Continue setup
           </Button>
         </DialogFooter>
+        <button
+          type="button"
+          className="justify-self-center rounded-[var(--radius-sm)] text-[13px] text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:shadow-[var(--shadow-focus)] disabled:opacity-50"
+          disabled={hiding}
+          onClick={async () => {
+            setHiding(true);
+            try {
+              await onNeverAgain();
+            } finally {
+              setHiding(false);
+            }
+          }}
+        >
+          Never show this again for {schoolName}
+        </button>
       </DialogContent>
     </Dialog>
   );

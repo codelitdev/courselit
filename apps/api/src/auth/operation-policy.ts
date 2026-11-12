@@ -166,6 +166,7 @@ export const OPERATION_POLICIES = {
   updateMailSequence: schoolOp(["contacts:write"]),
   deleteMailSequence: schoolOp(["contacts:write"]),
   getMailSequenceStats: schoolOp(["contacts:read"]),
+  listMailSequenceSubscribers: schoolOp(["contacts:read"]),
   startMailSequence: schoolOp(["contacts:write"], ["session", "oauth"]),
   pauseMailSequence: schoolOp(["contacts:write"]),
   createMailSequenceEmail: schoolOp(["contacts:write"]),
