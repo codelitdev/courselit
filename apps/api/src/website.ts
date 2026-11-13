@@ -1611,6 +1611,28 @@ export async function publishBlogPost(
   });
 }
 
+/**
+ * Takes a blog post off the site. Its draft keeps the latest writing, so
+ * publishing again puts it back; until then visitors and the sitemap don't
+ * see it.
+ */
+export async function unpublishBlogPost(
+  db: AppDb,
+  schoolId: string,
+  blogId: string,
+  clock: Clock,
+): Promise<Result<BlogPostDto>> {
+  const existing = await findBlogPost(db, schoolId, blogId);
+  if (!existing) return notFound();
+  if (!existing.publishedAt) return { ok: true, value: toBlogDto(existing) };
+  const [row] = await db
+    .update(schema.blogPosts)
+    .set({ publishedAt: null, updatedAt: clock.now() })
+    .where(eq(schema.blogPosts.id, existing.id))
+    .returning();
+  return { ok: true, value: toBlogDto(row!) };
+}
+
 export async function deleteBlogPost(
   db: AppDb,
   mediaLit: MediaLitClient,

@@ -61,6 +61,8 @@ export type Membership = {
   joiningReason: string;
   rejectionReason: string | null;
   paymentPlanId: string | null;
+  subscriptionId?: string | null;
+  subscriptionMethod?: string | null;
   createdAt: string;
   updatedAt: string;
 };

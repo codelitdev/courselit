@@ -1,7 +1,7 @@
 {
   "name": "@courselit/api",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0-alpha.0",
   "type": "module",
   "scripts": {
     "dev": "bun --watch src/main.ts",

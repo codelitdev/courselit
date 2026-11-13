@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "be4e1d24ea77380e2c9a8fc355e689d8b1c4dab8",
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "courselit",
+      "changelog-path": "CHANGELOG.md",
+      "versioning": "prerelease",
+      "prerelease": true,
+      "prerelease-type": "alpha",
+      "extra-files": [
+        { "type": "json", "path": "apps/api/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "apps/admin/package.json", "jsonpath": "$.version" },
+        {
+          "type": "json",
+          "path": "apps/storefront/package.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

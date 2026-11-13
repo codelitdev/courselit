@@ -27,12 +27,16 @@
                     },
                     "time": {
                       "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "status",
                     "service",
-                    "time"
+                    "time",
+                    "version"
                   ]
                 }
               }
@@ -344,6 +348,14 @@
                                 "nullable": true
                               },
                               "paymentPlanId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "subscriptionId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "subscriptionMethod": {
                                 "type": "string",
                                 "nullable": true
                               },
@@ -779,6 +791,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },
@@ -1269,6 +1289,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },
@@ -1803,6 +1831,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },
@@ -2825,6 +2861,14 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "createdAt": {
                           "type": "string"
                         },
@@ -3397,6 +3441,14 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "createdAt": {
                           "type": "string"
                         },
@@ -3843,6 +3895,14 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "subscriptionId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "subscriptionMethod": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -4185,6 +4245,14 @@
                       "nullable": true
                     },
                     "paymentPlanId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "subscriptionMethod": {
                       "type": "string",
                       "nullable": true
                     },
@@ -4580,6 +4648,14 @@
                       "nullable": true
                     },
                     "paymentPlanId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "subscriptionMethod": {
                       "type": "string",
                       "nullable": true
                     },
@@ -11062,6 +11138,14 @@
                                 "type": "string",
                                 "nullable": true
                               },
+                              "subscriptionId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "subscriptionMethod": {
+                                "type": "string",
+                                "nullable": true
+                              },
                               "createdAt": {
                                 "type": "string"
                               },
@@ -15534,6 +15618,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },
@@ -26861,6 +26953,14 @@
                                 "type": "string",
                                 "nullable": true
                               },
+                              "subscriptionId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "subscriptionMethod": {
+                                "type": "string",
+                                "nullable": true
+                              },
                               "createdAt": {
                                 "type": "string"
                               },
@@ -27260,6 +27360,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },
@@ -35337,6 +35445,1333 @@
                   },
                   "required": [
                     "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/contact-tags": {
+      "get": {
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "tag": {
+                            "type": "string"
+                          },
+                          "contactCount": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "tag",
+                          "contactCount"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/contact-tags/{tag}/references": {
+      "get": {
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tag": {
+                      "type": "string"
+                    },
+                    "contactCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "segments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "segmentId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "segmentId",
+                          "name"
+                        ]
+                      }
+                    },
+                    "sequences": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sequenceId": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "broadcast",
+                              "sequence"
+                            ]
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "usages": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "filter",
+                                "exclude_filter",
+                                "trigger",
+                                "email_action"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "sequenceId",
+                          "title",
+                          "type",
+                          "status",
+                          "usages"
+                        ]
+                      }
+                    },
+                    "signupForms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "formId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "formId",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tag",
+                    "contactCount",
+                    "segments",
+                    "sequences",
+                    "signupForms"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
+    "/v1/contact-tags/{tag}": {
+      "patch": {
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tag": {
+                      "type": "string"
+                    },
+                    "previousTag": {
+                      "type": "string"
+                    },
+                    "contactsUpdated": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "segmentsUpdated": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "sequencesUpdated": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "signupFormsUpdated": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "tag",
+                    "previousTag",
+                    "contactsUpdated",
+                    "segmentsUpdated",
+                    "sequencesUpdated",
+                    "signupFormsUpdated"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Contacts & Marketing"
+        ],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tag": {
+                      "type": "string"
+                    },
+                    "contactsUpdated": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "references": {
+                      "type": "object",
+                      "properties": {
+                        "tag": {
+                          "type": "string"
+                        },
+                        "contactCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "segments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "segmentId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "segmentId",
+                              "name"
+                            ]
+                          }
+                        },
+                        "sequences": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sequenceId": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "broadcast",
+                                  "sequence"
+                                ]
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "usages": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "filter",
+                                    "exclude_filter",
+                                    "trigger",
+                                    "email_action"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "sequenceId",
+                              "title",
+                              "type",
+                              "status",
+                              "usages"
+                            ]
+                          }
+                        },
+                        "signupForms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "formId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "formId",
+                              "name"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "tag",
+                        "contactCount",
+                        "segments",
+                        "sequences",
+                        "signupForms"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "tag",
+                    "contactsUpdated",
+                    "references"
                   ]
                 }
               }
@@ -44583,6 +46018,9 @@
                               "totalLessons",
                               "percentage"
                             ]
+                          },
+                          "downloaded": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -44598,7 +46036,8 @@
                           "subscription",
                           "signedUpAt",
                           "lastActiveAt",
-                          "progress"
+                          "progress",
+                          "downloaded"
                         ]
                       }
                     },
@@ -60174,6 +61613,10 @@
                             "type": "integer",
                             "minimum": 0
                           },
+                          "refundedAmountMinor": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
                           "currency": {
                             "type": "string"
                           },
@@ -60202,6 +61645,7 @@
                           "planName",
                           "planKind",
                           "amountMinor",
+                          "refundedAmountMinor",
                           "currency",
                           "status",
                           "purchasedAt"
@@ -64703,6 +66147,9 @@
                       ],
                       "nullable": true
                     },
+                    "currencyLocked": {
+                      "type": "boolean"
+                    },
                     "stripe": {
                       "type": "object",
                       "properties": {
@@ -64826,6 +66273,7 @@
                   },
                   "required": [
                     "provider",
+                    "currencyLocked",
                     "stripe",
                     "razorpay",
                     "lemonsqueezy"
@@ -65095,6 +66543,9 @@
                       ],
                       "nullable": true
                     },
+                    "currencyLocked": {
+                      "type": "boolean"
+                    },
                     "stripe": {
                       "type": "object",
                       "properties": {
@@ -65218,6 +66669,7 @@
                   },
                   "required": [
                     "provider",
+                    "currencyLocked",
                     "stripe",
                     "razorpay",
                     "lemonsqueezy"
@@ -73814,6 +75266,469 @@
         ]
       }
     },
+    "/v1/school/website/blogs/{blogId}/unpublish": {
+      "post": {
+        "tags": [
+          "School Website"
+        ],
+        "parameters": [
+          {
+            "name": "blogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "page",
+                        "blog"
+                      ]
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published",
+                        "published_with_changes"
+                      ]
+                    },
+                    "deletable": {
+                      "type": "boolean"
+                    },
+                    "featuredImage": {
+                      "type": "object",
+                      "properties": {
+                        "mediaId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbnailUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "alt": {
+                          "type": "string",
+                          "maxLength": 1000
+                        },
+                        "fileName": {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        "mimeType": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "byteSize": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "title": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "audio",
+                            "document",
+                            "other"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "nullable": true
+                    },
+                    "excerpt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "blogId": {
+                      "type": "string"
+                    },
+                    "publishedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "content": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "nullable": true
+                    },
+                    "meta": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "draftTitle": {
+                      "type": "string"
+                    },
+                    "draftContent": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "draftExcerpt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "draftFeaturedImage": {
+                      "type": "object",
+                      "properties": {
+                        "mediaId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbnailUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "alt": {
+                          "type": "string",
+                          "maxLength": 1000
+                        },
+                        "fileName": {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        "mimeType": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "byteSize": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "title": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "audio",
+                            "document",
+                            "other"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "nullable": true
+                    },
+                    "draftMeta": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "kind",
+                    "slug",
+                    "status",
+                    "deletable",
+                    "blogId",
+                    "meta",
+                    "draftTitle",
+                    "draftContent",
+                    "draftMeta"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "oauth": []
+          }
+        ]
+      }
+    },
     "/v1/school/website/blogs/{blogId}/discard-draft": {
       "post": {
         "tags": [
@@ -74670,6 +76585,62 @@
           },
           "404": {
             "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
             "content": {
               "application/json": {
                 "schema": {
@@ -80922,6 +82893,14 @@
                           "nullable": true
                         },
                         "paymentPlanId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "subscriptionMethod": {
                           "type": "string",
                           "nullable": true
                         },

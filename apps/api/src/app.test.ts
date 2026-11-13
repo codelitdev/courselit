@@ -1,3 +1,4 @@
+import { API_VERSION } from "./version.js";
 import { describe, expect, it } from "bun:test";
 import { contract } from "@courselit/api-contract";
 import { eq } from "drizzle-orm";
@@ -501,6 +502,7 @@ describe.serial("reference API adapters", () => {
         status: "ok",
         service: "courselit-api",
         time: "2026-03-01T00:00:00.000Z",
+        version: API_VERSION,
       },
     });
     const ready = await dispatch(runtime, {

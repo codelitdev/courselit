@@ -4,11 +4,14 @@ import type { MediaRef } from "@courselit/api-contract";
 import { ExternalLink, LayoutTemplate, Monitor, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useUnsavedChangesWarning } from "@/components/mails/unsaved-changes";
 import { PaymentPlanList } from "@/components/products/payment-plan-list";
 import { RichTextEditor } from "@/components/products/rich-text-editor";
 import { Button } from "@/components/ui/codelit/button";
 import { Input } from "@/components/ui/codelit/input";
 import { Switch } from "@/components/ui/codelit/switch";
+import { bannerSwitchUpdate, communityDetailsDirty } from "@/lib/community-details";
 import { cn } from "@/lib/utils";
 import { CommunityFeaturedImage } from "./community-featured-image";
 import { CommunityHomePreview } from "./community-previews";
@@ -58,8 +61,10 @@ export function CommunityDetails({
   const [editorKey, setEditorKey] = useState(0);
   const [posts, setPosts] = useState<Post[]>([]);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  /** The card or control being saved, so only its buttons wait. */
+  const [saving, setSaving] = useState<
+    "details" | "banner" | "question" | "image" | "bannerSwitch" | "autoAccept" | null
+  >(null);
 
   useEffect(() => {
     let active = true;
@@ -75,69 +80,114 @@ export function CommunityDetails({
     };
   }, [community.id, request]);
 
-  const savedBannerOn = Boolean(communityPlainText(community.banner));
-  const nextBanner = bannerOn ? banner : "";
-  const dirty =
-    name !== community.name ||
-    description !== community.description ||
-    bannerOn !== savedBannerOn ||
-    (bannerOn && banner !== community.banner) ||
-    autoAcceptMembers !== community.autoAcceptMembers ||
-    joiningReasonText !== community.joiningReasonText;
+  const dirty = communityDetailsDirty(community, {
+    name,
+    description,
+    banner,
+    bannerOn,
+    joiningReasonText,
+  });
+  useUnsavedChangesWarning(dirty.any);
 
-  function discard() {
+  async function update(
+    key: NonNullable<typeof saving>,
+    body: Partial<
+      Pick<
+        Community,
+        | "name"
+        | "description"
+        | "banner"
+        | "autoAcceptMembers"
+        | "joiningReasonText"
+        | "featuredImage"
+      >
+    >,
+    done: string,
+  ): Promise<Community | null> {
+    if (saving) return null;
+    setSaving(key);
+    try {
+      const updated = await request<Community>(`/api/v1/communities/${community.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      setCommunity({ ...updated, salesPage: community.salesPage });
+      setNotice(done);
+      return updated;
+    } catch (caught) {
+      toast.error(errorMessage(caught, "Unable to save the change."));
+      return null;
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function saveDetails() {
+    if (!dirty.details || !name.trim()) return;
+    const updated = await update(
+      "details",
+      { name: name.trim(), description },
+      "Details saved.",
+    );
+    if (updated) setName(updated.name);
+  }
+
+  function discardDetails() {
     setName(community.name);
     setDescription(community.description);
-    setBanner(community.banner);
-    setBannerOn(savedBannerOn);
-    setAutoAcceptMembers(community.autoAcceptMembers);
-    setJoiningReasonText(community.joiningReasonText);
     setEditorKey((key) => key + 1);
-    setError(null);
   }
 
-  async function save() {
-    if (saving || !name.trim()) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const updated = await request<Community>(`/api/v1/communities/${community.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          name: name.trim(),
-          description,
-          banner: nextBanner,
-          autoAcceptMembers,
-          joiningReasonText,
-        }),
-      });
-      setCommunity({ ...updated, salesPage: community.salesPage });
-      setName(updated.name);
-      setBanner(updated.banner);
-      setNotice("Community saved.");
-    } catch (caught) {
-      setError(errorMessage(caught, "Unable to save the community."));
-    } finally {
-      setSaving(false);
+  async function saveBanner() {
+    if (!dirty.banner) return;
+    const updated = await update("banner", { banner }, "Welcome banner saved.");
+    if (updated) setBanner(updated.banner);
+  }
+
+  function discardBanner() {
+    setBanner(community.banner);
+    setEditorKey((key) => key + 1);
+  }
+
+  async function switchBanner(on: boolean) {
+    const body = bannerSwitchUpdate(on, community.banner);
+    if (!body) {
+      setBannerOn(on);
+      return;
+    }
+    // Keep the text on screen so switching back on brings it back to edit.
+    if (await update("bannerSwitch", body, "Welcome banner removed.")) {
+      setBannerOn(false);
     }
   }
 
-  async function changeFeaturedImage(selection: MediaRef | null) {
-    if (saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const updated = await request<Community>(`/api/v1/communities/${community.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ featuredImage: selection }),
-      });
-      setCommunity({ ...updated, salesPage: community.salesPage });
-      setNotice(selection ? "Featured image saved." : "Featured image removed.");
-    } catch (caught) {
-      setError(errorMessage(caught, "Unable to update the featured image."));
-    } finally {
-      setSaving(false);
-    }
+  async function changeAutoAccept(value: boolean) {
+    if (value === community.autoAcceptMembers) return;
+    const previous = autoAcceptMembers;
+    setAutoAcceptMembers(value);
+    const updated = await update(
+      "autoAccept",
+      { autoAcceptMembers: value },
+      value ? "Everyone who joins gets in." : "New members now need your approval.",
+    );
+    if (!updated) setAutoAcceptMembers(previous);
+  }
+
+  async function saveQuestion() {
+    if (!dirty.question) return;
+    await update("question", { joiningReasonText }, "Question saved.");
+  }
+
+  function discardQuestion() {
+    setJoiningReasonText(community.joiningReasonText);
+  }
+
+  function changeFeaturedImage(selection: MediaRef | null) {
+    void update(
+      "image",
+      { featuredImage: selection },
+      selection ? "Featured image saved." : "Featured image removed.",
+    );
   }
 
   return (
@@ -158,8 +208,8 @@ export function CommunityDetails({
           <CommunityFeaturedImage
             school={school}
             value={community.featuredImage}
-            disabled={saving}
-            onChange={(value) => void changeFeaturedImage(value)}
+            disabled={saving === "image"}
+            onChange={changeFeaturedImage}
           />
           <div className="field">
             <span className="font-medium">Description</span>
@@ -191,6 +241,14 @@ export function CommunityDetails({
               </Button>
             </div>
           ) : null}
+          <SaveRow
+            dirty={dirty.details}
+            saving={saving === "details"}
+            canSave={Boolean(name.trim())}
+            label="Save details"
+            onDiscard={discardDetails}
+            onSave={() => void saveDetails()}
+          />
         </section>
         <CommunityCard
           title="Welcome banner"
@@ -198,7 +256,8 @@ export function CommunityDetails({
           action={
             <Switch
               checked={bannerOn}
-              onCheckedChange={setBannerOn}
+              disabled={saving === "bannerSwitch"}
+              onCheckedChange={(on) => void switchBanner(on)}
               aria-label="Show welcome banner"
             />
           }
@@ -221,16 +280,32 @@ export function CommunityDetails({
               <p className="text-xs text-muted-foreground">
                 Change it for launches, events or breaks. Members see the newest version.
               </p>
+              <SaveRow
+                dirty={dirty.banner}
+                saving={saving === "banner"}
+                label="Save message"
+                onDiscard={discardBanner}
+                onSave={() => void saveBanner()}
+              />
             </div>
           ) : null}
         </CommunityCard>
         <CommunityCard title="Who gets in">
           <WhoGetsIn
             autoAcceptMembers={autoAcceptMembers}
-            onAutoAcceptChange={setAutoAcceptMembers}
+            onAutoAcceptChange={(value) => void changeAutoAccept(value)}
             joiningReasonText={joiningReasonText}
             onJoiningReasonTextChange={setJoiningReasonText}
           />
+          {!autoAcceptMembers ? (
+            <SaveRow
+              dirty={dirty.question}
+              saving={saving === "question"}
+              label="Save question"
+              onDiscard={discardQuestion}
+              onSave={() => void saveQuestion()}
+            />
+          ) : null}
         </CommunityCard>
         <PaymentPlanList
           listPath={`/api/v1/communities/${encodeURIComponent(community.id)}/plans`}
@@ -250,29 +325,6 @@ export function CommunityDetails({
           description="Several can be active at once. The starred plan is shown first. Archiving stops new sign-ups; current members keep their access and price."
           entityLabel="community"
         />
-        {dirty || error ? (
-          <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 shadow-lg">
-            {error ? (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">You have unsaved changes.</p>
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={discard} disabled={saving}>
-                Discard
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void save()}
-                disabled={saving || !dirty || !name.trim()}
-              >
-                {saving ? "Saving…" : "Save changes"}
-              </Button>
-            </div>
-          </div>
-        ) : null}
       </div>
       <div className="space-y-3 lg:sticky lg:top-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -317,7 +369,7 @@ export function CommunityDetails({
           schoolName={school.name}
           address={address.replace(/\/join$/, "/dashboard")}
           community={{ name, categories: community.categories }}
-          banner={nextBanner}
+          banner={bannerOn ? banner : ""}
           posts={posts}
           device={device}
         />
@@ -326,6 +378,41 @@ export function CommunityDetails({
           in the page editor.
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * A card's own save controls, shown once its text is edited, the same as
+ * product settings: switches and choices elsewhere save immediately.
+ */
+function SaveRow({
+  dirty,
+  saving,
+  canSave = true,
+  label,
+  onDiscard,
+  onSave,
+}: {
+  dirty: boolean;
+  saving: boolean;
+  canSave?: boolean;
+  label: string;
+  onDiscard: () => void;
+  onSave: () => void;
+}) {
+  if (!dirty) return null;
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2 border-t pt-4">
+      <span className="mr-auto text-sm text-muted-foreground">
+        You have unsaved changes.
+      </span>
+      <Button type="button" variant="ghost" onClick={onDiscard} disabled={saving}>
+        Discard
+      </Button>
+      <Button type="button" onClick={onSave} disabled={saving || !canSave}>
+        {saving ? "Saving…" : label}
+      </Button>
     </div>
   );
 }

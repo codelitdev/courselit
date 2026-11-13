@@ -108,6 +108,9 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   if (clean === "/contacts") {
     return [{ label: "Contacts" }];
   }
+  if (clean === "/contacts/tags") {
+    return [{ label: "Contacts", href: "/contacts" }, { label: "Tags" }];
+  }
   if (clean.startsWith("/contacts/")) {
     return [{ label: "Contacts", href: "/contacts" }, { label: "Contact Details" }];
   }
@@ -177,6 +180,9 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
   }
   if (clean === "/onboarding") {
     return [{ label: "Onboarding" }];
+  }
+  if (clean === "/about") {
+    return [{ label: "About" }];
   }
   if (clean === "/settings") {
     return [{ label: "Settings" }];

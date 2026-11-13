@@ -233,17 +233,19 @@ product, and the admin sign-in page showed developer notes.
     and Activate are disabled with the reason. A banner asks for the mailing
     address up front, and the "Add your mailing address" dialog now opens (it
     matched the wrong wording).
-- [ ] **21. The first navigation in the admin is slow.** Some pages took 20 to 30
-  seconds. _(QA)_
-- [x] **22. Publishing a lesson takes three steps:** open it, switch Publish on,
+- [x] **21. Publishing a lesson takes three steps:** open it, switch Publish on,
   then Update. Lessons default to Draft, and the list has no quick publish.
   _(QA)_
   - Fixed by the product redesign: each lesson on the Content tab has a quick
     Live/Draft switch, "Make all drafts live" publishes every draft at once,
     and each product sets whether new lessons start live or as drafts.
-- [ ] **23. Community details need an explicit Save** at the bottom of the page.
+- [x] **22. Community details need an explicit Save** at the bottom of the page.
   Navigating away loses edits with no warning. _(QA)_
-- [x] **24. The contact filters in the UI cover only email, tag, subscription and
+  - Fixed 2026-11-13, checked locally. It now follows product settings: the
+    banner switch, "Who gets in" and the featured image save at once; the
+    details, banner message and joining question each have their own Save in
+    their card; and leaving with unsaved edits asks first.
+- [x] **23. The contact filters in the UI cover only email, tag, subscription and
   signed up.**
   - Product, community, last active and permission are missing, though
     `apps/api/src/contact-filters.ts` supports most of them.
@@ -256,16 +258,18 @@ product, and the admin sign-in page showed developer notes.
     team changes. Also fixed: the broadcast recipient count was empty for any
     filter. Still open: product access and community membership changes don't
     re-sync the contact, so those filters go stale until the learner signs in.
-- [x] **25. The product Visibility switch's helper text** stays "Only accessible
+- [x] **24. The product Visibility switch's helper text** stays "Only accessible
   via direct link" whichever way it is set. _(QA)_
   - Fixed by the product redesign: Visibility is now a choice between "Anyone"
     and "Only people with the link", each with its own description.
-- [ ] **26. There is no testimonials or social-proof block** in the page
+- [x] **25. There is no testimonials or social-proof block** in the page
   builder. _(QA)_
+  - Covered by the Grid block: each item takes a name (title), the quote
+    (description) and an optional photo, in two or three columns.
 
 ## 4. Security hardening
 
-- [ ] **27. Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high):
+- [ ] **26. Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high):
   validating an oversized constrained collection can exhaust memory.
   - The API, storefront and `api-contract` pin zod 3.25.76.
   - So do ts-rest, the patched `@anatine/zod-openapi` and our `@codelitdev/*`
@@ -276,104 +280,129 @@ product, and the admin sign-in page showed developer notes.
 
 ## 5. Missing compared with `main`
 
-- [ ] **28. Confirm the two changes made on purpose.**
+- [x] **27. Confirm the two changes made on purpose.**
   - One community per school instead of many, with no public `/communities`
     list (`apps/api/docs/one-community-per-school.md`).
   - Course discussions are one community space per course, not one per lesson.
 
   _(Parity)_
-- [ ] **29. Pinning community posts.** The API supports it and the feed shows a
+  - Confirmed 2026-11-13: both are by design.
+- [x] **28. Pinning community posts.** The API supports it and the feed shows a
   "Pinned" badge, but no screen sets it. _(Parity)_
-- [ ] **30. Unpublishing a blog post.** There is no endpoint or button.
+  - Fixed 2026-11-13, checked locally. Moderators get Pin post / Unpin post in
+    a post's actions menu, as on main. The API now lets only moderators pin
+    (authors could pin their own posts before), and pinning keeps the post's
+    date. Also fixed: posts in a space couldn't be edited at all, because
+    their category is the space's name.
+- [x] **29. Unpublishing a blog post.** There is no endpoint or button.
   _(Parity)_
-- [ ] **31. A tag management page:** counts, delete a tag, untag everyone.
+  - Fixed 2026-11-13, checked locally. `POST
+    /v1/school/website/blogs/:blogId/unpublish` (also an MCP tool), and an
+    Unpublish button with a confirmation in the blog editor's Publishing
+    settings. The writing stays as a draft to publish again.
+- [ ] **30. A tag management page:** counts, delete a tag, untag everyone.
   _(Parity)_
-- [ ] **32. Reply by email** to discussions and community posts. See
+- [ ] **31. Reply by email** to discussions and community posts. See
   `docs/wip/community-replies-from-email.md`. _(Parity)_
-- [ ] **33. Per-school Google login** with the school's own client ID and secret,
+- [x] **32. Per-school Google login** with the school's own client ID and secret,
   and per-school toggles for login methods. Google login is now platform-wide,
   set by env vars. _(Parity)_
-- [ ] **34. SAML SSO login.** _(Parity)_
-- [ ] **35. Editing a comment.** It exists in the API only. _(Parity)_
-- [ ] **36. A share button on community posts.** _(Parity)_
-- [ ] **37. A "Downloaded" column for download products.** _(Parity)_
-- [x] **38. The list of contacts in a sequence.** Only the count is shown.
+  - Confirmed 2026-11-13: by design. Google login stays platform-wide.
+- [ ] **33. SAML SSO login.** _(Parity)_
+- [x] **34. Editing a comment.** It exists in the API only. _(Parity)_
+  - Fixed 2026-11-13, checked locally. A comment's author gets Edit in its
+    actions menu, which opens it in the editor with Save and Cancel.
+- [ ] **35. A share button on community posts.** _(Parity)_
+- [x] **36. A "Downloaded" column for download products.** _(Parity)_
+  - Fixed 2026-11-13, checked locally. A download's Customers list shows
+    "Downloaded" (Yes / Not yet) in place of Progress, as on main; a customer
+    counts once they have used a download link.
+- [x] **37. The list of contacts in a sequence.** Only the count is shown.
   _(Parity)_
   - Fixed 2026-11-12, checked locally. A sent broadcast or active sequence lists
     its subscribers a page at a time (name, email, subscribed).
-- [ ] **39. A "From" name for each sequence.** _(Parity)_
+- [ ] **38. A "From" name for each sequence.** _(Parity)_
   - Blocked on SendLit: its sequences have no sender field, so every send uses
     the team's From name. SendLit needs a nullable `from_name` on sequences,
     used when sending, before CourseLit can offer it.
-- [ ] **40. Subscription ID and payment method in the community member list.**
+- [x] **39. Subscription ID and payment method in the community member list.**
   _(Parity)_
-- [ ] **41. Unsplash in page-builder blocks.** Today it is in the community image
+  - Fixed 2026-11-13, checked locally. Under each member's plan, the admin
+    member list shows the provider and the subscription ID, with a copy
+    button. Learner-facing responses don't include them.
+- [x] **40. Unsplash in page-builder blocks.** Today it is in the community image
   and rich text only. _(Parity)_
-- [ ] **42. A version or about page.** _(Parity)_
+  - Done: the page builder's Media block already offers Unsplash images.
+- [x] **41. A version or about page.** _(Parity)_
+  - Fixed 2026-11-13, checked locally. The admin has a hidden `/about` page,
+    like main's `/dashboard/courselit`, reached only by typing the address. It
+    shows the version, the build commit (from `COURSELIT_BUILD_SHA`, a build
+    argument of the admin image), the environment, the Next.js version, and
+    whether the API and its database answer.
 
 ## 6. Roadmap against competitors
 
-- [ ] **43. Discount codes.** Every competitor has them. Issue #839.
-- [ ] **44. Outbound webhooks and Zapier.** Without them creators can't connect
+- [ ] **42. Discount codes.** Every competitor has them. Issue #839.
+- [ ] **43. Outbound webhooks and Zapier.** Without them creators can't connect
   CourseLit to their other tools. Issue #843 (relates to #645 and #636).
-- [ ] **45. Getting members into the community.** Admins can already invite a
+- [ ] **44. Getting members into the community.** Admins can already invite a
   person by email onto a plan (the Invite button on Members). Still missing:
   - a shareable invite link;
   - CSV import;
   - member search on the Members tab.
-- [ ] **46. Community moderation tools:**
+- [ ] **45. Community moderation tools:**
   - bulk approve and reject;
   - mute or ban a member;
   - content rules and keyword filters;
   - moderator permissions for each space.
-- [ ] **47. Trials and coupons on community plans.** Standard in Kajabi and
+- [ ] **46. Trials and coupons on community plans.** Standard in Kajabi and
   Circle.
-- [ ] **48. Order bumps and upsells at checkout.** Bundles already exist, so this
+- [ ] **47. Order bumps and upsells at checkout.** Bundles already exist, so this
   is a short step. Issue #841 (relates to #426).
-- [ ] **49. Onboarding new community members.** Today there is a welcome banner.
+- [ ] **48. Onboarding new community members.** Today there is a welcome banner.
   Still missing:
   - a welcome post or onboarding checklist;
   - profile prompts;
   - automated welcome messages.
-- [ ] **50. Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
+- [ ] **49. Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
   Issue #840.
-- [ ] **51. Importers from Teachable, Kajabi and Thinkific.** Switching cost is
+- [ ] **50. Importers from Teachable, Kajabi and Thinkific.** Switching cost is
   the main thing stopping creators from moving.
-- [ ] **52. Tax handling.** LemonSqueezy is the merchant of record, so it covers
+- [ ] **51. Tax handling.** LemonSqueezy is the merchant of record, so it covers
   this. Stripe and Razorpay schools are on their own.
-- [ ] **53. Live sessions:**
+- [ ] **52. Live sessions:**
   - events and a calendar, including a calendar space in the community;
   - coaching bookings;
   - webinars through Zoom or a link.
 
   This is Circle's and Kajabi's moat, and cohort courses depend on it. Issue
   #842 (relates to #390).
-- [ ] **54. Community analytics:** active members, posts per week, pending
+- [ ] **53. Community analytics:** active members, posts per week, pending
   requests over time, churn.
-- [ ] **55. Engagement tools:**
+- [ ] **54. Engagement tools:**
   - chat or DMs;
   - challenges;
   - gamification (points, levels, leaderboards);
   - polls;
   - digests.
-- [ ] **56. Multiple communities per school, and groups of spaces with access
-  set for each space.** Only if item 28 reverses the decision to have one
+- [ ] **55. Multiple communities per school, and groups of spaces with access
+  set for each space.** Only if item 27 reverses the decision to have one
   community per school.
-- [ ] **57. A member directory.**
-- [ ] **58. A native mobile app, or at least a PWA.**
-- [ ] **59. Funnels, and the automation layer** that joins email, access, coupons
+- [ ] **56. A member directory.**
+- [ ] **57. A native mobile app, or at least a PWA.**
+- [ ] **58. Funnels, and the automation layer** that joins email, access, coupons
   and affiliates.
-- [ ] **60. AI drafting of courses and copy.**
-- [ ] **61. Podcasts.**
+- [ ] **59. AI drafting of courses and copy.**
+- [ ] **60. Podcasts.**
 
 ## 7. Maintenance
 
-- [ ] **62. minimatch (moderate) and deepmerge (low).** Both come in only through
+- [ ] **61. minimatch (moderate) and deepmerge (low).** Both come in only through
   the `shadcn` CLI, a dev tool. They clear when shadcn updates its dependencies.
   _(Audit)_
-- [ ] **63. Correct the parity ledger.**
+- [ ] **62. Correct the parity ledger.**
   `docs/platform-rewrite-parity-ledger.md` (COM-002) says the admin has pin and
-  unpin controls. It doesn't; see item 29.
+  unpin controls. It doesn't; see item 28.
 
 ## Done
 

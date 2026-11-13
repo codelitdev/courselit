@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, Clock, Lock, UserPlus } from "lucide-react";
+import { Check, Clock, Copy, Lock, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/codelit/button";
+import { paymentMethodLabel, shortSubscriptionId } from "@/lib/community-members";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,38 @@ import {
 } from "./community-shared";
 
 type MemberFilter = "all" | "pending" | "active" | "rejected";
+
+function SubscriptionDetails({
+  subscriptionId,
+  method,
+  onCopied,
+}: {
+  subscriptionId: string;
+  method: string | null;
+  onCopied: () => void;
+}) {
+  const label = paymentMethodLabel(method);
+  return (
+    <div className="mt-1 flex items-center gap-1 text-xs">
+      {label ? <span>{label} ·</span> : null}
+      <span className="font-mono" title={`Subscription ID: ${subscriptionId}`}>
+        {shortSubscriptionId(subscriptionId)}
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="size-6 px-0"
+        aria-label="Copy subscription ID"
+        onClick={() =>
+          void navigator.clipboard.writeText(subscriptionId).then(onCopied, () => {})
+        }
+      >
+        <Copy className="size-3" />
+      </Button>
+    </div>
+  );
+}
 
 function MemberStatus({ status }: { status: Membership["status"] }) {
   switch (status) {
@@ -321,10 +354,17 @@ export function CommunityMembers({
                         </p>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="px-4 py-3 align-top text-muted-foreground">
                       {member.paymentPlanId
                         ? (planNames.get(member.paymentPlanId) ?? "Archived plan")
                         : "—"}
+                      {member.subscriptionId ? (
+                        <SubscriptionDetails
+                          subscriptionId={member.subscriptionId}
+                          method={member.subscriptionMethod ?? null}
+                          onCopied={() => setNotice("Subscription ID copied.")}
+                        />
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <MemberStatus status={member.status} />

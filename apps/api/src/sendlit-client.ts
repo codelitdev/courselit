@@ -699,6 +699,99 @@ export async function deleteSendLitSegment(
 }
 
 // ---------------------------------------------------------------------------
+// Tag operations (Team API key scoped). Tags live on SendLit contacts.
+// ---------------------------------------------------------------------------
+
+export type SendLitTagSummary = { tag: string; contactCount: number };
+
+export type SendLitTagReferences = {
+  tag: string;
+  contactCount: number;
+  segments: { segmentId: string; name: string }[];
+  sequences: {
+    sequenceId: string;
+    title: string;
+    type: "broadcast" | "sequence";
+    status: string;
+    usages: ("filter" | "exclude_filter" | "trigger" | "email_action")[];
+  }[];
+  signupForms: { formId: string; name: string }[];
+};
+
+export type SendLitRenameTagResult = {
+  tag: string;
+  previousTag: string;
+  contactsUpdated: number;
+  segmentsUpdated: number;
+  sequencesUpdated: number;
+  signupFormsUpdated: number;
+};
+
+export type SendLitDeleteTagResult = {
+  tag: string;
+  contactsUpdated: number;
+  references: SendLitTagReferences;
+};
+
+type SendLitClientOptions = { config?: SendLitConfig; fetcher?: FetchLike };
+
+export async function listSendLitTags(
+  teamApiKey: string,
+  options: SendLitClientOptions = {},
+): Promise<{ items: SendLitTagSummary[] }> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<{ items: SendLitTagSummary[] }>(
+    config,
+    "/tags",
+    { method: "GET", teamApiKey },
+    options.fetcher,
+  );
+}
+
+export async function getSendLitTagReferences(
+  teamApiKey: string,
+  tag: string,
+  options: SendLitClientOptions = {},
+): Promise<SendLitTagReferences> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<SendLitTagReferences>(
+    config,
+    `/tags/${encodeURIComponent(tag)}/references`,
+    { method: "GET", teamApiKey },
+    options.fetcher,
+  );
+}
+
+export async function renameSendLitTag(
+  teamApiKey: string,
+  tag: string,
+  input: { name: string },
+  options: SendLitClientOptions = {},
+): Promise<SendLitRenameTagResult> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<SendLitRenameTagResult>(
+    config,
+    `/tags/${encodeURIComponent(tag)}`,
+    { method: "PATCH", teamApiKey, body: input },
+    options.fetcher,
+  );
+}
+
+export async function deleteSendLitTag(
+  teamApiKey: string,
+  tag: string,
+  options: SendLitClientOptions = {},
+): Promise<SendLitDeleteTagResult> {
+  const config = options.config ?? sendLitConfig();
+  return requestJson<SendLitDeleteTagResult>(
+    config,
+    `/tags/${encodeURIComponent(tag)}`,
+    { method: "DELETE", teamApiKey },
+    options.fetcher,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Templates operations (Team API key scoped)
 // ---------------------------------------------------------------------------
 

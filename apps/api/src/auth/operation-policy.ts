@@ -227,6 +227,10 @@ export const OPERATION_POLICIES = {
   updateContactSegment: schoolOp(["contacts:write"]),
   deleteContactSegment: schoolOp(["contacts:write"]),
   getContactSegmentMembers: schoolOp(["contacts:read"]),
+  listContactTags: schoolOp(["contacts:read"]),
+  getContactTagReferences: schoolOp(["contacts:read"]),
+  renameContactTag: schoolOp(["contacts:write"]),
+  deleteContactTag: schoolOp(["contacts:write"]),
   grantLearnerMembership: schoolOp(["contacts:write"]),
 
   // Community admin
@@ -287,6 +291,7 @@ export const OPERATION_POLICIES = {
   updateSchoolWebsiteBlog: schoolOp(["storefront:write"]),
   deleteSchoolWebsiteBlog: schoolOp(["storefront:publish"]),
   publishSchoolWebsiteBlog: schoolOp(["storefront:publish"]),
+  unpublishSchoolWebsiteBlog: schoolOp(["storefront:publish"]),
   discardSchoolWebsiteBlog: schoolOp(["storefront:write"]),
   getSchoolWebsiteBranding: schoolOp(["storefront:read"]),
   updateSchoolWebsiteBranding: schoolOp(["storefront:write"]),

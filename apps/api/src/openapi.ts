@@ -151,6 +151,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (
     isPathOrChild(path, "/v1/contacts") ||
     isPathOrChild(path, "/v1/contact-segments") ||
+    isPathOrChild(path, "/v1/contact-tags") ||
     isPathOrChild(path, "/v1/school/mails")
   ) {
     return "Contacts & Marketing";

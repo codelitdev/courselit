@@ -79,6 +79,14 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   deleteContactSegment:
     "Deletes a segment. The contacts in it are not deleted. Confirm with the user first.",
   getContactSegmentMembers: "Lists the contacts currently in a segment.",
+  listContactTags:
+    "Lists every tag carried by at least one contact, with how many contacts carry it.",
+  getContactTagReferences:
+    "Shows the segments, broadcasts, sequences and signup forms that use a tag, and how many contacts carry it. Check this before delete_contact_tag.",
+  renameContactTag:
+    "Renames a tag on every contact and in the segments, sequences and signup forms that use it. Renaming to an existing tag merges the two. Confirm with the user first.",
+  deleteContactTag:
+    "Removes a tag from every contact. Segments, sequences and signup forms that name it are left untouched. Check get_contact_tag_references first and confirm with the user first.",
   grantLearnerMembership:
     "Gives a contact access to a product or community without a payment. Confirm with the user first.",
 
@@ -187,6 +195,8 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Permanently deletes a blog post. Confirm with the user first.",
   publishSchoolWebsiteBlog:
     "Publishes a blog post's draft so visitors see it. Confirm with the user first.",
+  unpublishSchoolWebsiteBlog:
+    "Takes a published blog post off the site; its writing stays as a draft to publish again later. Confirm with the user first.",
   discardSchoolWebsiteBlog:
     "Throws away a blog post's unpublished draft and goes back to the published version. Confirm with the user first.",
 

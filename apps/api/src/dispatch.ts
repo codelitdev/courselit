@@ -27,6 +27,7 @@ import {
   createCommunityPostBodySchema,
   createCommunityReportBodySchema,
   createContactSegmentBodySchema,
+  renameContactTagBodySchema,
   createLearnerCheckoutBodySchema,
   createLearnerCommunityCheckoutBodySchema,
   createLearnerDownloadLinkBodySchema,
@@ -205,6 +206,10 @@ import {
   createContactSegment,
   deleteContact,
   deleteContactSegment,
+  deleteContactTag,
+  getContactTagReferences,
+  listContactTags,
+  renameContactTag,
   filterPreviewContacts,
   getContact,
   getContactSegment,
@@ -219,6 +224,7 @@ import {
 } from "./contacts.js";
 import { publicCaptchaConfig, verifyCaptcha } from "./captcha.js";
 import * as schema from "./db/schema/index.js";
+import { API_VERSION } from "./version.js";
 import type { DispatchDeps } from "./deps.js";
 import { createLearnerDownloadLink } from "./downloads.js";
 import { listLearnerPurchases } from "./learner-purchases.js";
@@ -230,6 +236,7 @@ import {
   deleteBlogPost,
   deleteWebsitePage,
   discardBlogPostDraft,
+  unpublishBlogPost,
   discardWebsitePageDraft,
   getBlogPost,
   getPublicWebsiteSettings,
@@ -512,7 +519,7 @@ export async function dispatch(
     if (request.method === "GET" && path === "/health") {
       return {
         status: 200,
-        body: healthReport(deps.serviceName, deps.clock),
+        body: { ...healthReport(deps.serviceName, deps.clock), version: API_VERSION },
       };
     }
     if (request.method === "GET" && path === "/ready") {
@@ -2578,6 +2585,20 @@ export async function dispatch(
       const result = await getBlogPost(deps.db, context.tenantId!, blogId);
       return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
+    const unpublishWebsiteBlogMatch =
+      /^\/v1\/school\/website\/blogs\/([^/]+)\/unpublish$/.exec(path);
+    if (request.method === "POST" && unpublishWebsiteBlogMatch) {
+      if (!context.permissions.has("storefront:publish")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const result = await unpublishBlogPost(
+        deps.db,
+        context.tenantId!,
+        decodeURIComponent(unpublishWebsiteBlogMatch[1]!),
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
+    }
     const discardWebsiteBlogMatch =
       /^\/v1\/school\/website\/blogs\/([^/]+)\/discard-draft$/.exec(path);
     if (request.method === "POST" && discardWebsiteBlogMatch) {
@@ -4044,6 +4065,92 @@ export async function dispatch(
             permissions: context.permissions,
           },
           segmentId,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+    }
+
+    if (path === "/v1/contact-tags" && request.method === "GET") {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const result = await listContactTags(deps.db, {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const contactTagReferencesMatch =
+      /^\/v1\/contact-tags\/([^/]+)\/references$/.exec(path);
+    if (request.method === "GET" && contactTagReferencesMatch) {
+      if (!context.permissions.has("contacts:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      const result = await getContactTagReferences(
+        deps.db,
+        {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+        decodeURIComponent(contactTagReferencesMatch[1]!),
+      );
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
+
+    const contactTagMatch = /^\/v1\/contact-tags\/([^/]+)$/.exec(path);
+    if (contactTagMatch) {
+      const tag = decodeURIComponent(contactTagMatch[1]!);
+      if (request.method === "PATCH") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const parsed = renameContactTagBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          return errorResponse(createPlatformError("validation_failed"));
+        }
+        const result = await renameContactTag(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          tag,
+          parsed.data,
+        );
+        return result.ok
+          ? { status: 200, body: result.value }
+          : errorResponse(result.error);
+      }
+      if (request.method === "DELETE") {
+        if (!context.permissions.has("contacts:write")) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
+        const result = await deleteContactTag(
+          deps.db,
+          {
+            schoolId: context.tenantId,
+            publicSchoolId: school.value.publicId,
+            principalId: context.principalId,
+            requestId: context.requestId,
+            permissions: context.permissions,
+          },
+          tag,
         );
         return result.ok
           ? { status: 200, body: result.value }

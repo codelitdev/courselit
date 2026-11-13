@@ -4,6 +4,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import type { TextEditorContent } from "@frontlit/text-editor";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AuthGate } from "@/components/auth-gate";
 import { BlogFeaturedImage } from "@/components/content/blog-featured-image";
 import { WritingEditorDocumentHeader } from "@/components/content/writing-editor-document-header";
@@ -11,6 +12,15 @@ import { WritingEditorShell } from "@/components/content/writing-editor-shell";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
 import { RichTextEditor } from "@/components/products/rich-text-editor";
+import { Button } from "@/components/ui/codelit/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
@@ -66,6 +76,7 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -224,6 +235,25 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
     }
   }
 
+  async function handleUnpublish() {
+    setPublishing(true);
+    setError(null);
+    try {
+      const unpublished = await websiteRequest<WebsiteBlog>(
+        `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}/unpublish`,
+        { method: "POST" },
+      );
+      setBlog(unpublished);
+      setUnpublishOpen(false);
+      toast.success("The post is off your site. It's saved here as a draft.");
+    } catch (caught: unknown) {
+      setUnpublishOpen(false);
+      setError(caught instanceof Error ? caught.message : "Unable to unpublish blog.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   async function handleDiscard() {
     for (const timer of Object.values(timersRef.current)) {
       if (timer) clearTimeout(timer);
@@ -362,6 +392,51 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
                   Your title, excerpt, tags, and article content go live together when
                   you publish changes.
                 </p>
+                {blog.status !== "draft" ? (
+                  <div className="mt-4 flex items-center justify-between gap-3 rounded-md border px-4 py-3">
+                    <p className="text-sm text-muted-foreground">
+                      Take it off your site. Your writing stays here as a draft.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={saving || publishing}
+                      onClick={() => setUnpublishOpen(true)}
+                    >
+                      Unpublish
+                    </Button>
+                  </div>
+                ) : null}
+                <Dialog open={unpublishOpen} onOpenChange={setUnpublishOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Unpublish this post?</DialogTitle>
+                      <DialogDescription>
+                        It disappears from your blog and its link stops working. Your
+                        writing stays here as a draft, and you can publish it again any
+                        time.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setUnpublishOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={publishing}
+                        onClick={() => void handleUnpublish()}
+                      >
+                        {publishing ? "Unpublishing…" : "Unpublish"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           }

@@ -1,0 +1,66 @@
+# Releases the rewrite. release-please keeps a release PR open that bumps the
+# product version (root and the api, admin and storefront package.json files)
+# from Conventional Commits and updates CHANGELOG.md. Merging it tags
+# vX.Y.Z and publishes the three images with that version.
+#
+# Versions are pre-releases (1.0.0-alpha.N) until the rewrite is declared
+# stable; see "Releases" in AGENTS.md. Pre-releases never move `latest`, so
+# `latest` keeps pointing at main's 0.74.x images.
+name: Release
+
+# Listing main too means nothing changes when this branch is merged into it;
+# until then main doesn't have this file, so only the rewrite branch runs it.
+on:
+  push:
+    branches: [main, platform-based-rewrite]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          target-branch: ${{ github.ref_name }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish-images:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        app: [api, admin, storefront]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERNAME }}
+          password: ${{ secrets.DOCKERTOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            COURSELIT_BUILD_SHA=${{ github.sha }}
+          # `latest` only for a stable release (a version without a pre-release suffix).
+          tags: |
+            codelit/courselit-${{ matrix.app }}:${{ needs.release-please.outputs.version }}
+            ${{ !contains(needs.release-please.outputs.version, '-') && format('codelit/courselit-{0}:latest', matrix.app) || '' }}

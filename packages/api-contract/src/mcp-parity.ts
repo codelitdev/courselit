@@ -930,9 +930,12 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "archiveCommunityPlan",
   "publishSchoolWebsitePage",
   "publishSchoolWebsiteBlog",
+  "unpublishSchoolWebsiteBlog",
   "discardSchoolWebsitePage",
   "discardSchoolWebsiteBlog",
   "startMailSequence",
+  "renameContactTag",
+  "deleteContactTag",
   "updateSchoolCodeInjection",
   "updateSchoolPaymentSettings",
 ]);

@@ -23,6 +23,7 @@ import {
   Paperclip,
   Pencil,
   Pin,
+  PinOff,
   Reply,
   Send,
   SmilePlus,
@@ -227,12 +228,17 @@ function PostActionsMenu({
   onEdit,
   onDelete,
   onReport,
+  pinned,
+  onTogglePin,
 }: {
   onEdit?: () => void;
   onDelete?: () => void;
   onReport?: () => void;
+  pinned?: boolean;
+  /** Moderators only: pin the post to the top of the feed, or unpin it. */
+  onTogglePin?: () => void;
 }) {
-  if (!onEdit && !onDelete && !onReport) return null;
+  if (!onEdit && !onDelete && !onReport && !onTogglePin) return null;
 
   return (
     <LearnerActionMenu
@@ -242,6 +248,19 @@ function PostActionsMenu({
           {onReport ? (
             <LearnerDropdownMenuItem onSelect={onReport}>
               <Flag className="size-4" /> Report
+            </LearnerDropdownMenuItem>
+          ) : null}
+          {onTogglePin ? (
+            <LearnerDropdownMenuItem onSelect={onTogglePin}>
+              {pinned ? (
+                <>
+                  <PinOff className="size-4" /> Unpin post
+                </>
+              ) : (
+                <>
+                  <Pin className="size-4" /> Pin post
+                </>
+              )}
             </LearnerDropdownMenuItem>
           ) : null}
           {onEdit ? (
@@ -607,6 +626,9 @@ export function LearnerCommunity({
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [subscribedPostIds, setSubscribedPostIds] = useState<Set<string>>(new Set());
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [savingCommentEdit, setSavingCommentEdit] = useState(false);
+  const commentEditDraftRef = useRef("");
   const [postEditDraft, setPostEditDraft] = useState<PostDraft>({
     title: "",
     content: "",
@@ -1372,6 +1394,36 @@ export function LearnerCommunity({
     }
   }
 
+  function startEditingComment(comment: CommunityComment) {
+    commentEditDraftRef.current = comment.content;
+    setEditingCommentId(comment.id);
+  }
+
+  async function saveCommentEdit(postId: string, commentId: string) {
+    const content = commentEditDraftRef.current;
+    if (!communityDescriptionHasContent(content) || savingCommentEdit) return;
+    setSavingCommentEdit(true);
+    try {
+      const updated = await requestJson<CommunityComment>(
+        `/api/v1/learner/community-comments/${encodeURIComponent(commentId)}`,
+        { method: "PATCH", body: JSON.stringify({ content }) },
+      );
+      setComments((current) => ({
+        ...current,
+        [postId]: (current[postId] ?? []).map((comment) =>
+          comment.id === updated.id ? { ...comment, ...updated } : comment,
+        ),
+      }));
+      setEditingCommentId(null);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to update this comment.",
+      );
+    } finally {
+      setSavingCommentEdit(false);
+    }
+  }
+
   function requestDeletePost(postId: string) {
     setDeleteTarget({ kind: "post", id: postId });
   }
@@ -1432,6 +1484,22 @@ export function LearnerCommunity({
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to update this post.",
+      );
+    }
+  }
+
+  async function togglePin(post: CommunityPost) {
+    try {
+      const updated = await requestJson<CommunityPost>(
+        `/api/v1/learner/community-posts/${encodeURIComponent(post.id)}`,
+        { method: "PATCH", body: JSON.stringify({ pinned: !post.pinned }) },
+      );
+      setPosts((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to pin this post.",
       );
     }
   }
@@ -1790,6 +1858,10 @@ export function LearnerCommunity({
                                   ? () => requestDeletePost(post.id)
                                   : undefined
                               }
+                              pinned={post.pinned === true}
+                              onTogglePin={
+                                canModerate ? () => void togglePin(post) : undefined
+                              }
                             />
                           ) : null}
                           {editingPostId === post.id ? (
@@ -1952,6 +2024,12 @@ export function LearnerCommunity({
                                     </div>
                                     {!comment.deletedAt ? (
                                       <PostActionsMenu
+                                        onEdit={
+                                          isOwnedByLearner(comment, learner) &&
+                                          editingCommentId !== comment.id
+                                            ? () => startEditingComment(comment)
+                                            : undefined
+                                        }
                                         onDelete={
                                           isOwnedByLearner(comment, learner) ||
                                           canModerate
@@ -1976,7 +2054,46 @@ export function LearnerCommunity({
                                     </p>
                                   ) : (
                                     <>
-                                      <CommunityDescription value={comment.content} />
+                                      {editingCommentId === comment.id ? (
+                                        <div className="grid gap-2">
+                                          <LearnerRichTextEditor
+                                            key={`comment-edit-${comment.id}`}
+                                            initialContent={communityEditorContent(
+                                              comment.content,
+                                            )}
+                                            onChange={(document) => {
+                                              commentEditDraftRef.current =
+                                                JSON.stringify(document);
+                                            }}
+                                            placeholder="Add a comment…"
+                                            className="rounded-md border bg-background"
+                                            editorClassName="min-h-[80px]"
+                                          />
+                                          <div className="flex justify-end gap-2">
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              variant="outline"
+                                              disabled={savingCommentEdit}
+                                              onClick={() => setEditingCommentId(null)}
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              disabled={savingCommentEdit}
+                                              onClick={() =>
+                                                void saveCommentEdit(post.id, comment.id)
+                                              }
+                                            >
+                                              {savingCommentEdit ? "Saving…" : "Save"}
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <CommunityDescription value={comment.content} />
+                                      )}
                                       <MediaAttachments
                                         items={comment.media.map(
                                           communityMediaToAttachment,

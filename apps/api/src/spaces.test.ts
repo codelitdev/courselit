@@ -898,6 +898,63 @@ describe.serial("school spaces and included products", () => {
     };
     expect(await canModerate(buyerHeaders)).toBe(false);
     expect(await canModerate(headers)).toBe(true);
+
+    // Authors edit their posts; only moderators pin them, as on main.
+    const editPost = (requestHeaders: Record<string, string>, body: object) =>
+      dispatch(runtime, {
+        method: "PATCH",
+        path: `/v1/learner/community-posts/${spamId}`,
+        headers: requestHeaders,
+        body,
+      });
+    expect((await editPost(buyerHeaders, { pinned: true })).status).toBe(403);
+    const edited = await editPost(buyerHeaders, { title: "Spam, edited" });
+    expect(edited.status).toBe(200);
+    // Back-date the post so a pin that touched the date would show.
+    const editedAt = "2026-01-01T00:00:00.000Z";
+    await runtime.db
+      .update(schema.communityPosts)
+      .set({ updatedAt: new Date(editedAt) })
+      .where(eq(schema.communityPosts.publicId, spamId));
+    expect((await editPost(headers, { title: "Not yours" })).status).toBe(403);
+    expect(
+      (await editPost(headers, { title: "Not yours", pinned: true })).status,
+    ).toBe(403);
+    const pinned = await editPost(headers, { pinned: true });
+    expect(pinned.status).toBe(200);
+    expect(pinned.body).toMatchObject({ pinned: true, title: "Spam, edited" });
+    // Pinning isn't an edit, so the post keeps its date.
+    expect((pinned.body as { updatedAt: string }).updatedAt).toBe(editedAt);
+    expect((await editPost(headers, { pinned: false })).body).toMatchObject({
+      pinned: false,
+    });
+
+    // A comment's author edits it; nobody else can, moderators included.
+    const commentContent = (text: string) =>
+      JSON.stringify({
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+      });
+    const commented = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/community-posts/${spamId}/comments`,
+      headers: buyerHeaders,
+      body: { content: commentContent("First take") },
+    });
+    expect(commented.status).toBe(201);
+    const commentId = (commented.body as { id: string }).id;
+    const editComment = (requestHeaders: Record<string, string>, text: string) =>
+      dispatch(runtime, {
+        method: "PATCH",
+        path: `/v1/learner/community-comments/${commentId}`,
+        headers: requestHeaders,
+        body: { content: commentContent(text) },
+      });
+    const editedComment = await editComment(buyerHeaders, "Second take");
+    expect(editedComment.status).toBe(200);
+    expect((editedComment.body as { content: string }).content).toContain("Second take");
+    expect((await editComment(headers, "Not yours")).status).toBe(403);
+
     const removed = await dispatch(runtime, {
       method: "DELETE",
       path: `/v1/learner/community-posts/${spamId}`,

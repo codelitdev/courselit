@@ -115,6 +115,23 @@ describe.serial("community invites", () => {
         ),
       );
     expect(communityRows).toHaveLength(1);
+
+    // The admin member list shows each member's subscription, as on main.
+    await runtime.db
+      .update(schema.learnerMemberships)
+      .set({ subscriptionId: "sub_1Q2w3E4r5T", subscriptionMethod: "stripe" })
+      .where(eq(schema.learnerMemberships.id, communityRows[0]!.id));
+    const listed = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/communities/${communityId}/members`,
+      headers: adminHeaders,
+    });
+    expect(listed.status).toBe(200);
+    expect(
+      (listed.body as { items: Array<Record<string, unknown>> }).items.find(
+        (item) => item.id === communityRows[0]!.publicId,
+      ),
+    ).toMatchObject({ subscriptionId: "sub_1Q2w3E4r5T", subscriptionMethod: "stripe" });
     await runtime.close();
   });
 });

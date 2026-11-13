@@ -32,13 +32,21 @@ import {
   createSendLitContact,
   createSendLitSegment,
   deleteSendLitSegment,
+  deleteSendLitTag,
   getSendLitContact,
   getSendLitSegment,
+  getSendLitTagReferences,
   listSendLitContacts,
   listSendLitSegments,
+  listSendLitTags,
+  renameSendLitTag,
   SendLitApiError,
   type SendLitConfig,
   type SendLitContact,
+  type SendLitDeleteTagResult,
+  type SendLitRenameTagResult,
+  type SendLitTagReferences,
+  type SendLitTagSummary,
   sendLitConfig,
   updateSendLitContact,
   updateSendLitSegment,
@@ -1511,5 +1519,135 @@ export async function getContactSegmentMembers(
     };
   } catch (err) {
     return { ok: false, error: createPlatformError("internal_error") };
+  }
+}
+
+type TagResult<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
+
+/**
+ * Resolves the school's SendLit credentials for a tag call. `null` means the
+ * school has no SendLit integration configured.
+ */
+async function resolveTagSendLit(
+  db: AppDb,
+  ctx: AdminContactContext,
+  options: { config?: SendLitConfig },
+): Promise<
+  | { ok: true; teamApiKey: string | null; cfg: SendLitConfig }
+  | { ok: false; error: PlatformError }
+> {
+  const schoolId = getSchoolId(ctx);
+  if (!schoolId) {
+    return { ok: false, error: createPlatformError("tenant_forbidden") };
+  }
+  const teamApiKey = await getSendLitTeamApiKey(db, schoolId);
+  const cfg = options.config ?? sendLitConfig();
+  return { ok: true, teamApiKey: cfg.server ? teamApiKey : null, cfg };
+}
+
+function mapTagError(err: unknown): PlatformError {
+  if (err instanceof SendLitApiError) {
+    if (err.status === 404) return createPlatformError("not_found");
+    if (err.status === 400) {
+      return createPlatformError(
+        "validation_failed",
+        err.detail === "tag_unchanged"
+          ? { safeDetails: { reason: "tag_unchanged" } }
+          : undefined,
+      );
+    }
+  }
+  return createPlatformError("internal_error");
+}
+
+/** Lists the tags carried by the school's contacts (proxied to SendLit). */
+export async function listContactTags(
+  db: AppDb,
+  ctx: AdminContactContext,
+  options: { config?: SendLitConfig } = {},
+): Promise<TagResult<{ items: SendLitTagSummary[] }>> {
+  const resolved = await resolveTagSendLit(db, ctx, options);
+  if (!resolved.ok) return resolved;
+  if (!resolved.teamApiKey) return { ok: true, value: { items: [] } };
+  try {
+    const result = await listSendLitTags(resolved.teamApiKey, {
+      config: resolved.cfg,
+    });
+    return { ok: true, value: { items: result.items } };
+  } catch (err) {
+    return { ok: false, error: mapTagError(err) };
+  }
+}
+
+/** Where a tag is used (segments, sequences, signup forms). */
+export async function getContactTagReferences(
+  db: AppDb,
+  ctx: AdminContactContext,
+  tag: string,
+  options: { config?: SendLitConfig } = {},
+): Promise<TagResult<SendLitTagReferences>> {
+  const resolved = await resolveTagSendLit(db, ctx, options);
+  if (!resolved.ok) return resolved;
+  if (!resolved.teamApiKey) {
+    return { ok: false, error: createPlatformError("internal_error") };
+  }
+  try {
+    return {
+      ok: true,
+      value: await getSendLitTagReferences(resolved.teamApiKey, tag, {
+        config: resolved.cfg,
+      }),
+    };
+  } catch (err) {
+    return { ok: false, error: mapTagError(err) };
+  }
+}
+
+/** Renames a tag everywhere SendLit knows it. */
+export async function renameContactTag(
+  db: AppDb,
+  ctx: AdminContactContext,
+  tag: string,
+  body: { name: string },
+  options: { config?: SendLitConfig } = {},
+): Promise<TagResult<SendLitRenameTagResult>> {
+  const resolved = await resolveTagSendLit(db, ctx, options);
+  if (!resolved.ok) return resolved;
+  if (!resolved.teamApiKey) {
+    return { ok: false, error: createPlatformError("internal_error") };
+  }
+  try {
+    return {
+      ok: true,
+      value: await renameSendLitTag(resolved.teamApiKey, tag, body, {
+        config: resolved.cfg,
+      }),
+    };
+  } catch (err) {
+    return { ok: false, error: mapTagError(err) };
+  }
+}
+
+/** Removes a tag from every contact. */
+export async function deleteContactTag(
+  db: AppDb,
+  ctx: AdminContactContext,
+  tag: string,
+  options: { config?: SendLitConfig } = {},
+): Promise<TagResult<SendLitDeleteTagResult>> {
+  const resolved = await resolveTagSendLit(db, ctx, options);
+  if (!resolved.ok) return resolved;
+  if (!resolved.teamApiKey) {
+    return { ok: false, error: createPlatformError("internal_error") };
+  }
+  try {
+    return {
+      ok: true,
+      value: await deleteSendLitTag(resolved.teamApiKey, tag, {
+        config: resolved.cfg,
+      }),
+    };
+  } catch (err) {
+    return { ok: false, error: mapTagError(err) };
   }
 }

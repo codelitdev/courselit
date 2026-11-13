@@ -139,6 +139,9 @@ export type CommunityMembershipDto = {
   joiningReason: string;
   rejectionReason: string | null;
   paymentPlanId: string | null;
+  /** Set only in the admin member list. */
+  subscriptionId?: string | null;
+  subscriptionMethod?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -2678,8 +2681,10 @@ export async function listMemberships(
   return {
     ok: true,
     value: {
-      items: page.map((row) =>
-        membershipToDto(
+      // Admins see each member's subscription, as on main; learner-facing
+      // membership responses leave it out.
+      items: page.map((row) => ({
+        ...membershipToDto(
           row.membership,
           row.learnerPublicId,
           communityPublicId,
@@ -2688,7 +2693,9 @@ export async function listMemberships(
             : null,
           ownerIds.has(row.membership.schoolAccountId),
         ),
-      ),
+        subscriptionId: row.membership.subscriptionId,
+        subscriptionMethod: row.membership.subscriptionMethod,
+      })),
       nextCursor:
         rows.length > options.limit && page.at(-1)
           ? encodeCursor(page.at(-1)!.membership.createdAt, page.at(-1)!.membership.id)
@@ -3638,18 +3645,45 @@ export async function updatePost(
     ))
   )
     return forbidden();
-  if (!(await authorCanChange(viewer, existing.schoolAccountId))) return forbidden();
+  // Only the author edits a post; only moderators pin it, as on main.
+  const changesContent =
+    input.title !== undefined ||
+    input.content !== undefined ||
+    input.category !== undefined ||
+    input.mediaIds !== undefined ||
+    input.gifUrls !== undefined;
+  const changesPin = input.pinned !== undefined && input.pinned !== existing.pinned;
+  if (
+    (changesContent || !changesPin) &&
+    !(await authorCanChange(viewer, existing.schoolAccountId))
+  )
+    return forbidden();
+  if (
+    changesPin &&
+    !(await canModerateCommunity(
+      db,
+      school.schoolId,
+      existing.communityId,
+      viewer,
+      existing.spaceId,
+    ))
+  )
+    return forbidden();
   const now = clock.now();
   const next = {
     title: input.title?.trim() ?? existing.title,
     content: input.content ?? existing.content,
-    category: input.category?.trim() || existing.category,
+    // A space post's category is its space's name and doesn't change.
+    category: existing.spaceId
+      ? existing.category
+      : input.category?.trim() || existing.category,
     pinned: input.pinned ?? existing.pinned,
     gifUrls:
       input.gifUrls === undefined
         ? communityGifUrls(existing.gifUrls)
         : communityGifUrls(input.gifUrls),
-    updatedAt: now,
+    // Pinning isn't an edit, so the post keeps its date.
+    updatedAt: changesContent ? now : existing.updatedAt,
   };
   const community = await db
     .select()
@@ -3663,7 +3697,10 @@ export async function updatePost(
     )
     .limit(1);
   if (!community[0]) return notFound();
-  if (!parseCategories(community[0].categories).includes(next.category)) {
+  if (
+    !existing.spaceId &&
+    !parseCategories(community[0].categories).includes(next.category)
+  ) {
     return {
       ok: false,
       error: createPlatformError("validation_failed", {

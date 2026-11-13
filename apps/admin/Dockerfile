@@ -21,6 +21,9 @@ RUN bun --bun run --filter @courselit/admin build
 
 FROM oven/bun:1.4.1-alpine AS runner
 WORKDIR /app
+# The commit the image is built from, shown on the hidden /about page.
+ARG COURSELIT_BUILD_SHA=""
+ENV COURSELIT_BUILD_SHA=$COURSELIT_BUILD_SHA
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0

@@ -68,6 +68,7 @@ type ProductCustomer = {
   subscription: CustomerSubscription | null;
   signedUpAt: string;
   lastActiveAt: string | null;
+  downloaded: boolean;
   progress: {
     completedLessons: number;
     totalLessons: number;
@@ -374,7 +375,7 @@ export function ProductCustomers({ productId }: { productId: string }) {
               <div className="grid grid-cols-[minmax(240px,2fr)_140px_minmax(180px,1.5fr)_140px_140px_140px_40px] gap-4 border-b px-5 py-3 text-xs font-semibold text-muted-foreground">
                 <span>Name</span>
                 <span>Status</span>
-                <span>Progress</span>
+                <span>{product?.kind === "download" ? "Downloaded" : "Progress"}</span>
                 <span>Signed up</span>
                 <span>Last active</span>
                 <span>Subscription</span>
@@ -406,6 +407,11 @@ export function ProductCustomers({ productId }: { productId: string }) {
                   <span className="w-fit rounded-full border px-2.5 py-1 text-xs capitalize">
                     {statusLabel(customer.membershipStatus)}
                   </span>
+                  {product?.kind === "download" ? (
+                    <span className="text-muted-foreground">
+                      {customer.downloaded ? "Yes" : "Not yet"}
+                    </span>
+                  ) : (
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                       <div
@@ -426,6 +432,7 @@ export function ProductCustomers({ productId }: { productId: string }) {
                       </button>
                     ) : null}
                   </div>
+                  )}
                   <span className="text-muted-foreground">{formatDate(customer.signedUpAt)}</span>
                   <span className="text-muted-foreground">{formatDate(customer.lastActiveAt)}</span>
                   <span

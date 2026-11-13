@@ -35,6 +35,8 @@ export const healthResponseSchema = z.object({
   status: z.literal("ok"),
   service: z.string(),
   time: z.string(),
+  /** The API's installed version (its package.json). */
+  version: z.string(),
 });
 
 export const readinessResponseSchema = z.object({
@@ -284,6 +286,8 @@ export const productCustomerSchema = z.object({
     totalLessons: z.number().int().nonnegative(),
     percentage: z.number().int().min(0).max(100),
   }),
+  /** Download products: whether the customer has downloaded the files. */
+  downloaded: z.boolean(),
 });
 export type ProductCustomer = z.infer<typeof productCustomerSchema>;
 
@@ -1100,6 +1104,9 @@ export const communityMembershipSchema = z.object({
   joiningReason: z.string(),
   rejectionReason: z.string().nullable(),
   paymentPlanId: z.string().nullable(),
+  /** Admin member list only: the provider subscription and how it's paid. */
+  subscriptionId: z.string().nullable().optional(),
+  subscriptionMethod: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -1727,6 +1734,57 @@ export const updateContactSegmentBodySchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   filter: contactFilterSetSchema.optional(),
 });
+
+export const contactTagSummarySchema = z.object({
+  tag: z.string(),
+  contactCount: z.number().int().nonnegative(),
+});
+export type ContactTagSummary = z.infer<typeof contactTagSummarySchema>;
+
+export const contactTagReferencesSchema = z.object({
+  tag: z.string(),
+  contactCount: z.number().int().nonnegative(),
+  segments: z.array(z.object({ segmentId: z.string(), name: z.string() })),
+  sequences: z.array(
+    z.object({
+      sequenceId: z.string(),
+      title: z.string(),
+      type: z.enum(["broadcast", "sequence"]),
+      status: z.string(),
+      usages: z.array(
+        z.enum(["filter", "exclude_filter", "trigger", "email_action"]),
+      ),
+    }),
+  ),
+  signupForms: z.array(z.object({ formId: z.string(), name: z.string() })),
+});
+export type ContactTagReferences = z.infer<typeof contactTagReferencesSchema>;
+
+export const renameContactTagBodySchema = z.object({
+  name: z.string().trim().min(1),
+});
+export type RenameContactTagBody = z.infer<typeof renameContactTagBodySchema>;
+
+export const renameContactTagResultSchema = z.object({
+  tag: z.string(),
+  previousTag: z.string(),
+  contactsUpdated: z.number().int().nonnegative(),
+  segmentsUpdated: z.number().int().nonnegative(),
+  sequencesUpdated: z.number().int().nonnegative(),
+  signupFormsUpdated: z.number().int().nonnegative(),
+});
+export type RenameContactTagResult = z.infer<
+  typeof renameContactTagResultSchema
+>;
+
+export const deleteContactTagResultSchema = z.object({
+  tag: z.string(),
+  contactsUpdated: z.number().int().nonnegative(),
+  references: contactTagReferencesSchema,
+});
+export type DeleteContactTagResult = z.infer<
+  typeof deleteContactTagResultSchema
+>;
 
 export const newsletterSubscribeBodySchema = z.object({
   email: z.string().trim().email(),
@@ -3282,6 +3340,55 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
+  listContactTags: {
+    method: "GET",
+    path: "/v1/contact-tags",
+    responses: {
+      200: z.object({ items: z.array(contactTagSummarySchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  getContactTagReferences: {
+    method: "GET",
+    path: "/v1/contact-tags/:tag/references",
+    pathParams: z.object({ tag: z.string() }),
+    responses: {
+      200: contactTagReferencesSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  renameContactTag: {
+    method: "PATCH",
+    path: "/v1/contact-tags/:tag",
+    pathParams: z.object({ tag: z.string() }),
+    body: renameContactTagBodySchema,
+    responses: {
+      200: renameContactTagResultSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  deleteContactTag: {
+    method: "DELETE",
+    path: "/v1/contact-tags/:tag",
+    pathParams: z.object({ tag: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: deleteContactTagResultSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
   getContactSegmentMembers: {
     method: "GET",
     path: "/v1/contact-segments/:segmentId/members",
@@ -4671,6 +4778,19 @@ export const contract = c.router({
       403: platformErrorSchema,
       404: platformErrorSchema,
       409: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  unpublishSchoolWebsiteBlog: {
+    method: "POST",
+    path: "/v1/school/website/blogs/:blogId/unpublish",
+    pathParams: z.object({ blogId: z.string().min(1) }),
+    body: c.noBody(),
+    responses: {
+      200: websiteBlogSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
       500: platformErrorSchema,
     },
   },

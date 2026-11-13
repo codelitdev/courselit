@@ -34,4 +34,10 @@
 - The description is lowercase and has no trailing period; keep the header within 100 characters.
 - A `commit-msg` hook (husky, installed by `bun install`) and the pull request CI run commitlint with `commitlint.config.js`.
 
+## Releases
+- The whole product has one version, kept in the root `package.json` and mirrored in `apps/api`, `apps/admin` and `apps/storefront` (the API reports it at `/health`; the admin's hidden `/about` page shows it). Internal packages stay at `0.0.0`.
+- release-please (`.github/workflows/release.yml`) keeps a release PR open on the branch it runs on (`platform-based-rewrite` now, `main` once merged, with no changes needed) that bumps the version from Conventional Commits and updates `CHANGELOG.md`. Merging it tags `vX.Y.Z` and publishes `codelit/courselit-api`, `-admin` and `-storefront` images with that version.
+- The rewrite continues main's version history (last `v0.74.5`) as pre-releases: `1.0.0-alpha.N` while features land, then beta, then rc, then `1.0.0`. Move to the next stage by changing `prerelease-type` in `release-please-config.json`. Pre-releases never tag `latest`.
+- Don't edit versions by hand.
+
 ## PR instructions

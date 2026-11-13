@@ -556,6 +556,35 @@ describe.serial("school website", () => {
       expect((await publicGet("/v1/public/site/blogs")).body).toMatchObject({
         total: 1,
       });
+
+      // Unpublishing takes the post off the site and keeps the writing as a
+      // draft, including edits made since publishing.
+      await admin("PATCH", `/v1/school/website/blogs/${blogId}`, { title: "Revised" });
+      const unpublished = await admin(
+        "POST",
+        `/v1/school/website/blogs/${blogId}/unpublish`,
+      );
+      expect(unpublished.status).toBe(200);
+      expect(unpublished.body).toMatchObject({
+        status: "draft",
+        draftTitle: "Revised",
+        publishedAt: null,
+      });
+      expect((await publicGet("/v1/public/site/blogs")).body).toEqual({
+        items: [],
+        total: 0,
+      });
+      expect((await publicGet("/v1/public/site/blogs/hello-world")).status).toBe(404);
+      // Unpublishing a draft is harmless, and publishing again restores it.
+      expect(
+        (await admin("POST", `/v1/school/website/blogs/${blogId}/unpublish`)).body,
+      ).toMatchObject({ status: "draft" });
+      expect(
+        (await admin("POST", `/v1/school/website/blogs/${blogId}/publish`)).body,
+      ).toMatchObject({ status: "published", title: "Revised" });
+      expect((await publicGet("/v1/public/site/blogs")).body).toMatchObject({
+        total: 1,
+      });
     } finally {
       await runtime.close();
     }

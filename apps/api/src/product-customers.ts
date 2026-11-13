@@ -59,7 +59,7 @@ export async function listProductCustomers(
   }
 
   const products = await db
-    .select({ id: schema.products.id })
+    .select({ id: schema.products.id, kind: schema.products.kind })
     .from(schema.products)
     .where(
       and(
@@ -168,6 +168,25 @@ export async function listProductCustomers(
     db,
     page.map(({ selected }) => selected),
   );
+  // A download counts once its link has been used, as on main.
+  const downloadedAccounts = new Set<string>();
+  if (product.kind === "download" && page.length > 0) {
+    const downloads = await db
+      .selectDistinct({ schoolAccountId: schema.downloadLinks.schoolAccountId })
+      .from(schema.downloadLinks)
+      .where(
+        and(
+          eq(schema.downloadLinks.schoolId, ctx.tenantId),
+          eq(schema.downloadLinks.productId, product.id),
+          eq(schema.downloadLinks.consumed, true),
+          inArray(
+            schema.downloadLinks.schoolAccountId,
+            page.map(({ account }) => account.id),
+          ),
+        ),
+      );
+    for (const row of downloads) downloadedAccounts.add(row.schoolAccountId);
+  }
 
   return {
     ok: true,
@@ -202,6 +221,7 @@ export async function listProductCustomers(
             percentage:
               totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100),
           },
+          downloaded: downloadedAccounts.has(account.id),
         };
       }),
     },
