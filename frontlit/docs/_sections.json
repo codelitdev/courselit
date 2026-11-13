@@ -47,59 +47,9 @@
       "order": 90
     },
     {
-      "folder": "legacy-getting-started",
-      "name": "Legacy: Getting started",
-      "order": 1010
-    },
-    {
-      "folder": "legacy-courses",
-      "name": "Legacy: Online courses",
-      "order": 1020
-    },
-    {
-      "folder": "legacy-downloads",
-      "name": "Legacy: Digital downloads",
-      "order": 1030
-    },
-    {
-      "folder": "legacy-communities",
-      "name": "Legacy: Communities",
-      "order": 1040
-    },
-    {
-      "folder": "legacy-email-marketing",
-      "name": "Legacy: Email marketing and automation",
-      "order": 1050
-    },
-    {
-      "folder": "legacy-website",
-      "name": "Legacy: Website",
-      "order": 1060
-    },
-    {
-      "folder": "legacy-blog",
-      "name": "Legacy: Blog",
-      "order": 1070
-    },
-    {
-      "folder": "legacy-school",
-      "name": "Legacy: School",
-      "order": 1080
-    },
-    {
-      "folder": "legacy-users",
-      "name": "Legacy: Users",
-      "order": 1090
-    },
-    {
-      "folder": "legacy-developers",
-      "name": "Legacy: Developers",
-      "order": 1100
-    },
-    {
-      "folder": "legacy-self-hosting",
-      "name": "Legacy: Self hosting",
-      "order": 1110
+      "folder": "legacy",
+      "name": "Legacy docs (v0.x)",
+      "order": 1000
     }
   ]
 }
