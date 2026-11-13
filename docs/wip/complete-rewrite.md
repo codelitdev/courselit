@@ -235,9 +235,12 @@ product, and the admin sign-in page showed developer notes.
     matched the wrong wording).
 - [ ] **21. The first navigation in the admin is slow.** Some pages took 20 to 30
   seconds. _(QA)_
-- [ ] **22. Publishing a lesson takes three steps:** open it, switch Publish on,
+- [x] **22. Publishing a lesson takes three steps:** open it, switch Publish on,
   then Update. Lessons default to Draft, and the list has no quick publish.
   _(QA)_
+  - Fixed by the product redesign: each lesson on the Content tab has a quick
+    Live/Draft switch, "Make all drafts live" publishes every draft at once,
+    and each product sets whether new lessons start live or as drafts.
 - [ ] **23. Community details need an explicit Save** at the bottom of the page.
   Navigating away loses edits with no warning. _(QA)_
 - [x] **24. The contact filters in the UI cover only email, tag, subscription and
