@@ -62,7 +62,7 @@ The form depends on your choice.
 
 Choose **Free** to publish the offer when your school goes live. If you choose **Paid**, the wizard does not take the price: it stays hidden from your site until you connect payments and add a payment plan from your dashboard.
 
-If you prefer to build in a chat with an AI assistant, this step also offers a way to connect one. See [Developers](/docs/developers).
+If you prefer to build in a chat with an AI assistant, this step also offers a way to connect one. See [Set up your first offer with an AI assistant](/docs/setup).
 
 </Step>
 
