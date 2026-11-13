@@ -2,6 +2,51 @@
   "version": 1,
   "sections": [
     {
+      "folder": "getting-started",
+      "name": "Getting started",
+      "order": 10
+    },
+    {
+      "folder": "products",
+      "name": "Courses and downloads",
+      "order": 20
+    },
+    {
+      "folder": "learners",
+      "name": "Learners",
+      "order": 30
+    },
+    {
+      "folder": "communities",
+      "name": "Communities",
+      "order": 40
+    },
+    {
+      "folder": "website",
+      "name": "Website and blog",
+      "order": 50
+    },
+    {
+      "folder": "marketing",
+      "name": "Marketing",
+      "order": 60
+    },
+    {
+      "folder": "settings",
+      "name": "School settings",
+      "order": 70
+    },
+    {
+      "folder": "developers",
+      "name": "Developers",
+      "order": 80
+    },
+    {
+      "folder": "self-hosting",
+      "name": "Self-hosting",
+      "order": 90
+    },
+    {
       "folder": "legacy-getting-started",
       "name": "Legacy: Getting started",
       "order": 1010
