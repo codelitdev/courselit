@@ -25,7 +25,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@types/bun": "1.4.1",
+    "husky": "9.1.7",
     "puppeteer": "^25.11.0"
   },
   "scripts": {
@@ -41,6 +44,8 @@
     "test": "bun run --workspaces --if-present test",
     "build": "bun run --workspaces --if-present build",
     "generate:check": "bun run --filter @courselit/api check:drift",
-    "migrate": "bun apps/api/scripts/migrate.mjs"
+    "migrate": "bun apps/api/scripts/migrate.mjs",
+    "prepare": "husky",
+    "commitlint": "commitlint"
   }
 }

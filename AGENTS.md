@@ -28,4 +28,10 @@
 ## Testing instructions
 - If we are removing a functionality, remember to clean up obsolete tests.
 
+## Commit messages
+- Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `<type>(<optional scope>): <description>`, e.g. `feat(storefront): show partly refunded purchases` or `fix(api): count refunds in revenue`.
+- Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`. Use the app or package as the scope (`api`, `admin`, `storefront`, `api-contract`, ...). Mark breaking changes with `!` after the type or scope, or a `BREAKING CHANGE:` footer.
+- The description is lowercase and has no trailing period; keep the header within 100 characters.
+- A `commit-msg` hook (husky, installed by `bun install`) and the pull request CI run commitlint with `commitlint.config.js`.
+
 ## PR instructions
