@@ -1,0 +1,173 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "The front office of your SaaS",
+        "title": "Build your website, publish content, and support users from one place",
+        "description": "FrontLit is the connected front office for your product: a visual site builder, one content system for articles, docs, and changelog, a shared inbox with AI answers, and email — API first and ready to grow with you.",
+        "contentAlignment": "center"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "features",
+        "layout": "grid",
+        "description": "One dashboard for the public site your customers see and the support tools that keep them.",
+        "items": [
+          {
+            "title": "Website",
+            "description": "Design and publish pages with a drag-and-drop editor, shared header and footer, and themes.",
+            "icon": "Globe"
+          },
+          {
+            "title": "Content",
+            "description": "Articles, documentation, and product updates share one content system and can feed your site.",
+            "icon": "Newspaper"
+          },
+          {
+            "title": "Support",
+            "description": "A help desk, shared inbox, and AI answers grounded in the docs you publish.",
+            "icon": "LifeBuoy"
+          },
+          {
+            "title": "Engage",
+            "description": "Grow your audience and send email without leaving FrontLit.",
+            "icon": "Mail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "title": "Explore the site",
+        "description": "These pages ship with every FrontLit site. Replace the copy, or keep them as the spine of your public presence.",
+        "columns": 2,
+        "items": [
+          {
+            "title": "Blog",
+            "description": "Publish articles and grow an audience from the same workspace you use to ship the rest of the site.",
+            "icon": "Newspaper",
+            "mediaAlignment": "top",
+            "buttonCaption": "Read articles",
+            "buttonAction": "/blog"
+          },
+          {
+            "title": "Docs",
+            "description": "Help-center articles your customers can browse — and that FrontLit can search when AI replies.",
+            "icon": "BookOpen",
+            "mediaAlignment": "top",
+            "buttonCaption": "Browse docs",
+            "buttonAction": "/docs"
+          },
+          {
+            "title": "Help desk",
+            "description": "A public support form that opens tickets in your shared inbox.",
+            "icon": "Headset",
+            "mediaAlignment": "top",
+            "buttonCaption": "Contact us",
+            "buttonAction": "/help"
+          },
+          {
+            "title": "Changelog",
+            "description": "Ship product updates your users can follow without leaving your site.",
+            "icon": "Sparkles",
+            "mediaAlignment": "top",
+            "buttonCaption": "See updates",
+            "buttonAction": "/changelog"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pricing",
+      "settings": {
+        "cssId": "pricing",
+        "layout": "grid",
+        "description": "Start free. Upgrade when you need a custom domain, help desk, or more room to grow.",
+        "tiers": [
+          {
+            "name": "Starter",
+            "price": "$0/mo",
+            "description": "For hobby sites and side projects.",
+            "features": [
+              "1 website",
+              "FrontLit branding",
+              "Community support"
+            ],
+            "buttonCaption": "Get started",
+            "buttonAction": "/help"
+          },
+          {
+            "name": "Pro",
+            "price": "$29/mo",
+            "description": "For growing businesses that need more.",
+            "features": [
+              "Custom domain",
+              "Blog, docs, and changelog",
+              "Email",
+              "Priority support"
+            ],
+            "buttonCaption": "Talk to us",
+            "buttonAction": "/help",
+            "highlighted": true
+          },
+          {
+            "name": "Business",
+            "price": "$79/mo",
+            "description": "For teams that need scale and control.",
+            "features": [
+              "Help desk and chatbot",
+              "Team seats",
+              "AI answers from your docs",
+              "Dedicated support"
+            ],
+            "buttonCaption": "Contact sales",
+            "buttonAction": "/help"
+          }
+        ]
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "layout": "list",
+        "items": [
+          {
+            "question": "What can I build with FrontLit?",
+            "answer": "A marketing website, articles, documentation, product updates, a help desk, and email — all from one connected dashboard."
+          },
+          {
+            "question": "Do I need to know how to code?",
+            "answer": "No. Every page is assembled from ready-made blocks, and you can customize copy, media, and layout without touching code."
+          },
+          {
+            "question": "Can I use my own domain?",
+            "answer": "Yes. Every FrontLit site can be connected to a custom domain from website settings."
+          },
+          {
+            "question": "How do customers reach support?",
+            "answer": "The /help page ships with a support form. Tickets land in your shared inbox, and you can turn on an AI agent that answers from your published docs."
+          },
+          {
+            "question": "Is there a free plan?",
+            "answer": "Yes. Start for free and upgrade as your audience grows."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "stacked",
+        "title": "Ready to launch your front office?",
+        "description": "Publish this site, write your first doc, and open the help desk — or ask us how FrontLit fits your product."
+      }
+    }
+  ]
+}
