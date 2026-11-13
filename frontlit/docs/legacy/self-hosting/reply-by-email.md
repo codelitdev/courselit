@@ -49,13 +49,13 @@ Amazon SES is a first-class option and is the recommended route for an AWS-hoste
 2. Create an SNS topic for inbound notifications and set its ARN as `INBOUND_EMAIL_SES_TOPIC_ARN`.
 3. Configure the topic to use **SNS SignatureVersion 2**. CourseLit requires the SHA-256 signature version and rejects SNS's legacy SignatureVersion 1 default. The SNS topic console does not expose this setting, so run the following in AWS CloudShell or with the AWS CLI (replace the placeholders):
 
-   ```bash
-   aws sns set-topic-attributes \
-     --region <aws-region> \
-     --topic-arn arn:aws:sns:<aws-region>:<aws-account-id>:<topic-name> \
-     --attribute-name SignatureVersion \
-     --attribute-value 2
-   ```
+    ```bash
+    aws sns set-topic-attributes \
+      --region <aws-region> \
+      --topic-arn arn:aws:sns:<aws-region>:<aws-account-id>:<topic-name> \
+      --attribute-name SignatureVersion \
+      --attribute-value 2
+    ```
 
     See [AWS's signature-version guidance](https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message-configure-message-signature.html).
 
