@@ -20,7 +20,7 @@ You don't have to do anything.
 
 ## Set up a paid download
 
-**In order to get paid for your product, you first need to [setup payments](). Currently, CourseLit offers [Stripe](https://stripe.com) integration.**
+**In order to get paid for your product, you first need to [setup payments](/docs/legacy/schools/set-up-payments). Currently, CourseLit offers [Stripe](https://stripe.com) integration.**
 
 ### Steps
 
