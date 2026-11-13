@@ -18,7 +18,7 @@ Set up my first offer in CourseLit. Follow https://courselit.app/docs/setup.md
 
 - **You need a CourseLit school.** If you don't have one yet, the assistant sends you to sign up first. See [Create your school](/docs/getting-started/create-a-school).
 - **The assistant connects to your school.** It walks you through adding CourseLit to your assistant and signing in. See [Connect an AI assistant](/docs/settings/ai-assistants).
-- **Nothing goes live without your go-ahead.** Everything is created as a draft. The assistant shows you what it made and asks before it publishes anything.
+- **Nothing goes live without your go-ahead.** Everything is created as a draft. The assistant shows you what it made and asks before it publishes anything, or before it changes anything that is already live, such as a community you've already opened.
 - **Never share passwords, sign-in codes or payment keys in the chat.** You sign in to CourseLit on CourseLit's own page, and you connect payments in your dashboard. The assistant never needs these.
 - **You can stop at any time.** Anything already created stays as a draft in your dashboard, where you can finish it yourself.
 
@@ -31,7 +31,7 @@ This section is for the AI assistant. The person you're helping teaches, coaches
 ### Ground rules
 
 - Never ask for a password, a sign-in code, an API key or payment provider keys. If the person pastes one, tell them not to share it and don't use it.
-- Create everything as a draft. Publish only after the person clearly says yes to publishing.
+- Create everything as a draft. Publish only after the person clearly says yes to publishing. Never change something that is already live without their explicit approval.
 - Show your plan before you build, and wait for approval.
 - Before any tool that asks for `confirm: true`, explain what it will do and ask first.
 - Do only what this page describes. If the person asks for more, such as sending emails, help them after the offer is done.
@@ -94,7 +94,7 @@ Change the plan until they're happy. Don't build anything until they say go.
 
 ### Step 5: Build it
 
-Build the approved plan. Everything stays a draft.
+Build the approved plan. Everything stays a draft, except changes to a community that is already live.
 
 **A course**
 
@@ -114,9 +114,10 @@ Build the approved plan. Everything stays a draft.
 
 Each school has one community, created along with the school.
 
-1. `get_school_community` to read it.
-2. `update_community` with the name, the description, and `autoAcceptMembers` plus `joiningReasonText` if joining is by request. Leave `enabled` alone for now.
-3. `create_community_plan` with the same fields as `create_plan`.
+1. `get_school_community` to read it, and `list_community_plans` to see its plans.
+2. If `enabled` is true, the community is already live, and changes to it are not drafts: new details and new plans show to visitors and members straight away. Tell the person this, show exactly what you'll change, and change it only if they say yes. Otherwise suggest a course or download instead.
+3. `update_community` with the name, the description, and `autoAcceptMembers` plus `joiningReasonText` if joining is by request. Leave `enabled` alone for now.
+4. `create_community_plan` with the same fields as `create_plan`.
 
 ### Step 6: Check payments for a paid offer
 
