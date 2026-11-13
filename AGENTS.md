@@ -14,7 +14,7 @@
 
 ## Documentation tips
 
-- We manage the product's documentation in `apps/docs`.
+- We manage the product's documentation in `frontlit/docs` as Markdown published by FrontLit (see the `frontlit-docs` skill from `codelitdev/frontlit-skills`). Docs for the current product live at `/docs/...`; the docs of the pre-rewrite (v0.x) product, formerly `apps/docs` on `main`, live under `frontlit/docs/legacy/` at `/docs/legacy/...`.
 - When working on a new feature or changing an existing feature significantly, see if documentation should be updated.
 - No need to update documentation while doing bug fixes and refactors.
 - If a browser tool is available, see if you can automatically take relevant screenshots and include them in the documentation.
