@@ -154,7 +154,7 @@ If you want to stop using the currently selected payment platform, go to `Settin
 
 ## Looking for developer docs?
 
-We have created detailed documentation to help you understand the payment flow in CourseLit. Check it out [here]().
+We have created detailed documentation to help you understand the payment flow in CourseLit.
 
 ## Stuck somewhere?
 
