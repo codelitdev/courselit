@@ -1,0 +1,51 @@
+{
+  "$schema": "https://frontlit.app/schema/site.v1.json",
+  "header": {
+    "links": [
+      {
+        "label": "Docs",
+        "href": "/docs"
+      },
+      {
+        "label": "Blog",
+        "href": "/blog"
+      }
+    ],
+    "ctaLabel": "Contact us"
+  },
+  "footer": {
+    "columns": [
+      {
+        "title": "Resources",
+        "links": [
+          {
+            "label": "Blog",
+            "href": "/blog"
+          },
+          {
+            "label": "Help center",
+            "href": "/help"
+          },
+          {
+            "label": "Docs",
+            "href": "/docs"
+          }
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          {
+            "label": "Terms of use",
+            "href": "/terms"
+          },
+          {
+            "label": "Privacy policy",
+            "href": "/privacy"
+          }
+        ]
+      }
+    ],
+    "copyrightText": "© CourseLit Rewrite. All rights reserved."
+  }
+}
