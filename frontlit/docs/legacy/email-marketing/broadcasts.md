@@ -29,14 +29,14 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here, you w
 
 3. Let's get acquainted with the interface. In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
 
-    -   1. **User Filters**: To select the users.
-    -   2. **Total Selected Users**: The total number of selected users as per the applied filters.
-    -   3. **Subject**: The email subject goes here.
-    -   4. **Email Preview**: Live email preview.
+    1. **User Filters**: To select the users.
+    2. **Total Selected Users**: The total number of selected users as per the applied filters.
+    3. **Subject**: The email subject goes here.
+    4. **Email Preview**: Live email preview.
             > During the preview, variables will be displayed as placeholders. The actual values will be replaced when sending the actual email.
-    -   5. **Mail Edit Button**: Opens the mail for editing.
-    -   6. **Send Button**: Sends the email immediately.
-    -   7. **Schedule Button**: Lets you schedule an email for later.
+    5. **Mail Edit Button**: Opens the mail for editing.
+    6. **Send Button**: Sends the email immediately.
+    7. **Schedule Button**: Lets you schedule an email for later.
 
     ![Broadcast Compose](https://docs.courselit.app/assets/emails/compose-broadcast.png)
 
@@ -48,10 +48,10 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here, you w
 
     We have annotated the screenshot of the CourseLit email editor:
 
-    -   1. **Variables**: You can use these variables in your emails. These variables will be replaced with the actual data when sending the email.
-    -   2. **Email Preview**: The live preview of the email.
-    -   3. **Settings Pane**: The settings pane for the email and the selected block.
-    -   4. **Exit Button**: The email editor exit button.
+    1. **Variables**: You can use these variables in your emails. These variables will be replaced with the actual data when sending the email.
+    2. **Email Preview**: The live preview of the email.
+    3. **Settings Pane**: The settings pane for the email and the selected block.
+    4. **Exit Button**: The email editor exit button.
 
 5. If you are not yet ready to send the email or schedule it, you can simply go back to the Broadcasts hub by clicking on the `Broadcasts` breadcrumb (located at the top of the page).
 

@@ -40,20 +40,20 @@ In the following image, we have marked all the sections. To see the description 
 
 ![Sequence Compose](https://docs.courselit.app/assets/emails/compose-sequence.png)
 
--   1. **Sequence Name**: The internal name of the sequence.
--   2. **From**: The sender's name that is displayed in the emails sent.
--   3. **Entrance Condition**: The condition that triggers this sequence for a user. You can pick from the following conditions:
+1. **Sequence Name**: The internal name of the sequence.
+2. **From**: The sender's name that is displayed in the emails sent.
+3. **Entrance Condition**: The condition that triggers this sequence for a user. You can pick from the following conditions:
     - `Tag added`
     - `Tag removed`
     - `Product purchased`
     - `Subscriber added`
     - `Community joined`
     - `Community left`
--   4. **Entrance Condition Data**: The exact tag or product that triggers the sequence. This field is only relevant in the context of the `Entrance Condition` field.
--   5. **Save**: A button to save your changes to the sequence.
--   6. **Start/Pause**: A button to start or pause the sequence. Once paused, the sequence won't be triggered for subsequent events in the system.
--   7. **Email Row**: Shows an overview of one of the emails in the sequence.
--   8. **New Email Button**: A button to add a new email to the sequence.
+4. **Entrance Condition Data**: The exact tag or product that triggers the sequence. This field is only relevant in the context of the `Entrance Condition` field.
+5. **Save**: A button to save your changes to the sequence.
+6. **Start/Pause**: A button to start or pause the sequence. Once paused, the sequence won't be triggered for subsequent events in the system.
+7. **Email Row**: Shows an overview of one of the emails in the sequence.
+8. **New Email Button**: A button to add a new email to the sequence.
 
 4. Fill in the details for `Sequence Name`, `From`, `Entrance Condition`, and `Entrance Condition Data` (if applicable), then hit `Save`.
 
@@ -65,10 +65,10 @@ In the following image, we have marked all the sections. To see the description 
 
     ![Sequence email row](https://docs.courselit.app/assets/emails/compose-sequence-email-row.jpeg)
 
-    -   1. **Delay Since the Last Sent Email**: This shows the time to wait (in days) since the last email before dispatching this email.
-    -   2. **Subject**: The subject of the email.
-    -   3. **Published**: The status of the email. Only published emails are sent to users.
-    -   4. **Context Menu**: Contains options like `Delete`, etc.
+    1. **Delay Since the Last Sent Email**: This shows the time to wait (in days) since the last email before dispatching this email.
+    2. **Subject**: The subject of the email.
+    3. **Published**: The status of the email. Only published emails are sent to users.
+    4. **Context Menu**: Contains options like `Delete`, etc.
 
     > The default email has `0 days` as the delay, which means the email will be sent immediately after the user enters the sequence, as it is the first email in the sequence.
 
@@ -76,13 +76,13 @@ In the following image, we have marked all the sections. To see the description 
 
 8. Let's get acquainted with the email compose interface:
 
-    -   1. **Delay**: The delay (in days) between this email and the previous one.
-    -   2. **Subject**: The email's subject.
-    -   3. **Email Preview**: Live email preview.
+    1. **Delay**: The delay (in days) between this email and the previous one.
+    2. **Subject**: The email's subject.
+    3. **Email Preview**: Live email preview.
             > During the preview, variables will be displayed as placeholders. The actual values will be replaced when sending the actual email.
-    -   4. **Status**: Only `Published` emails are sent to users. If you want to skip any email without deleting it from the sequence, just switch its status to `Unpublished`.
-    -   5. **Mail Edit Button**: Opens the mail for editing.
-    -   6. **Save Button**: A button to save changes to the email's details like subject, status, etc.
+    4. **Status**: Only `Published` emails are sent to users. If you want to skip any email without deleting it from the sequence, just switch its status to `Unpublished`.
+    5. **Mail Edit Button**: Opens the mail for editing.
+    6. **Save Button**: A button to save changes to the email's details like subject, status, etc.
 
     ![Sequence's Email Compose](https://docs.courselit.app/assets/emails/compose-sequence-email.png)
 
@@ -95,10 +95,10 @@ In the following image, we have marked all the sections. To see the description 
 
     We have annotated the screenshot of the CourseLit email editor:
 
-    -   1. **Variables**: You can use these variables in your emails. These variables will be replaced with the actual data when sending the email.
-    -   2. **Email Preview**: The live preview of the email.
-    -   3. **Settings Pane**: The settings pane for the email and the selected block.
-    -   4. **Exit Button**: The email editor exit button.
+    1. **Variables**: You can use these variables in your emails. These variables will be replaced with the actual data when sending the email.
+    2. **Email Preview**: The live preview of the email.
+    3. **Settings Pane**: The settings pane for the email and the selected block.
+    4. **Exit Button**: The email editor exit button.
 
 11. To go back to the sequence settings, click on the `Compose sequence` breadcrumb as shown below.
 
