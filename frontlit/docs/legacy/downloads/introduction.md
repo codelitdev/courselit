@@ -34,7 +34,7 @@ We have got you covered. Track how many copies you have sold, how many people ha
 
 ### Start building yours!
 
-[Create your digital download under 5 minutes](/docs/legacy/courses/create)
+[Create your digital download under 5 minutes](/docs/legacy/downloads/create)
 
 ## Stuck somewhere?
 
