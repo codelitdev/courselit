@@ -234,6 +234,8 @@ export const storefrontPayments = pgTable(
       .notNull(),
     currency: text("currency").notNull(),
     amountMinor: integer("amount_minor").notNull(),
+    /** Money given back so far; a partial refund keeps the payment succeeded. */
+    refundedAmountMinor: integer("refunded_amount_minor").notNull().default(0),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),

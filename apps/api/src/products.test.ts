@@ -259,7 +259,8 @@ describe.serial("product listing", () => {
       updatedAt: clock.now(),
     });
 
-    // One paid sale and one free sign-up: only the money counts as sales.
+    // One paid sale, partly refunded, and one free sign-up: only the money
+    // kept counts as sales.
     const [note] = await runtime.db
       .select({ id: schema.products.id })
       .from(schema.products)
@@ -314,6 +315,7 @@ describe.serial("product listing", () => {
         status: "succeeded",
         currency: "USD",
         amountMinor,
+        refundedAmountMinor: amountMinor ? 250 : 0,
         occurredAt: clock.now(),
         createdAt: clock.now(),
         updatedAt: clock.now(),
@@ -375,7 +377,7 @@ describe.serial("product listing", () => {
     expect(courseBody.items[0]).toMatchObject({
       id: world.noteA.publicId,
       currency: "USD",
-      salesAmountMinor: 1250,
+      salesAmountMinor: 1000,
       customers: 1,
     });
 

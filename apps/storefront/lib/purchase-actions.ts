@@ -27,3 +27,11 @@ export function manageSubscriptionLink(
     label: "Manage subscription",
   };
 }
+
+/** Paid, with part of the money given back; access is unchanged. */
+export function partlyRefunded(purchase: {
+  status: PurchaseLike["status"];
+  refundedAmountMinor: number;
+}): boolean {
+  return purchase.status === "paid" && purchase.refundedAmountMinor > 0;
+}

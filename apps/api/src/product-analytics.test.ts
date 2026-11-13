@@ -268,6 +268,8 @@ describe.serial("product analytics", () => {
       status: "succeeded",
       currency: "INR",
       amountMinor: 1250,
+      // A partial refund lowers sales by what went back.
+      refundedAmountMinor: 250,
       occurredAt: eventDate,
       createdAt: eventDate,
       updatedAt: eventDate,
@@ -309,14 +311,14 @@ describe.serial("product analytics", () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       currency: "INR",
-      sales: { amountMinor: 1250, growth: 100 },
+      sales: { amountMinor: 1000, growth: 100 },
       customers: { count: 1, growth: 100 },
       completions: { count: 1, growth: 100 },
     });
     expect(
       (response.body as { sales: { points: Array<{ date: string; amountMinor: number }> } })
         .sales.points.find((point) => point.date === "2026-03-04"),
-    ).toEqual({ date: "2026-03-04", amountMinor: 1250 });
+    ).toEqual({ date: "2026-03-04", amountMinor: 1000 });
 
     await runtime.close();
   });

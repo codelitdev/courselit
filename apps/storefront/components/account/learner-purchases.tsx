@@ -12,7 +12,7 @@ import {
 } from "@/components/communities/learner-community";
 import { CourseLitLoading } from "@/components/course-lit-loader";
 import { LearnerShell } from "@/components/layout/learner-shell";
-import { manageSubscriptionLink } from "@/lib/purchase-actions";
+import { manageSubscriptionLink, partlyRefunded } from "@/lib/purchase-actions";
 import {
   LearnerBadge,
   LearnerButton,
@@ -69,8 +69,13 @@ function PurchaseCard({ purchase }: { purchase: Purchase }) {
           <LearnerText2 className="font-semibold">
             {formatAmount(purchase)}
           </LearnerText2>
+          {partlyRefunded(purchase) ? (
+            <LearnerText2 className="text-muted-foreground">
+              {formatPrice(purchase.refundedAmountMinor, purchase.currency)} refunded
+            </LearnerText2>
+          ) : null}
           <LearnerBadge variant={purchase.status === "paid" ? "secondary" : "outline"}>
-            {STATUS_LABELS[purchase.status]}
+            {partlyRefunded(purchase) ? "Partly refunded" : STATUS_LABELS[purchase.status]}
           </LearnerBadge>
           {purchase.status === "paid" ? (
             <LearnerButton asChild size="sm" variant="outline">

@@ -326,6 +326,8 @@ describe("admin and learner surfaces", () => {
     );
     expect(featuredImage).toContain("Select featured image");
     expect(featuredImage).toContain("@frontlit/media-uploader");
+    expect(featuredImage).toContain("allowUnsplash");
+    expect(featuredImage).not.toContain("allowUnsplash={false}");
     expect(certificates).toContain("Issue certificates");
     expect(certificates).toContain("<Switch");
     expect(certificates).toContain("Certificate preview");
@@ -548,6 +550,8 @@ describe("admin and learner surfaces", () => {
     expect(blogFeaturedImage).toContain('purpose: "blog_artwork"');
     expect(blogFeaturedImage).toContain("Remove image");
     expect(blogFeaturedImage).toContain("filterCourseLitMediaAdapters");
+    expect(blogFeaturedImage).toContain("allowUnsplash");
+    expect(blogFeaturedImage).not.toContain("allowUnsplash={false}");
     expect(blogEditor).toContain("h-full min-h-0");
     expect(blogEditor).toContain("beforeContent");
     expect(writingEditorShell).toContain("Document settings");

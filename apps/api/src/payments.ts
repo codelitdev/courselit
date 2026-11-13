@@ -390,6 +390,12 @@ class StripePayment implements PaymentProvider {
       rawAmount === null || !stripeCurrency
         ? rawAmount
         : fromStripeAmount(rawAmount, stripeCurrency);
+    // A charge reports everything refunded so far, across partial refunds.
+    const rawRefunded = integerValue(object.amount_refunded);
+    const stripeRefunded =
+      rawRefunded === null || !stripeCurrency
+        ? rawRefunded
+        : fromStripeAmount(rawRefunded, stripeCurrency);
     const data: Record<string, unknown> = {
       ...object,
       metadata: { ...subscriptionMetadata, ...objectMetadata },
@@ -399,6 +405,7 @@ class StripePayment implements PaymentProvider {
         stringValue(subscriptionDetails.subscription) ??
         (isSubscriptionObject ? stringValue(object.id) : null),
       amount: stripeAmount,
+      refunded_amount: stripeRefunded,
       currency: stripeCurrency,
       // A subscription-mode checkout session and the first invoice share the
       // invoice id; a charge carries it as `invoice` on older API versions.
@@ -446,7 +453,7 @@ function stripeEventType(eventName: string, object: Record<string, unknown>): st
       return "payment.failed";
     case "charge.refunded":
       // Partial refunds keep access; only a fully refunded charge revokes it.
-      return object.refunded === false ? "payment.ignored" : "payment.refunded";
+      return object.refunded === false ? "payment.partially_refunded" : "payment.refunded";
     case "charge.dispute.created":
       return "payment.disputed";
     case "customer.subscription.deleted":
@@ -613,6 +620,8 @@ class LemonSqueezyPayment implements PaymentProvider {
       subscription_id: idString(attributes.subscription_id) ?? (isSubscription ? resourceId : null),
       invoice_id: isSubscription ? null : resourceId,
       amount: integerValue(attributes.total) ?? integerValue(attributes.total_usd) ?? integerValue(attributes.unit_price),
+      // Everything refunded so far on the order or invoice.
+      refunded_amount: integerValue(attributes.refunded_amount),
       currency: stringValue(attributes.currency)?.toUpperCase(),
       current_period_end: isSubscription
         ? isoDate(attributes.renews_at) ?? isoDate(attributes.ends_at)
@@ -656,7 +665,9 @@ function lemonSqueezyEventType(name: string, attributes: Record<string, unknown>
       return "payment.failed";
     case "order_refunded":
     case "subscription_payment_refunded":
-      return attributes.status === "partial_refund" ? "payment.ignored" : "payment.refunded";
+      return attributes.status === "partial_refund"
+        ? "payment.partially_refunded"
+        : "payment.refunded";
     case "subscription_cancelled":
       return "subscription.cancel_scheduled";
     case "subscription_expired":
@@ -806,6 +817,8 @@ class RazorpayPayment implements PaymentProvider {
       checkout_id: stringValue(notes.courselit_checkout_id),
       invoice_id: stringValue(payment.invoice_id),
       amount: integerValue(payment.amount) ?? integerValue(source.amount),
+      // Everything refunded so far on the payment, across partial refunds.
+      refunded_amount: integerValue(payment.amount_refunded) ?? integerValue(refund.amount),
       currency: stringValue(payment.currency) ?? stringValue(source.currency),
       current_period_end: hasSubscription ? isoDate(subscription.current_end) : null,
       // `end_at` is the planned end after `total_count` charges, not a
@@ -842,12 +855,15 @@ function razorpayEventType(
     case "payment.failed":
       return "payment.failed";
     case "refund.processed": {
+      // Judge by the total refunded so far: a second partial refund can
+      // complete the first.
+      if (payment.refund_status === "full") return "payment.refunded";
       const paymentAmount = integerValue(payment.amount);
-      const refundAmount = integerValue(refund.amount);
-      const partial =
-        payment.refund_status === "partial" ||
-        (paymentAmount !== null && refundAmount !== null && refundAmount < paymentAmount);
-      return partial ? "payment.ignored" : "payment.refunded";
+      const refunded =
+        integerValue(payment.amount_refunded) ?? integerValue(refund.amount);
+      const full =
+        paymentAmount !== null && refunded !== null && refunded >= paymentAmount;
+      return full ? "payment.refunded" : "payment.partially_refunded";
     }
     case "payment.dispute.created":
       return "payment.disputed";

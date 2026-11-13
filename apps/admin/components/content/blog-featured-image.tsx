@@ -50,11 +50,11 @@ export function BlogFeaturedImage({
   const previewUrl = imageUrl(value);
 
   function selectImage(selected: SelectedImage<CourseLitMedia>) {
-    if (!selected.media) {
-      setError("Featured images must be stored in the media library.");
-      return;
-    }
-    if (!mediaMatchesAcceptedTypes(selected.media, BLOG_IMAGE_ACCEPTED_TYPES)) {
+    // Unsplash photos have no media record; they stay out of the library.
+    if (
+      selected.media &&
+      !mediaMatchesAcceptedTypes(selected.media, BLOG_IMAGE_ACCEPTED_TYPES)
+    ) {
       setError("Featured images must be JPEG, PNG, GIF, or WebP images.");
       return;
     }
@@ -95,7 +95,7 @@ export function BlogFeaturedImage({
         {...filteredAdapters}
         title="Select blog featured image"
         acceptedTypes={BLOG_IMAGE_ACCEPTED_TYPES}
-        allowUnsplash={false}
+        allowUnsplash
         metadataMode="alt"
         onSelect={selectImage}
       >

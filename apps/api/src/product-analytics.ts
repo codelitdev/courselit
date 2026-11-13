@@ -2,6 +2,7 @@ import { and, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createPlatformError, type Clock, type PlatformError } from "@codelitdev/platform";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
+import { netAmount } from "./revenue.js";
 import type { AppDb } from "./types.js";
 
 import { type AnalyticsRange, analyticsWindow } from "./analytics-range.js";
@@ -110,7 +111,11 @@ export async function getProductAnalytics(
   } = analyticsWindow(range, now, school[0]?.createdAt ?? now);
 
   const salesRows = await db
-    .select({ amountMinor: schema.storefrontPayments.amountMinor, date: schema.storefrontPayments.occurredAt })
+    .select({
+      amountMinor: schema.storefrontPayments.amountMinor,
+      refundedAmountMinor: schema.storefrontPayments.refundedAmountMinor,
+      date: schema.storefrontPayments.occurredAt,
+    })
     .from(schema.storefrontPayments)
     .innerJoin(
       schema.storefrontCheckoutAttempts,
@@ -216,7 +221,7 @@ export async function getProductAnalytics(
       range,
       currency,
       sales: salesMetric(
-        salesRows.map((row) => ({ date: row.date, value: row.amountMinor })),
+        salesRows.map((row) => ({ date: row.date, value: netAmount(row) })),
         currentPeriodStart,
         previousStart,
         pointCount,

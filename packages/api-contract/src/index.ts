@@ -149,6 +149,8 @@ export const learnerPurchaseSchema = z.object({
   planName: z.string(),
   planKind: z.enum(["free", "one_time", "subscription", "installment"]),
   amountMinor: z.number().int().nonnegative(),
+  /** Money given back so far; a partly refunded purchase stays paid. */
+  refundedAmountMinor: z.number().int().nonnegative(),
   currency: z.string(),
   status: z.enum(["paid", "refunded", "disputed", "failed"]),
   purchasedAt: z.string(),
@@ -554,6 +556,8 @@ export const paymentWebhookStatusSchema = z.object({
 });
 export const schoolPaymentSettingsSchema = z.object({
   provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]).nullable(),
+  /** The school has taken payments, so its currency can no longer change. */
+  currencyLocked: z.boolean(),
   stripe: z.object({
     publishableKey: z.string(),
     secretConfigured: z.boolean(),
@@ -4708,6 +4712,7 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      409: platformErrorSchema,
     },
   },
   listSchoolHosts: {

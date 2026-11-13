@@ -25,6 +25,7 @@ import {
   type PaymentProvider,
   type PaymentWebhookScope,
 } from "./payments.js";
+import { nextRefundedAmount } from "./revenue.js";
 import { amountMinorForPlan } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
@@ -1313,6 +1314,7 @@ export async function processCommunityPaymentEvent(
                   : ("one_time" as const),
             status: "succeeded" as const,
             currency,
+            refundedAmountMinor: 0,
             amountMinor: amount,
             occurredAt: new Date(
               stringValue(data.created_at ?? data.timestamp) ?? now.toISOString(),
@@ -1504,6 +1506,18 @@ export async function processCommunityPaymentEvent(
       return "processed";
     }
   }
+  if (eventType === "payment.partially_refunded") {
+    // Some money went back but the member keeps access.
+    const payment = await findRefundedCommunityPayment(db, data, scope);
+    if (!payment) return eventCheckout ? "ignored" : null;
+    const refunded = nextRefundedAmount(payment, integerValue(data.refunded_amount));
+    if (refunded === null) return "processed";
+    await db
+      .update(schema.communityPayments)
+      .set({ refundedAmountMinor: refunded, updatedAt: clock.now() })
+      .where(eq(schema.communityPayments.id, payment.id));
+    return "processed";
+  }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
     const payment = await findRefundedCommunityPayment(db, data, scope);
     if (!payment) return eventCheckout ? "ignored" : null;
@@ -1540,7 +1554,11 @@ export async function processCommunityPaymentEvent(
       }
       await tx
         .update(schema.communityPayments)
-        .set({ status, updatedAt: now })
+        .set({
+          status,
+          ...(status === "refunded" ? { refundedAmountMinor: payment.amountMinor } : {}),
+          updatedAt: now,
+        })
         .where(eq(schema.communityPayments.id, payment.id));
       await tx
         .update(schema.communityInvoices)

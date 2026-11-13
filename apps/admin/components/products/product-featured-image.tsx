@@ -47,11 +47,11 @@ export function ProductFeaturedImage({
   );
 
   function selectImage(selected: SelectedImage<CourseLitMedia>) {
-    if (!selected.media) {
-      setError("Featured images must be stored in the media library.");
-      return;
-    }
-    if (!mediaMatchesAcceptedTypes(selected.media, PRODUCT_IMAGE_ACCEPTED_TYPES)) {
+    // Unsplash photos have no media record; they stay out of the library.
+    if (
+      selected.media &&
+      !mediaMatchesAcceptedTypes(selected.media, PRODUCT_IMAGE_ACCEPTED_TYPES)
+    ) {
       setError("Featured images must be JPEG, PNG, GIF, or WebP images.");
       return;
     }
@@ -112,7 +112,7 @@ export function ProductFeaturedImage({
             {...filteredAdapters}
             title="Select featured image"
             acceptedTypes={PRODUCT_IMAGE_ACCEPTED_TYPES}
-            allowUnsplash={false}
+            allowUnsplash
             metadataMode="alt"
             onSelect={selectImage}
           >

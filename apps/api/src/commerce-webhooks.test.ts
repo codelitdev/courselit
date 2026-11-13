@@ -891,7 +891,7 @@ describe.serial("payment webhooks: Stripe products", () => {
     await env.runtime.close();
   });
 
-  it("refunds a renewal charge and ignores partial refunds", async () => {
+  it("refunds a renewal charge and records partial refunds", async () => {
     const env = await setup("stripe");
     const sale = await buyProduct(env, "subscription");
     await env.deliver(
@@ -924,7 +924,27 @@ describe.serial("payment webhooks: Stripe products", () => {
         }),
       ),
     );
-    expect((await productState(env, sale.productId)).membership?.status).toBe("active");
+    let partial = await productState(env, sale.productId);
+    expect(partial.membership?.status).toBe("active");
+    expect(
+      partial.payments.find((payment) => payment.providerPaymentId === "pi_rr2"),
+    ).toMatchObject({ status: "succeeded", refundedAmountMinor: 200 });
+    // An older event arriving late never lowers the refunded total.
+    expectProcessed(
+      await env.deliver({
+        ...stripeEvent("charge.refunded", {
+          ...stripeCharge({ paymentIntent: "pi_rr2", invoice: "in_rr2", amount: 1000 }),
+          amount_refunded: 100,
+          refunded: false,
+        }),
+        id: "evt_partial_late",
+      }),
+    );
+    partial = await productState(env, sale.productId);
+    expect(
+      partial.payments.find((payment) => payment.providerPaymentId === "pi_rr2")
+        ?.refundedAmountMinor,
+    ).toBe(200);
     expectProcessed(
       await env.deliver(
         stripeEvent(
@@ -938,6 +958,7 @@ describe.serial("payment webhooks: Stripe products", () => {
       (payment) => payment.providerPaymentId === "pi_rr2",
     );
     expect(renewal?.status).toBe("refunded");
+    expect(renewal?.refundedAmountMinor).toBe(AMOUNTS.subscription);
     expect(state.membership?.status).toBe("expired");
     await env.runtime.close();
   });
@@ -1114,6 +1135,27 @@ describe.serial("payment webhooks: Lemon Squeezy products", () => {
     let state = await productState(env, sale.productId);
     expect(state.payments).toHaveLength(1);
     expect(state.paidInvoices).toHaveLength(1);
+    expect(state.membership?.status).toBe("active");
+    expectProcessed(
+      await env.deliver(
+        lemonEvent("order_refunded", sale.metadata, {
+          type: "orders",
+          id: "1001",
+          attributes: {
+            status: "partial_refund",
+            total: AMOUNTS.one_time,
+            refunded_amount: 500,
+            currency: "USD",
+            refunded: false,
+          },
+        }),
+      ),
+    );
+    state = await productState(env, sale.productId);
+    expect(state.payments[0]).toMatchObject({
+      status: "succeeded",
+      refundedAmountMinor: 500,
+    });
     expect(state.membership?.status).toBe("active");
     expectProcessed(
       await env.deliver(
@@ -1506,11 +1548,40 @@ describe.serial("payment webhooks: Razorpay products", () => {
         event: "refund.processed",
         payload: {
           refund: {
+            entity: { id: "rfnd_0", entity: "refund", payment_id: "pay_s1", amount: 300 },
+          },
+          payment: {
+            entity: {
+              id: "pay_s1",
+              entity: "payment",
+              amount: AMOUNTS.subscription,
+              amount_refunded: 300,
+              currency: "USD",
+              refund_status: "partial",
+            },
+          },
+        },
+      }),
+    );
+    state = await productState(env, sale.productId);
+    expect(
+      state.payments.find((payment) => payment.providerPaymentId === "pay_s1"),
+    ).toMatchObject({ status: "succeeded", refundedAmountMinor: 300 });
+    expect(state.membership?.status).toBe("active");
+
+    // The second refund returns the rest: the payment is now fully refunded
+    // even though this refund alone is smaller than the payment.
+    expectProcessed(
+      await env.deliver({
+        entity: "event",
+        event: "refund.processed",
+        payload: {
+          refund: {
             entity: {
               id: "rfnd_1",
               entity: "refund",
               payment_id: "pay_s1",
-              amount: AMOUNTS.subscription,
+              amount: AMOUNTS.subscription - 300,
             },
           },
           payment: {
@@ -1518,8 +1589,9 @@ describe.serial("payment webhooks: Razorpay products", () => {
               id: "pay_s1",
               entity: "payment",
               amount: AMOUNTS.subscription,
+              amount_refunded: AMOUNTS.subscription,
               currency: "USD",
-              refund_status: "full",
+              refund_status: "partial",
             },
           },
         },
@@ -1645,6 +1717,22 @@ describe.serial("payment webhooks: community checkouts", () => {
     state = await communityState(env, join);
     expect(state.payments).toHaveLength(2);
     expect(state.paidInvoices).toHaveLength(2);
+
+    // A partial refund of the renewal keeps the membership.
+    expectProcessed(
+      await env.deliver(
+        stripeEvent("charge.refunded", {
+          ...stripeCharge({ paymentIntent: "pi_c2", invoice: "in_c2", amount: AMOUNTS.subscription }),
+          amount_refunded: 400,
+          refunded: false,
+        }),
+      ),
+    );
+    state = await communityState(env, join);
+    expect(
+      state.payments.find((payment) => payment.providerPaymentId === "pi_c2"),
+    ).toMatchObject({ status: "succeeded", refundedAmountMinor: 400 });
+    expect(state.membership?.status).toBe("active");
 
     expectProcessed(
       await env.deliver(

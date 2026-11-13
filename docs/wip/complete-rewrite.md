@@ -253,17 +253,16 @@ product, and the admin sign-in page showed developer notes.
     team changes. Also fixed: the broadcast recipient count was empty for any
     filter. Still open: product access and community membership changes don't
     re-sync the contact, so those filters go stale until the learner signs in.
-- [ ] **25. The product Visibility switch's helper text** stays "Only accessible
+- [x] **25. The product Visibility switch's helper text** stays "Only accessible
   via direct link" whichever way it is set. _(QA)_
-- [ ] **26. The creator isn't signed in on the storefront** and must sign in
-  separately as a learner to join their own community. Confirm first: the two
-  test tabs may not have shared cookies. _(QA)_
-- [ ] **27. There is no testimonials or social-proof block** in the page
+  - Fixed by the product redesign: Visibility is now a choice between "Anyone"
+    and "Only people with the link", each with its own description.
+- [ ] **26. There is no testimonials or social-proof block** in the page
   builder. _(QA)_
 
 ## 4. Security hardening
 
-- [ ] **28. Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high):
+- [ ] **27. Move to zod 4.** Zod 3 has no fix for GHSA-mrhx-c7xc-m3w5 (high):
   validating an oversized constrained collection can exhaust memory.
   - The API, storefront and `api-contract` pin zod 3.25.76.
   - So do ts-rest, the patched `@anatine/zod-openapi` and our `@codelitdev/*`
@@ -274,104 +273,104 @@ product, and the admin sign-in page showed developer notes.
 
 ## 5. Missing compared with `main`
 
-- [ ] **29. Confirm the two changes made on purpose.**
+- [ ] **28. Confirm the two changes made on purpose.**
   - One community per school instead of many, with no public `/communities`
     list (`apps/api/docs/one-community-per-school.md`).
   - Course discussions are one community space per course, not one per lesson.
 
   _(Parity)_
-- [ ] **30. Pinning community posts.** The API supports it and the feed shows a
+- [ ] **29. Pinning community posts.** The API supports it and the feed shows a
   "Pinned" badge, but no screen sets it. _(Parity)_
-- [ ] **31. Unpublishing a blog post.** There is no endpoint or button.
+- [ ] **30. Unpublishing a blog post.** There is no endpoint or button.
   _(Parity)_
-- [ ] **32. A tag management page:** counts, delete a tag, untag everyone.
+- [ ] **31. A tag management page:** counts, delete a tag, untag everyone.
   _(Parity)_
-- [ ] **33. Reply by email** to discussions and community posts. See
+- [ ] **32. Reply by email** to discussions and community posts. See
   `docs/wip/community-replies-from-email.md`. _(Parity)_
-- [ ] **34. Per-school Google login** with the school's own client ID and secret,
+- [ ] **33. Per-school Google login** with the school's own client ID and secret,
   and per-school toggles for login methods. Google login is now platform-wide,
   set by env vars. _(Parity)_
-- [ ] **35. SAML SSO login.** _(Parity)_
-- [ ] **36. Editing a comment.** It exists in the API only. _(Parity)_
-- [ ] **37. A share button on community posts.** _(Parity)_
-- [ ] **38. A "Downloaded" column for download products.** _(Parity)_
-- [x] **39. The list of contacts in a sequence.** Only the count is shown.
+- [ ] **34. SAML SSO login.** _(Parity)_
+- [ ] **35. Editing a comment.** It exists in the API only. _(Parity)_
+- [ ] **36. A share button on community posts.** _(Parity)_
+- [ ] **37. A "Downloaded" column for download products.** _(Parity)_
+- [x] **38. The list of contacts in a sequence.** Only the count is shown.
   _(Parity)_
   - Fixed 2026-11-12, checked locally. A sent broadcast or active sequence lists
     its subscribers a page at a time (name, email, subscribed).
-- [ ] **40. A "From" name for each sequence.** _(Parity)_
+- [ ] **39. A "From" name for each sequence.** _(Parity)_
   - Blocked on SendLit: its sequences have no sender field, so every send uses
     the team's From name. SendLit needs a nullable `from_name` on sequences,
     used when sending, before CourseLit can offer it.
-- [ ] **41. Subscription ID and payment method in the community member list.**
+- [ ] **40. Subscription ID and payment method in the community member list.**
   _(Parity)_
-- [ ] **42. Unsplash in page-builder blocks.** Today it is in the community image
+- [ ] **41. Unsplash in page-builder blocks.** Today it is in the community image
   and rich text only. _(Parity)_
-- [ ] **43. A version or about page.** _(Parity)_
+- [ ] **42. A version or about page.** _(Parity)_
 
 ## 6. Roadmap against competitors
 
-- [ ] **44. Discount codes.** Every competitor has them. Issue #839.
-- [ ] **45. Outbound webhooks and Zapier.** Without them creators can't connect
+- [ ] **43. Discount codes.** Every competitor has them. Issue #839.
+- [ ] **44. Outbound webhooks and Zapier.** Without them creators can't connect
   CourseLit to their other tools. Issue #843 (relates to #645 and #636).
-- [ ] **46. Getting members into the community.** Admins can already invite a
+- [ ] **45. Getting members into the community.** Admins can already invite a
   person by email onto a plan (the Invite button on Members). Still missing:
   - a shareable invite link;
   - CSV import;
   - member search on the Members tab.
-- [ ] **47. Community moderation tools:**
+- [ ] **46. Community moderation tools:**
   - bulk approve and reject;
   - mute or ban a member;
   - content rules and keyword filters;
   - moderator permissions for each space.
-- [ ] **48. Trials and coupons on community plans.** Standard in Kajabi and
+- [ ] **47. Trials and coupons on community plans.** Standard in Kajabi and
   Circle.
-- [ ] **49. Order bumps and upsells at checkout.** Bundles already exist, so this
+- [ ] **48. Order bumps and upsells at checkout.** Bundles already exist, so this
   is a short step. Issue #841 (relates to #426).
-- [ ] **50. Onboarding new community members.** Today there is a welcome banner.
+- [ ] **49. Onboarding new community members.** Today there is a welcome banner.
   Still missing:
   - a welcome post or onboarding checklist;
   - profile prompts;
   - automated welcome messages.
-- [ ] **51. Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
+- [ ] **50. Affiliate program.** A growth lever on Kajabi, Teachable and Podia.
   Issue #840.
-- [ ] **52. Importers from Teachable, Kajabi and Thinkific.** Switching cost is
+- [ ] **51. Importers from Teachable, Kajabi and Thinkific.** Switching cost is
   the main thing stopping creators from moving.
-- [ ] **53. Tax handling.** LemonSqueezy is the merchant of record, so it covers
+- [ ] **52. Tax handling.** LemonSqueezy is the merchant of record, so it covers
   this. Stripe and Razorpay schools are on their own.
-- [ ] **54. Live sessions:**
+- [ ] **53. Live sessions:**
   - events and a calendar, including a calendar space in the community;
   - coaching bookings;
   - webinars through Zoom or a link.
 
   This is Circle's and Kajabi's moat, and cohort courses depend on it. Issue
   #842 (relates to #390).
-- [ ] **55. Community analytics:** active members, posts per week, pending
+- [ ] **54. Community analytics:** active members, posts per week, pending
   requests over time, churn.
-- [ ] **56. Engagement tools:**
+- [ ] **55. Engagement tools:**
   - chat or DMs;
   - challenges;
   - gamification (points, levels, leaderboards);
   - polls;
   - digests.
-- [ ] **57. Multiple communities per school, and groups of spaces with access
-  set for each space.** Only if item 29 reverses the decision to have one
+- [ ] **56. Multiple communities per school, and groups of spaces with access
+  set for each space.** Only if item 28 reverses the decision to have one
   community per school.
-- [ ] **58. A member directory.**
-- [ ] **59. A native mobile app, or at least a PWA.**
-- [ ] **60. Funnels, and the automation layer** that joins email, access, coupons
+- [ ] **57. A member directory.**
+- [ ] **58. A native mobile app, or at least a PWA.**
+- [ ] **59. Funnels, and the automation layer** that joins email, access, coupons
   and affiliates.
-- [ ] **61. AI drafting of courses and copy.**
-- [ ] **62. Podcasts.**
+- [ ] **60. AI drafting of courses and copy.**
+- [ ] **61. Podcasts.**
 
 ## 7. Maintenance
 
-- [ ] **63. minimatch (moderate) and deepmerge (low).** Both come in only through
+- [ ] **62. minimatch (moderate) and deepmerge (low).** Both come in only through
   the `shadcn` CLI, a dev tool. They clear when shadcn updates its dependencies.
   _(Audit)_
-- [ ] **64. Correct the parity ledger.**
+- [ ] **63. Correct the parity ledger.**
   `docs/platform-rewrite-parity-ledger.md` (COM-002) says the admin has pin and
-  unpin controls. It doesn't; see item 30.
+  unpin controls. It doesn't; see item 29.
 
 ## Done
 

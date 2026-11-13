@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { manageSubscriptionLink } from "./purchase-actions";
+import { manageSubscriptionLink, partlyRefunded } from "./purchase-actions";
 
 const purchase = {
   resourceType: "product" as const,
@@ -27,5 +27,13 @@ describe("manageSubscriptionLink", () => {
     expect(manageSubscriptionLink({ ...purchase, planKind: "one_time" })).toBeNull();
     expect(manageSubscriptionLink({ ...purchase, planKind: "installment" })).toBeNull();
     expect(manageSubscriptionLink({ ...purchase, status: "refunded" })).toBeNull();
+  });
+});
+
+describe("partlyRefunded", () => {
+  it("is true only for paid purchases with some money given back", () => {
+    expect(partlyRefunded({ status: "paid", refundedAmountMinor: 200 })).toBe(true);
+    expect(partlyRefunded({ status: "paid", refundedAmountMinor: 0 })).toBe(false);
+    expect(partlyRefunded({ status: "refunded", refundedAmountMinor: 1000 })).toBe(false);
   });
 });

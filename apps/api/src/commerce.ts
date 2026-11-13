@@ -29,6 +29,7 @@ import {
   unstageLearnerMembership,
 } from "./learner-memberships.js";
 import { notifyCheckoutRefused, notifyPaymentSucceeded } from "./purchase-notifications.js";
+import { nextRefundedAmount } from "./revenue.js";
 import { amountMinorForPlan, sourceTypeForKind } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
@@ -1229,6 +1230,7 @@ async function processPaymentEvent(
                 : ("one_time" as const),
           status: "succeeded" as const,
           currency,
+          refundedAmountMinor: 0,
           amountMinor: amount,
           occurredAt: new Date(
             stringValue(data.created_at ?? data.timestamp) ?? now.toISOString(),
@@ -1444,6 +1446,19 @@ async function processPaymentEvent(
     });
     return "processed";
   }
+  if (eventType === "payment.partially_refunded") {
+    // Some money went back but the learner keeps access; revenue drops by
+    // what was refunded.
+    const payment = await findRefundedPayment(db, data, scope);
+    if (!payment) return "ignored";
+    const refunded = nextRefundedAmount(payment, integerValue(data.refunded_amount));
+    if (refunded === null) return "processed";
+    await db
+      .update(schema.storefrontPayments)
+      .set({ refundedAmountMinor: refunded, updatedAt: clock.now() })
+      .where(eq(schema.storefrontPayments.id, payment.id));
+    return "processed";
+  }
   if (eventType === "payment.refunded" || eventType === "payment.disputed") {
     const payment = await findRefundedPayment(db, data, scope);
     if (!payment) return "ignored";
@@ -1482,7 +1497,13 @@ async function processPaymentEvent(
       }
       await tx
         .update(schema.storefrontPayments)
-        .set({ status: nextPaymentStatus, updatedAt: now })
+        .set({
+          status: nextPaymentStatus,
+          ...(eventType === "payment.refunded"
+            ? { refundedAmountMinor: payment.amountMinor }
+            : {}),
+          updatedAt: now,
+        })
         .where(eq(schema.storefrontPayments.id, payment.id));
       await tx
         .update(schema.storefrontInvoices)

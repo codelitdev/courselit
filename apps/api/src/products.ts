@@ -213,7 +213,8 @@ export async function listProducts(
       : db
           .select({
             productId: schema.storefrontCheckoutAttempts.productId,
-            amountMinor: sql<string>`coalesce(sum(${schema.storefrontPayments.amountMinor}), 0)`,
+            // Net of partial refunds; full refunds are no longer succeeded.
+            amountMinor: sql<string>`coalesce(sum(${schema.storefrontPayments.amountMinor} - ${schema.storefrontPayments.refundedAmountMinor}), 0)`,
           })
           .from(schema.storefrontPayments)
           .innerJoin(

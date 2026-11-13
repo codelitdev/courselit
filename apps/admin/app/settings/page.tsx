@@ -195,6 +195,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     ? paymentSettings?.[paymentMethod]
     : undefined;
   const webhook = providerSettings?.webhook;
+  const currencyLocked = paymentSettings?.currencyLocked === true;
 
   useEffect(() => {
     void fetch("/api/v1/schools", { credentials: "include", cache: "no-store" })
@@ -453,6 +454,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 <Label htmlFor="settings-currency">Currency</Label>
                 <Select
                   value={currency}
+                  disabled={currencyLocked}
                   onValueChange={(value) => {
                     setCurrency(value);
                     setCurrencyError(null);
@@ -470,6 +472,12 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {currencyLocked ? (
+                  <p className="text-xs text-muted-foreground">
+                    Your school has taken payments, so its currency can no longer be
+                    changed.
+                  </p>
+                ) : null}
                 {paymentMethod === "lemonsqueezy" ? (
                   <p className="text-xs text-destructive">
                     The currency selected will not be applied during checkout. Set your

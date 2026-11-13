@@ -9,6 +9,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
+import { schoolHasPaidPayments } from "./revenue.js";
 import { insertSchoolOnboarding } from "./onboarding.js";
 import {
   OWNER_PERMISSIONS,
@@ -403,6 +404,17 @@ export async function updateSchoolCurrency(
   if (!school) {
     return { ok: false, error: createPlatformError("not_found") };
   }
+  if (
+    normalizedCurrency !== school.currency.toUpperCase() &&
+    (await schoolHasPaidPayments(db, school.id))
+  ) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "currency_locked" },
+      }),
+    };
+  }
 
   const now = clock.now();
   let updatedRow: typeof schema.schools.$inferSelect | undefined;
@@ -442,9 +454,10 @@ export async function getSchoolPaymentSettings(db: AppDb, schoolId: string) {
   if (!rows[0]) return { ok: false as const, error: createPlatformError("not_found") };
   return {
     ok: true as const,
-    value: providerSettingsDto(
-      parseStoredPaymentSettings(rows[0].paymentSettingsEncrypted),
-    ),
+    value: {
+      ...providerSettingsDto(parseStoredPaymentSettings(rows[0].paymentSettingsEncrypted)),
+      currencyLocked: await schoolHasPaidPayments(db, schoolId),
+    },
   };
 }
 
@@ -666,5 +679,11 @@ export async function updateSchoolPaymentSettings(
       createdAt: now,
     });
   });
-  return { ok: true as const, value: providerSettingsDto(next) };
+  return {
+    ok: true as const,
+    value: {
+      ...providerSettingsDto(next),
+      currencyLocked: await schoolHasPaidPayments(db, input.schoolId),
+    },
+  };
 }
