@@ -300,8 +300,14 @@ product, and the admin sign-in page showed developer notes.
     /v1/school/website/blogs/:blogId/unpublish` (also an MCP tool), and an
     Unpublish button with a confirmation in the blog editor's Publishing
     settings. The writing stays as a draft to publish again.
-- [ ] **30. A tag management page:** counts, delete a tag, untag everyone.
+- [x] **30. A tag management page:** counts, delete a tag, untag everyone.
   _(Parity)_
+  - Fixed 2026-11-13, checked locally. Contacts → Manage tags opens
+    `/contacts/tags`: SendLit's TagManager (shared from
+    `@sendlit/email-blocks` 0.7.0) over CourseLit's `/v1/contact-tags`
+    endpoints. It lists tags with contact counts, renames a tag everywhere,
+    and deletes one from every contact after listing what still uses it.
+    Deleting covers main's "untag everyone".
 - [ ] **31. Reply by email** to discussions and community posts. See
   `docs/wip/community-replies-from-email.md`. _(Parity)_
 - [x] **32. Per-school Google login** with the school's own client ID and secret,

@@ -243,6 +243,11 @@ export default function ContactsPage() {
         <PageHeader
           title="Contacts"
           description="Manage audience contacts, learners, subscribers, segmentation, and tags."
+          action={
+            <Button asChild variant="outline">
+              <Link href="/contacts/tags">Manage tags</Link>
+            </Button>
+          }
         />
 
         {error ? (
