@@ -8,10 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/loading";
 import { CourseLitEmailEditor } from "@/components/mails/courselit-email-editor";
-import {
-  MailingAddressNotice,
-  useMailingAddressMissing,
-} from "@/components/mails/mailing-address-notice";
 import { SendTestEmailButton } from "@/components/mails/send-test-email-dialog";
 import {
   EditorBackButton,
@@ -99,7 +95,6 @@ export default function EmailBroadcastEditorPage({
   const searchParams = useSearchParams();
   const sequenceEmailId = searchParams.get("emailId");
   const isSequenceEmailEditor = Boolean(sequenceEmailId);
-  const mailingAddressMissing = useMailingAddressMissing();
 
   const [sequence, setSequence] = useState<SequenceDetail | null>(null);
   const [emailId, setEmailId] = useState<string | null>(null);
@@ -633,17 +628,11 @@ export default function EmailBroadcastEditorPage({
         </div>
       ) : null}
 
-      {!isSequenceEmailEditor && !isScheduledBroadcast ? (
-        <div className="space-y-2 border-b px-4 py-2 empty:hidden">
-          <MailingAddressNotice
-            missing={mailingAddressMissing}
-            action="send this broadcast"
-          />
-          {unreadyReason ? (
-            <p role="status" className="text-xs font-medium text-amber-700">
-              {unreadyReason}
-            </p>
-          ) : null}
+      {!isSequenceEmailEditor && !isScheduledBroadcast && unreadyReason ? (
+        <div className="border-b px-4 py-2">
+          <p role="status" className="text-xs font-medium text-amber-700">
+            {unreadyReason}
+          </p>
         </div>
       ) : null}
 
