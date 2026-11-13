@@ -1,6 +1,7 @@
 "use client";
 
 import { publicApiPath, useLegalPages, useSchoolId } from "@/components/school-context";
+import { safeRedirectPath } from "@courselit/api-contract/safe-redirect";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
@@ -30,7 +31,7 @@ type OtpStep = "email" | "otp" | "name";
 function destinationAfterLogin() {
   if (typeof window === "undefined") return "/dashboard";
   const next = new URLSearchParams(window.location.search).get("next");
-  return next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+  return safeRedirectPath(next, "/dashboard");
 }
 
 /**

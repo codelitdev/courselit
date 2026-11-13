@@ -1,4 +1,10 @@
-import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
+import {
+  createOAuthProviderOptions,
+  secureCookieOptions,
+  secureEmailAndPasswordOptions,
+  secureSessionOptions,
+  sessionCookieName,
+} from "@codelitdev/oauth-server-kit/better-auth";
 import { cimd } from "@better-auth/cimd";
 import { captcha, emailOTP } from "better-auth/plugins";
 import { jwt } from "better-auth/plugins/jwt";
@@ -8,8 +14,27 @@ import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
 import { CAPTCHA_AUTH_ENDPOINTS, captchaSettings } from "../captcha.js";
 import { fetchClientMetadataResource } from "./cimd-fetch.js";
+import { CLIENT_IP_HEADER } from "./api-key-throttle.js";
 
 export const AUTH_COOKIE_PREFIX = "courselit";
+
+/**
+ * CourseLit's Better Auth `advanced` cookie settings, from the kit: `__Host-`
+ * session cookies over https (plain names on http local dev), and Better
+ * Auth reads the client address only from the header the Express edge sets.
+ */
+export function authCookieAdvancedOptions(publicApiUrl: string) {
+  return secureCookieOptions({
+    baseURL: publicApiUrl,
+    cookiePrefix: AUTH_COOKIE_PREFIX,
+    clientIpHeader: CLIENT_IP_HEADER,
+  });
+}
+
+/** The session cookie name Better Auth uses for this public API URL. */
+export function adminSessionCookieName(publicApiUrl: string): string {
+  return sessionCookieName(authCookieAdvancedOptions(publicApiUrl));
+}
 export const DATA_READ_SCOPE = "data:read";
 export const DATA_WRITE_SCOPE = "data:write";
 // MCP clients request exactly these. `offline_access` gets them a refresh
@@ -62,9 +87,7 @@ export function buildBetterAuthOptions(input: {
     secret: input.secret,
     baseURL: input.publicApiUrl,
     basePath: AUTH_BASE_PATH,
-    advanced: {
-      cookiePrefix: AUTH_COOKIE_PREFIX,
-    },
+    advanced: authCookieAdvancedOptions(input.publicApiUrl),
     // Only CourseLit's own hosts. School websites never call Better Auth:
     // learners sign in to a school through school-scoped routes, so a host a
     // school controls never holds a CourseLit-wide session.
@@ -109,10 +132,8 @@ export function buildBetterAuthOptions(input: {
     },
     session: {
       modelName: "session",
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60,
-      },
+      // No cookie cache: a revoked session stops working immediately.
+      ...secureSessionOptions(),
     },
     account: {
       modelName: "account",
@@ -124,9 +145,9 @@ export function buildBetterAuthOptions(input: {
       window: 60,
       max: 100,
     },
-    emailAndPassword: {
-      enabled: true,
-    },
+    // Nobody signs in with a password: staff use email codes or Google, and
+    // learners use their school's own sign-in.
+    emailAndPassword: secureEmailAndPasswordOptions(),
     ...(hasPlatformGoogle
       ? {
           socialProviders: {
@@ -229,7 +250,6 @@ export async function sendVerificationOTP(
 }
 
 export const AUTH_BASE_PATH = "/api/auth";
-export const ADMIN_SESSION_COOKIE_NAME = `${AUTH_COOKIE_PREFIX}.session_token`;
 export const adminAuthOptions = buildBetterAuthOptions;
 
 export function authUrls(

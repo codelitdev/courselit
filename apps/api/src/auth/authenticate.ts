@@ -21,7 +21,7 @@ import {
 } from "./api-keys.js";
 import { apiKeyFailureLimiterFor, clientKeyFromHeaders } from "./api-key-throttle.js";
 import type { AdminAuth } from "./better-auth.js";
-import { ADMIN_SESSION_COOKIE_NAME } from "./options.js";
+import { adminSessionCookieName } from "./options.js";
 
 export type AuthRuntime = {
   db: AppDb;
@@ -42,7 +42,7 @@ export async function authenticateHttpRequest(
   deps: AuthRuntime,
 ): Promise<AuthenticationResult<string>> {
   const selected = selectHttpCredential(headers, {
-    sessionCookieName: ADMIN_SESSION_COOKIE_NAME,
+    sessionCookieName: adminSessionCookieName(deps.auth.issuer),
   });
   if (selected.kind === "absent") {
     return mapTransportAuthentication({ kind: "absent" }, { transport: "http" });

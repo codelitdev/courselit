@@ -128,10 +128,11 @@ import { authenticateHttpRequest } from "./auth/authenticate.js";
 import {
   authorizeOperationCredential,
   type CredentialKind,
+  getOperationPolicy,
   operationPermissionsAllow,
   resolveOperationId,
 } from "./auth/operation-policy.js";
-import { ADMIN_SESSION_COOKIE_NAME } from "./auth/options.js";
+import { hasRecentAuthentication } from "./auth/recent-authentication.js";
 import {
   createLesson,
   createSection,
@@ -277,6 +278,7 @@ import {
   grantLearnerMembership,
   signUpForLeadMagnet,
   learnerMe,
+  isSecureCookieUrl,
   learnerSessionCookieHeader,
   listLearnerProducts,
   listLearnerProgress,
@@ -675,7 +677,13 @@ export async function dispatch(
         : errorResponse(result.error);
     }
 
-    const learnerAuth = await authenticateLearner(deps.db, request.headers, deps.clock);
+    const secureLearnerCookies = isSecureCookieUrl(deps.auth.publicApiUrl);
+    const learnerAuth = await authenticateLearner(
+      deps.db,
+      request.headers,
+      deps.clock,
+      secureLearnerCookies,
+    );
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
       const parsed = consumeSchoolAuthTicketBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
@@ -696,7 +704,7 @@ export async function dispatch(
       return {
         status: 200,
         headers: {
-          "Set-Cookie": learnerSessionCookieHeader(consumed.value.sessionToken),
+          "Set-Cookie": learnerSessionCookieHeader(consumed.value.sessionToken, secureLearnerCookies),
         },
         body: consumed.value.dto,
       };
@@ -1014,7 +1022,7 @@ export async function dispatch(
       return {
         status: 200,
         body: { ...result.value.dto, needsName: result.value.needsName },
-        headers: { "Set-Cookie": learnerSessionCookieHeader(result.value.token) },
+        headers: { "Set-Cookie": learnerSessionCookieHeader(result.value.token, secureLearnerCookies) },
       };
     }
     if (request.method === "POST" && path === "/v1/learner/auth/google") {
@@ -1044,7 +1052,7 @@ export async function dispatch(
       return {
         status: 204,
         body: undefined,
-        headers: { "Set-Cookie": clearLearnerSessionCookieHeader() },
+        headers: { "Set-Cookie": clearLearnerSessionCookieHeader(secureLearnerCookies) },
       };
     }
     if (path.startsWith("/v1/learner/")) {
@@ -2038,6 +2046,28 @@ export async function dispatch(
       { internalRoute: request.method === "POST" && path === "/api/school/select" },
     );
     if (credentialDenied) return errorResponse(credentialDenied);
+    // Operations such as handing over a school need a fresh sign-in, so a
+    // stolen or long-lived session can't run them on its own.
+    const operationPolicy = getOperationPolicy(
+      resolveOperationId(request.method, path) ?? "",
+    );
+    if (
+      operationPolicy &&
+      "recentAuthentication" in operationPolicy &&
+      operationPolicy.recentAuthentication &&
+      (auth.credential.kind !== "session" ||
+        !(await hasRecentAuthentication(
+          deps.auth,
+          requestHeaders(request),
+          deps.clock,
+        )))
+    ) {
+      return errorResponse(
+        createPlatformError("forbidden", {
+          safeDetails: { reason: "recent_authentication_required" },
+        }),
+      );
+    }
 
     if (request.method === "POST" && path === "/api/school/select") {
       const schoolId =

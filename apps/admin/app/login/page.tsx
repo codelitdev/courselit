@@ -2,12 +2,13 @@
 
 import { Button } from "@codelitdev/design-system";
 import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
+import { safeRedirectPath } from "@courselit/api-contract/safe-redirect";
 import { type FormEvent, useEffect, useState } from "react";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
 
 function destinationAfterSignIn() {
   const next = new URLSearchParams(window.location.search).get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  return safeRedirectPath(next, "/");
 }
 
 export default function SignInPage() {

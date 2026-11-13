@@ -1,4 +1,5 @@
 import type { MediaRef } from "@courselit/api-contract";
+import { safeRedirectPath } from "@courselit/api-contract/safe-redirect";
 import type { TextEditorContent } from "@frontlit/text-editor";
 
 export type WebsiteContentStatus = "draft" | "published" | "published_with_changes";
@@ -89,5 +90,5 @@ export function contentStatusLabel(status: WebsiteContentStatus): string {
 }
 
 export function resolveEditorRedirect(value: string | null, fallback: string): string {
-  return value?.startsWith("/") && !value.startsWith("//") ? value : fallback;
+  return safeRedirectPath(value, fallback);
 }

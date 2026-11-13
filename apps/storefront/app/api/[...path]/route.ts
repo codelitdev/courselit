@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isCrossOriginWrite } from "@/lib/request-origin";
 import { resolveSchoolForRequest } from "@/lib/school-resolution";
 
+const CLIENT_IP_HEADER = "x-courselit-client-ip";
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
 const NULL_BODY_STATUSES = new Set([204, 205, 304]);
 
@@ -19,6 +21,12 @@ async function proxy(
         { status: 404 },
       );
     }
+    if (isCrossOriginWrite(request.method, request.headers)) {
+      return NextResponse.json(
+        { code: "forbidden", message: "Cross-origin requests can't change data." },
+        { status: 403 },
+      );
+    }
     const suffix = path.join("/");
     const target = `${API_URL}/${suffix}${request.nextUrl.search}`;
     // Redeeming a Google sign-in ticket needs the school and the nonce cookie
@@ -31,6 +39,9 @@ async function proxy(
     headers.delete("x-school-id");
     headers.delete("x-tenant-id");
     headers.delete("x-forwarded-host");
+    // The API resolves the client address from the forwarded chain, which is
+    // passed through unchanged. A browser must never set the internal header.
+    headers.delete(CLIENT_IP_HEADER);
     if (path[1] === "learner" || isTicketConsume) {
       const resolution = await resolveSchoolForRequest(request);
       if (resolution.status === "unavailable") {
@@ -58,6 +69,7 @@ async function proxy(
         const name = part.split("=", 1)[0];
         return (
           name === "courselit.learner.session" ||
+          name === "__Host-courselit.learner.session" ||
           (isTicketConsume && name === "courselit.login.nonce")
         );
       });

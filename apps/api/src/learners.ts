@@ -31,6 +31,18 @@ import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
 import type { AppDb } from "./types.js";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
+// When cookies are secure the learner session is a `__Host-` cookie (Secure,
+// Path=/, no Domain), so a sibling subdomain cannot plant one for the parent.
+export const SECURE_LEARNER_SESSION_COOKIE = `__Host-${LEARNER_SESSION_COOKIE}`;
+
+/** Secure when the public API URL is https (same rule as the Google routes). */
+export function isSecureCookieUrl(publicApiUrl: string): boolean {
+  return new URL(publicApiUrl).protocol === "https:";
+}
+
+export function learnerSessionCookieName(secure: boolean): string {
+  return secure ? SECURE_LEARNER_SESSION_COOKIE : LEARNER_SESSION_COOKIE;
+}
 export const LOGIN_NONCE_COOKIE = "courselit.login.nonce";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -437,6 +449,13 @@ export async function listLearnerProducts(
   );
 }
 
+/**
+ * Reads one cookie by exact name. When the header holds the same name more
+ * than once, the first occurrence wins (browsers send the most specific path
+ * and oldest cookie first), and an empty first value reads as absent; later
+ * duplicates are never consulted, so the result does not depend on how many
+ * are present.
+ */
 function readCookie(
   headers: Record<string, string | string[] | undefined>,
   name: string,
@@ -458,8 +477,9 @@ function readCookie(
 
 export function readLearnerSessionCookie(
   headers: Record<string, string | string[] | undefined>,
+  secure = false,
 ): string | null {
-  return readCookie(headers, LEARNER_SESSION_COOKIE);
+  return readCookie(headers, learnerSessionCookieName(secure));
 }
 
 /**
@@ -472,12 +492,12 @@ export function readLoginNonceCookie(
   return readCookie(headers, LOGIN_NONCE_COOKIE);
 }
 
-export function learnerSessionCookieHeader(token: string): string {
-  return `${LEARNER_SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
+export function learnerSessionCookieHeader(token: string, secure = false): string {
+  return `${learnerSessionCookieName(secure)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}${secure ? "; Secure" : ""}`;
 }
 
-export function clearLearnerSessionCookieHeader(): string {
-  return `${LEARNER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+export function clearLearnerSessionCookieHeader(secure = false): string {
+  return `${learnerSessionCookieName(secure)}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? "; Secure" : ""}`;
 }
 
 export function toLearnerDto(
@@ -506,12 +526,13 @@ export async function authenticateLearner(
   db: AppDb,
   headers: Record<string, string | string[] | undefined>,
   clock: Clock,
+  secureCookies = false,
 ): Promise<
   | { kind: "absent" }
   | { kind: "authenticated"; value: LearnerSession }
   | { kind: "rejected"; error: PlatformError }
 > {
-  const token = readLearnerSessionCookie(headers);
+  const token = readLearnerSessionCookie(headers, secureCookies);
   if (!token) return { kind: "absent" };
   const digest = digestToken(token);
   const now = clock.now();
@@ -888,7 +909,30 @@ export async function findOrCreateVerifiedUser(
   const existing = (
     await db.select().from(schema.user).where(eq(schema.user.email, normalized)).limit(1)
   )[0];
-  if (existing) return existing;
+  if (existing?.emailVerified) return existing;
+  if (existing) {
+    // Whoever created this user never proved they own the address; the
+    // person who just did now takes it over. Drop any password and session
+    // the earlier claimant left, so they can't ride the verified owner's
+    // school accounts.
+    return db.transaction(async (tx) => {
+      await tx
+        .delete(schema.account)
+        .where(
+          and(
+            eq(schema.account.userId, existing.id),
+            eq(schema.account.providerId, "credential"),
+          ),
+        );
+      await tx.delete(schema.session).where(eq(schema.session.userId, existing.id));
+      const [verified] = await tx
+        .update(schema.user)
+        .set({ emailVerified: true, updatedAt: clock.now() })
+        .where(eq(schema.user.id, existing.id))
+        .returning();
+      return verified!;
+    });
+  }
   const now = clock.now();
   const created = await db
     .insert(schema.user)

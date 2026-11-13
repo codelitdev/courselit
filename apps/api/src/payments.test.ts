@@ -150,7 +150,7 @@ describe.serial("school payment providers", () => {
       });
       provider!.verifyWebhook(rawBody, { "x-signature": signature("lem_webhook", rawBody) }, new Date());
       expect(provider!.parseWebhook(rawBody, {})).toMatchObject({
-        eventId: "lem_evt",
+        eventId: "lemonsqueezy:lem_evt",
         eventType: "payment.succeeded",
         data: {
           payment_id: "lem_order",
@@ -225,7 +225,7 @@ describe.serial("school payment providers", () => {
       });
       provider!.verifyWebhook(rawBody, { "x-razorpay-signature": signature("rzp_webhook", rawBody) }, new Date());
       expect(provider!.parseWebhook(rawBody, {})).toMatchObject({
-        eventId: "rzp_evt",
+        eventId: "razorpay:rzp_evt",
         eventType: "payment.succeeded",
         data: {
           payment_id: "pay_test",

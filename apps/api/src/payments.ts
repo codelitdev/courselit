@@ -634,13 +634,26 @@ class LemonSqueezyPayment implements PaymentProvider {
       // `initial` subscription invoice; refunds may reference either.
       initial_charge: attributes.billing_reason === "initial",
     };
-    const fallbackId = createHash("sha256").update(rawBody).digest("hex");
+    // Dedupe only on signed body fields: headers are outside the signature,
+    // so a replayed body with a fresh header must map to the same key.
+    const version = stringValue(attributes.updated_at) ?? stringValue(attributes.created_at);
+    const bodyEventId = stringValue(meta.event_id);
+    const eventId = bodyEventId
+      ? `lemonsqueezy:${bodyEventId}`
+      : version && resourceId && stringValue(meta.event_name)
+        ? `lemonsqueezy:${name}:${resourceType ?? ""}:${resourceId}:${version}`
+        : signedBodyKey("lemonsqueezy", rawBody);
     return {
-      eventId: stringValue(headers["x-event-id"]) ?? stringValue(meta.event_id) ?? fallbackId,
+      eventId,
       eventType: lemonSqueezyEventType(name, attributes),
       data,
     };
   }
+}
+
+/** Deterministic dedupe key derived from the signed raw body only. */
+function signedBodyKey(provider: string, rawBody: string): string {
+  return `${provider}:body:${createHash("sha256").update(rawBody).digest("hex")}`;
 }
 
 /**
@@ -828,9 +841,19 @@ class RazorpayPayment implements PaymentProvider {
       subscription_completed:
         subscription.status === "completed" || remainingCount === 0,
     };
-    const fallbackId = createHash("sha256").update(rawBody).digest("hex");
+    // Dedupe only on signed body fields: headers are outside the signature.
+    const createdAt = integerValue(event.created_at);
+    const entityIds = [refund.id, dispute.id, payment.id, source.id]
+      .map(stringValue)
+      .filter((id): id is string => Boolean(id));
+    const bodyEventId = stringValue(event.id);
+    const eventId = bodyEventId
+      ? `razorpay:${bodyEventId}`
+      : createdAt !== null && entityIds.length > 0
+        ? `razorpay:${name}:${entityIds.join(":")}:${stringValue(payment.status) ?? ""}:${stringValue(payment.refund_status) ?? ""}:${createdAt}`
+        : signedBodyKey("razorpay", rawBody);
     return {
-      eventId: stringValue(headers["x-razorpay-event-id"]) ?? stringValue(event.id) ?? fallbackId,
+      eventId,
       eventType: razorpayEventType(name, payment, refund),
       data,
     };

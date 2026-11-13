@@ -76,8 +76,5 @@ export function clientKeyFromHeaders(
   const internal = headers[CLIENT_IP_HEADER];
   const internalValue = Array.isArray(internal) ? internal[0] : internal;
   if (internalValue?.trim()) return internalValue.trim();
-  const forwarded = headers["x-forwarded-for"];
-  const forwardedValue = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  const first = forwardedValue?.split(",")[0]?.trim();
-  return first || "unknown";
+  return "unknown";
 }

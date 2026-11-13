@@ -5,6 +5,7 @@ import {
   type PlatformError,
   uuidv7,
 } from "@codelitdev/platform";
+import { safeRedirectPath } from "@courselit/api-contract";
 import { and, count, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
@@ -51,10 +52,7 @@ function sameDigest(a: string, b: string): boolean {
 
 /** A same-site path to land on after signing in; anything else becomes `/dashboard`. */
 export function safeNextPath(next: string | null | undefined): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) {
-    return "/dashboard";
-  }
-  return next.slice(0, 1000);
+  return safeRedirectPath(next, "/dashboard");
 }
 
 /** The sign-in code email, sent in the school's name like its other email. */
@@ -172,14 +170,24 @@ export async function verifyLearnerEmailCode(
     )
     .orderBy(desc(schema.schoolLoginCodes.createdAt))
     .limit(1);
-  if (!row || row.attempts >= EMAIL_CODE_MAX_ATTEMPTS) {
-    return { ok: false, error: signInFailed("invalid_code") };
-  }
+  if (!row) return { ok: false, error: signInFailed("invalid_code") };
+  // Count the attempt before comparing the code, in one conditional update.
+  // Reading the count and incrementing it after a wrong guess let guesses
+  // sent at the same time all pass the limit check, so one code could be
+  // guessed far more than EMAIL_CODE_MAX_ATTEMPTS times.
+  const counted = await db
+    .update(schema.schoolLoginCodes)
+    .set({ attempts: sql`${schema.schoolLoginCodes.attempts} + 1` })
+    .where(
+      and(
+        eq(schema.schoolLoginCodes.id, row.id),
+        isNull(schema.schoolLoginCodes.consumedAt),
+        lt(schema.schoolLoginCodes.attempts, EMAIL_CODE_MAX_ATTEMPTS),
+      ),
+    )
+    .returning({ id: schema.schoolLoginCodes.id });
+  if (!counted[0]) return { ok: false, error: signInFailed("invalid_code") };
   if (!sameDigest(codeDigest(row.id, input.code.trim()), row.codeDigest)) {
-    await db
-      .update(schema.schoolLoginCodes)
-      .set({ attempts: sql`${schema.schoolLoginCodes.attempts} + 1` })
-      .where(eq(schema.schoolLoginCodes.id, row.id));
     return { ok: false, error: signInFailed("invalid_code") };
   }
   const claimed = await db
@@ -189,7 +197,6 @@ export async function verifyLearnerEmailCode(
       and(
         eq(schema.schoolLoginCodes.id, row.id),
         isNull(schema.schoolLoginCodes.consumedAt),
-        lt(schema.schoolLoginCodes.attempts, EMAIL_CODE_MAX_ATTEMPTS),
       ),
     )
     .returning({ id: schema.schoolLoginCodes.id });

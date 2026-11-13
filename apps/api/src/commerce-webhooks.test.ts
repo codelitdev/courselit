@@ -206,6 +206,8 @@ function signed(provider: ProviderName, event: unknown, eventId?: string) {
       rawBody,
       headers: {
         "x-event-name": (event as { meta: { event_name: string } }).meta.event_name,
+        // Unsigned: tests vary it to prove it is never used for dedupe.
+        ...(eventId ? { "x-event-id": eventId } : {}),
         "x-signature": hmac(LEMON_WEBHOOK_SECRET, rawBody),
       },
     };
@@ -1663,6 +1665,132 @@ describe.serial("payment webhooks: Razorpay products", () => {
     expect((listed.body as { items: unknown[] }).items[0]).toMatchObject({
       subscription: { planKind: "installment", status: "completed" },
     });
+    await env.runtime.close();
+  });
+});
+
+describe.serial("webhook replay protection", () => {
+  it("dedupes Lemon Squeezy on the signed body, not the event-id header", async () => {
+    const env = await setup("lemonsqueezy");
+    const sale = await buyProduct(env, "one_time");
+    const attributes = {
+      status: "paid",
+      total: AMOUNTS.one_time,
+      currency: "USD",
+      refunded: false,
+      updated_at: "2025-01-01T00:00:00.000000Z",
+    };
+    const order = lemonEvent("order_created", sale.metadata, {
+      type: "orders",
+      id: "1901",
+      attributes,
+    });
+    expectProcessed(await env.deliver(order, "hdr_1"));
+    expect(await env.deliver(order, "hdr_2")).toMatchObject({
+      status: 200,
+      body: { duplicate: true },
+    });
+    expect(await env.deliver(order)).toMatchObject({ body: { duplicate: true } });
+    let state = await productState(env, sale.productId);
+    expect(state.payments).toHaveLength(1);
+
+    // Two genuine updates of the same order differ by updated_at.
+    const refund = (status: string, updatedAt: string, extra = {}) =>
+      lemonEvent("order_refunded", sale.metadata, {
+        type: "orders",
+        id: "1901",
+        attributes: {
+          ...attributes,
+          status,
+          updated_at: updatedAt,
+          ...extra,
+        },
+      });
+    expectProcessed(
+      await env.deliver(
+        refund("partial_refund", "2025-01-02T00:00:00.000000Z", { refunded_amount: 500 }),
+        "same_hdr",
+      ),
+    );
+    expectProcessed(
+      await env.deliver(
+        refund("refunded", "2025-01-03T00:00:00.000000Z", { refunded: true }),
+        "same_hdr",
+      ),
+    );
+    state = await productState(env, sale.productId);
+    expect(state.payments[0]?.status).toBe("refunded");
+    await env.runtime.close();
+  });
+
+  it("dedupes Razorpay on the signed body, not the event-id header", async () => {
+    const env = await setup("razorpay");
+    const sale = await buyProduct(env, "one_time");
+    const payment = {
+      id: "pay_replay",
+      entity: "payment",
+      amount: AMOUNTS.one_time,
+      currency: "USD",
+      status: "captured",
+      order_id: sale.razorpayId,
+      invoice_id: null,
+      notes: [],
+    };
+    const paid = {
+      entity: "event",
+      event: "order.paid",
+      created_at: 1735689600,
+      payload: {
+        payment: { entity: payment },
+        order: {
+          entity: {
+            id: sale.razorpayId,
+            entity: "order",
+            amount: AMOUNTS.one_time,
+            amount_paid: AMOUNTS.one_time,
+            currency: "USD",
+            status: "paid",
+            notes: sale.metadata,
+          },
+        },
+      },
+    };
+    expectProcessed(await env.deliver(paid, "hdr_1"));
+    expect(await env.deliver(paid, "hdr_2")).toMatchObject({
+      status: 200,
+      body: { duplicate: true },
+    });
+    let state = await productState(env, sale.productId);
+    expect(state.payments).toHaveLength(1);
+    expect(state.paidInvoices).toHaveLength(1);
+
+    // Payment captured, then partly and fully refunded: distinct events.
+    const refunded = (id: string, amount: number, total: number, at: number) => ({
+      entity: "event",
+      event: "refund.processed",
+      created_at: at,
+      payload: {
+        refund: { entity: { id, entity: "refund", payment_id: "pay_replay", amount } },
+        payment: {
+          entity: {
+            ...payment,
+            amount_refunded: total,
+            refund_status: total >= AMOUNTS.one_time ? "full" : "partial",
+          },
+        },
+      },
+    });
+    expectProcessed(
+      await env.deliver(refunded("rfnd_a", 300, 300, 1735689700), "same_hdr"),
+    );
+    expectProcessed(
+      await env.deliver(
+        refunded("rfnd_b", AMOUNTS.one_time - 300, AMOUNTS.one_time, 1735689800),
+        "same_hdr",
+      ),
+    );
+    state = await productState(env, sale.productId);
+    expect(state.payments[0]?.status).toBe("refunded");
     await env.runtime.close();
   });
 });

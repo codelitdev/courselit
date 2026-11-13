@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { NextRequest } from "next/server";
 import { DEV_SCHOOL_COOKIE, schoolHostCache } from "@/lib/school-resolution";
-import { GET } from "./route";
+import { GET, POST } from "./route";
 
 const originalFetch = globalThis.fetch;
 
@@ -59,6 +59,8 @@ describe("storefront API proxy cookies", () => {
     const cookie = [
       "courselit.session_token=session-value",
       "__Secure-courselit.session_token.0=session-chunk",
+      "__Host-courselit.session_token=host-session",
+      "__Host-courselit.session_data=host-data",
     ].join("; ");
     expect(await forwardedCookie("v1/learner/me", cookie)).toBeNull();
   });
@@ -67,6 +69,19 @@ describe("storefront API proxy cookies", () => {
     const cookie = "courselit.learner.session=learner-session";
 
     expect(await forwardedCookie("v1/learner/me", cookie)).toBe(cookie);
+  });
+
+  it("forwards the __Host- learner session cookie under its own name", async () => {
+    const cookie = "__Host-courselit.learner.session=learner-session";
+
+    expect(await forwardedCookie("v1/learner/me", cookie)).toBe(cookie);
+  });
+
+  it("forwards only the learner cookie when platform __Host- cookies ride along", async () => {
+    const learner = "__Host-courselit.learner.session=learner-session";
+    const cookie = `__Host-courselit.session_token=host-session; ${learner}`;
+
+    expect(await forwardedCookie("v1/learner/me", cookie)).toBe(learner);
   });
 
   it("forwards the sign-in nonce only when redeeming a ticket", async () => {
@@ -122,11 +137,60 @@ describe("storefront API proxy tenancy", () => {
     expect(resolveCalls).toBe(0);
   });
 
+  it("passes X-Forwarded-For through and strips a client-sent client-IP header", async () => {
+    const { upstream } = await proxied("v1/public/sch_school/products", {
+      "x-forwarded-for": "6.6.6.6, 203.0.113.9",
+      "x-courselit-client-ip": "6.6.6.6",
+    });
+    expect(upstream?.headers.get("x-forwarded-for")).toBe("6.6.6.6, 203.0.113.9");
+    expect(upstream?.headers.get("x-courselit-client-ip")).toBeNull();
+  });
+
   it("does not proxy Better Auth", async () => {
     for (const path of ["auth/get-session", "learner-auth/sign-in/email-otp"]) {
       const { status, upstream } = await proxied(path, {});
       expect(status).toBe(404);
       expect(upstream).toBeNull();
     }
+  });
+});
+
+describe("storefront API proxy origin check", () => {
+  async function posted(headers: Record<string, string>) {
+    let reached = false;
+    globalThis.fetch = (async (input) => {
+      const target = new URL(typeof input === "string" ? input : input.toString());
+      if (target.pathname === "/v1/public/resolve-host") {
+        return Response.json({ schoolId: "sch_school", subdomain: "school", name: "School" });
+      }
+      reached = true;
+      return Response.json({});
+    }) as typeof fetch;
+    const request = new NextRequest("https://school.example/api/v1/learner/me", {
+      method: "POST",
+      headers: { host: "school.example", "content-type": "application/json", ...headers },
+      body: "{}",
+    });
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["v1", "learner", "me"] }),
+    });
+    return { status: response.status, reached };
+  }
+
+  it("refuses a write another school's page sends with this school's cookie", async () => {
+    const result = await posted({
+      cookie: "courselit.learner.session=learner-session",
+      origin: "https://other-school.example",
+      "sec-fetch-site": "same-site",
+    });
+    expect(result).toEqual({ status: 403, reached: false });
+  });
+
+  it("forwards a write from the school's own pages", async () => {
+    const result = await posted({
+      origin: "https://school.example",
+      "sec-fetch-site": "same-origin",
+    });
+    expect(result).toEqual({ status: 200, reached: true });
   });
 });

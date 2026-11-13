@@ -7,6 +7,10 @@ import { resolveSchoolForRequest } from "@/lib/school-resolution";
 
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
 const LEARNER_SESSION_COOKIE = "courselit.learner.session";
+// The API names the cookie `__Host-` when its public URL is https; the
+// storefront doesn't know the API's mode, so it accepts either (preferring
+// `__Host-`) and forwards it under the name it arrived with.
+const SECURE_LEARNER_SESSION_COOKIE = `__Host-${LEARNER_SESSION_COOKIE}`;
 const MAX_PACKAGE_BYTES = 300 * 1024 * 1024;
 const CACHE_ROOT = process.env.SCORM_CACHE_DIR?.trim() || path.join(os.tmpdir(), "courselit-scorm");
 
@@ -136,9 +140,12 @@ async function getMediaUrl(
   lessonId: string,
 ) {
   const headers = new Headers();
-  const learnerSession = request.cookies.get(LEARNER_SESSION_COOKIE)?.value;
+  const cookieName = request.cookies.get(SECURE_LEARNER_SESSION_COOKIE)?.value
+    ? SECURE_LEARNER_SESSION_COOKIE
+    : LEARNER_SESSION_COOKIE;
+  const learnerSession = request.cookies.get(cookieName)?.value;
   if (learnerSession) {
-    headers.set("cookie", `${LEARNER_SESSION_COOKIE}=${learnerSession}`);
+    headers.set("cookie", `${cookieName}=${learnerSession}`);
   }
   const response = await fetch(
     `${API_URL}/v1/public/${encodeURIComponent(schoolId)}/products/${encodeURIComponent(productId)}/lessons/${encodeURIComponent(lessonId)}/media`,

@@ -167,4 +167,36 @@ describe("admin notifications", () => {
       await runtime.close();
     }
   });
+
+  it("streams admin notifications only to staff browser sessions that may read them", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const app = createExpressApp(runtime);
+    const server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
+      const listening = app.listen(0, () => resolve(listening));
+    });
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("listen_failed");
+    const open = async (headers: Record<string, string>) => {
+      const response = await fetch(
+        `http://127.0.0.1:${address.port}/v1/notifications/stream?schoolId=${encodeURIComponent(world.schoolA.publicId)}`,
+        { headers },
+      );
+      await response.body?.cancel();
+      return response.status;
+    };
+    try {
+      // An API key acts through the owner's account, but the REST listing
+      // never accepts one, so neither does the stream.
+      expect(await open({ "x-api-key": world.apiKeyA.raw })).toBe(403);
+      // Signed in, but not on this school's team.
+      expect(await open({ cookie: world.outsider.sessionCookie })).toBe(403);
+      // On the team, without the permission the listing needs.
+      expect(await open({ cookie: world.member.sessionCookie })).toBe(403);
+    } finally {
+      server.close();
+      await runtime.close();
+    }
+  });
 });

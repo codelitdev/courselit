@@ -1,14 +1,13 @@
 "use client";
 
+import { safeRedirectPath } from "@courselit/api-contract/safe-redirect";
 import { useEffect, useRef, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import { LearnerButton, LearnerText2 } from "@/components/themed-page-builder";
 import { writeSignedInHint } from "@/lib/header-account";
 
 function safeNext(value: string | null): string {
-  return value?.startsWith("/") && !value.startsWith("//") && !value.includes("\\")
-    ? value
-    : "/dashboard";
+  return safeRedirectPath(value, "/dashboard");
 }
 
 /**

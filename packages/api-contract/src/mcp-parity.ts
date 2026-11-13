@@ -461,7 +461,7 @@ const mcpParityOverrides = [
     parity: "exempt",
     exemption: {
       reason:
-        "Cancelling a CourseLit plan needs a recent browser sign-in and stays off MCP.",
+        "Cancelling a CourseLit plan runs on a single-use grant in the owner's browser and stays off MCP.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -472,7 +472,7 @@ const mcpParityOverrides = [
     parity: "exempt",
     exemption: {
       reason:
-        "Resuming a CourseLit plan needs a recent browser sign-in and stays off MCP.",
+        "Resuming a CourseLit plan runs on a single-use grant in the owner's browser and stays off MCP.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },

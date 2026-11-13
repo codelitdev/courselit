@@ -34,7 +34,6 @@ export type SeededWorld = {
   noteA: { publicId: string };
 };
 
-const PASSWORD = "reference-password-1";
 const SEEDED_TENANT_A_ID = "11111111-1111-4111-8111-111111111111";
 const SEEDED_TENANT_B_ID = "22222222-2222-4222-8222-222222222222";
 
@@ -65,8 +64,12 @@ async function signUp(
   name: string,
   email: string,
 ): Promise<{ id: string; sessionCookie: string }> {
-  const response = await runtime.auth.auth.api.signUpEmail({
-    body: { name, email, password: PASSWORD },
+  // Same path staff take: an email code (passwords are switched off).
+  const otp = await runtime.auth.auth.api.createVerificationOTP({
+    body: { email, type: "sign-in" },
+  });
+  const response = await runtime.auth.auth.api.signInEmailOTP({
+    body: { email, otp, name },
     asResponse: true,
   });
   if (!response.ok) {

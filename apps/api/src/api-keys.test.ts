@@ -10,7 +10,7 @@ import {
   MAX_ACTIVE_API_KEYS_PER_SCHOOL,
   parseApiKey,
 } from "./auth/api-keys.js";
-import { API_KEY_FAILURE_LIMIT } from "./auth/api-key-throttle.js";
+import { API_KEY_FAILURE_LIMIT, CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
 import {
   authorizeOperationCredential,
   OPERATION_POLICIES,
@@ -79,7 +79,7 @@ async function withKey(
   return dispatch(runtime, {
     method: "GET",
     path: "/v1/products",
-    headers: { "x-api-key": key, "x-forwarded-for": "203.0.113.1", ...extra },
+    headers: { "x-api-key": key, [CLIENT_IP_HEADER]: "203.0.113.1", ...extra },
   });
 }
 
@@ -717,7 +717,7 @@ describe.serial("school API keys", () => {
     expect((await withKey(runtime, world.apiKeyA.raw)).status).toBe(429);
     // ...while other clients and successful traffic are unaffected.
     expect(
-      (await withKey(runtime, world.apiKeyA.raw, { "x-forwarded-for": "198.51.100.7" }))
+      (await withKey(runtime, world.apiKeyA.raw, { [CLIENT_IP_HEADER]: "198.51.100.7" }))
         .status,
     ).toBe(200);
     clock.advance(5 * 60 * 1000 + 1);

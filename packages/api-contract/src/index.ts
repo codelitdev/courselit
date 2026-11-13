@@ -9,6 +9,7 @@ export * from "./team-permissions.js";
 export * from "./learner-avatar.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
+export * from "./safe-redirect.js";
 
 const c = initContract();
 

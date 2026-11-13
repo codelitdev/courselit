@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { fromNodeHeaders } from "better-auth/node";
 import type { Express, Response } from "express";
 import type { DispatchDeps } from "./deps.js";
@@ -10,6 +11,38 @@ import { escapeHtml } from "./system-mail.js";
 
 const BEGIN_PATH = "/learner-login/google";
 const FINISH_PATH = "/learner-login/google/finish";
+/**
+ * Holds the sign-in request on the API host from begin to finish, so the
+ * finish step only completes a sign-in this browser started. Without it, a
+ * link straight to the finish URL would admit whoever's CourseLit session
+ * the browser happened to have.
+ */
+const REQUEST_COOKIE = "courselit.learner_google_request";
+
+function requestCookie(token: string, secure: boolean, maxAgeSeconds: number) {
+  return [
+    `${REQUEST_COOKIE}=${maxAgeSeconds > 0 ? token : ""}`,
+    `Path=${BEGIN_PATH}`,
+    "HttpOnly",
+    // Google sends the browser back with a top-level GET, which Lax allows.
+    "SameSite=Lax",
+    ...(secure ? ["Secure"] : []),
+    `Max-Age=${maxAgeSeconds}`,
+  ].join("; ");
+}
+
+function readCookie(header: string | undefined, name: string): string | null {
+  for (const part of (header ?? "").split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return rest.join("=");
+  }
+  return null;
+}
+
+function sameToken(a: string | null, b: string): boolean {
+  if (!a || a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 function sendExpired(res: Response) {
   res
@@ -35,6 +68,7 @@ function copySetCookies(from: globalThis.Response, res: Response) {
 export function registerLearnerGoogleRoutes(app: Express, deps: DispatchDeps) {
   const auth = deps.auth.auth;
   const publicApiUrl = deps.auth.publicApiUrl;
+  const secureCookie = new URL(publicApiUrl).protocol === "https:";
 
   app.get(BEGIN_PATH, async (req, res, next) => {
     try {
@@ -60,6 +94,7 @@ export function registerLearnerGoogleRoutes(app: Express, deps: DispatchDeps) {
       const body = (await response.json().catch(() => null)) as { url?: string } | null;
       if (!response.ok || !body?.url) return sendExpired(res);
       copySetCookies(response, res);
+      res.append("Set-Cookie", requestCookie(token, secureCookie, 15 * 60));
       res.redirect(302, body.url);
     } catch (error) {
       next(error);
@@ -70,8 +105,23 @@ export function registerLearnerGoogleRoutes(app: Express, deps: DispatchDeps) {
     try {
       const token = typeof req.query.request === "string" ? req.query.request : "";
       if (!token) return sendExpired(res);
+      res.append("Set-Cookie", requestCookie("", secureCookie, 0));
+      // Only the browser that began this sign-in may finish it.
+      if (!sameToken(readCookie(req.headers.cookie, REQUEST_COOKIE), token)) {
+        return sendExpired(res);
+      }
+      const request = await findLearnerGoogleRequest(deps.db, token, deps.clock);
+      if (!request) return sendExpired(res);
       const headers = fromNodeHeaders(req.headers);
-      const session = req.query.error ? null : await auth.api.getSession({ headers });
+      const current = req.query.error
+        ? null
+        : await auth.api.getSession({ headers, query: { disableCookieCache: true } });
+      // The CourseLit session must be the one Google sign-in just created for
+      // this request, not an older one the browser already had.
+      const session =
+        current && new Date(current.session.createdAt) >= request.createdAt
+          ? current
+          : null;
       const finished = session
         ? await finishLearnerGoogleSignIn(
             deps.db,
@@ -87,7 +137,7 @@ export function registerLearnerGoogleRoutes(app: Express, deps: DispatchDeps) {
             deps.clock,
           )
         : null;
-      if (session) {
+      if (current) {
         // The learner now has a school session to come; the CourseLit-wide
         // session Google sign-in made here has done its job.
         const signedOut = await auth.api.signOut({ headers, asResponse: true });

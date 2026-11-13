@@ -11,6 +11,10 @@ import { createExpressEndpoints, initServer } from "@ts-rest/express";
 import { toNodeHandler } from "better-auth/node";
 import express, { type Express, type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
+import {
+  createClientIpMiddleware,
+  parseTrustProxy,
+} from "@codelitdev/oauth-server-kit/express";
 import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
 import { captchaSettings } from "./captcha.js";
 import swaggerUi from "swagger-ui-express";
@@ -22,16 +26,25 @@ import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
 import { registerLearnerGoogleRoutes } from "./learner-google-routes.js";
-import { assertLearnerSchool, authenticateLearner } from "./learners.js";
+import { assertLearnerSchool, authenticateLearner, isSecureCookieUrl } from "./learners.js";
 import { createOpenApiDocument } from "./openapi.js";
-import { and, eq, or } from "drizzle-orm";
-import * as schema from "./db/schema/index.js";
 import { authenticateHttpRequest } from "./auth/authenticate.js";
+import {
+  authorizeOperationCredential,
+  type CredentialKind,
+  operationPermissionsAllow,
+} from "./auth/operation-policy.js";
+import { resolveSchoolContext } from "./school-context.js";
 import { subscribeToNotifications } from "./notification-stream.js";
 
 export function createExpressApp(deps: DispatchDeps): Express {
   const app = express();
   app.disable("x-powered-by");
+  app.set("trust proxy", parseTrustProxy(process.env.TRUST_PROXY));
+  // Resolves the client address from the trusted proxy chain (`req.ip`) and
+  // overwrites any client-sent CLIENT_IP_HEADER; rate limiting, API-key
+  // throttling and Better Auth all read that header.
+  app.use(createClientIpMiddleware({ header: CLIENT_IP_HEADER }));
   const buckets = new Map<string, { window: number; count: number }>();
   app.use((req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -48,18 +61,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
     req.headers["x-request-id"] = requestId;
     res.setHeader("X-Request-ID", requestId);
     const now = Date.now();
-    const forwardedHeader = req.headers["x-forwarded-for"];
-    const forwardedIp =
-      typeof forwardedHeader === "string"
-        ? forwardedHeader.split(",")[0]?.trim()
-        : Array.isArray(forwardedHeader)
-          ? forwardedHeader[0]?.split(",")[0]?.trim()
-          : undefined;
-    const clientIp = forwardedIp || req.ip || req.socket.remoteAddress || "unknown";
+    const clientIp = String(req.headers[CLIENT_IP_HEADER] ?? "unknown");
     const key = clientIp;
-    // Overwrite any client-supplied value: downstream API-key failure
-    // throttling keys on the address resolved here.
-    req.headers[CLIENT_IP_HEADER] = clientIp;
     const isLoopback =
       clientIp === "127.0.0.1" ||
       clientIp === "::1" ||
@@ -265,6 +268,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
         deps.db,
         req.headers as Record<string, string | string[] | undefined>,
         deps.clock,
+        isSecureCookieUrl(deps.auth.publicApiUrl),
       );
       if (learnerAuth.kind !== "authenticated") {
         const mapped = toPublicHttpError(
@@ -323,6 +327,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
         deps.db,
         req.headers as Record<string, string | string[] | undefined>,
         deps.clock,
+        isSecureCookieUrl(deps.auth.publicApiUrl),
       );
       if (learnerAuth.kind !== "authenticated") {
         res.status(401).end();
@@ -364,43 +369,36 @@ export function createExpressApp(deps: DispatchDeps): Express {
         res.status(401).end();
         return;
       }
-      const schoolPublicId =
-        typeof req.query.schoolId === "string" ? req.query.schoolId : "";
-      const isUuid =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          schoolPublicId,
-        );
-      const [school] = await deps.db
-        .select({ id: schema.schools.id })
-        .from(schema.schools)
-        .where(
-          isUuid
-            ? eq(schema.schools.id, schoolPublicId)
-            : or(
-                eq(schema.schools.publicId, schoolPublicId),
-                eq(schema.schools.subdomain, schoolPublicId),
-              ),
+      // The stream pushes what `listAdminNotifications` returns, so it gets
+      // that operation's checks: the credential kind it allows (a browser
+      // session, never an API key), an active staff membership in the school,
+      // and the permissions it requires.
+      const operationId = "listAdminNotifications";
+      if (
+        authorizeOperationCredential(
+          operationId,
+          adminAuth.credential.kind as CredentialKind,
         )
-        .limit(1);
-      if (!school) {
-        res.status(404).end();
+      ) {
+        res.status(403).end();
         return;
       }
-      const [membership] = await deps.db
-        .select({ schoolAccountId: schema.schoolAccounts.id })
-        .from(schema.schoolAccounts)
-        .innerJoin(
-          schema.memberships,
-          eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
-        )
-        .where(
-          and(
-            eq(schema.schoolAccounts.schoolId, school.id),
-            eq(schema.schoolAccounts.userId, adminAuth.principalId),
-          ),
-        )
-        .limit(1);
-      if (!membership?.schoolAccountId) {
+      const schoolPublicId =
+        typeof req.query.schoolId === "string" ? req.query.schoolId : "";
+      const school = await resolveSchoolContext({
+        db: deps.db,
+        clock: deps.clock,
+        principalId: adminAuth.principalId,
+        credential: adminAuth.credential,
+        requestedPublicSchoolId: schoolPublicId || null,
+      });
+      if (
+        !school.ok ||
+        !operationPermissionsAllow(operationId, {
+          permissions: school.value.permissions,
+          isOwner: school.value.isOwner,
+        })
+      ) {
         res.status(403).end();
         return;
       }
@@ -413,8 +411,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
       const unsubscribe = subscribeToNotifications(
         {
           audience: "admin",
-          schoolId: school.id,
-          recipientId: membership.schoolAccountId,
+          schoolId: school.value.schoolId,
+          recipientId: school.value.schoolAccountId,
         },
         (event) => {
           res.write(

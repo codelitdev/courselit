@@ -20,6 +20,10 @@
       "types": "./src/page-blocks.ts",
       "import": "./src/page-blocks.ts"
     },
+    "./safe-redirect": {
+      "types": "./src/safe-redirect.ts",
+      "import": "./src/safe-redirect.ts"
+    },
     "./money": {
       "types": "./src/money.ts",
       "import": "./src/money.ts"

@@ -112,6 +112,52 @@ describe.serial("learner authentication", () => {
     await runtime.close();
   });
 
+  it("counts every guess against a code's limit, even guesses sent at once", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const email = "race-learner@example.com";
+    const sent: string[] = [];
+    const requested = await requestLearnerEmailCode(
+      runtime.db,
+      { schoolPublicId: world.schoolA.publicId, email },
+      clock,
+      async (message) => {
+        sent.push(message.otp);
+      },
+    );
+    expect(requested.ok).toBe(true);
+    const code = sent[0]!;
+    const wrong = Array.from({ length: 20 }, (_, index) =>
+      String((Number(code) + index + 1) % 1_000_000).padStart(6, "0"),
+    );
+
+    const guesses = await Promise.all(
+      wrong.map((guess) =>
+        verifyLearnerEmailCode(
+          runtime.db,
+          { schoolPublicId: world.schoolA.publicId, email, code: guess },
+          clock,
+        ),
+      ),
+    );
+    expect(guesses.every((guess) => !guess.ok)).toBe(true);
+    const [row] = await runtime.db
+      .select({ attempts: schema.schoolLoginCodes.attempts })
+      .from(schema.schoolLoginCodes)
+      .where(eq(schema.schoolLoginCodes.email, email));
+    expect(row?.attempts).toBe(5);
+
+    // The limit is used up, so even the right code no longer works.
+    const correct = await verifyLearnerEmailCode(
+      runtime.db,
+      { schoolPublicId: world.schoolA.publicId, email, code },
+      clock,
+    );
+    expect(correct.ok).toBe(false);
+    await runtime.close();
+  });
+
   it("signs a learner in to one school with an emailed code", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -269,6 +315,98 @@ describe.serial("learner authentication", () => {
     await runtime.close();
   });
 
+  it("won't let anyone register someone else's email to take over their learner account", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const app = createExpressApp(runtime);
+    const server = await new Promise<Server>((resolve) => {
+      const listening = app.listen(0, () => resolve(listening));
+    });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      const email = "victim@example.com";
+
+      // Password sign-up is off, so nobody can claim an address with it.
+      const signUp = await fetch(`${base}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password: "attacker-pass-1", name: "Mallory" }),
+      });
+      expect(signUp.ok).toBe(false);
+      expect(signUp.headers.get("set-cookie")).toBeNull();
+
+      // Even if an unverified user for the address exists (made before this
+      // change, or by any other path) with a password and a live session...
+      const now = clock.now();
+      const userId = "unverified-claimant";
+      await runtime.db.insert(schema.user).values({
+        id: userId,
+        name: "Mallory",
+        email,
+        emailVerified: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await runtime.db.insert(schema.account).values({
+        id: "claimant-credential",
+        accountId: userId,
+        providerId: "credential",
+        userId,
+        password: "hash",
+        createdAt: now,
+        updatedAt: now,
+      });
+      await runtime.db.insert(schema.session).values({
+        id: "claimant-session",
+        token: "claimant-token",
+        userId,
+        expiresAt: new Date(now.getTime() + 86_400_000),
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      // ...the real owner proving the address with a school's email code
+      // takes the user over and shuts the claimant out.
+      const sent: string[] = [];
+      const requested = await requestLearnerEmailCode(
+        runtime.db,
+        { schoolPublicId: world.schoolA.publicId, email },
+        clock,
+        async (message: { otp: string }) => {
+          sent.push(message.otp);
+        },
+      );
+      expect(requested.ok).toBe(true);
+      const verified = await verifyLearnerEmailCode(
+        runtime.db,
+        { schoolPublicId: world.schoolA.publicId, email, code: sent[0]! },
+        clock,
+      );
+      expect(verified.ok).toBe(true);
+      const [user] = await runtime.db
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.id, userId));
+      expect(user?.emailVerified).toBe(true);
+      expect(
+        await runtime.db
+          .select()
+          .from(schema.account)
+          .where(eq(schema.account.userId, userId)),
+      ).toHaveLength(0);
+      expect(
+        await runtime.db
+          .select()
+          .from(schema.session)
+          .where(eq(schema.session.userId, userId)),
+      ).toHaveLength(0);
+    } finally {
+      server.close();
+      await runtime.close();
+    }
+  });
+
   it("redeems a Google sign-in ticket once, for its school and browser only", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-03T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -313,12 +451,11 @@ describe.serial("learner authentication", () => {
       expect(begin.origin).toBe("http://api.localhost:4000");
       const requestToken = begin.searchParams.get("request")!;
 
-      const user = await runtime.auth.auth.api.signUpEmail({
-        body: {
-          name: "Ticket User",
-          email: "ticket-user@example.com",
-          password: "password123",
-        },
+      const otp = await runtime.auth.auth.api.createVerificationOTP({
+        body: { email: "ticket-user@example.com", type: "sign-in" },
+      });
+      const user = await runtime.auth.auth.api.signInEmailOTP({
+        body: { email: "ticket-user@example.com", otp, name: "Ticket User" },
       });
       const finished = await finishLearnerGoogleSignIn(
         runtime.db,
@@ -441,10 +578,71 @@ describe.serial("learner authentication", () => {
         `${runtime.auth.publicApiUrl}/api/auth/callback/google`,
       );
 
+      // Begin pins the request to this browser with a cookie on the API host.
+      const requestCookie = begin.headers
+        .getSetCookie()
+        .find((cookie) => cookie.startsWith("courselit.learner_google_request="))
+        ?.split(";", 1)[0];
+      expect(requestCookie).toBe(`courselit.learner_google_request=${requestToken}`);
+
+      // A CourseLit session someone already has, e.g. from an email code.
+      const otp = await runtime.auth.auth.api.createVerificationOTP({
+        body: { email: "bystander@example.com", type: "sign-in" },
+      });
+      const platform = await runtime.auth.auth.api.signInEmailOTP({
+        body: { email: "bystander@example.com", otp, name: "Bystander" },
+        asResponse: true,
+      });
+      const platformCookie = platform.headers.get("set-cookie")!.split(";", 1)[0]!;
+      const bystanderAccounts = async () =>
+        runtime.db
+          .select({ id: schema.schoolAccounts.id })
+          .from(schema.schoolAccounts)
+          .innerJoin(schema.user, eq(schema.user.id, schema.schoolAccounts.userId))
+          .where(eq(schema.user.email, "bystander@example.com"));
+
+      // A link straight to the finish URL, opened in a browser that never
+      // began this sign-in, admits nobody, however signed in it is.
+      const hijack = await fetch(
+        `${base}/learner-login/google/finish?request=${requestToken}`,
+        { redirect: "manual", headers: { cookie: platformCookie } },
+      );
+      expect(hijack.status).toBe(400);
+      expect(await bystanderAccounts()).toHaveLength(0);
+
+      // In the browser that began it, a session older than the request (one
+      // that wasn't made by this Google sign-in) doesn't count either.
+      const later = freezeRuntimeClock(new Date("2099-01-01T00:00:00.000Z"));
+      const laterStart = await startLearnerGoogleSignIn(
+        runtime.db,
+        {
+          schoolPublicId: world.schoolA.publicId,
+          host: "school-a.localhost:3001",
+          nonce: "m".repeat(43),
+          publicApiUrl: runtime.auth.publicApiUrl,
+        },
+        later,
+      );
+      expect(laterStart.ok).toBe(true);
+      if (!laterStart.ok) return;
+      const laterToken = new URL(laterStart.value.url).searchParams.get("request")!;
+      const stale = await fetch(
+        `${base}/learner-login/google/finish?request=${laterToken}`,
+        {
+          redirect: "manual",
+          headers: {
+            cookie: `${platformCookie}; courselit.learner_google_request=${laterToken}`,
+          },
+        },
+      );
+      expect(stale.status).toBe(302);
+      expect(new URL(stale.headers.get("location")!).pathname).toBe("/login");
+      expect(await bystanderAccounts()).toHaveLength(0);
+
       // Coming back without a Google session lands on the school's login page.
       const failed = await fetch(
         `${base}/learner-login/google/finish?request=${requestToken}&error=1`,
-        { redirect: "manual" },
+        { redirect: "manual", headers: { cookie: requestCookie! } },
       );
       expect(failed.status).toBe(302);
       const failure = new URL(failed.headers.get("location")!);

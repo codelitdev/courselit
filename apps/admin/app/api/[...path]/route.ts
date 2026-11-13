@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isCrossOriginWrite } from "@/lib/request-origin";
 
+const CLIENT_IP_HEADER = "x-courselit-client-ip";
 const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, "");
 
 async function proxy(
@@ -8,6 +10,12 @@ async function proxy(
 ) {
   try {
     const { path } = await context.params;
+    if (isCrossOriginWrite(request.method, request.headers)) {
+      return NextResponse.json(
+        { code: "forbidden", message: "Cross-origin requests can't change data." },
+        { status: 403 },
+      );
+    }
     const suffix = path.join("/");
     // The BFF strips its own `/api` segment.  Restore it for Better Auth and
     // account-scoped routes; versioned product APIs live at `/v1/*` upstream.
@@ -19,16 +27,19 @@ async function proxy(
     // The API never picks a school from the host. Only Better Auth (`/api/auth`)
     // reads the forwarded host, for CSRF origin checks.
     if (path[0] !== "auth") headers.delete("x-forwarded-host");
-    const clientIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip");
-    if (clientIp && !headers.has("x-forwarded-for")) {
-      headers.set("x-forwarded-for", clientIp);
-    }
+    // The API resolves the client address from the forwarded chain, so pass
+    // it through unchanged. A browser must never set the internal header.
+    headers.delete(CLIENT_IP_HEADER);
     let body: BodyInit | undefined;
     if (request.method !== "GET" && request.method !== "HEAD") {
       const contentType = request.headers.get("content-type") ?? "";
-      if (contentType.includes("application/x-www-form-urlencoded")) {
+      // Better Auth's own HTML forms (OAuth consent) post urlencoded bodies it
+      // only reads as JSON. Product APIs take JSON alone, so a plain HTML form
+      // can't reach them.
+      if (
+        path[0] === "auth" &&
+        contentType.includes("application/x-www-form-urlencoded")
+      ) {
         const form = await request.formData();
         body = JSON.stringify(Object.fromEntries(form.entries()));
         headers.set("content-type", "application/json");

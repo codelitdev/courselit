@@ -237,7 +237,9 @@ describe.serial("school team memberships and permissions", () => {
   });
 
   it("queues contact syncs for both sides of an ownership transfer", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    // Handing over a school needs a recent sign-in, and Better Auth stamps
+    // sessions with the real time, so the API runs at the real time too.
+    const clock = freezeRuntimeClock(new Date());
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
@@ -300,7 +302,9 @@ describe.serial("school team memberships and permissions", () => {
   });
 
   it("transfers ownership atomically to another team member", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    // Handing over a school needs a recent sign-in, and Better Auth stamps
+    // sessions with the real time, so the API runs at the real time too.
+    const clock = freezeRuntimeClock(new Date());
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
@@ -435,7 +439,12 @@ describe.serial("school team memberships and permissions", () => {
     expect(resendRes.status).toBe(200);
     const resent = resendRes.body as { token: string; id: string };
 
-    // 3. Unverified email cannot preview (returns 403)
+    // 3. Unverified email cannot preview (returns 403). Every sign-in proves
+    // the address now, so make the outsider unverified by hand.
+    await runtime.db
+      .update(schema.user)
+      .set({ emailVerified: false })
+      .where(eq(schema.user.email, world.outsider.email));
     const unverifiedPreview = await dispatch(runtime, {
       method: "POST",
       path: "/v1/team-invitations/preview",
@@ -506,6 +515,59 @@ describe.serial("school team memberships and permissions", () => {
       },
     });
     expect(afterRejectPreview.status).toBe(404);
+
+    await runtime.close();
+  });
+
+  it("transfers ownership only with a recent sign-in", async () => {
+    // Better Auth stamps sessions with real time, so run at real time.
+    const clock = freezeRuntimeClock(new Date());
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    // The owner signed in an hour ago.
+    await runtime.db
+      .update(schema.session)
+      .set({ createdAt: new Date(clock.now().getTime() - 60 * 60 * 1000) })
+      .where(eq(schema.session.userId, world.owner.id));
+    const transfer = (cookie: string) =>
+      dispatch(runtime, {
+        method: "POST",
+        path: "/v1/school/team/transfer-ownership",
+        headers: { cookie, "x-school-id": world.schoolA.publicId },
+        body: { targetMemberId: world.member.id },
+      });
+
+    const stale = await transfer(world.owner.sessionCookie);
+    expect(stale.status).toBe(403);
+    expect(stale.body).toMatchObject({
+      details: { reason: "recent_authentication_required" },
+    });
+    const [owner] = await runtime.db
+      .select({ isOwner: schema.memberships.isOwner })
+      .from(schema.memberships)
+      .innerJoin(
+        schema.schoolAccounts,
+        eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+      )
+      .where(
+        and(
+          eq(schema.memberships.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.owner.id),
+        ),
+      );
+    expect(owner?.isOwner).toBe(true);
+
+    // Signing in again makes the session fresh enough.
+    const otp = await runtime.auth.auth.api.createVerificationOTP({
+      body: { email: world.owner.email, type: "sign-in" },
+    });
+    const signedIn = await runtime.auth.auth.api.signInEmailOTP({
+      body: { email: world.owner.email, otp },
+      asResponse: true,
+    });
+    const freshCookie = signedIn.headers.get("set-cookie")!.split(";", 1)[0]!;
+    const transferred = await transfer(freshCookie);
+    expect(transferred.status).toBe(200);
 
     await runtime.close();
   });
