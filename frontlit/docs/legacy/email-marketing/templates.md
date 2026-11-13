@@ -9,7 +9,11 @@ Email templates help you build a reusable library of branded email layouts. Once
 
 > This feature is currently in beta, which means you may encounter bugs. Please report them in our [Discord](https://discord.com/invite/GR4bQsN) group if you run into any issues.
 
-> **Before you start**: If your school is hosted on [courselit.app](https://courselit.app), you need to get approved to send marketing emails. [Request access here](/docs/legacy/email-marketing/mail-access-request).
+<Callout type="note" title="Before you start">
+
+If your school is hosted on [courselit.app](https://courselit.app), you need to get approved to send marketing emails. [Request access here](/docs/legacy/email-marketing/mail-access-request).
+
+</Callout>
 
 ## Templates Hub
 

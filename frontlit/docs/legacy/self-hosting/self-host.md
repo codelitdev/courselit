@@ -6,7 +6,11 @@ nav_title: "Self hosting guide"
 nav_order: 11020
 ---
 
-> **Before you self-host**: Although we believe in the power of hosting your own software, we still think that buying a subscription to [CourseLit](https://courselit.app) will save you a lot of time and money of maintaining your own CourseLit instance. Check out our [pricing](https://courselit.app/#pricing).
+<Callout type="note" title="Before you self-host">
+
+Although we believe in the power of hosting your own software, we still think that buying a subscription to [CourseLit](https://courselit.app) will save you a lot of time and money of maintaining your own CourseLit instance. Check out our [pricing](https://courselit.app/#pricing).
+
+</Callout>
 
 We offer two ways to self-host CourseLit, which are as follows.
 

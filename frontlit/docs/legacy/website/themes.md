@@ -155,7 +155,11 @@ Colors for the navigation sidebar
 
 Customize shadow effects for depth and elevation
 
-> **For Developers**: These settings correspond 1-to-1 to ShadCN's [CSS variables](https://ui.shadcn.com/docs/theming).
+<Callout type="note" title="For Developers">
+
+These settings correspond 1-to-1 to ShadCN's [CSS variables](https://ui.shadcn.com/docs/theming).
+
+</Callout>
 
 ### 2. Typography
 
