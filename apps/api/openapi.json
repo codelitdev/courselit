@@ -63734,7 +63734,10 @@
                             "type": "string",
                             "enum": [
                               "active",
+                              "pending_checkout",
+                              "imported",
                               "read_only",
+                              "suspended",
                               "maintenance",
                               "migrating",
                               "deleted"
@@ -64032,7 +64035,10 @@
                       "type": "string",
                       "enum": [
                         "active",
+                        "pending_checkout",
+                        "imported",
                         "read_only",
+                        "suspended",
                         "maintenance",
                         "migrating",
                         "deleted"
@@ -76610,7 +76616,10 @@
                       "type": "string",
                       "enum": [
                         "active",
+                        "pending_checkout",
+                        "imported",
                         "read_only",
+                        "suspended",
                         "maintenance",
                         "migrating",
                         "deleted"

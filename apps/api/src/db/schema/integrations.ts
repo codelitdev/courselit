@@ -78,6 +78,11 @@ export const schoolIntegrations = pgTable(
       withTimezone: true,
     }),
     lastError: text("last_error"),
+    /**
+     * Marketing sends (drip) wait until this time after SendLit refused one for
+     * quota; set from SendLit's `retryAfter`. Only used on the `sendlit` row.
+     */
+    marketingPausedUntil: timestamp("marketing_paused_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },

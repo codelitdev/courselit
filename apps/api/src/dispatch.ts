@@ -349,6 +349,7 @@ import {
   startSchoolCheckout,
 } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
+import { schoolStateAllows, schoolStateError } from "./school-state.js";
 import {
   checkSchoolSubdomain,
   disconnectAiConnection,
@@ -689,6 +690,37 @@ export async function dispatch(
       deps.clock,
       secureLearnerCookies,
     );
+    // Learner and public routes of a read-only or offline school are gated on
+    // the school's state before any handler runs (school-state.ts). The school
+    // is the one in the path, else the one the request names, else the
+    // learner's own.
+    {
+      const publicSchoolId = /^\/v1\/public\/([^/]+)\//.exec(path)?.[1];
+      const isLearnerRoute =
+        path.startsWith("/v1/learner/") || path === "/v1/auth/tickets/consume";
+      if (publicSchoolId || isLearnerRoute) {
+        const schoolPublicId = publicSchoolId
+          ? decodeURIComponent(publicSchoolId)
+          : (headerSchoolId(request.headers) ??
+            (learnerAuth.kind === "authenticated"
+              ? learnerAuth.value.school.publicId
+              : null));
+        const stateSchool = schoolPublicId
+          ? await loadSchoolByPublicId(deps.db, schoolPublicId)
+          : null;
+        if (
+          stateSchool &&
+          !schoolStateAllows({
+            status: stateSchool.status,
+            actor: isLearnerRoute ? "learner" : "public",
+            method: request.method,
+            operationId: resolveOperationId(request.method, path),
+          })
+        ) {
+          return errorResponse(schoolStateError(stateSchool.status));
+        }
+      }
+    }
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
       const parsed = consumeSchoolAuthTicketBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
@@ -2336,6 +2368,19 @@ export async function dispatch(
       })
     ) {
       return errorResponse(createPlatformError("forbidden"));
+    }
+    // A read-only or offline school lets staff do only what its state allows
+    // (school-state.ts). Checked after permissions, so a refusal never tells
+    // someone without access what state the school is in.
+    if (
+      !schoolStateAllows({
+        status: school.value.status,
+        actor: school.value.isOwner ? "owner" : "team",
+        method: request.method,
+        operationId: policyOperationId,
+      })
+    ) {
+      return errorResponse(schoolStateError(school.value.status));
     }
 
     if (request.method === "GET" && path === "/v1/notification-preferences") {

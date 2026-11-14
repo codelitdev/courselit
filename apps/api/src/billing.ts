@@ -17,7 +17,7 @@ import { createBillingAuditHook } from "./billing-audit.js";
 import { verification } from "./db/schema/auth.generated.js";
 import * as billingSchema from "./db/schema/billing.generated.js";
 import { enqueuePlanFeatureSync } from "./plan-features.js";
-import { SSO_FEATURE } from "./sso-config.js";
+import { PLAN_FEATURES, PLAN_LIMITS } from "./school-plan.js";
 import type { AppDb } from "./types.js";
 
 export type BillingBundle = {
@@ -177,7 +177,9 @@ export function composeBilling(
         },
       },
     },
-    planFeatures: { business: [SSO_FEATURE] },
+    planFeatures: PLAN_FEATURES,
+    // In oss mode the package answers unlimited and needs no catalog plans.
+    ...(mode === "cloud" ? { planLimits: PLAN_LIMITS } : {}),
     mode,
     checkoutProvider: mode !== "cloud" ? "" : lemonsqueezy ? "lemonsqueezy" : "fake",
     requestedRevision: mode === "cloud" ? (lemonsqueezy ? revision : 1) : null,

@@ -33,9 +33,9 @@ type Plan = {
 describe("billing composition", () => {
   it("refuses to run production cloud billing on the fake provider", async () => {
     const { runtime, clock } = await setup();
-    const previous = { nodeEnv: process.env.NODE_ENV, provider: process.env.BILLING_CHECKOUT_PROVIDER };
+    const previous = { nodeEnv: process.env.NODE_ENV, provider: process.env.BILLING_PROVIDER };
     process.env.NODE_ENV = "production";
-    delete process.env.BILLING_CHECKOUT_PROVIDER;
+    delete process.env.BILLING_PROVIDER;
     try {
       expect(() => composeBilling(runtime.db, clock, { mode: "cloud" })).toThrow(
         "billing_provider_required_in_production",
@@ -44,8 +44,8 @@ describe("billing composition", () => {
       expect(() => composeBilling(runtime.db, clock, { mode: "oss" })).not.toThrow();
     } finally {
       process.env.NODE_ENV = previous.nodeEnv;
-      if (previous.provider === undefined) delete process.env.BILLING_CHECKOUT_PROVIDER;
-      else process.env.BILLING_CHECKOUT_PROVIDER = previous.provider;
+      if (previous.provider === undefined) delete process.env.BILLING_PROVIDER;
+      else process.env.BILLING_PROVIDER = previous.provider;
     }
     await runtime.close();
   });

@@ -16,15 +16,40 @@ import {
 import { user } from "./auth.generated.js";
 import { schoolSsoConnections } from "./school-sso.js";
 
+/**
+ * Where a school is in its life (docs/wip/plan-limits.md, section 3).
+ * `pending_checkout`, `imported` and `suspended` are offline; `read_only` is the
+ * grace period after a trial or subscription ends. Only the lifecycle job and
+ * the staff CLI change it.
+ */
+export const SCHOOL_STATUSES = [
+  "active",
+  "pending_checkout",
+  "imported",
+  "read_only",
+  "suspended",
+  "maintenance",
+  "migrating",
+  "deleted",
+] as const;
+export type SchoolStatus = (typeof SCHOOL_STATUSES)[number];
+
 export const schools = pgTable("schools", {
   id: uuid("id").primaryKey(),
   publicId: text("public_id").notNull().unique(),
   name: text("name").notNull(),
   subdomain: text("subdomain").notNull().unique(),
-  status: text("status")
-    .$type<"active" | "read_only" | "maintenance" | "migrating" | "deleted">()
-    .notNull()
-    .default("active"),
+  status: text("status").$type<SchoolStatus>().notNull().default("active"),
+  /** End of the read-only grace period after a lapse; null otherwise. */
+  graceEndsAt: timestamp("grace_ends_at", { withTimezone: true }),
+  /** Why staff suspended the school (staff CLI); null unless `suspended`. */
+  suspendedReason: text("suspended_reason"),
+  /**
+   * The last plan `schoolPlan` read from billing, used while billing can't be
+   * read (S23). Never written from a request body.
+   */
+  lastPlan: jsonb("last_plan"),
+  lastPlanAt: timestamp("last_plan_at", { withTimezone: true }),
   locale: text("locale").notNull().default("en"),
   /**
    * Sign-in methods the school has turned on. SSO isn't listed: it is on
@@ -46,6 +71,10 @@ export const schools = pgTable("schools", {
   check(
     "schools_login_methods_check",
     sql`${table.loginMethods} <@ ARRAY['email', 'google']::text[]`,
+  ),
+  check(
+    "schools_status_check",
+    sql`${table.status} IN ('active', 'pending_checkout', 'imported', 'read_only', 'suspended', 'maintenance', 'migrating', 'deleted')`,
   ),
 ]);
 

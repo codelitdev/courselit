@@ -7,6 +7,7 @@ import {
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, inArray, ne } from "drizzle-orm";
+import type { SchoolStatus } from "./db/schema/schools.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
 import { schoolHasPaidPayments } from "./revenue.js";
@@ -43,7 +44,7 @@ export type SchoolDto = {
   storefrontHost: string | null;
   /** Where the storefront is reached, e.g. `https://school.example.com`. */
   storefrontOrigin: string | null;
-  status: "active" | "read_only" | "maintenance" | "migrating" | "deleted";
+  status: SchoolStatus;
   locale: string;
   currency: string;
   permissions?: CourseLitPermission[];
@@ -138,6 +139,10 @@ export async function createSchool(
     paymentSettingsEncrypted: null,
     codeInjectionHead: "",
     codeInjectionBody: "",
+    graceEndsAt: null,
+    suspendedReason: null,
+    lastPlan: null,
+    lastPlanAt: null,
     createdAt: now,
     updatedAt: now,
   };
