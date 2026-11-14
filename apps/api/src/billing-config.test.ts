@@ -15,7 +15,8 @@ function lsEnv(overrides: Record<string, string | undefined> = {}): NodeJS.Proce
     BILLING_PRO_YEAR_PRODUCT_ID: "1002",
     BILLING_BUSINESS_MONTH_PRODUCT_ID: "1003",
     BILLING_BUSINESS_YEAR_PRODUCT_ID: "1004",
-    BILLING_DATA_ENCRYPTION_KEY: "a2V5LWtleS1rZXkta2V5LWtleS1rZXkta2V5LWtleXk=",
+    // A fake 32-byte key, built here so scanners don't mistake it for a real one.
+    BILLING_DATA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
     LEMONSQUEEZY_API_KEY: "ls-key",
     LEMONSQUEEZY_STORE_ID: "4242",
     LEMONSQUEEZY_WEBHOOK_SECRET: "whsec-current",
