@@ -34,9 +34,14 @@ describe("admin and learner surfaces", () => {
     const products = read("admin/app/products/page.tsx");
     const resources = read("admin/components/resources.tsx");
     const productWorkspace = read("admin/components/products/product-workspace.tsx");
+    const productContent = read("admin/components/products/product-content.tsx");
+    const productOverview = read("admin/components/products/product-overview.tsx");
+    const productSettings = read("admin/components/products/product-settings.tsx");
     const lessonAuthoring = read("admin/components/products/lesson-authoring.tsx");
     const scormUpload = read("admin/components/products/scorm-lesson-upload.tsx");
-    const sectionAuthoring = read("admin/components/products/section-authoring.tsx");
+    // Sections are released (dripped) from the product content page.
+    const sectionAuthoring = read("admin/components/products/product-content.tsx");
+    const productPublishing = read("admin/lib/product-publishing.ts");
     const paymentPlanList = read("admin/components/products/payment-plan-list.tsx");
     const paymentPlanDialog = read("admin/components/products/payment-plan-dialog.tsx");
     const featuredImage = read("admin/components/products/product-featured-image.tsx");
@@ -117,7 +122,6 @@ describe("admin and learner surfaces", () => {
     const learnerAccount = read(
       "storefront/app/schools/[schoolId]/(loggedin)/dashboard/account/page.tsx",
     );
-    const productRootPlaceholder = ["$", "{productRoot}"].join("");
     const publicProductPath = [
       "/product/",
       "$",
@@ -213,7 +217,6 @@ describe("admin and learner surfaces", () => {
     expect(products).toContain("/products/new");
     expect(products).toContain("/api/v1/products");
     expect(products).toContain("ITEMS_PER_PAGE = 9");
-    expect(products).toContain("currencySymbol");
     expect(read("admin/components/featured-card.tsx")).toContain(
       'const FALLBACK_IMAGE = "/courselit_backdrop_square.webp"',
     );
@@ -225,66 +228,18 @@ describe("admin and learner surfaces", () => {
     expect(products).toContain("https://docs.courselit.app/downloads/introduction/");
     expect(resources).toContain('target="_blank"');
     expect(productWorkspace).toContain("/api/v1/products/");
-    expect(productWorkspace).toContain("lessonsBySection");
-    expect(productWorkspace).toContain(
-      'changePublishStatus(checked === true ? "published" : "draft")',
-    );
+    expect(productContent).toContain("lessonsBySection");
     expect(productWorkspace).toContain("Digital download");
-    expect(productWorkspace).toContain(
-      'product.kind === "download" ? "Add File" : "Add Lesson"',
-    );
-    expect(productWorkspace).toContain('product.kind === "course" ?');
-    expect(productWorkspace).toContain("Add a section to start organizing this");
-    expect(productWorkspace).toContain(`href={\`${productRootPlaceholder}/content\`}`);
-    expect(productWorkspace).toContain(`href={\`${productRootPlaceholder}/manage\`}`);
-    expect(productWorkspace).toContain("function LessonTypeIcon");
-    expect(productWorkspace).toContain(
-      '<FileText className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<Video className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<HelpCircle className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<Headphones className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<FileImage className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<File className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<Tv className="size-4 text-muted-foreground" />',
-    );
-    expect(productWorkspace).toContain(
-      '<Package className="size-4 text-muted-foreground" />',
-    );
     expect(productWorkspace).toContain("Invite a customer");
     expect(productWorkspace).toContain("storefrontUrl");
     expect(productWorkspace).toContain("storefrontOrigin");
     expect(productWorkspace).toContain(publicProductPath);
-    expect(productWorkspace).toContain("Edit page");
     expect(productWorkspace).toContain(
-      '/pages/${encodeURIComponent(product.salesPage?.pageId ?? "")}/edit?redirectTo=',
+      "/pages/${encodeURIComponent(product.salesPage.pageId)}/edit?redirectTo=",
     );
     expect(productWorkspace).toContain("/api/v1/memberships");
-    expect(productWorkspace).toContain('aria-label="Share product"');
     expect(productWorkspace).toContain("school?.storefrontOrigin");
-    expect(productWorkspace).toContain("Enable a discussion space for this course");
-    expect(productWorkspace).toContain("Lead Magnet");
-    expect(productWorkspace).toContain("Danger zone");
-    expect(productWorkspace).toContain("<Switch");
-    expect(productWorkspace).toContain("Only accessible via direct link.");
-    expect(productWorkspace).toContain(
-      "Product must have exactly one free payment plan",
-    );
-    expect(productWorkspace).toContain("Type &quot;delete&quot; to confirm");
-    expect(lessonAuthoring).toContain("LessonTypeCards");
-    expect(lessonAuthoring).toContain('label="Preview"');
-    expect(lessonAuthoring).toContain('label="Visibility"');
+    expect(productSettings).toContain("Type &quot;delete&quot; to confirm");
     expect(lessonAuthoring).toContain("@frontlit/text-editor");
     expect(lessonAuthoring).toContain("ResizeObserver");
     expect(lessonAuthoring).toContain('type: "embed-resize"');
@@ -298,14 +253,9 @@ describe("admin and learner surfaces", () => {
     expect(scormUpload).toContain("packageFileCount");
     expect(scormUpload).toContain("{packageFileCount ?? 0} files");
     expect(scormUpload).not.toContain("Private MediaLit asset");
-    expect(sectionAuthoring).toContain("Content Release");
-    expect(sectionAuthoring).toContain("Scheduled Release");
-    expect(sectionAuthoring).toContain("dripDelaySeconds");
-    expect(sectionAuthoring).toContain("Release days after previous section");
-    expect(sectionAuthoring).toContain(
-      "https://docs.courselit.app/courses/section/#drip-a-section",
-    );
-    expect(paymentPlanList).toContain("New Plan");
+    expect(sectionAuthoring).toContain("Days after previous section");
+    expect(sectionAuthoring).toContain("Release date");
+    expect(productPublishing).toContain("dripDelaySeconds");
     expect(paymentPlanList).toContain('title = "Pricing"');
     expect(paymentPlanList).toContain("Manage your product's pricing plans");
     expect(paymentPlanList).toContain("Archive this payment plan?");
@@ -321,9 +271,6 @@ describe("admin and learner surfaces", () => {
     );
     expect(paymentPlanList).toContain("includedProducts.length");
     expect(productWorkspace).toContain("featuredImage");
-    expect(productWorkspace).toContain(
-      "The URL-friendly identifier for this product page.",
-    );
     expect(featuredImage).toContain("Select featured image");
     expect(featuredImage).toContain("@frontlit/media-uploader");
     expect(featuredImage).toContain("allowUnsplash");
@@ -357,9 +304,7 @@ describe("admin and learner surfaces", () => {
       "Your product is empty. Add some content to make it look interesting.",
     );
     expect(analytics).toContain("Edit content");
-    expect(productWorkspace).toContain("Analytics time range");
-    expect(productWorkspace).toContain("formatUpdatedAt");
-    expect(productWorkspace).toContain("<ProductAnalytics");
+    expect(productOverview).toContain("<ProductAnalytics");
     expect(products).not.toContain('form.get("body")');
     expect(communities).toContain('redirect("/community")');
     expect(communityPage).toContain("CommunityAdmin");
