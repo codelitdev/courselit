@@ -21,6 +21,7 @@ import {
   listSendLitContacts,
   provisionSendLitTeam,
   rotateSendLitTeamKey,
+  updateSendLitTeamQuota,
   SendLitApiError,
   type SendLitConfig,
   type SendLitContact,
@@ -33,6 +34,7 @@ import type { TrackSendLitEventPayload } from "./membership-events.js";
 import type { SendSchoolEmailPayload } from "./school-emails.js";
 import { sendSystemMail } from "./system-mail.js";
 import { deleteShadowUserIfOrphaned } from "./shadow-users.js";
+import { enqueuePlanFeatureSync } from "./plan-features.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -57,6 +59,7 @@ export function effectiveTeamPermissions(
 export type SendLitOperations = {
   provisionTeam: typeof provisionSendLitTeam;
   rotateKey: typeof rotateSendLitTeamKey;
+  updateTeamQuota?: typeof updateSendLitTeamQuota;
   createContact?: typeof createSendLitContact;
   getContact?: typeof getSendLitContact;
   updateContact?: typeof updateSendLitContact;
@@ -70,6 +73,7 @@ export type SendLitOperations = {
 const defaultSendLitOperations: SendLitOperations = {
   provisionTeam: provisionSendLitTeam,
   rotateKey: rotateSendLitTeamKey,
+  updateTeamQuota: updateSendLitTeamQuota,
   createContact: createSendLitContact,
   getContact: getSendLitContact,
   updateContact: updateSendLitContact,
@@ -183,6 +187,9 @@ async function provisionOneSendLitSchool(
         // Learners see the school, not the shared sending account, as the sender.
         sender: { fromName: payload.name },
         mailingAddress: payload.mailingAddress,
+        // SendLit only accepts a positive quota here; it is set to 0 below
+        // before the team is used, so a new team never starts unlimited (S20).
+        quota: { monthlyLimit: 1 },
       },
       { config },
     );
@@ -204,13 +211,24 @@ async function provisionOneSendLitSchool(
       );
     }
 
-    await updateIntegration(db, job.schoolId, "sendlit", {
-      remoteTeamId: teamId,
-      encryptedTeamKey: encryptIntegrationSecret(teamApiKey),
-      status: "ready",
-      lastSuccessfulSyncAt: clock.now(),
-      lastError: null,
-      updatedAt: clock.now(),
+    // Fail closed: no marketing sends until the plan sync sets the school's
+    // real allowance. The sync is queued with the ready mark, below. Until
+    // this PATCH succeeds the integration is not ready, and the job retries.
+    if (!operations.updateTeamQuota) {
+      throw new Error("SendLit updateTeamQuota operation is required to provision");
+    }
+    await operations.updateTeamQuota(teamId, { monthlyLimit: 0 }, { config });
+
+    await db.transaction(async (tx) => {
+      await updateIntegration(tx as unknown as AppDb, job.schoolId, "sendlit", {
+        remoteTeamId: teamId,
+        encryptedTeamKey: encryptIntegrationSecret(teamApiKey!),
+        status: "ready",
+        lastSuccessfulSyncAt: clock.now(),
+        lastError: null,
+        updatedAt: clock.now(),
+      });
+      await enqueuePlanFeatureSync(tx as unknown as AppDb, job.schoolId, clock);
     });
   } else {
     await updateIntegration(db, job.schoolId, "sendlit", {

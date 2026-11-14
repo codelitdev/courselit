@@ -5,6 +5,7 @@ import type { Logger } from "pino";
 import * as schema from "./db/schema/index.js";
 import { processNextPlatformJob } from "./integration-provisioning.js";
 import { cleanupSsoRequests } from "./learner-sso-sign-in.js";
+import { schoolsWithSendLitTeams, syncMarketingQuota } from "./marketing-quota.js";
 import { schoolsWithSsoConnections, syncPlanFeatures } from "./plan-features.js";
 import { SSO_DOMAIN_LABEL, ssoDnsResolver } from "./sso-admin.js";
 import { notifySsoOwner, recordSsoEvent } from "./sso-events.js";
@@ -17,12 +18,16 @@ type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 export const DOMAIN_FAILURES_BEFORE_UNVERIFIED = 3;
 const DOMAIN_RECHECK_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
 
-/** Drain the platform jobs the billing hook queued (`sync_plan_features`). */
+/**
+ * Drain the platform jobs the billing hook and SendLit provisioning queued
+ * (`sync_plan_features`): SSO connections, then the SendLit marketing quota.
+ */
 export async function processPlatformJobs(
   db: AppDb,
   billing: Billing,
   clock: Clock,
   logger: Logger,
+  mode: "cloud" | "oss" = "cloud",
 ): Promise<number> {
   let processed = 0;
   while (
@@ -31,11 +36,39 @@ export async function processPlatformJobs(
         throw new Error(`Unknown platform job type: ${job.type}`);
       }
       await syncPlanFeatures(db, billing, job.schoolId, clock);
+      await syncMarketingQuota({ db, billing, mode, clock }, job.schoolId);
     })
   ) {
     processed += 1;
   }
   return processed;
+}
+
+/**
+ * The daily backstop for SendLit quotas (S3): sets every ready team's quota
+ * from its school's plan, in case a sync job was lost or failed.
+ */
+export async function syncAllMarketingQuotas(
+  db: AppDb,
+  billing: Billing,
+  clock: Clock,
+  mode: "cloud" | "oss",
+  logger?: Logger,
+): Promise<number> {
+  let synced = 0;
+  for (const schoolId of await schoolsWithSendLitTeams(db)) {
+    try {
+      if ((await syncMarketingQuota({ db, billing, mode, clock }, schoolId)) === "updated") {
+        synced += 1;
+      }
+    } catch (error) {
+      logger?.warn(
+        { schoolId, error: error instanceof Error ? error.message : String(error) },
+        "marketing quota sync failed",
+      );
+    }
+  }
+  return synced;
 }
 
 /** The daily backstop: re-sync every school that has an active or suspended connection. */
@@ -155,9 +188,11 @@ export function startSsoJobs(options: {
   billing: Billing;
   clock: Clock;
   logger: Logger;
+  billingMode?: "cloud" | "oss";
   onError?: (task: string, error: unknown) => void;
 }): () => void {
   const { db, billing, clock, logger } = options;
+  const mode = options.billingMode ?? "cloud";
   const fail = (task: string, error: unknown) => {
     logger.error(
       { sso_task: task, error: error instanceof Error ? error.message : String(error) },
@@ -173,7 +208,7 @@ export function startSsoJobs(options: {
     if (jobsRunning || stopped) return;
     jobsRunning = true;
     try {
-      await processPlatformJobs(db, billing, clock, logger);
+      await processPlatformJobs(db, billing, clock, logger, mode);
     } catch (error) {
       fail("platform_jobs", error);
     } finally {
@@ -196,6 +231,7 @@ export function startSsoJobs(options: {
     try {
       if (clock.now().getTime() - lastPlanSync >= 24 * 60 * 60 * 1000) {
         await syncAllSsoPlanFeatures(db, billing, clock, logger);
+        await syncAllMarketingQuotas(db, billing, clock, mode, logger);
         lastPlanSync = clock.now().getTime();
       }
     } catch (error) {

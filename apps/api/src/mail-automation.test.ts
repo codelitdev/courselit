@@ -3,7 +3,8 @@ import { uuidv7 } from "@codelitdev/platform";
 import { and, eq, inArray } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
-import { processDripEmails } from "./drip-emails.js";
+import { DRIP_QUOTA_PAUSE_MS, processDripEmails } from "./drip-emails.js";
+import { SendLitApiError } from "./sendlit-client.js";
 import {
   processNextIntegrationJob,
   type SendLitOperations,
@@ -377,6 +378,85 @@ describe("section drip emails", () => {
         sendEmail,
       }),
     ).toBe(0);
+    await runtime.close();
+  });
+
+  it("pauses a school out of marketing quota instead of failing every learner", async () => {
+    const { runtime, adminHeaders, productId } = await setUp();
+    const createdSection = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/sections`,
+      headers: adminHeaders,
+      body: { title: "First section" },
+    });
+    const sectionId = (createdSection.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/sections/${sectionId}`,
+      headers: adminHeaders,
+      body: { dripEnabled: true, dripType: "relative-date", dripDelaySeconds: 86_400 },
+    });
+    await dispatch(runtime, {
+      method: "PUT",
+      path: `/v1/sections/${sectionId}/drip-email`,
+      headers: adminHeaders,
+      body: {
+        enabled: true,
+        subject: "Week 2 is open",
+        content: { content: [] },
+        html: "<p>Week 2 is open</p>",
+      },
+    });
+    await grantMembership(runtime, adminHeaders, productId);
+
+    let attempts = 0;
+    let quotaLeft = false;
+    const sent: string[] = [];
+    const sendEmail = async (_key: string, input: { to: string }) => {
+      attempts += 1;
+      if (!quotaLeft) {
+        throw new SendLitApiError(
+          "SendLit request failed with HTTP 429: organization_team_quota_exhausted",
+          429,
+          true,
+        );
+      }
+      sent.push(input.to);
+      return { txeId: "txe_1" };
+    };
+    const warnings: unknown[] = [];
+    const logger = { warn: (...args: unknown[]) => warnings.push(args), info: () => {} };
+
+    const unlocked = freezeRuntimeClock(new Date("2026-03-02T01:00:00.000Z"));
+    expect(
+      await processDripEmails(runtime.db, unlocked, { config: sendLitConfig, sendEmail, logger }),
+    ).toBe(0);
+    expect(attempts).toBe(1);
+    expect(warnings).toEqual([]);
+    const [integration] = await runtime.db
+      .select({ until: schema.schoolIntegrations.marketingPausedUntil })
+      .from(schema.schoolIntegrations)
+      .where(eq(schema.schoolIntegrations.provider, "sendlit"));
+    expect(integration!.until).toEqual(
+      new Date(unlocked.now().getTime() + DRIP_QUOTA_PAUSE_MS),
+    );
+
+    // Inside the pause, SendLit isn't asked again.
+    const later = freezeRuntimeClock(new Date("2026-03-02T01:30:00.000Z"));
+    await processDripEmails(runtime.db, later, { config: sendLitConfig, sendEmail, logger });
+    expect(attempts).toBe(1);
+
+    // The quota sync clears the pause when it raises the quota; the learner
+    // whose claim was released gets the email.
+    quotaLeft = true;
+    await runtime.db
+      .update(schema.schoolIntegrations)
+      .set({ marketingPausedUntil: null })
+      .where(eq(schema.schoolIntegrations.provider, "sendlit"));
+    expect(
+      await processDripEmails(runtime.db, later, { config: sendLitConfig, sendEmail, logger }),
+    ).toBe(1);
+    expect(sent).toEqual(["buyer@example.com"]);
     await runtime.close();
   });
 });

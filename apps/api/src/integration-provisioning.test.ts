@@ -122,7 +122,12 @@ describe("CourseLit SendLit provisioning", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) throw new Error("school_creation_failed");
 
-    const provisioned: Array<{ name: string; sender?: { fromName?: string } }> = [];
+    const provisioned: Array<{
+      name: string;
+      sender?: { fromName?: string };
+      quota?: { monthlyLimit?: number | null };
+    }> = [];
+    const quotas: Array<{ teamId: string; monthlyLimit: number | null }> = [];
     const sendLitOperations: SendLitOperations = {
       provisionTeam: async (input) => {
         provisioned.push(input);
@@ -135,6 +140,9 @@ describe("CourseLit SendLit provisioning", () => {
         };
       },
       rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
+      updateTeamQuota: async (teamId, quota) => {
+        quotas.push({ teamId, monthlyLimit: quota.monthlyLimit });
+      },
     };
 
     const processed = await processNextIntegrationJob(
@@ -147,6 +155,10 @@ describe("CourseLit SendLit provisioning", () => {
     expect(processed).toBe(true);
     // Its email goes out under the school's name, not the shared account's.
     expect(provisioned[0]?.sender?.fromName).toBe("SendLit School");
+    // A new team never starts unlimited (S20): provisioned with the smallest
+    // quota SendLit accepts, then set to 0 before it is marked ready.
+    expect(provisioned[0]?.quota).toEqual({ monthlyLimit: 1 });
+    expect(quotas).toEqual([{ teamId: "sl_team_1", monthlyLimit: 0 }]);
 
     const [ready] = await runtime.db
       .select()
@@ -159,6 +171,17 @@ describe("CourseLit SendLit provisioning", () => {
       );
     expect(ready).toMatchObject({ status: "ready", remoteTeamId: "sl_team_1" });
     expect(ready!.encryptedTeamKey).not.toContain("sl_live_key_999");
+    // The plan sync that sets the real allowance is queued with the ready mark.
+    const syncJobs = await runtime.db
+      .select()
+      .from(schema.integrationOutboxJobs)
+      .where(
+        and(
+          eq(schema.integrationOutboxJobs.schoolId, ready!.schoolId),
+          eq(schema.integrationOutboxJobs.type, "sync_plan_features"),
+        ),
+      );
+    expect(syncJobs).toHaveLength(1);
     await runtime.close();
   }, 20000);
 

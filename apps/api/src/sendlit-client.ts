@@ -22,6 +22,19 @@ export class SendLitApiError extends Error {
   }
 }
 
+/**
+ * Whether SendLit refused a send because the team's (or the organization's)
+ * sending quota is used up. SendLit answers 429 with
+ * `organization_team_quota_exhausted` or `organization_quota_exhausted`.
+ */
+export function isSendLitQuotaExhausted(error: unknown): boolean {
+  return (
+    error instanceof SendLitApiError &&
+    error.status === 429 &&
+    /quota_exhausted/.test(`${error.message} ${error.detail ?? ""}`)
+  );
+}
+
 export function sendLitConfig(
   env: Record<string, string | undefined> = process.env,
 ): SendLitConfig {
@@ -48,9 +61,14 @@ export type SendLitProvisionTeamInput = {
     source: "organization" | "custom";
     espId?: string;
   };
+  /**
+   * SendLit's field names (`schemas/teams.ts` in SendLit's API contract). On
+   * provisioning SendLit only accepts positive numbers; use
+   * `updateSendLitTeamQuota` to set 0. `null` means unlimited.
+   */
   quota?: {
-    monthly?: number;
-    daily?: number;
+    monthlyLimit?: number | null;
+    dailyLimit?: number | null;
   };
 };
 
@@ -379,6 +397,35 @@ export async function provisionSendLitTeam(
       method: "POST",
       provisioningApiKey: config.provisioningApiKey,
       body: input,
+    },
+    options.fetcher,
+  );
+}
+
+/**
+ * Sets a provisioned team's sending quota (`PATCH /provisioning/teams/:id`).
+ * Unlike provisioning, this accepts 0, which stops all sending from the team.
+ */
+export async function updateSendLitTeamQuota(
+  teamId: string,
+  quota: { monthlyLimit: number | null; dailyLimit?: number | null },
+  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+): Promise<void> {
+  const config = options.config ?? sendLitConfig();
+  if (!config.provisioningApiKey) {
+    throw new SendLitApiError(
+      "SENDLIT_ORGANIZATION_API_KEY is not configured",
+      undefined,
+      false,
+    );
+  }
+  await requestJson(
+    config,
+    `/provisioning/teams/${encodeURIComponent(teamId)}`,
+    {
+      method: "PATCH",
+      provisioningApiKey: config.provisioningApiKey,
+      body: { quota },
     },
     options.fetcher,
   );
