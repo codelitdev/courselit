@@ -5,6 +5,7 @@ import * as schema from "./db/schema/index.js";
 import { getPaymentProvider } from "./payments.js";
 import { getMailingSettings } from "./sendlit-service.js";
 import type { AppDb } from "./types.js";
+import { isReservedSubdomain } from "@courselit/api-contract/school-subdomain";
 
 export const ONBOARDING_CHECKLIST_KEYS = [
   "pay",
@@ -346,7 +347,11 @@ async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>>
       .from(schema.schoolHosts)
       .where(inArray(schema.schoolHosts.hostname, candidates)),
   ]);
-  return new Set([...schools, ...hosts].map((row) => row.value));
+  // Reserved subdomains read as taken, so the address checker suggests others (S19).
+  return new Set([
+    ...[...schools, ...hosts].map((row) => row.value),
+    ...candidates.filter(isReservedSubdomain),
+  ]);
 }
 
 export async function checkSchoolSubdomain(

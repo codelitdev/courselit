@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CourseLitLoading } from "@/components/course-lit-loader";
+import { CourseLitBadgeStrip } from "@/components/courselit-badge";
 import {
   LearnerButton as Button,
   LearnerCardImage,
@@ -143,6 +144,7 @@ export default function CertificateVerificationPage() {
           </>
         ) : null}
       </section>
+      <CourseLitBadgeStrip />
     </main>
   );
 }

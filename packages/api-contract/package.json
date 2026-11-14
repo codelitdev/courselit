@@ -28,6 +28,10 @@
       "types": "./src/school-name.ts",
       "import": "./src/school-name.ts"
     },
+    "./school-subdomain": {
+      "types": "./src/school-subdomain.ts",
+      "import": "./src/school-subdomain.ts"
+    },
     "./money": {
       "types": "./src/money.ts",
       "import": "./src/money.ts"

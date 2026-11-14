@@ -4,6 +4,8 @@ import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { type SeededWorld, seedWorld } from "./seed.js";
+import { checkSchoolSubdomain } from "./onboarding.js";
+import { createSchool } from "./schools.js";
 
 async function setup(billingMode?: "oss") {
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
@@ -356,5 +358,33 @@ describe("AI connections", () => {
     });
     expect(again.status).toBe(404);
     await runtime.close();
+  });
+});
+
+describe("reserved subdomains (S19)", () => {
+  it("read as taken, with suggestions, and can't be created even internally", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const checked = await checkSchoolSubdomain(runtime.db, "billing");
+      expect(checked).toMatchObject({ available: false, reason: "taken" });
+      expect(checked.suggestions.length).toBeGreaterThan(0);
+      const created = await createSchool(
+        runtime.db,
+        {
+          name: "Billing",
+          subdomain: "billing",
+          locale: "en",
+          currency: "USD",
+          principalId: world.owner.id,
+          requestId: "req_reserved",
+        },
+        clock,
+      );
+      expect(created.ok).toBe(false);
+    } finally {
+      await runtime.close();
+    }
   });
 });

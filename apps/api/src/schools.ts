@@ -45,6 +45,7 @@ import type { AppDb } from "./types.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionWebsite } from "./website.js";
 import { LEARNER_UPLOAD_LIMIT_DEFAULT } from "./storage.js";
+import { isReservedSubdomain } from "@courselit/api-contract/school-subdomain";
 
 export type SchoolDto = {
   id: string;
@@ -143,7 +144,8 @@ export async function createSchool(
     .from(schema.schools)
     .where(eq(schema.schools.subdomain, input.subdomain))
     .limit(1);
-  if (duplicate[0]) {
+  // A reserved subdomain is refused like a taken one (S19), also for staff imports.
+  if (duplicate[0] || isReservedSubdomain(input.subdomain)) {
     return {
       ok: false,
       error: createPlatformError("conflict", {

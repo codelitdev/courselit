@@ -36,16 +36,32 @@ export function CourseLitBadge({ className }: { className?: string }) {
   );
 }
 
+/** Where "Report this site" goes: a fixed CourseLit page, never the school's (S12). */
+export const REPORT_ABUSE_URL = "https://courselit.app/docs/policies/report-abuse";
+
+/** "Report this site", shown on every plan; a school can't turn it off (S12). */
+export function ReportSiteLink() {
+  return (
+    <LearnerLink href={REPORT_ABUSE_URL} target="_blank" rel="nofollow noopener noreferrer">
+      <LearnerCaption>Report this site</LearnerCaption>
+    </LearnerLink>
+  );
+}
+
 /** The strip CourseLit owns under every public page. It sits outside the
- * page's layout, so editing the page can't remove it. */
+ * page's layout, so editing the page can't remove it. It always has "Report
+ * this site", and the badge unless the school's plan lets it hide it. */
 export function CourseLitBadgeStrip() {
   const url = useCourseLitBadgeUrl();
-  if (!url) return null;
   return (
     // Not a page-builder Section: that adds the theme's full section padding,
     // and this is a thin strip. The theme's own colour tokens style it.
-    <div className="bg-background text-foreground">
-      <CourseLitBadge className="py-3" />
+    <div
+      className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-background py-3 text-foreground print:hidden"
+      data-courselit-strip=""
+    >
+      {url ? <CourseLitBadge /> : null}
+      <ReportSiteLink />
     </div>
   );
 }

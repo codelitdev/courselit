@@ -11,7 +11,9 @@ export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";
 export * from "./school-name.js";
+export * from "./school-subdomain.js";
 import { schoolNameSchema } from "./school-name.js";
+import { isReservedSubdomain } from "./school-subdomain.js";
 
 const c = initContract();
 
@@ -2069,7 +2071,8 @@ export const createSchoolBodySchema = z.object({
     .trim()
     .min(3)
     .max(63)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .refine((value) => !isReservedSubdomain(value), { message: "subdomain_reserved" }),
   locale: z.string().trim().min(2).max(35).default("en"),
   currency: z
     .string()

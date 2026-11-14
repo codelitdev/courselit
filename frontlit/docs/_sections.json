@@ -47,6 +47,11 @@
       "order": 90
     },
     {
+      "folder": "policies",
+      "name": "Policies",
+      "order": 95
+    },
+    {
       "folder": "legacy",
       "name": "Legacy docs (v0.x)",
       "order": 1000
