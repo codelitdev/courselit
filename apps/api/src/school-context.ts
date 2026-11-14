@@ -14,11 +14,14 @@ import {
 } from "./permissions.js";
 import { isApiKeyExpired, loadActiveApiKey } from "./auth/api-keys.js";
 import { loadSchoolByPublicId } from "./schools.js";
+import type { SchoolStatus } from "./db/schema/schools.js";
 import type { AppDb } from "./types.js";
 
 export type ResolvedSchool = {
   schoolId: string;
   publicId: string;
+  /** The school's lifecycle state; requests are gated on it (school-state.ts). */
+  status: SchoolStatus;
   schoolAccountId: string;
   schoolAccountPublicId: string;
   staffMembershipId: string;
@@ -75,6 +78,7 @@ async function resolveSchool(
       value: {
         schoolId: row.school.id,
         publicId: row.school.publicId,
+        status: row.school.status,
         schoolAccountId: row.ownerAccount.id,
         schoolAccountPublicId: row.ownerAccount.publicId,
         staffMembershipId: row.ownerMembership.id,
@@ -139,6 +143,7 @@ async function loadMembership(
     value: {
       schoolId: row.school.id,
       publicId: row.school.publicId,
+      status: row.school.status,
       schoolAccountId: row.schoolAccount.id,
       schoolAccountPublicId: row.schoolAccount.publicId,
       staffMembershipId: row.membership.id,

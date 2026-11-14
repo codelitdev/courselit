@@ -7,6 +7,7 @@ import type {
 } from "@frontlit/media-uploader";
 import { useCallback, useMemo, useState } from "react";
 import { type MediaUploadAuthorization, uploadAuthorizedMedia } from "./media-upload";
+import { learnerUploadErrorMessage } from "./upload-errors";
 
 export type LearnerCommunityMediaRecord = {
   id: string;
@@ -47,13 +48,10 @@ function mediaFromApi(item: LearnerCommunityMediaRecord): LearnerCommunityMedia 
 async function throwResponseError(response: Response, fallback: string): Promise<void> {
   if (response.ok) return;
   const body = (await response.json().catch(() => null)) as {
-    message?: unknown;
+    details?: { reason?: unknown };
   } | null;
-  const message =
-    body && typeof body.message === "string" && body.message.trim()
-      ? body.message
-      : fallback;
-  throw new Error(message);
+  const reason = typeof body?.details?.reason === "string" ? body.details.reason : "";
+  throw new Error(learnerUploadErrorMessage(response.status, reason, fallback));
 }
 
 export function useLearnerCommunityMediaUploader(): MediaUploaderAdapters<LearnerCommunityMedia> {

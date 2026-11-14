@@ -323,7 +323,7 @@ describe.serial("commerce: receipts", () => {
     expect(receipts[0]).toMatchObject({
       provider: "system",
       type: "send_system_email",
-      payload: { subject: "Your receipt for Paid course" },
+      payload: { subject: "Your receipt for Paid course | School A", stream: "transactional" },
     });
     const { html, text } = receipts[0]!.payload;
     expect(text).toContain("$25.00");
@@ -347,7 +347,7 @@ describe.serial("commerce: receipts", () => {
       );
     }
     expect(sent.filter((message) => message.to === "buyer@example.com")).toEqual([
-      expect.objectContaining({ subject: "Your receipt for Paid course" }),
+      expect.objectContaining({ subject: "Your receipt for Paid course | School A" }),
     ]);
     const pending = await setup.runtime.db
       .select()
@@ -362,12 +362,18 @@ describe.serial("commerce: receipts", () => {
     await setup.runtime.close();
   });
 
-  it("sends receipts through the school's mailing team when it has one", async () => {
+  it("sends receipts through the platform even when the school has a mailing team", async () => {
+    // The school's team carries marketing only, so no school quota can ever
+    // block a receipt (docs/wip/plan-limits.md, section 6).
     const setup = await setUp({ mailingTeam: true });
     const learner = await signUp(setup.runtime, setup.world, "team-buyer@example.com");
     await buy(setup, learner, "pay_team");
     expect(await receiptsTo(setup.runtime, "team-buyer@example.com")).toEqual([
-      expect.objectContaining({ provider: "sendlit", type: "send_school_email" }),
+      expect.objectContaining({
+        provider: "system",
+        type: "send_system_email",
+        payload: expect.objectContaining({ stream: "transactional" }),
+      }),
     ]);
     await setup.runtime.close();
   });
@@ -380,7 +386,7 @@ describe.serial("commerce: receipts", () => {
     expect(started.body).toMatchObject({ status: "paid" });
     const receipts = await receiptsTo(setup.runtime, "free@example.com");
     expect(receipts).toHaveLength(1);
-    expect(receipts[0]!.payload.subject).toBe("You're in: Paid course");
+    expect(receipts[0]!.payload.subject).toBe("You're in: Paid course | School A");
     expect(receipts[0]!.payload.text).toContain("Amount: Free");
     expect(
       await saleNotifications(setup.runtime, setup.world.owner.email),
@@ -400,8 +406,8 @@ describe.serial("commerce: receipts", () => {
     expect(second.status).toBe(200);
     const receipts = await receiptsTo(setup.runtime, "renewal@example.com");
     expect(receipts.map((receipt) => receipt.payload.subject)).toEqual([
-      "Your receipt for Paid course",
-      "Payment received for Paid course",
+      "Your receipt for Paid course | School A",
+      "Payment received for Paid course | School A",
     ]);
     expect(
       await saleNotifications(setup.runtime, setup.world.owner.email),
@@ -563,7 +569,7 @@ describe.serial("commerce: sale alerts", () => {
     const ownerAlertEmails = (await emailJobs(setup.runtime)).filter(
       (job) =>
         job.payload.to === setup.world.owner.email &&
-        job.payload.subject === "New sale: Paid course",
+        job.payload.subject === "New sale: Paid course | School A",
     );
     expect(ownerAlertEmails).toHaveLength(1);
     expect(ownerAlertEmails[0]!.provider).toBe("system");
@@ -585,7 +591,7 @@ describe.serial("commerce: sale alerts", () => {
       (await emailJobs(setup.runtime)).filter(
         (job) =>
           job.payload.to === setup.world.owner.email &&
-          job.payload.subject === "New sale: Paid course",
+          job.payload.subject === "New sale: Paid course | School A",
       ),
     ).toHaveLength(1);
     // The buyer still gets their receipt.

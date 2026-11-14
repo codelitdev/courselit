@@ -95,7 +95,12 @@ export type SchoolOnboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: {
+    required: boolean;
+    entitled: boolean;
+    paid: boolean;
+    trialEndsAt: string | null;
+  };
   updatedAt: string;
 };
 

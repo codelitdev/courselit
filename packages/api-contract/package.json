@@ -24,6 +24,10 @@
       "types": "./src/safe-redirect.ts",
       "import": "./src/safe-redirect.ts"
     },
+    "./school-name": {
+      "types": "./src/school-name.ts",
+      "import": "./src/school-name.ts"
+    },
     "./money": {
       "types": "./src/money.ts",
       "import": "./src/money.ts"

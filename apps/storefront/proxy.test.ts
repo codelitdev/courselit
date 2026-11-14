@@ -38,6 +38,24 @@ afterEach(() => {
 });
 
 describe("storefront proxy", () => {
+  it("shows a neutral offline page for a school that isn't live, without its site", async () => {
+    mockResolveHost(
+      () =>
+        new Response(
+          JSON.stringify({ schoolId: "sch_offline", subdomain: "acme", name: "Acme", offline: true }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    const response = await proxy(
+      new NextRequest("http://acme.courselit.app/products", {
+        headers: { host: "acme.courselit.app" },
+      }),
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(await response.text()).toContain("This site isn't available.");
+  });
+
   it("blocks direct requests to internal /schools routes with 404", async () => {
     const response = await proxy(new NextRequest("http://localhost:3002/schools/sch_123"));
     expect(response.status).toBe(404);

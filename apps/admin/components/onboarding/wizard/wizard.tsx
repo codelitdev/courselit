@@ -22,13 +22,13 @@ import {
   adoptProduct,
   applyBranding,
   applyEmail,
+  assertAcceptedFile,
   type BillingCatalog,
   checkSubdomain,
   createSchool,
   fetchBillingCatalog,
   getOnboarding,
   isHostedCatalog,
-  assertAcceptedFile,
   newUploadingFile,
   patchOnboarding,
   publishOffer,
@@ -101,6 +101,8 @@ export type WizardProps = {
   checkoutReturn: boolean;
   /** `?resume=1`: offer the Resume dialog. */
   resume: boolean;
+  /** `?plan=1`: open on the plan step, e.g. to buy a plan during a trial. */
+  choosePlan?: boolean;
 };
 
 type SchoolInfo = {
@@ -131,7 +133,12 @@ function realAccountName(
   return name && name.toLowerCase() !== prefix ? name : "";
 }
 
-export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
+export function SetupWizard({
+  isNew,
+  checkoutReturn,
+  resume,
+  choosePlan,
+}: WizardProps) {
   const router = useRouter();
   const shell = useAdminShellContext();
   const account = shell?.account ?? null;
@@ -158,6 +165,7 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
   const [bootError, setBootError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<BillingCatalog | null>(null);
   const [hosted, setHosted] = useState(true);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [firstRun, setFirstRun] = useState(false);
   const [step, setStep] = useState<WizardStep>("about");
   const [data, setData] = useState<WizardData>(() => emptyWizardData(localeDefaults));
@@ -329,13 +337,16 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
         setData(restored);
         dataRef.current = restored;
         setFirstRun(false);
-        const entitled = onboarding.billing.entitled || !onboarding.billing.required;
+        // Back from checkout: only a paid plan confirms the payment. A running
+        // trial is entitled too, but it says nothing about this checkout.
+        const paid = onboarding.billing.paid || !onboarding.billing.required;
+        setTrialEndsAt(onboarding.billing.paid ? null : onboarding.billing.trialEndsAt);
         const target = resolveResumeStep(onboarding.step, {
           hosted: isHosted,
           hasOffer: restored.offer !== null,
         });
         if (checkoutReturn) {
-          if (entitled) {
+          if (paid) {
             setStep("plan");
             setPaidConfirmed(true);
             setGoingLive(true);
@@ -344,6 +355,9 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
             return;
           }
           setCancelled(true);
+          setStep("plan");
+        } else if (choosePlan) {
+          setPlanMode("form");
           setStep("plan");
         } else {
           setStep(target);
@@ -1509,7 +1523,13 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
       <ResumeDialog
         open={showResume}
         schoolName={schoolName}
-        rows={resumeRows(resumeStep, { firstRun, hosted }, data, accountName)}
+        rows={resumeRows(
+          resumeStep,
+          { firstRun, hosted },
+          data,
+          accountName,
+          trialEndsAt,
+        )}
         onContinue={() => {
           markResumePrompted();
           setShowResume(false);

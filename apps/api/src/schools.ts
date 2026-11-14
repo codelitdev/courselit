@@ -8,33 +8,43 @@ import {
 import type { MediaRef } from "@courselit/api-contract";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import type { SchoolStatus } from "./db/schema/schools.js";
 import { normalizeEmail } from "./invitations.js";
-import { schoolHasPaidPayments } from "./revenue.js";
 import { insertSchoolOnboarding } from "./onboarding.js";
-import {
-  OWNER_PERMISSIONS,
-  parsePermissions,
-  serializePermissions,
-  type CourseLitPermission,
-} from "./permissions.js";
-import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
-import { sendLitConfig } from "./sendlit-client.js";
-import type { AppDb } from "./types.js";
-import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
-import {
-  parseStoredPaymentSettings,
-  providerSettingsDto,
-  type StoredPaymentSettings,
-} from "./payments.js";
 import {
   PAYMENT_WEBHOOK_PROVIDERS,
   paymentWebhookUrl,
   registerPaymentWebhook,
   WebhookRegistrationError,
 } from "./payment-webhooks.js";
-import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import {
+  parseStoredPaymentSettings,
+  providerSettingsDto,
+  type StoredPaymentSettings,
+} from "./payments.js";
+import {
+  type CourseLitPermission,
+  OWNER_PERMISSIONS,
+  parsePermissions,
+  serializePermissions,
+} from "./permissions.js";
+import {
+  CONTACT_PUBLIC_ID_PREFIX,
+  SCHOOL_PUBLIC_ID_PREFIX,
+} from "./public-id-prefixes.js";
+import { schoolHasPaidPayments } from "./revenue.js";
+import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
+import {
+  SCHOOL_CREATIONS_PER_DAY,
+  schoolsCreatedToday,
+  startTrial,
+} from "./school-trials.js";
+import { sendLitConfig } from "./sendlit-client.js";
 import { provisionSchoolCommunity } from "./spaces.js";
+import type { AppDb } from "./types.js";
+import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionWebsite } from "./website.js";
+import { LEARNER_UPLOAD_LIMIT_DEFAULT } from "./storage.js";
 
 export type SchoolDto = {
   id: string;
@@ -43,9 +53,11 @@ export type SchoolDto = {
   storefrontHost: string | null;
   /** Where the storefront is reached, e.g. `https://school.example.com`. */
   storefrontOrigin: string | null;
-  status: "active" | "read_only" | "maintenance" | "migrating" | "deleted";
+  status: SchoolStatus;
   locale: string;
   currency: string;
+  hideCourseLitBranding: boolean;
+  learnerUploadLimitBytes: number;
   permissions?: CourseLitPermission[];
   /** Whether the caller owns this school (owner-only settings such as API keys). */
   isOwner?: boolean;
@@ -92,6 +104,8 @@ export function toSchoolDto(
     status: row.status,
     locale: row.locale,
     currency: row.currency,
+    hideCourseLitBranding: row.hideCourseLitBranding,
+    learnerUploadLimitBytes: row.learnerUploadLimitBytes,
     ...(permissions === undefined ? {} : { permissions: [...permissions] }),
     ...(selected === undefined ? {} : { selected }),
     ...(website === undefined ? {} : { website }),
@@ -107,9 +121,23 @@ export async function createSchool(
     currency: string;
     principalId: string;
     requestId: string;
+    /**
+     * Set by the public create-school route. In `cloud` mode the account's
+     * first school starts a 14-day trial and later ones wait for checkout
+     * (`pending_checkout`); school creation is also rate-limited. Internal
+     * callers (imports, tests) leave it unset and get an active school.
+     */
+    billingMode?: "cloud" | "oss";
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolDto } | { ok: false; error: PlatformError }> {
+  if (
+    input.billingMode === "cloud" &&
+    (await schoolsCreatedToday(db, input.principalId, clock)) >=
+      SCHOOL_CREATIONS_PER_DAY
+  ) {
+    return { ok: false, error: createPlatformError("rate_limited") };
+  }
   const duplicate = await db
     .select()
     .from(schema.schools)
@@ -131,13 +159,19 @@ export async function createSchool(
     publicId,
     name: input.name,
     subdomain: input.subdomain,
-    status: "active" as const,
+    status: "active" as SchoolStatus,
     locale: input.locale,
     currency: input.currency,
     loginMethods: ["email" as const],
     paymentSettingsEncrypted: null,
     codeInjectionHead: "",
     codeInjectionBody: "",
+    hideCourseLitBranding: false,
+    learnerUploadLimitBytes: LEARNER_UPLOAD_LIMIT_DEFAULT,
+    graceEndsAt: null,
+    suspendedReason: null,
+    lastPlan: null,
+    lastPlanAt: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -262,6 +296,22 @@ export async function createSchool(
       createdAt: now,
       updatedAt: now,
     });
+
+    if (input.billingMode === "cloud") {
+      const trial = await startTrial(
+        tx as AppDb,
+        { userId: input.principalId, email: ownerEmail, schoolId },
+        clock,
+      );
+      if (!trial.started) {
+        // One trial per account: this school waits for its owner's checkout.
+        row.status = "pending_checkout";
+        await tx
+          .update(schema.schools)
+          .set({ status: "pending_checkout" })
+          .where(eq(schema.schools.id, schoolId));
+      }
+    }
   });
   return { ok: true, value: toSchoolDto(row, true) };
 }
@@ -380,19 +430,24 @@ export async function resolveSchoolByHost(db: AppDb, rawHost: string) {
   return school ?? null;
 }
 
-
-export async function updateSchoolCurrency(
+/**
+ * Updates a school's own settings: its currency and whether to hide the
+ * CourseLit badge. The caller checks the plan before turning the badge off.
+ */
+export async function updateSchool(
   db: AppDb,
   input: {
     schoolId: string;
     actorId: string;
-    currency: string;
+    currency?: string;
+    hideCourseLitBranding?: boolean;
+    learnerUploadLimitBytes?: number;
     requestId?: string;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolDto } | { ok: false; error: PlatformError }> {
-  const normalizedCurrency = input.currency.trim().toUpperCase();
-  if (normalizedCurrency.length !== 3) {
+  const normalizedCurrency = input.currency?.trim().toUpperCase();
+  if (normalizedCurrency !== undefined && normalizedCurrency.length !== 3) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
 
@@ -406,6 +461,7 @@ export async function updateSchoolCurrency(
     return { ok: false, error: createPlatformError("not_found") };
   }
   if (
+    normalizedCurrency !== undefined &&
     normalizedCurrency !== school.currency.toUpperCase() &&
     (await schoolHasPaidPayments(db, school.id))
   ) {
@@ -424,7 +480,13 @@ export async function updateSchoolCurrency(
     const [row] = await tx
       .update(schema.schools)
       .set({
-        currency: normalizedCurrency,
+        ...(normalizedCurrency === undefined ? {} : { currency: normalizedCurrency }),
+        ...(input.hideCourseLitBranding === undefined
+          ? {}
+          : { hideCourseLitBranding: input.hideCourseLitBranding }),
+        ...(input.learnerUploadLimitBytes === undefined
+          ? {}
+          : { learnerUploadLimitBytes: input.learnerUploadLimitBytes }),
         updatedAt: now,
       })
       .where(eq(schema.schools.id, input.schoolId))

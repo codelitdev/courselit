@@ -9,6 +9,7 @@ import { LEARNER_AVATAR_MAX_BYTES } from "@courselit/api-contract/learner-avatar
 import { useCallback, useMemo, useState } from "react";
 import type { LearnerCommunityMedia } from "./community-media-uploader";
 import { type MediaUploadAuthorization, uploadAuthorizedMedia } from "./media-upload";
+import { learnerUploadErrorMessage } from "./upload-errors";
 
 type ProfileMediaDto = {
   id: string;
@@ -54,7 +55,9 @@ async function throwResponseError(response: Response, fallback: string): Promise
     details?: { reason?: unknown };
   } | null;
   const reason = typeof body?.details?.reason === "string" ? body.details.reason : "";
-  throw new Error(REASON_MESSAGES[reason] ?? fallback);
+  throw new Error(
+    REASON_MESSAGES[reason] ?? learnerUploadErrorMessage(response.status, reason, fallback),
+  );
 }
 
 export function useLearnerProfileMediaUploader(): MediaUploaderAdapters<LearnerAvatarMedia> {

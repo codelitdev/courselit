@@ -1,8 +1,14 @@
 import { type Clock, uuidv7 } from "@codelitdev/platform";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, gte } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { schoolSiteUrl } from "./membership-events.js";
-import { escapeHtml } from "./system-mail.js";
+import {
+  lastKnownPlan,
+  planIncludesFeature,
+  REMOVE_BRANDING_FEATURE,
+} from "./school-plan.js";
+import { courseLitBadgeUrl } from "./storefront-plan.js";
+import { escapeHtml, type MailStream } from "./system-mail.js";
 import type { AppDb } from "./types.js";
 
 /** An email a school sends to one person: notifications, access grants and
@@ -15,7 +21,76 @@ export type SendSchoolEmailPayload = {
   html: string;
   text: string;
   idempotencyKey: string;
+  /** Which platform team sends it; set by `queueSchoolEmail`. */
+  stream?: MailStream;
 };
+
+/**
+ * Daily caps per school on platform mail (docs/wip/plan-limits.md, S14 and
+ * S22). Notifications have their own budget, so a busy community can never
+ * use up the allowance that receipts and access emails need.
+ */
+export const PLATFORM_MAIL_DAILY_CAPS: Record<
+  "transactional" | "notifications",
+  Record<"trial" | "pro" | "business", number>
+> = {
+  transactional: { trial: 200, pro: 2_000, business: 10_000 },
+  notifications: { trial: 500, pro: 5_000, business: 25_000 },
+};
+
+/**
+ * The cap tier from the school's last confirmed plan (`schools.last_plan`), so
+ * queueing an email never waits on billing. Anything not known to be paid
+ * gets the smallest cap. `null` is uncapped (self-hosted).
+ */
+export function platformMailTier(lastPlan: unknown): "trial" | "pro" | "business" | null {
+  if (process.env.BILLING_MODE === "oss") return null;
+  const plan = lastPlan as { kind?: string; plan?: string } | null;
+  if (plan?.kind === "oss") return null;
+  if (plan?.kind === "paid" && (plan.plan === "pro" || plan.plan === "business")) {
+    return plan.plan;
+  }
+  return "trial";
+}
+
+/**
+ * Whether learner mail from a school carries the "Powered by CourseLit"
+ * badge: always, unless the school hid it and its plan includes
+ * `remove_branding`. Read from the cached `last_plan`, as mail is queued
+ * outside any request that could ask billing.
+ */
+export function emailShowsCourseLitBadge(school: {
+  hideCourseLitBranding: boolean;
+  lastPlan: unknown;
+}): boolean {
+  if (!school.hideCourseLitBranding) return true;
+  if (process.env.BILLING_MODE === "oss") return false;
+  const plan = lastKnownPlan({ kind: "unknown" }, school.lastPlan);
+  return !planIncludesFeature(plan, REMOVE_BRANDING_FEATURE);
+}
+
+/** Adds the badge at the end of a rendered email. */
+export function withCourseLitBadge(
+  email: { html: string; text: string },
+  subdomain: string,
+): { html: string; text: string } {
+  const url = escapeHtml(courseLitBadgeUrl(subdomain));
+  const badge = `<p style="margin:24px 0 0;font-size:12px;color:#6b7280;text-align:center">Powered by <a href="${url}" rel="nofollow" style="color:#6b7280;font-weight:bold">CourseLit</a></p>`;
+  const html = email.html.includes("</div></body>")
+    ? email.html.replace(
+        /<\/div><\/body>(?![\s\S]*<\/div><\/body>)/,
+        `${badge}</div></body>`,
+      )
+    : `${email.html}${badge}`;
+  return {
+    html,
+    text: `${email.text}\n\nPowered by CourseLit: ${courseLitBadgeUrl(subdomain)}`,
+  };
+}
+
+function startOfUtcDay(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
 
 type EmailBody = {
   schoolName: string;
@@ -97,30 +172,101 @@ export async function schoolEmailSender(
   };
 }
 
-/** Queues one email for the worker. Email is never dropped: without a usable
- * mailing team it goes out through the platform's default sender. */
+/**
+ * Queues one email to a learner or the school's owner. It always goes through
+ * the platform's own SendLit teams, never the school's: no school quota can
+ * block sign-in codes or receipts, and the school's team carries marketing
+ * only (docs/wip/plan-limits.md, section 6).
+ *
+ * The subject names the school, because the sender is the platform until
+ * SendLit can set a sender name per message. Transactional mail over the
+ * school's daily cap waits for the next UTC day; notifications over theirs
+ * are skipped and stay in-app.
+ */
 export async function queueSchoolEmail(
   db: AppDb,
   schoolId: string,
   payload: SendSchoolEmailPayload,
   clock: Clock,
-): Promise<SchoolEmailSender> {
-  const { sender } = await schoolEmailSender(db, schoolId);
+  stream: MailStream = "transactional",
+): Promise<"queued" | "deferred" | "skipped"> {
   const now = clock.now();
+  const [school] = await db
+    .select({
+      name: schema.schools.name,
+      subdomain: schema.schools.subdomain,
+      lastPlan: schema.schools.lastPlan,
+      hideCourseLitBranding: schema.schools.hideCourseLitBranding,
+    })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  if (!school) return "skipped";
+
+  let nextAttemptAt = now;
+  if (stream === "transactional" || stream === "notifications") {
+    const tier = platformMailTier(school.lastPlan);
+    if (tier) {
+      const cap = PLATFORM_MAIL_DAILY_CAPS[stream][tier];
+      const dayStart = startOfUtcDay(now);
+      const [row] = await db
+        .select({ count: count() })
+        .from(schema.rateLimitEvents)
+        .where(
+          and(
+            eq(schema.rateLimitEvents.schoolId, schoolId),
+            eq(schema.rateLimitEvents.scope, "platform_mail"),
+            eq(schema.rateLimitEvents.action, stream),
+            gte(schema.rateLimitEvents.createdAt, dayStart),
+          ),
+        );
+      const used = Number(row?.count ?? 0);
+      if (used >= cap) {
+        if (stream === "notifications") return "skipped";
+        nextAttemptAt = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      }
+      if (used + 1 === Math.ceil(cap * 0.8)) {
+        console.warn(
+          JSON.stringify({ msg: "platform mail cap at 80%", schoolId, stream, cap }),
+        );
+      }
+      await db.insert(schema.rateLimitEvents).values({
+        id: uuidv7(clock),
+        schoolId,
+        userId: "system",
+        scope: "platform_mail",
+        action: stream,
+        subjectId: schoolId,
+        fingerprint: null,
+        createdAt: now,
+      });
+    }
+  }
+
+  const schoolName = school.name.replace(/[\r\n]+/g, " ").trim();
+  const subject = payload.subject.includes(schoolName)
+    ? payload.subject
+    : `${payload.subject} | ${schoolName}`;
+  // Staff mail (team invites, owner notices) is CourseLit's own and is
+  // branded on every plan; learner mail carries the badge (section 4).
+  const body =
+    stream !== "staff" && emailShowsCourseLitBadge(school)
+      ? withCourseLitBadge({ html: payload.html, text: payload.text }, school.subdomain)
+      : { html: payload.html, text: payload.text };
   await db.insert(schema.integrationOutboxJobs).values({
     id: uuidv7(clock),
     schoolId,
-    provider: sender === "school" ? "sendlit" : "system",
-    type: sender === "school" ? "send_school_email" : "send_system_email",
-    payload,
+    provider: "system",
+    type: "send_system_email",
+    payload: { ...payload, ...body, subject, stream },
     status: "pending",
     attempts: 0,
     revision: 1,
-    nextAttemptAt: now,
+    nextAttemptAt,
     createdAt: now,
     updatedAt: now,
   });
-  return sender;
+  return nextAttemptAt > now ? "deferred" : "queued";
 }
 
 /** The admin app's origin, where staff notification links point. */
@@ -209,6 +355,7 @@ export async function queueNotificationEmail(
       idempotencyKey: `notification:${input.notificationId}`,
     },
     clock,
+    input.audience === "admin" ? "staff" : "notifications",
   );
 }
 

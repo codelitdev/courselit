@@ -14,6 +14,7 @@ import {
   contract,
   normalizeCourseLitPermissions,
   addCommunityCategoryBodySchema,
+  auditEventListQuerySchema,
   authorizeMediaUploadBodySchema,
   communityListQuerySchema,
   communityMembershipListQuerySchema,
@@ -349,6 +350,8 @@ import {
   startSchoolCheckout,
 } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
+import { schoolStateAllows, schoolStateError } from "./school-state.js";
+import { assertTriggeredMailAllowed } from "./mail-abuse-limits.js";
 import {
   checkSchoolSubdomain,
   disconnectAiConnection,
@@ -370,7 +373,7 @@ import {
   loadSchoolByPublicId,
   resolveSchoolByHost,
   updateSchoolCodeInjection,
-  updateSchoolCurrency,
+  updateSchool,
   updateSchoolPaymentSettings,
 } from "./schools.js";
 import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
@@ -440,11 +443,66 @@ import {
 } from "./team.js";
 
 import type { DispatchResponse, IncomingRequest } from "./types.js";
+import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
+import { listAuditEvents } from "./audit-log.js";
+import { lessonType, scormPlanError } from "./scorm-plan.js";
+import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
+import { schoolUsage } from "./usage.js";
+import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
-  decryptIntegrationSecret,
-} from "./utils/integration-secrets.js";
+  AUDIT_LOG_FEATURE,
+  REMOVE_BRANDING_FEATURE,
+  schoolPlan,
+} from "./school-plan.js";
+import {
+  courseLitBadgeUrl,
+  isSchoolOwnerAccount,
+  storefrontPlanFlags,
+} from "./storefront-plan.js";
 
 export type { DispatchDeps };
+
+/** Invite limits apply on courselit.app only (S6); OSS sends its own mail. */
+async function inviteLimitCheck(
+  deps: DispatchDeps,
+  schoolId: string,
+  kind: InviteKind | "resend",
+) {
+  if (deps.billingMode !== "cloud") return null;
+  return inviteLimitError(
+    deps.db,
+    schoolId,
+    { newInvitation: kind === "team" },
+    deps.clock.now(),
+  );
+}
+
+async function inviteSent(
+  deps: DispatchDeps,
+  context: { tenantId?: string | null; principalId: string },
+  kind: InviteKind,
+) {
+  if (deps.billingMode !== "cloud" || !context.tenantId) return;
+  await recordInvite(
+    deps.db,
+    { schoolId: context.tenantId, userId: context.principalId, kind },
+    deps.clock,
+  );
+}
+
+const storageDeps = (deps: DispatchDeps) => ({
+  db: deps.db,
+  billing: deps.billing.billing,
+  mode: deps.billingMode,
+  clock: deps.clock,
+});
+
+const scormDeps = (deps: DispatchDeps) => ({
+  db: deps.db,
+  billing: deps.billing.billing,
+  now: deps.clock.now(),
+});
 
 const mcpKits = new WeakMap<DispatchDeps, ReturnType<typeof createCourseLitMcp>>();
 
@@ -557,6 +615,12 @@ export async function dispatch(
               schoolId: school.publicId,
               subdomain: school.subdomain,
               name: school.name,
+              // Pending checkout, imported or suspended: the storefront shows a
+              // neutral "not available" page instead of the site (section 3).
+              offline:
+                school.status === "pending_checkout" ||
+                school.status === "imported" ||
+                school.status === "suspended",
             },
           }
         : errorResponse(createPlatformError("not_found"));
@@ -689,6 +753,37 @@ export async function dispatch(
       deps.clock,
       secureLearnerCookies,
     );
+    // Learner and public routes of a read-only or offline school are gated on
+    // the school's state before any handler runs (school-state.ts). The school
+    // is the one in the path, else the one the request names, else the
+    // learner's own.
+    {
+      const publicSchoolId = /^\/v1\/public\/([^/]+)\//.exec(path)?.[1];
+      const isLearnerRoute =
+        path.startsWith("/v1/learner/") || path === "/v1/auth/tickets/consume";
+      if (publicSchoolId || isLearnerRoute) {
+        const schoolPublicId = publicSchoolId
+          ? decodeURIComponent(publicSchoolId)
+          : (headerSchoolId(request.headers) ??
+            (learnerAuth.kind === "authenticated"
+              ? learnerAuth.value.school.publicId
+              : null));
+        const stateSchool = schoolPublicId
+          ? await loadSchoolByPublicId(deps.db, schoolPublicId)
+          : null;
+        if (
+          stateSchool &&
+          !schoolStateAllows({
+            status: stateSchool.status,
+            actor: isLearnerRoute ? "learner" : "public",
+            method: request.method,
+            operationId: resolveOperationId(request.method, path),
+          })
+        ) {
+          return errorResponse(schoolStateError(stateSchool.status));
+        }
+      }
+    }
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
       const parsed = consumeSchoolAuthTicketBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
@@ -791,10 +886,23 @@ export async function dispatch(
               )
               .limit(1),
           ]);
+          const flags = await storefrontPlanFlags(
+            { db: deps.db, billing: deps.billing.billing, now: deps.clock.now() },
+            school.id,
+          );
+          const head = injection.ok ? injection.value.codeInjectionHead : "";
+          const body = injection.ok ? injection.value.codeInjectionBody : "";
+          // During a trial the code is the owner's alone (S25): it never goes
+          // out on this public, cacheable response.
           return ok({
             ...settings,
-            codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
-            codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
+            codeInjectionHead: flags.publicCodeInjection ? head : "",
+            codeInjectionBody: flags.publicCodeInjection ? body : "",
+            ownerOnlyCodeInjection:
+              !flags.publicCodeInjection && Boolean(head.trim() || body.trim()),
+            courseLitBadgeUrl: flags.showCourseLitBranding
+              ? courseLitBadgeUrl(school.subdomain)
+              : null,
             canonicalHost: verifiedCustomHost?.hostname ?? null,
             hasPublishedOffers: Boolean(publishedProduct || liveCommunity),
           });
@@ -931,6 +1039,19 @@ export async function dispatch(
           }
           const human = await verifyCaptcha(request.headers);
           if (!human.ok) return errorResponse(human.error);
+          // Anyone can type anyone's address here (S14, S28).
+          const leadIp = request.headers[CLIENT_IP_HEADER];
+          const allowed = await assertTriggeredMailAllowed(
+            deps.db,
+            {
+              schoolId: school.id,
+              kind: "lead_magnet",
+              email: parsed.data.email,
+              clientIp: (Array.isArray(leadIp) ? leadIp[0] : leadIp) ?? null,
+            },
+            deps.clock,
+          );
+          if (!allowed.ok) return errorResponse(allowed.error);
           const result = await signUpForLeadMagnet(
             deps.db,
             {
@@ -1001,9 +1122,14 @@ export async function dispatch(
       if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
       const human = await verifyCaptcha(request.headers);
       if (!human.ok) return errorResponse(human.error);
+      const clientIp = request.headers[CLIENT_IP_HEADER];
       const result = await requestLearnerEmailCode(
         deps.db,
-        { schoolPublicId, email: parsed.data.email },
+        {
+          schoolPublicId,
+          email: parsed.data.email,
+          clientIp: (Array.isArray(clientIp) ? clientIp[0] : clientIp) ?? null,
+        },
         deps.clock,
       );
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
@@ -1130,6 +1256,7 @@ export async function dispatch(
         const result = await authorizeLearnerAvatarUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1149,6 +1276,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -1167,9 +1295,20 @@ export async function dispatch(
         if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
+        // Only members who can post may upload community media (S24).
+        if (
+          !(await learnerMayUploadCommunityMedia(
+            deps.db,
+            learnerAuth.value.school.id,
+            learnerAuth.value.learner.id,
+          ))
+        ) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
         const result = await authorizeLearnerCommunityMediaUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1187,6 +1326,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -1230,8 +1370,24 @@ export async function dispatch(
           };
         }
       }
+      if (request.method === "GET" && path === "/v1/learner/site/code-injection") {
+        // Only the owner's own session gets code the plan keeps private (S25).
+        const owner = await isSchoolOwnerAccount(
+          deps.db,
+          learnerAuth.value.school.id,
+          learnerAuth.value.schoolAccount.id,
+        );
+        if (!owner) return errorResponse(createPlatformError("forbidden"));
+        const injection = await getSchoolCodeInjection(
+          deps.db,
+          learnerAuth.value.school.id,
+        );
+        return injection.ok
+          ? { status: 200, body: injection.value }
+          : errorResponse(injection.error);
+      }
       if (request.method === "GET" && path === "/v1/learner/me") {
-        let profile = undefined;
+        let profile;
         try {
           profile = await readLearnerProfile(deps.db, deps.sendLit, {
             schoolId: learnerAuth.value.school.id,
@@ -2171,6 +2327,7 @@ export async function dispatch(
           currency: parsed.data.currency,
           principalId: auth.principalId,
           requestId,
+          billingMode: deps.billingMode,
         },
         deps.clock,
       );
@@ -2336,6 +2493,19 @@ export async function dispatch(
       })
     ) {
       return errorResponse(createPlatformError("forbidden"));
+    }
+    // A read-only or offline school lets staff do only what its state allows
+    // (school-state.ts). Checked after permissions, so a refusal never tells
+    // someone without access what state the school is in.
+    if (
+      !schoolStateAllows({
+        status: school.value.status,
+        actor: school.value.isOwner ? "owner" : "team",
+        method: request.method,
+        operationId: policyOperationId,
+      })
+    ) {
+      return errorResponse(schoolStateError(school.value.status));
     }
 
     if (request.method === "GET" && path === "/v1/notification-preferences") {
@@ -2714,12 +2884,31 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const result = await updateSchoolCurrency(
+      // Removing the badge needs a paid plan (or OSS); a trial can't.
+      if (
+        parsed.data.hideCourseLitBranding === true &&
+        !(await schoolHasFeature(
+          deps.billing.billing,
+          context.tenantId!,
+          REMOVE_BRANDING_FEATURE,
+          deps.db,
+          deps.clock.now(),
+        ))
+      ) {
+        return errorResponse(
+          createPlatformError("forbidden", {
+            safeDetails: { reason: "plan_required" },
+          }),
+        );
+      }
+      const result = await updateSchool(
         deps.db,
         {
           schoolId: context.tenantId!,
           actorId: context.principalId,
           currency: parsed.data.currency,
+          hideCourseLitBranding: parsed.data.hideCourseLitBranding,
+          learnerUploadLimitBytes: parsed.data.learnerUploadLimitBytes,
           requestId: context.requestId,
         },
         deps.clock,
@@ -2761,6 +2950,52 @@ export async function dispatch(
       }
     }
 
+    if (request.method === "GET" && path === "/v1/school/plan-features") {
+      return {
+        status: 200,
+        body: {
+          features: await schoolPlanFeatureList(
+            deps.billing.billing,
+            context.tenantId!,
+            deps.db,
+            deps.clock.now(),
+          ),
+        },
+      };
+    }
+    if (request.method === "GET" && path === "/v1/school/audit-events") {
+      const parsed = auditEventListQuerySchema.safeParse({
+        cursor: query.get("cursor") ?? undefined,
+        limit: query.get("limit") ?? undefined,
+      });
+      if (!parsed.success)
+        return errorResponse(createPlatformError("validation_failed"));
+      if (
+        !(await schoolHasFeature(
+          deps.billing.billing,
+          context.tenantId!,
+          AUDIT_LOG_FEATURE,
+          deps.db,
+          deps.clock.now(),
+        ))
+      ) {
+        return errorResponse(
+          createPlatformError("forbidden", {
+            safeDetails: { reason: "plan_required" },
+          }),
+        );
+      }
+      const result = await listAuditEvents(deps.db, {
+        schoolId: context.tenantId!,
+        cursor: parsed.data.cursor,
+        limit: parsed.data.limit,
+        // Billing events are the owner's, in a browser session only (S9, S30).
+        includeBilling: school.value.isOwner && context.credential.kind === "session",
+      });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (path === "/v1/school/code-injection") {
       const requiredPerm = request.method === "PATCH" ? "school:write" : "school:read";
       if (!context.permissions.has(requiredPerm)) {
@@ -3459,6 +3694,8 @@ export async function dispatch(
       const parsed = inviteCommunityMemberBodySchema.safeParse(request.body ?? {});
       if (!parsed.success)
         return errorResponse(createPlatformError("validation_failed"));
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "community");
+      if (limited) return errorResponse(limited);
       const result = await inviteCommunityMember(
         deps.db,
         context,
@@ -3467,6 +3704,7 @@ export async function dispatch(
         parsed.data,
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "community");
       return result.ok
         ? { status: 201, body: result.value }
         : errorResponse(result.error);
@@ -4534,6 +4772,7 @@ export async function dispatch(
       const result = await authorizeMediaUpload(
         context,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );
@@ -4551,6 +4790,7 @@ export async function dispatch(
         context,
         school.value.publicId,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );
@@ -4909,12 +5149,15 @@ export async function dispatch(
     const resendInvitationMatch =
       /^\/v1\/school\/team\/invitations\/([^/]+)\/resend$/.exec(path);
     if (request.method === "POST" && resendInvitationMatch) {
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "resend");
+      if (limited) return errorResponse(limited);
       const result = await resendInvitation(
         deps.db,
         context,
         decodeURIComponent(resendInvitationMatch[1]!),
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "team");
       return result.ok ? { status: 200, body: result } : errorResponse(result.error);
     }
     const teamInvitationMatch = /^\/v1\/school\/team\/invitations\/([^/]+)$/.exec(path);
@@ -4949,6 +5192,8 @@ export async function dispatch(
       ) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "team");
+      if (limited) return errorResponse(limited);
       const result = await createInvitation(
         deps.db,
         context,
@@ -4960,6 +5205,7 @@ export async function dispatch(
         deps.clock,
       );
       if (result.ok) {
+        await inviteSent(deps, context, "team");
         const acceptUrl = new URL(
           `/team-invitations/${encodeURIComponent(result.id)}`,
           deps.auth.webOrigin,
@@ -5200,6 +5446,11 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+        kind: "create",
+        type: parsed.data.type,
+      });
+      if (scormRefused) return errorResponse(scormRefused);
       const result = await createLesson(
         deps.db,
         context,
@@ -5224,6 +5475,10 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+        kind: "process_package",
+      });
+      if (scormRefused) return errorResponse(scormRefused);
       const result = await processScormPackage(
         deps.db,
         context,
@@ -5251,6 +5506,19 @@ export async function dispatch(
       const parsed = updateLessonBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
+      }
+      if (parsed.data.mediaId !== undefined || parsed.data.content !== undefined) {
+        const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+          kind: "update",
+          lessonType: await lessonType(
+            deps.db,
+            context.tenantId!,
+            decodeURIComponent(lessonMatch[1]!),
+          ),
+          mediaId: parsed.data.mediaId,
+          content: parsed.data.content,
+        });
+        if (scormRefused) return errorResponse(scormRefused);
       }
       const result = await updateLesson(
         deps.db,
@@ -5280,6 +5548,8 @@ export async function dispatch(
       if (typeof input?.productId !== "string" || typeof input.email !== "string") {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "product");
+      if (limited) return errorResponse(limited);
       const result = await grantLearnerMembership(
         deps.db,
         {
@@ -5294,6 +5564,7 @@ export async function dispatch(
         deps.clock,
       );
       if (!result.ok) return errorResponse(result.error);
+      await inviteSent(deps, context, "product");
       return { status: 201, body: result.value };
     }
 
@@ -5325,6 +5596,12 @@ export async function dispatch(
         ? { status: 200, body: { checkoutUrl: checkout.checkoutUrl } }
         : errorResponse(checkout.error);
     }
+    if (request.method === "GET" && path === "/v1/school/billing/usage") {
+      return {
+        status: 200,
+        body: { items: await schoolUsage(storageDeps(deps), context.tenantId!) },
+      };
+    }
     if (request.method === "GET" && path === "/v1/school/billing") {
       return {
         status: 200,
@@ -5332,6 +5609,8 @@ export async function dispatch(
           billing: deps.billing,
           billingMode: deps.billingMode,
           schoolInternalId: context.tenantId!,
+          db: deps.db,
+          now: deps.clock.now(),
         }),
       };
     }
@@ -5367,12 +5646,20 @@ export async function dispatch(
       };
     }
     if (path === "/v1/school/onboarding") {
+      const plan = await schoolPlan(
+        {
+          db: deps.db,
+          billing: deps.billing.billing,
+          mode: deps.billingMode,
+          clock: deps.clock,
+        },
+        context.tenantId!,
+      );
       const billing = {
         required: deps.billingMode === "cloud",
-        entitled:
-          deps.billingMode !== "cloud" ||
-          (await deps.billing.billing.commercialState(context.tenantId!))
-            .activePaidPlan !== null,
+        entitled: plan.kind === "oss" || plan.kind === "paid" || plan.kind === "trial",
+        paid: plan.kind === "oss" || plan.kind === "paid",
+        trialEndsAt: plan.kind === "trial" ? plan.endsAt.toISOString() : null,
       };
       if (request.method === "GET") {
         return {

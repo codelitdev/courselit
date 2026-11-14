@@ -11,6 +11,7 @@ function SetupWizardRoute() {
       isNew={params.get("new") === "1"}
       checkoutReturn={params.get("checkout") === "return"}
       resume={params.get("resume") === "1"}
+      choosePlan={params.get("plan") === "1"}
     />
   );
 }

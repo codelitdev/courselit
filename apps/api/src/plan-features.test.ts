@@ -1,7 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
+import { uuidv7 } from "@codelitdev/platform";
 import * as schema from "./db/schema/index.js";
-import { enqueuePlanFeatureSync, schoolHasFeature, syncPlanFeatures } from "./plan-features.js";
+import {
+  enqueuePlanFeatureSync,
+  planIncludesFeatureOrThrow,
+  schoolHasFeature,
+  syncPlanFeatures,
+} from "./plan-features.js";
 import { processPlatformJobs } from "./sso-jobs.js";
 import { buyPlan, changePlan, changeSubscription } from "./test-billing-plan.js";
 import { ssoSetup, type SsoSetup } from "./test-sso-flow.js";
@@ -36,9 +42,62 @@ describe.serial("plan gating for learner SSO", () => {
     }
   });
 
-  it("fails closed when billing can't answer", async () => {
-    const throwing = { hasFeature: async () => { throw new Error("down"); } };
+  it("fails closed when billing can't answer and no last plan is known", async () => {
+    const throwing = {
+      hasFeature: async () => {
+        throw new Error("down");
+      },
+      commercialState: async () => {
+        throw new Error("down");
+      },
+    };
     expect(await schoolHasFeature(throwing, "x", "learner_sso")).toBe(false);
+  });
+
+  it("answers from the last confirmed plan while billing is down, so SSO keeps working (S10)", async () => {
+    const t = await ssoSetup({ billingMode: "cloud", noConnection: true });
+    try {
+      const throwing = {
+        hasFeature: async () => false,
+        commercialState: async () => {
+          throw new Error("down");
+        },
+      };
+      const schoolId = t.world.schoolB.id;
+      expect(await schoolHasFeature(throwing, schoolId, "learner_sso", t.runtime.db)).toBe(false);
+      await t.runtime.db
+        .update(schema.schools)
+        .set({ lastPlan: { kind: "paid", plan: "business", status: "active" } })
+        .where(eq(schema.schools.id, schoolId));
+      expect(await schoolHasFeature(throwing, schoolId, "learner_sso", t.runtime.db)).toBe(true);
+    } finally {
+      await t.close();
+    }
+  });
+
+  it("gives a running trial the Business features (S11)", async () => {
+    const t = await ssoSetup({ billingMode: "cloud", noConnection: true });
+    try {
+      const schoolId = t.world.schoolB.id;
+      const billing = t.runtime.billing.billing;
+      const now = t.clock.now();
+      expect(await schoolHasFeature(billing, schoolId, "learner_sso", t.runtime.db, now)).toBe(false);
+      await t.runtime.db.insert(schema.schoolTrials).values({
+        id: uuidv7(t.clock),
+        userId: "trial-user",
+        normalizedEmail: "trial@example.com",
+        schoolId,
+        startedAt: now,
+        endsAt: new Date(now.getTime() + 14 * 86_400_000),
+      });
+      expect(await schoolHasFeature(billing, schoolId, "learner_sso", t.runtime.db, now)).toBe(true);
+      expect(await schoolHasFeature(billing, schoolId, "remove_branding", t.runtime.db, now)).toBe(false);
+      expect(
+        await planIncludesFeatureOrThrow(billing, schoolId, "learner_sso", t.runtime.db, now),
+      ).toBe(true);
+    } finally {
+      await t.close();
+    }
   });
 
   it("only falls back to oss mode when BILLING_MODE=oss is set explicitly", async () => {

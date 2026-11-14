@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
+import { inviteErrorMessage } from "@/lib/invite-errors";
 
 type TeamMember = {
   id: string;
@@ -186,7 +187,7 @@ export function TeamSettings() {
         message?: string;
       } | null;
       if (!response.ok || !body?.token) {
-        throw new Error(body?.message ?? "Unable to create the invitation.");
+        throw new Error(inviteErrorMessage(body, "Unable to create the invitation."));
       }
       const invitationUrl = new URL(
         `/team-invitations/${encodeURIComponent(body.id ?? "")}`,

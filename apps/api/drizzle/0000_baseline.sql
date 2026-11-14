@@ -161,14 +161,6 @@ CREATE TABLE "oauth_resource" (
 	CONSTRAINT "oauth_resource_identifier_unique" UNIQUE("identifier")
 );
 --> statement-breakpoint
-CREATE TABLE "payment_notifications" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"payment_public_id" text NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "payment_notifications_payment_public_id_unique" UNIQUE("payment_public_id")
-);
---> statement-breakpoint
 CREATE TABLE "session" (
 	"id" text PRIMARY KEY NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
@@ -362,6 +354,27 @@ CREATE TABLE "scorm_runtime_states" (
 	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "section_drip_email_deliveries" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"section_id" uuid NOT NULL,
+	"membership_id" uuid NOT NULL,
+	"unlocked_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "section_drip_emails" (
+	"section_id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"enabled" boolean DEFAULT false NOT NULL,
+	"subject" text DEFAULT '' NOT NULL,
+	"content" jsonb,
+	"html" text,
+	"enabled_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "communities" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"public_id" text NOT NULL,
@@ -547,6 +560,7 @@ CREATE TABLE "school_integrations" (
 	"last_attempt_at" timestamp with time zone,
 	"last_successful_sync_at" timestamp with time zone,
 	"last_error" text,
+	"marketing_paused_until" timestamp with time zone,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL
 );
@@ -614,6 +628,38 @@ CREATE TABLE "migration_runs" (
 	"error_code" text,
 	"started_at" timestamp with time zone NOT NULL,
 	"completed_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "media_upload_reservations" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"school_account_id" uuid,
+	"bytes" bigint NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "media_upload_reservations_bytes_check" CHECK ("media_upload_reservations"."bytes" > 0)
+);
+--> statement-breakpoint
+CREATE TABLE "platform_audit_events" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"actor" text NOT NULL,
+	"command" text NOT NULL,
+	"school_id" uuid,
+	"school_subdomain" text,
+	"reason" text,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_trials" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"normalized_email" text NOT NULL,
+	"school_id" uuid,
+	"started_at" timestamp with time zone NOT NULL,
+	"ends_at" timestamp with time zone NOT NULL,
+	"ended_at" timestamp with time zone,
+	"end_reason" text,
+	CONSTRAINT "school_trials_end_reason_check" CHECK ("school_trials"."end_reason" IS NULL OR "school_trials"."end_reason" IN ('purchased', 'expired'))
 );
 --> statement-breakpoint
 CREATE TABLE "learner_notification_preferences" (
@@ -695,6 +741,102 @@ CREATE TABLE "rate_limit_events" (
 	"action" text NOT NULL,
 	"subject_id" text NOT NULL,
 	"fingerprint" text,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_assertion_ids" (
+	"connection_id" uuid NOT NULL,
+	"assertion_id" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "school_sso_assertion_ids_connection_id_assertion_id_pk" PRIMARY KEY("connection_id","assertion_id")
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_connections" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"public_id" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"protocol" text NOT NULL,
+	"status" text DEFAULT 'draft' NOT NULL,
+	"display_name" text NOT NULL,
+	"enforcement" text DEFAULT 'optional' NOT NULL,
+	"max_session_minutes" integer,
+	"idp_entity_id" text,
+	"idp_sso_url" text,
+	"idp_certificates" text[] DEFAULT '{}'::text[] NOT NULL,
+	"subject_attribute" text,
+	"oidc_issuer" text,
+	"oidc_client_id" text,
+	"oidc_client_secret" text,
+	"tested_at" timestamp with time zone,
+	"tested_config_digest" text,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "school_sso_connections_public_id_unique" UNIQUE("public_id"),
+	CONSTRAINT "school_sso_connections_protocol_check" CHECK ("school_sso_connections"."protocol" IN ('saml', 'oidc')),
+	CONSTRAINT "school_sso_connections_status_check" CHECK ("school_sso_connections"."status" IN ('draft', 'active', 'suspended', 'disabled')),
+	CONSTRAINT "school_sso_connections_enforcement_check" CHECK ("school_sso_connections"."enforcement" IN ('optional', 'required_for_domains'))
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_domains" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"connection_id" uuid NOT NULL,
+	"school_id" uuid NOT NULL,
+	"domain" text NOT NULL,
+	"verification_token" text NOT NULL,
+	"verified_at" timestamp with time zone,
+	"consecutive_check_failures" integer DEFAULT 0 NOT NULL,
+	"last_checked_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_events" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"connection_id" uuid,
+	"actor_school_account_id" uuid,
+	"action" text NOT NULL,
+	"reason" text,
+	"metadata" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_identities" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"connection_id" uuid NOT NULL,
+	"issuer" text NOT NULL,
+	"subject" text NOT NULL,
+	"school_account_id" uuid NOT NULL,
+	"last_email" text NOT NULL,
+	"last_signed_in_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "school_sso_requests" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"request_digest" text NOT NULL,
+	"school_id" uuid NOT NULL,
+	"connection_id" uuid NOT NULL,
+	"nonce_digest" text NOT NULL,
+	"return_origin" text NOT NULL,
+	"next_path" text NOT NULL,
+	"protocol_request_id" text,
+	"oidc_nonce" text,
+	"pkce_verifier" text,
+	"purpose" text DEFAULT 'sign_in' NOT NULL,
+	"started_by_school_account_id" uuid,
+	"test_result" jsonb,
+	"test_result_expires_at" timestamp with time zone,
+	"expires_at" timestamp with time zone NOT NULL,
+	"consumed_at" timestamp with time zone,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "school_sso_requests_request_digest_unique" UNIQUE("request_digest"),
+	CONSTRAINT "school_sso_requests_purpose_check" CHECK ("school_sso_requests"."purpose" IN ('sign_in', 'test'))
+);
+--> statement-breakpoint
+CREATE TABLE "sso_shadow_users" (
+	"user_id" text PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
 	"created_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
@@ -789,6 +931,22 @@ CREATE TABLE "school_auth_tickets" (
 	CONSTRAINT "school_auth_tickets_ticket_digest_unique" UNIQUE("ticket_digest")
 );
 --> statement-breakpoint
+CREATE TABLE "school_hosts" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"hostname" text NOT NULL,
+	"kind" text NOT NULL,
+	"verification_status" text DEFAULT 'unverified' NOT NULL,
+	"verification_token" text,
+	"txt_satisfied" boolean,
+	"routing_satisfied" boolean,
+	"verified_at" timestamp with time zone,
+	"is_primary" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "school_hosts_hostname_unique" UNIQUE("hostname")
+);
+--> statement-breakpoint
 CREATE TABLE "school_login_codes" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"school_id" uuid NOT NULL,
@@ -811,22 +969,6 @@ CREATE TABLE "school_login_requests" (
 	"consumed_at" timestamp with time zone,
 	"created_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "school_login_requests_request_digest_unique" UNIQUE("request_digest")
-);
---> statement-breakpoint
-CREATE TABLE "school_hosts" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"hostname" text NOT NULL,
-	"kind" text NOT NULL,
-	"verification_status" text DEFAULT 'unverified' NOT NULL,
-	"verification_token" text,
-	"txt_satisfied" boolean,
-	"routing_satisfied" boolean,
-	"verified_at" timestamp with time zone,
-	"is_primary" boolean DEFAULT false NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "school_hosts_hostname_unique" UNIQUE("hostname")
 );
 --> statement-breakpoint
 CREATE TABLE "school_onboarding" (
@@ -861,17 +1003,24 @@ CREATE TABLE "schools" (
 	"name" text NOT NULL,
 	"subdomain" text NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
+	"grace_ends_at" timestamp with time zone,
+	"suspended_reason" text,
+	"last_plan" jsonb,
+	"last_plan_at" timestamp with time zone,
 	"locale" text DEFAULT 'en' NOT NULL,
 	"login_methods" text[] DEFAULT '{email}'::text[] NOT NULL,
 	"currency" text DEFAULT 'USD' NOT NULL,
 	"payment_settings_encrypted" text,
 	"code_injection_head" text DEFAULT '' NOT NULL,
 	"code_injection_body" text DEFAULT '' NOT NULL,
+	"hide_courselit_branding" boolean DEFAULT false NOT NULL,
+	"learner_upload_limit_bytes" bigint DEFAULT 104857600 NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "schools_public_id_unique" UNIQUE("public_id"),
 	CONSTRAINT "schools_subdomain_unique" UNIQUE("subdomain"),
-	CONSTRAINT "schools_login_methods_check" CHECK ("schools"."login_methods" <@ ARRAY['email', 'google']::text[])
+	CONSTRAINT "schools_login_methods_check" CHECK ("schools"."login_methods" <@ ARRAY['email', 'google']::text[]),
+	CONSTRAINT "schools_status_check" CHECK ("schools"."status" IN ('active', 'pending_checkout', 'imported', 'read_only', 'suspended', 'maintenance', 'migrating', 'deleted'))
 );
 --> statement-breakpoint
 CREATE TABLE "selected_schools" (
@@ -919,6 +1068,14 @@ CREATE TABLE "spaces" (
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "spaces_public_id_unique" UNIQUE("public_id")
+);
+--> statement-breakpoint
+CREATE TABLE "payment_notifications" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"school_id" uuid NOT NULL,
+	"payment_public_id" text NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "payment_notifications_payment_public_id_unique" UNIQUE("payment_public_id")
 );
 --> statement-breakpoint
 CREATE TABLE "storefront_checkout_attempts" (
@@ -1357,7 +1514,6 @@ ALTER TABLE "oauth_consent" ADD CONSTRAINT "oauth_consent_user_id_user_id_fk" FO
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_client_id_oauth_client_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_client"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_session_id_session_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."session"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payment_notifications" ADD CONSTRAINT "payment_notifications_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "certificate_templates" ADD CONSTRAINT "certificate_templates_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "certificate_templates" ADD CONSTRAINT "certificate_templates_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1390,6 +1546,11 @@ ALTER TABLE "product_sections" ADD CONSTRAINT "product_sections_product_id_produ
 ALTER TABLE "product_sections" ADD CONSTRAINT "product_sections_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "scorm_runtime_states" ADD CONSTRAINT "scorm_runtime_states_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "scorm_runtime_states" ADD CONSTRAINT "scorm_runtime_states_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_membership_id_learner_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."learner_memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "communities" ADD CONSTRAINT "communities_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "communities" ADD CONSTRAINT "communities_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1424,6 +1585,7 @@ ALTER TABLE "learner_memberships" ADD CONSTRAINT "learner_memberships_school_acc
 ALTER TABLE "migration_mappings" ADD CONSTRAINT "migration_mappings_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "migration_mappings" ADD CONSTRAINT "migration_mappings_run_id_migration_runs_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."migration_runs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "migration_rejections" ADD CONSTRAINT "migration_rejections_run_id_migration_runs_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."migration_runs"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "media_upload_reservations" ADD CONSTRAINT "media_upload_reservations_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learner_notification_preferences" ADD CONSTRAINT "learner_notification_preferences_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learner_notification_preferences" ADD CONSTRAINT "learner_notification_preferences_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1434,6 +1596,21 @@ ALTER TABLE "audit_events" ADD CONSTRAINT "audit_events_school_id_schools_id_fk"
 ALTER TABLE "products" ADD CONSTRAINT "products_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rate_limit_events" ADD CONSTRAINT "rate_limit_events_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_assertion_ids" ADD CONSTRAINT "school_sso_assertion_ids_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_connections" ADD CONSTRAINT "school_sso_connections_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_domains" ADD CONSTRAINT "school_sso_domains_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_domains" ADD CONSTRAINT "school_sso_domains_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_actor_school_account_id_school_accounts_id_fk" FOREIGN KEY ("actor_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_started_by_school_account_id_school_accounts_id_fk" FOREIGN KEY ("started_by_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sso_shadow_users" ADD CONSTRAINT "sso_shadow_users_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sso_shadow_users" ADD CONSTRAINT "sso_shadow_users_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_created_by_school_account_id_school_accounts_id_fk" FOREIGN KEY ("created_by_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -1449,13 +1626,15 @@ ALTER TABLE "school_accounts" ADD CONSTRAINT "school_accounts_user_id_user_id_fk
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_sso_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("sso_connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_hosts" ADD CONSTRAINT "school_hosts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_login_codes" ADD CONSTRAINT "school_login_codes_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_login_requests" ADD CONSTRAINT "school_login_requests_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_hosts" ADD CONSTRAINT "school_hosts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_onboarding" ADD CONSTRAINT "school_onboarding_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_sso_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("sso_connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "selected_schools" ADD CONSTRAINT "selected_schools_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "selected_schools" ADD CONSTRAINT "selected_schools_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "space_followers" ADD CONSTRAINT "space_followers_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1467,6 +1646,7 @@ ALTER TABLE "space_unlock_plans" ADD CONSTRAINT "space_unlock_plans_payment_plan
 ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "space_unlocks" ADD CONSTRAINT "space_unlocks_space_id_spaces_id_fk" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "spaces" ADD CONSTRAINT "spaces_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payment_notifications" ADD CONSTRAINT "payment_notifications_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "storefront_checkout_attempts" ADD CONSTRAINT "storefront_checkout_attempts_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -1528,6 +1708,7 @@ CREATE UNIQUE INDEX "media_school_media_lit_uidx" ON "media" USING btree ("schoo
 CREATE UNIQUE INDEX "media_references_resource_media_uidx" ON "media_references" USING btree ("school_id","resource_type","resource_internal_id","media_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "product_sections_product_position_uidx" ON "product_sections" USING btree ("product_id","position");--> statement-breakpoint
 CREATE UNIQUE INDEX "scorm_runtime_states_membership_lesson_uidx" ON "scorm_runtime_states" USING btree ("membership_id","lesson_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "section_drip_email_deliveries_uidx" ON "section_drip_email_deliveries" USING btree ("section_id","membership_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "communities_school_slug_uidx" ON "communities" USING btree ("school_id","slug");--> statement-breakpoint
 CREATE UNIQUE INDEX "communities_school_uidx" ON "communities" USING btree ("school_id") WHERE "communities"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "community_comments_post_idx" ON "community_comments" USING btree ("post_id","created_at","id");--> statement-breakpoint
@@ -1552,12 +1733,27 @@ CREATE UNIQUE INDEX "learner_memberships_included_entity_uidx" ON "learner_membe
 CREATE INDEX "learner_memberships_school_account_lookup_idx" ON "learner_memberships" USING btree ("school_id","school_account_id","status");--> statement-breakpoint
 CREATE INDEX "learner_memberships_parent_lookup_idx" ON "learner_memberships" USING btree ("parent_membership_id","status");--> statement-breakpoint
 CREATE UNIQUE INDEX "migration_mappings_source_target_uidx" ON "migration_mappings" USING btree ("source_system","source_collection","source_id","target_table");--> statement-breakpoint
+CREATE INDEX "media_upload_reservations_school_idx" ON "media_upload_reservations" USING btree ("school_id","expires_at");--> statement-breakpoint
+CREATE INDEX "platform_audit_events_school_idx" ON "platform_audit_events" USING btree ("school_id","created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_trials_user_uidx" ON "school_trials" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_trials_email_uidx" ON "school_trials" USING btree ("normalized_email");--> statement-breakpoint
+CREATE INDEX "school_trials_school_idx" ON "school_trials" USING btree ("school_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "learner_notification_preferences_type_uidx" ON "learner_notification_preferences" USING btree ("school_id","school_account_id","type");--> statement-breakpoint
 CREATE INDEX "notifications_feed_idx" ON "notifications" USING btree ("school_id","school_account_id","created_at","id");--> statement-breakpoint
 CREATE UNIQUE INDEX "staff_notification_preferences_type_uidx" ON "staff_notification_preferences" USING btree ("school_id","membership_id","type");--> statement-breakpoint
 CREATE UNIQUE INDEX "products_school_slug_uidx" ON "products" USING btree ("school_id","slug");--> statement-breakpoint
 CREATE INDEX "rate_limit_events_lookup_idx" ON "rate_limit_events" USING btree ("school_id","user_id","scope","action","subject_id","created_at");--> statement-breakpoint
 CREATE INDEX "rate_limit_events_fingerprint_idx" ON "rate_limit_events" USING btree ("school_id","user_id","scope","subject_id","fingerprint","created_at");--> statement-breakpoint
+CREATE INDEX "school_sso_assertion_ids_expires_idx" ON "school_sso_assertion_ids" USING btree ("expires_at");--> statement-breakpoint
+CREATE INDEX "school_sso_connections_school_idx" ON "school_sso_connections" USING btree ("school_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_sso_connections_one_active_uidx" ON "school_sso_connections" USING btree ("school_id") WHERE "school_sso_connections"."status" = 'active';--> statement-breakpoint
+CREATE UNIQUE INDEX "school_sso_domains_school_domain_uidx" ON "school_sso_domains" USING btree ("school_id","domain");--> statement-breakpoint
+CREATE INDEX "school_sso_domains_connection_idx" ON "school_sso_domains" USING btree ("connection_id");--> statement-breakpoint
+CREATE INDEX "school_sso_events_school_created_idx" ON "school_sso_events" USING btree ("school_id","created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_sso_identities_connection_subject_uidx" ON "school_sso_identities" USING btree ("connection_id","subject");--> statement-breakpoint
+CREATE UNIQUE INDEX "school_sso_identities_connection_account_uidx" ON "school_sso_identities" USING btree ("connection_id","school_account_id");--> statement-breakpoint
+CREATE INDEX "school_sso_identities_account_idx" ON "school_sso_identities" USING btree ("school_account_id");--> statement-breakpoint
+CREATE INDEX "school_sso_requests_connection_idx" ON "school_sso_requests" USING btree ("connection_id");--> statement-breakpoint
 CREATE INDEX "invitations_school_email_idx" ON "invitations" USING btree ("school_id","email");--> statement-breakpoint
 CREATE UNIQUE INDEX "invitations_school_pending_email_uidx" ON "invitations" USING btree ("school_id","normalized_email") WHERE "invitations"."status" = 'pending';--> statement-breakpoint
 CREATE UNIQUE INDEX "memberships_school_account_uidx" ON "memberships" USING btree ("school_id","school_account_id");--> statement-breakpoint
@@ -1567,6 +1763,7 @@ CREATE UNIQUE INDEX "school_accounts_school_user_uidx" ON "school_accounts" USIN
 CREATE UNIQUE INDEX "school_accounts_school_email_uidx" ON "school_accounts" USING btree ("school_id","email");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_accounts_school_sendlit_contact_uidx" ON "school_accounts" USING btree ("school_id","sendlit_contact_id") WHERE "school_accounts"."sendlit_contact_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "school_hosts_school_hostname_uidx" ON "school_hosts" USING btree ("school_id","hostname");--> statement-breakpoint
+CREATE INDEX "school_login_codes_school_email_idx" ON "school_login_codes" USING btree ("school_id","email","created_at");--> statement-breakpoint
 CREATE INDEX "school_sessions_school_account_idx" ON "school_sessions" USING btree ("school_id","school_account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "space_followers_space_account_uidx" ON "space_followers" USING btree ("space_id","school_account_id");--> statement-breakpoint
 CREATE INDEX "space_followers_account_idx" ON "space_followers" USING btree ("school_id","school_account_id","space_id");--> statement-breakpoint
@@ -1613,155 +1810,4 @@ CREATE UNIQUE INDEX "billing_reconciliation_jobs_live_customer_uidx" ON "billing
 CREATE UNIQUE INDEX "billing_subscriptions_provider_subscription_uidx" ON "billing_subscriptions" USING btree ("provider","provider_subscription_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_subscriptions_entity_source_uidx" ON "billing_subscriptions" USING btree ("billable_entity_id") WHERE "billing_subscriptions"."is_entitlement_source" = true;--> statement-breakpoint
 CREATE UNIQUE INDEX "billing_webhook_events_provider_event_uidx" ON "billing_webhook_events" USING btree ("provider","provider_event_id");--> statement-breakpoint
-CREATE INDEX "billing_webhook_events_queue_idx" ON "billing_webhook_events" USING btree ("status","available_at");--> statement-breakpoint
-CREATE TABLE "section_drip_email_deliveries" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"section_id" uuid NOT NULL,
-	"membership_id" uuid NOT NULL,
-	"unlocked_at" timestamp with time zone NOT NULL,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "section_drip_emails" (
-	"section_id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"enabled" boolean DEFAULT false NOT NULL,
-	"subject" text DEFAULT '' NOT NULL,
-	"content" jsonb,
-	"html" text,
-	"enabled_at" timestamp with time zone,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_assertion_ids" (
-	"connection_id" uuid NOT NULL,
-	"assertion_id" text NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "school_sso_assertion_ids_connection_id_assertion_id_pk" PRIMARY KEY("connection_id","assertion_id")
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_connections" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"public_id" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"protocol" text NOT NULL,
-	"status" text DEFAULT 'draft' NOT NULL,
-	"display_name" text NOT NULL,
-	"enforcement" text DEFAULT 'optional' NOT NULL,
-	"max_session_minutes" integer,
-	"idp_entity_id" text,
-	"idp_sso_url" text,
-	"idp_certificates" text[] DEFAULT '{}'::text[] NOT NULL,
-	"subject_attribute" text,
-	"oidc_issuer" text,
-	"oidc_client_id" text,
-	"oidc_client_secret" text,
-	"tested_at" timestamp with time zone,
-	"tested_config_digest" text,
-	"created_at" timestamp with time zone NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "school_sso_connections_public_id_unique" UNIQUE("public_id"),
-	CONSTRAINT "school_sso_connections_protocol_check" CHECK ("school_sso_connections"."protocol" IN ('saml', 'oidc')),
-	CONSTRAINT "school_sso_connections_status_check" CHECK ("school_sso_connections"."status" IN ('draft', 'active', 'suspended', 'disabled')),
-	CONSTRAINT "school_sso_connections_enforcement_check" CHECK ("school_sso_connections"."enforcement" IN ('optional', 'required_for_domains'))
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_domains" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"connection_id" uuid NOT NULL,
-	"school_id" uuid NOT NULL,
-	"domain" text NOT NULL,
-	"verification_token" text NOT NULL,
-	"verified_at" timestamp with time zone,
-	"consecutive_check_failures" integer DEFAULT 0 NOT NULL,
-	"last_checked_at" timestamp with time zone,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_events" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"connection_id" uuid,
-	"actor_school_account_id" uuid,
-	"action" text NOT NULL,
-	"reason" text,
-	"metadata" jsonb DEFAULT '{}'::jsonb NOT NULL,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_identities" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"connection_id" uuid NOT NULL,
-	"issuer" text NOT NULL,
-	"subject" text NOT NULL,
-	"school_account_id" uuid NOT NULL,
-	"last_email" text NOT NULL,
-	"last_signed_in_at" timestamp with time zone,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "school_sso_requests" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"request_digest" text NOT NULL,
-	"school_id" uuid NOT NULL,
-	"connection_id" uuid NOT NULL,
-	"nonce_digest" text NOT NULL,
-	"return_origin" text NOT NULL,
-	"next_path" text NOT NULL,
-	"protocol_request_id" text,
-	"oidc_nonce" text,
-	"pkce_verifier" text,
-	"purpose" text DEFAULT 'sign_in' NOT NULL,
-	"started_by_school_account_id" uuid,
-	"test_result" jsonb,
-	"test_result_expires_at" timestamp with time zone,
-	"expires_at" timestamp with time zone NOT NULL,
-	"consumed_at" timestamp with time zone,
-	"created_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "school_sso_requests_request_digest_unique" UNIQUE("request_digest"),
-	CONSTRAINT "school_sso_requests_purpose_check" CHECK ("school_sso_requests"."purpose" IN ('sign_in', 'test'))
-);
---> statement-breakpoint
-CREATE TABLE "sso_shadow_users" (
-	"user_id" text PRIMARY KEY NOT NULL,
-	"school_id" uuid NOT NULL,
-	"created_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "section_drip_email_deliveries" ADD CONSTRAINT "section_drip_email_deliveries_membership_id_learner_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."learner_memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_section_id_product_sections_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."product_sections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "section_drip_emails" ADD CONSTRAINT "section_drip_emails_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_assertion_ids" ADD CONSTRAINT "school_sso_assertion_ids_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_connections" ADD CONSTRAINT "school_sso_connections_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_domains" ADD CONSTRAINT "school_sso_domains_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_domains" ADD CONSTRAINT "school_sso_domains_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_events" ADD CONSTRAINT "school_sso_events_actor_school_account_id_school_accounts_id_fk" FOREIGN KEY ("actor_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_identities" ADD CONSTRAINT "school_sso_identities_school_account_id_school_accounts_id_fk" FOREIGN KEY ("school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sso_requests" ADD CONSTRAINT "school_sso_requests_started_by_school_account_id_school_accounts_id_fk" FOREIGN KEY ("started_by_school_account_id") REFERENCES "public"."school_accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sso_shadow_users" ADD CONSTRAINT "sso_shadow_users_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sso_shadow_users" ADD CONSTRAINT "sso_shadow_users_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_auth_tickets" ADD CONSTRAINT "school_auth_tickets_sso_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("sso_connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "school_sessions" ADD CONSTRAINT "school_sessions_sso_connection_id_school_sso_connections_id_fk" FOREIGN KEY ("sso_connection_id") REFERENCES "public"."school_sso_connections"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "section_drip_email_deliveries_uidx" ON "section_drip_email_deliveries" USING btree ("section_id","membership_id");--> statement-breakpoint
-CREATE INDEX "school_login_codes_school_email_idx" ON "school_login_codes" USING btree ("school_id","email","created_at");--> statement-breakpoint
-CREATE INDEX "school_sso_assertion_ids_expires_idx" ON "school_sso_assertion_ids" USING btree ("expires_at");--> statement-breakpoint
-CREATE INDEX "school_sso_connections_school_idx" ON "school_sso_connections" USING btree ("school_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "school_sso_connections_one_active_uidx" ON "school_sso_connections" USING btree ("school_id") WHERE "school_sso_connections"."status" = 'active';--> statement-breakpoint
-CREATE UNIQUE INDEX "school_sso_domains_school_domain_uidx" ON "school_sso_domains" USING btree ("school_id","domain");--> statement-breakpoint
-CREATE INDEX "school_sso_domains_connection_idx" ON "school_sso_domains" USING btree ("connection_id");--> statement-breakpoint
-CREATE INDEX "school_sso_events_school_created_idx" ON "school_sso_events" USING btree ("school_id","created_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "school_sso_identities_connection_subject_uidx" ON "school_sso_identities" USING btree ("connection_id","subject");--> statement-breakpoint
-CREATE UNIQUE INDEX "school_sso_identities_connection_account_uidx" ON "school_sso_identities" USING btree ("connection_id","school_account_id");--> statement-breakpoint
-CREATE INDEX "school_sso_identities_account_idx" ON "school_sso_identities" USING btree ("school_account_id");--> statement-breakpoint
-CREATE INDEX "school_sso_requests_connection_idx" ON "school_sso_requests" USING btree ("connection_id");
+CREATE INDEX "billing_webhook_events_queue_idx" ON "billing_webhook_events" USING btree ("status","available_at");

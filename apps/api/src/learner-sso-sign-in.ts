@@ -31,7 +31,7 @@ const MIN_NONCE_LENGTH = 32;
 const START_WINDOW_MS = 10 * 60 * 1000;
 const START_LIMIT = 30;
 
-type Billing = Pick<BillingEngine, "hasFeature">;
+type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 
 export async function findSsoConnectionByPublicId(db: AppDb, publicId: string) {
@@ -88,7 +88,7 @@ export async function startLearnerSsoSignIn(
   const connection = await activeSsoConnection(db, school.id);
   if (
     connection?.protocol !== "saml" ||
-    !(await schoolHasFeature(input.billing, school.id, SSO_FEATURE))
+    !(await schoolHasFeature(input.billing, school.id, SSO_FEATURE, db, clock.now()))
   ) {
     return {
       ok: false,
@@ -354,7 +354,7 @@ export async function completeSsoResponse(
       if (known.purpose === "sign_in") {
         return (
           current.status === "active" &&
-          (await schoolHasFeature(input.billing, current.schoolId, SSO_FEATURE))
+          (await schoolHasFeature(input.billing, current.schoolId, SSO_FEATURE, db))
         );
       }
       return current.status === "draft" || current.status === "active";

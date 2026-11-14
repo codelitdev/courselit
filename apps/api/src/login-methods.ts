@@ -12,7 +12,7 @@ import {
 import { SSO_FEATURE } from "./sso-config.js";
 import type { AppDb } from "./types.js";
 
-type Billing = Pick<BillingEngine, "hasFeature">;
+type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 type School = typeof schema.schools.$inferSelect;
 type Method = "email" | "google";
@@ -37,7 +37,7 @@ export async function usableLearnerMethods(
   const methods = await usableSignInMethods(db, school);
   const connection = methods.includes("sso") ? await activeSsoConnection(db, school.id) : null;
   const ssoUsable =
-    connection !== null && (await schoolHasFeature(billing, school.id, SSO_FEATURE));
+    connection !== null && (await schoolHasFeature(billing, school.id, SSO_FEATURE, db));
   return {
     methods: methods.filter((method) => method !== "sso" || ssoUsable),
     ssoDisplayName: ssoUsable ? connection!.displayName : null,
@@ -65,7 +65,7 @@ export async function readSchoolLoginMethods(
       sso: {
         active: connection !== null,
         displayName: connection?.displayName ?? null,
-        planAvailable: await schoolHasFeature(billing, school.id, SSO_FEATURE),
+        planAvailable: await schoolHasFeature(billing, school.id, SSO_FEATURE, db),
       },
       usable: usable.methods,
     },

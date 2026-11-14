@@ -1,3 +1,4 @@
+import { assertTriggeredMailAllowed } from "./mail-abuse-limits.js";
 import { randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import {
   type Clock,
@@ -94,7 +95,7 @@ export function learnerCodeEmail(
 /** Email a six-digit sign-in code that only works for this school. */
 export async function requestLearnerEmailCode(
   db: AppDb,
-  input: { schoolPublicId: string; email: string },
+  input: { schoolPublicId: string; email: string; clientIp?: string | null },
   clock: Clock,
   deliver?: (message: { email: string; otp: string }) => Promise<void>,
 ): Promise<Result<null>> {
@@ -127,6 +128,13 @@ export async function requestLearnerEmailCode(
   ) {
     return { ok: false, error: createPlatformError("rate_limited") };
   }
+  // Per school, per IP and per address across every school (S14, S28).
+  const allowed = await assertTriggeredMailAllowed(
+    db,
+    { schoolId: school.id, kind: "sign_in_code", email, clientIp: input.clientIp ?? null },
+    clock,
+  );
+  if (!allowed.ok) return allowed;
   const id = uuidv7(clock);
   const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
   await db.insert(schema.schoolLoginCodes).values({
@@ -153,6 +161,7 @@ export async function requestLearnerEmailCode(
         ...learnerCodeEmail(school.name, code),
       },
       clock,
+      "sign_in",
     );
   }
   return { ok: true, value: null };

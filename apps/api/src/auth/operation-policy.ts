@@ -144,6 +144,8 @@ export const OPERATION_POLICIES = {
   getSchoolOverview: schoolOp(["analytics:read"]),
   updateSchool: schoolOp(["school:write"]),
   getSchoolCodeInjection: schoolOp(["school:read"]),
+  getSchoolPlanFeatures: schoolOp(["school:read"]),
+  listSchoolAuditEvents: schoolOp(["school:write"]),
   updateSchoolCodeInjection: schoolOp(["school:write"], ["session", "oauth"]),
   // Payment gateway credentials and storefront script injection are never
   // reachable with a long-lived API key: a leaked key must not be able to
@@ -346,6 +348,7 @@ export const OPERATION_POLICIES = {
   // Starting the CourseLit plan checkout is a billing action, so also owner only.
   startSchoolBillingCheckout: schoolOwnerOp(["session"]),
   getSchoolBillingPlan: schoolOwnerOp(["session"]),
+  getSchoolBillingUsage: schoolOwnerOp(["session"]),
   cancelSchoolBillingPlan: schoolOwnerOp(["session"]),
   resumeSchoolBillingPlan: schoolOwnerOp(["session"]),
   getSchoolOnboarding: schoolOwnerOp(["session"]),
@@ -395,6 +398,7 @@ export const OPERATION_POLICIES = {
   consumeSchoolAuthTicket: learnerOp(),
   learnerSignOut: learnerOp(),
   learnerMe: learnerOp(),
+  getLearnerSiteCodeInjection: learnerOp(),
   learnerCheckout: learnerOp(),
   startLearnerCheckoutSession: learnerOp(),
   getLearnerCheckout: learnerOp(),

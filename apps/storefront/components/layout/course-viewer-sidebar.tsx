@@ -10,6 +10,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import Link from "next/link";
+import { CourseLitBadge } from "@/components/courselit-badge";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { LearnerSchoolLogo } from "@/components/layout/learner-school-logo";
@@ -278,6 +279,7 @@ export function CourseViewerSidebar({
             )
           : null}
       </SidebarContent>
+      <CourseLitBadge className="py-2 group-data-[collapsible=icon]:hidden" />
     </Sidebar>
   );
 }

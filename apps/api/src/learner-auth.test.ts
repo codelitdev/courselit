@@ -130,7 +130,11 @@ describe.serial("learner authentication", () => {
     expect(email?.subject).toBe("Sign in to School A");
     expect(email?.text).toContain("Enter this code to sign in to School A:");
     expect(email?.text).toContain("expires in 10 minutes");
-    expect(`${email?.subject} ${email?.text}`).not.toContain("CourseLit");
+    // The message is the school's; CourseLit appears only in the badge at the
+    // end (docs/wip/plan-limits.md, section 4).
+    const [body, badge] = (email?.text ?? "").split("\n\nPowered by CourseLit:");
+    expect(`${email?.subject} ${body}`).not.toContain("CourseLit");
+    expect(badge).toContain("utm_source=school-a");
 
     await runtime.close();
   });
