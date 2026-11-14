@@ -165,6 +165,14 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Checks the DNS records for a custom domain and marks it verified when they are right.",
   deleteSchoolHost:
     "Detaches a custom domain from the school. Confirm with the user first.",
+  getSchoolLoginMethods:
+    "Reads which sign-in methods the school's learners can use (email codes, Google, single sign-on) and which are on right now.",
+  updateSchoolLoginMethods:
+    "Turns learner sign-in with email codes or Google on or off. Turning a method off signs out learners who used it. At least one method always stays on. This changes how learners sign in. Confirm with the user first.",
+  listSsoConnections:
+    "Lists the school's single sign-on connections with their status, verified email domains and the values to enter at the identity provider. Secrets are never returned.",
+  getSsoConnection:
+    "Reads one single sign-on connection: status, identity provider settings, domains and the DNS record to publish for each, and whether it was tested and the plan allows it. Secrets are never returned.",
 
   // Website
   listSchoolWebsitePages: "Lists the school website's pages with their publish status.",

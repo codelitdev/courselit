@@ -920,6 +920,103 @@ export const updateMediaBodySchema = z.object({
   caption: z.string().max(2_000).optional(),
   accessPolicy: z.enum(["public", "private"]).optional(),
 });
+const ssoConnectionPathParams = z.object({ connectionId: z.string().min(1).max(64) });
+
+export const ssoConnectionStatusSchema = z.enum(["draft", "active", "suspended", "disabled"]);
+export const ssoEnforcementSchema = z.enum(["optional", "required_for_domains"]);
+export const ssoDomainSchema = z.object({
+  domain: z.string(),
+  verified: z.boolean(),
+  verifiedAt: z.string().nullable(),
+  /** The TXT record to publish; the value is the bare token. */
+  verificationRecord: z.object({
+    type: z.literal("TXT"),
+    name: z.string(),
+    value: z.string(),
+  }),
+  /** Weekly re-checks in a row that found no record. Three clear the verification. */
+  consecutiveCheckFailures: z.number().int(),
+  lastCheckedAt: z.string().nullable(),
+});
+/** An SSO connection. Never includes OIDC secrets or test-sign-in attributes. */
+export const ssoConnectionSchema = z.object({
+  id: z.string(),
+  protocol: z.enum(["saml", "oidc"]),
+  status: ssoConnectionStatusSchema,
+  displayName: z.string(),
+  enforcement: ssoEnforcementSchema,
+  maxSessionMinutes: z.number().int().nullable(),
+  idpEntityId: z.string().nullable(),
+  idpSsoUrl: z.string().nullable(),
+  idpCertificates: z.array(z.string()),
+  subjectAttribute: z.string().nullable(),
+  /** Values to enter at the identity provider. */
+  serviceProvider: z.object({
+    entityId: z.string(),
+    acsUrl: z.string(),
+    metadataUrl: z.string(),
+  }),
+  domains: z.array(ssoDomainSchema),
+  testedAt: z.string().nullable(),
+  /** True when the last successful test ran against the current settings. */
+  testedCurrentConfiguration: z.boolean(),
+  /** Whether the school's plan lets it activate the connection. */
+  planAvailable: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const ssoSettingsFields = {
+  displayName: z.string().trim().min(1).max(100),
+  /** IdP metadata XML, pasted; fills the entity ID, SSO URL and certificates. */
+  metadataXml: z.string().max(524_288),
+  idpEntityId: z.string().trim().min(1).max(2048),
+  idpSsoUrl: z.string().trim().min(1).max(2048),
+  idpCertificates: z.array(z.string().min(1).max(16_384)).max(5),
+  subjectAttribute: z.string().trim().min(1).max(512).nullable(),
+  enforcement: ssoEnforcementSchema,
+  maxSessionMinutes: z.number().int().min(5).max(525_600).nullable(),
+};
+export const createSsoConnectionBodySchema = z
+  .object({
+    ...ssoSettingsFields,
+    protocol: z.literal("saml").optional(),
+  })
+  .partial()
+  .required({ displayName: true })
+  .strict();
+export const updateSsoConnectionBodySchema = z.object(ssoSettingsFields).partial().strict();
+export const addSsoDomainBodySchema = z.object({ domain: z.string().trim().min(3).max(253) }).strict();
+export const startSsoConnectionTestBodySchema = z
+  .object({ returnUrl: z.string().url().max(1000) })
+  .strict();
+export const ssoConnectionTestResultSchema = z.object({
+  ok: z.boolean(),
+  /** A reason code when the test sign-in failed. */
+  reason: z.string().nullable(),
+  issuer: z.string().nullable(),
+  subject: z.string().nullable(),
+  email: z.string().nullable(),
+  name: z.string().nullable(),
+  emailDomainVerified: z.boolean().nullable(),
+  attributes: z.record(z.array(z.string())),
+  expiresAt: z.string(),
+});
+export const schoolLoginMethodSchema = z.enum(["email", "google"]);
+export const schoolLoginMethodsSchema = z.object({
+  /** The methods the school turned on. SSO is on exactly when it has an active connection. */
+  loginMethods: z.array(schoolLoginMethodSchema),
+  googleAvailable: z.boolean(),
+  sso: z.object({
+    active: z.boolean(),
+    displayName: z.string().nullable(),
+    planAvailable: z.boolean(),
+  }),
+  /** What learners can use right now. */
+  usable: z.array(z.enum(["email", "google", "sso"])),
+});
+export const updateSchoolLoginMethodsBodySchema = z
+  .object({ loginMethods: z.array(schoolLoginMethodSchema).max(2) })
+  .strict();
 export const mediaReferenceSchema = z.object({
   resourceType: mediaResourceTypeSchema,
   resourceId: z.string().trim().min(1).max(255),
@@ -1898,6 +1995,7 @@ export const learnerStartGoogleBodySchema = z.object({
   nonce: z.string().min(32).max(200),
   next: z.string().max(1000).optional(),
 });
+export const learnerStartSsoBodySchema = learnerStartGoogleBodySchema;
 export const consumeSchoolAuthTicketBodySchema = z.object({
   ticket: z.string().min(1).max(200),
 });
@@ -3654,8 +3752,10 @@ export const contract = c.router({
     responses: {
       200: z.object({
         schoolId: z.string(),
-        loginMethods: z.array(z.enum(["email", "google"])),
+        loginMethods: z.array(z.enum(["email", "google", "sso"])),
         hasGoogle: z.boolean(),
+        hasSso: z.boolean(),
+        ssoDisplayName: z.string().nullable(),
       }),
       404: platformErrorSchema,
     },
@@ -4148,6 +4248,19 @@ export const contract = c.router({
       400: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+    },
+  },
+  learnerStartSsoSignIn: {
+    method: "POST",
+    path: "/v1/learner/auth/sso",
+    summary: "Start single sign-on for a school website",
+    body: learnerStartSsoBodySchema,
+    responses: {
+      200: z.object({ url: z.string().url() }),
+      400: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      429: platformErrorSchema,
     },
   },
   consumeSchoolAuthTicket: {
@@ -4884,6 +4997,197 @@ export const contract = c.router({
       403: platformErrorSchema,
       404: platformErrorSchema,
       409: platformErrorSchema,
+    },
+  },
+  listSsoConnections: {
+    method: "GET",
+    path: "/v1/sso/connections",
+    summary: "List the school's single sign-on connections",
+    responses: {
+      200: z.object({ items: z.array(ssoConnectionSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  createSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections",
+    summary: "Create a draft single sign-on connection",
+    body: createSsoConnectionBodySchema,
+    responses: {
+      201: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  getSsoConnection: {
+    method: "GET",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Read a single sign-on connection",
+    responses: {
+      200: ssoConnectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateSsoConnection: {
+    method: "PATCH",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Change a single sign-on connection",
+    body: updateSsoConnectionBodySchema,
+    responses: {
+      200: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  deleteSsoConnection: {
+    method: "DELETE",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Delete a single sign-on connection",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  addSsoDomain: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/domains",
+    pathParams: ssoConnectionPathParams,
+    summary: "Add an email domain to a single sign-on connection",
+    body: addSsoDomainBodySchema,
+    responses: {
+      201: ssoDomainSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  verifySsoDomain: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/domains/:domain/verify",
+    pathParams: ssoConnectionPathParams.extend({ domain: z.string().min(1) }),
+    summary: "Check the DNS record that proves the school owns an email domain",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoDomainSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      429: platformErrorSchema,
+    },
+  },
+  deleteSsoDomain: {
+    method: "DELETE",
+    path: "/v1/sso/connections/:connectionId/domains/:domain",
+    pathParams: ssoConnectionPathParams.extend({ domain: z.string().min(1) }),
+    summary: "Remove an email domain from a single sign-on connection",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  startSsoConnectionTest: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/test",
+    pathParams: ssoConnectionPathParams,
+    summary: "Start a test sign-in; returns the URL to open",
+    body: startSsoConnectionTestBodySchema,
+    responses: {
+      200: z.object({ url: z.string().url() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getSsoConnectionTestResult: {
+    method: "GET",
+    path: "/v1/sso/connections/:connectionId/test-results/:requestId",
+    pathParams: ssoConnectionPathParams.extend({ requestId: z.string().min(1) }),
+    summary: "Read the result of a test sign-in this admin started",
+    responses: {
+      200: ssoConnectionTestResultSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  activateSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/activate",
+    pathParams: ssoConnectionPathParams,
+    summary: "Turn a tested single sign-on connection on",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  disableSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/disable",
+    pathParams: ssoConnectionPathParams,
+    summary: "Turn a single sign-on connection off and end its sessions",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoConnectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  unlinkSsoIdentity: {
+    method: "DELETE",
+    path: "/v1/sso/identities/:schoolAccountId",
+    pathParams: z.object({ schoolAccountId: z.string().min(1) }),
+    summary: "Remove a learner's single sign-on link and end their SSO sessions",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getSchoolLoginMethods: {
+    method: "GET",
+    path: "/v1/school/login-methods",
+    summary: "Read which sign-in methods the school's learners can use",
+    responses: {
+      200: schoolLoginMethodsSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  updateSchoolLoginMethods: {
+    method: "PATCH",
+    path: "/v1/school/login-methods",
+    summary: "Turn learner sign-in methods on or off",
+    body: updateSchoolLoginMethodsBodySchema,
+    responses: {
+      200: schoolLoginMethodsSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
     },
   },
   createSchool: {

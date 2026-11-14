@@ -60,6 +60,7 @@ import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
 import { accessibleSpaceIds, moderatesSpace } from "./space-access.js";
 import { amountMinorForPlan } from "./storefront.js";
+import type { SignInMethod } from "./sign-in-policy.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -73,6 +74,8 @@ export type CommunityLearnerViewer = {
   schoolPublicId: string;
   learnerId: string;
   learnerPublicId: string;
+  /** How the learner signed in; an `sso` session never has team powers. */
+  authenticationMethod: SignInMethod;
 };
 
 export type CommunityViewer =
@@ -1116,7 +1119,7 @@ async function canReadCommunity(
   });
   if (membership?.status === "active") return true;
 
-  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (accessible.size === 0) return false;
   if (spaceId) return accessible.has(spaceId);
   const posts = await db
@@ -1148,7 +1151,7 @@ async function canWriteCommunity(
   });
   if (membership?.status === "active") return true;
 
-  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (accessible.size === 0) return false;
   if (spaceId) return accessible.has(spaceId);
   const posts = await db
@@ -1173,7 +1176,7 @@ async function canModerateCommunity(
   if (viewer.kind === "admin") {
     return adminCan(viewer.context, "communities:moderate");
   }
-  if (spaceId) return moderatesSpace(db, schoolId, viewer.learnerId, spaceId);
+  if (spaceId) return moderatesSpace(db, schoolId, viewer.learnerId, spaceId, viewer.authenticationMethod);
   const membership = await loadMembership(db, schoolId, communityId, {
     kind: "learner",
     id: viewer.learnerId,

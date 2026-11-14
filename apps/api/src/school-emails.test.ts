@@ -311,6 +311,7 @@ describe("space post notifications", () => {
         schoolPublicId: world.schoolA.publicId,
         learnerId: account.id,
         learnerPublicId: account.publicId,
+        authenticationMethod: "email" as const,
       });
     }
     expect(

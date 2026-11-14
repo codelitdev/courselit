@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { parsePermissions } from "./permissions.js";
+import type { SignInMethod } from "./sign-in-policy.js";
 import type { AppDb } from "./types.js";
 
 /**
@@ -51,7 +52,10 @@ export async function staffSpaceIds(
   db: AppDb,
   schoolId: string,
   schoolAccountId: string,
+  authenticationMethod: SignInMethod,
 ): Promise<Set<string>> {
+  // An SSO session never carries team powers, whatever the account holds.
+  if (authenticationMethod === "sso") return new Set();
   const [staff] = await db
     .select({
       isOwner: schema.memberships.isOwner,
@@ -98,8 +102,15 @@ export async function moderatesSpace(
   schoolId: string,
   schoolAccountId: string,
   spaceId: string,
+  authenticationMethod: SignInMethod,
 ): Promise<boolean> {
-  if ((await staffSpaceIds(db, schoolId, schoolAccountId)).has(spaceId)) return true;
+  if (
+    (await staffSpaceIds(db, schoolId, schoolAccountId, authenticationMethod)).has(
+      spaceId,
+    )
+  ) {
+    return true;
+  }
   const ownership = await spaceOwnership(db, schoolId);
   if (ownership.productSpaces.has(spaceId)) return false;
   const [moderator] = await db
@@ -132,10 +143,11 @@ export async function accessibleSpaceIds(
   db: AppDb,
   schoolId: string,
   schoolAccountId: string,
+  authenticationMethod: SignInMethod,
 ): Promise<Set<string>> {
   const [learner, staff] = await Promise.all([
     learnerSpaceIds(db, schoolId, schoolAccountId),
-    staffSpaceIds(db, schoolId, schoolAccountId),
+    staffSpaceIds(db, schoolId, schoolAccountId, authenticationMethod),
   ]);
   for (const id of staff) learner.add(id);
   return learner;

@@ -10,6 +10,7 @@ export * from "./migration.js";
 export * from "./notifications.js";
 export * from "./products.js";
 export * from "./rate-limit.js";
+export * from "./school-sso.js";
 export * from "./schools.js";
 export * from "./spaces.js";
 export * from "./storefront.js";

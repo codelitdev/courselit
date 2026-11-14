@@ -1,5 +1,5 @@
 {
-  "id": "37b35a5c-0571-4933-a750-58e9fc4c055c",
+  "id": "8f68a5f8-20e9-4e22-bf51-f83cb1ec81dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -4704,6 +4704,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "refunded_amount_minor": {
+          "name": "refunded_amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "occurred_at": {
           "name": "occurred_at",
           "type": "timestamp with time zone",
@@ -6318,6 +6325,13 @@
           "notNull": true,
           "default": false
         },
+        "new_lesson_status": {
+          "name": "new_lesson_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
         "included_with_community": {
           "name": "included_with_community",
           "type": "boolean",
@@ -6570,6 +6584,936 @@
         "rate_limit_events_school_id_schools_id_fk": {
           "name": "rate_limit_events_school_id_schools_id_fk",
           "tableFrom": "rate_limit_events",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.school_sso_assertion_ids": {
+      "name": "school_sso_assertion_ids",
+      "schema": "",
+      "columns": {
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assertion_id": {
+          "name": "assertion_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_assertion_ids_expires_idx": {
+          "name": "school_sso_assertion_ids_expires_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_assertion_ids_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sso_assertion_ids_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sso_assertion_ids",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "school_sso_assertion_ids_connection_id_assertion_id_pk": {
+          "name": "school_sso_assertion_ids_connection_id_assertion_id_pk",
+          "columns": [
+            "connection_id",
+            "assertion_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.school_sso_connections": {
+      "name": "school_sso_connections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "protocol": {
+          "name": "protocol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enforcement": {
+          "name": "enforcement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'optional'"
+        },
+        "max_session_minutes": {
+          "name": "max_session_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idp_entity_id": {
+          "name": "idp_entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idp_sso_url": {
+          "name": "idp_sso_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idp_certificates": {
+          "name": "idp_certificates",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "subject_attribute": {
+          "name": "subject_attribute",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oidc_issuer": {
+          "name": "oidc_issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oidc_client_id": {
+          "name": "oidc_client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oidc_client_secret": {
+          "name": "oidc_client_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tested_at": {
+          "name": "tested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tested_config_digest": {
+          "name": "tested_config_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_connections_school_idx": {
+          "name": "school_sso_connections_school_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "school_sso_connections_one_active_uidx": {
+          "name": "school_sso_connections_one_active_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"school_sso_connections\".\"status\" = 'active'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_connections_school_id_schools_id_fk": {
+          "name": "school_sso_connections_school_id_schools_id_fk",
+          "tableFrom": "school_sso_connections",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "school_sso_connections_public_id_unique": {
+          "name": "school_sso_connections_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "school_sso_connections_protocol_check": {
+          "name": "school_sso_connections_protocol_check",
+          "value": "\"school_sso_connections\".\"protocol\" IN ('saml', 'oidc')"
+        },
+        "school_sso_connections_status_check": {
+          "name": "school_sso_connections_status_check",
+          "value": "\"school_sso_connections\".\"status\" IN ('draft', 'active', 'suspended', 'disabled')"
+        },
+        "school_sso_connections_enforcement_check": {
+          "name": "school_sso_connections_enforcement_check",
+          "value": "\"school_sso_connections\".\"enforcement\" IN ('optional', 'required_for_domains')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.school_sso_domains": {
+      "name": "school_sso_domains",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "domain": {
+          "name": "domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verification_token": {
+          "name": "verification_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consecutive_check_failures": {
+          "name": "consecutive_check_failures",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_checked_at": {
+          "name": "last_checked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_domains_school_domain_uidx": {
+          "name": "school_sso_domains_school_domain_uidx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "domain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "school_sso_domains_connection_idx": {
+          "name": "school_sso_domains_connection_idx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_domains_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sso_domains_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sso_domains",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_domains_school_id_schools_id_fk": {
+          "name": "school_sso_domains_school_id_schools_id_fk",
+          "tableFrom": "school_sso_domains",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.school_sso_events": {
+      "name": "school_sso_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actor_school_account_id": {
+          "name": "actor_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_events_school_created_idx": {
+          "name": "school_sso_events_school_created_idx",
+          "columns": [
+            {
+              "expression": "school_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_events_school_id_schools_id_fk": {
+          "name": "school_sso_events_school_id_schools_id_fk",
+          "tableFrom": "school_sso_events",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_events_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sso_events_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sso_events",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "school_sso_events_actor_school_account_id_school_accounts_id_fk": {
+          "name": "school_sso_events_actor_school_account_id_school_accounts_id_fk",
+          "tableFrom": "school_sso_events",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "actor_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.school_sso_identities": {
+      "name": "school_sso_identities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issuer": {
+          "name": "issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_account_id": {
+          "name": "school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_email": {
+          "name": "last_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_signed_in_at": {
+          "name": "last_signed_in_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_identities_connection_subject_uidx": {
+          "name": "school_sso_identities_connection_subject_uidx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "school_sso_identities_connection_account_uidx": {
+          "name": "school_sso_identities_connection_account_uidx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "school_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "school_sso_identities_account_idx": {
+          "name": "school_sso_identities_account_idx",
+          "columns": [
+            {
+              "expression": "school_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_identities_school_id_schools_id_fk": {
+          "name": "school_sso_identities_school_id_schools_id_fk",
+          "tableFrom": "school_sso_identities",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_identities_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sso_identities_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sso_identities",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_identities_school_account_id_school_accounts_id_fk": {
+          "name": "school_sso_identities_school_account_id_school_accounts_id_fk",
+          "tableFrom": "school_sso_identities",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.school_sso_requests": {
+      "name": "school_sso_requests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "request_digest": {
+          "name": "request_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nonce_digest": {
+          "name": "nonce_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "return_origin": {
+          "name": "return_origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "next_path": {
+          "name": "next_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "protocol_request_id": {
+          "name": "protocol_request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oidc_nonce": {
+          "name": "oidc_nonce",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pkce_verifier": {
+          "name": "pkce_verifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sign_in'"
+        },
+        "started_by_school_account_id": {
+          "name": "started_by_school_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "test_result": {
+          "name": "test_result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "test_result_expires_at": {
+          "name": "test_result_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "school_sso_requests_connection_idx": {
+          "name": "school_sso_requests_connection_idx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "school_sso_requests_school_id_schools_id_fk": {
+          "name": "school_sso_requests_school_id_schools_id_fk",
+          "tableFrom": "school_sso_requests",
+          "tableTo": "schools",
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_requests_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sso_requests_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sso_requests",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_sso_requests_started_by_school_account_id_school_accounts_id_fk": {
+          "name": "school_sso_requests_started_by_school_account_id_school_accounts_id_fk",
+          "tableFrom": "school_sso_requests",
+          "tableTo": "school_accounts",
+          "columnsFrom": [
+            "started_by_school_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "school_sso_requests_request_digest_unique": {
+          "name": "school_sso_requests_request_digest_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "request_digest"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "school_sso_requests_purpose_check": {
+          "name": "school_sso_requests_purpose_check",
+          "value": "\"school_sso_requests\".\"purpose\" IN ('sign_in', 'test')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sso_shadow_users": {
+      "name": "sso_shadow_users",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "school_id": {
+          "name": "school_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sso_shadow_users_user_id_user_id_fk": {
+          "name": "sso_shadow_users_user_id_user_id_fk",
+          "tableFrom": "sso_shadow_users",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sso_shadow_users_school_id_schools_id_fk": {
+          "name": "sso_shadow_users_school_id_schools_id_fk",
+          "tableFrom": "sso_shadow_users",
           "tableTo": "schools",
           "columnsFrom": [
             "school_id"
@@ -7400,6 +8344,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "sso_connection_id": {
+          "name": "sso_connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_expires_at": {
+          "name": "session_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "expires_at": {
           "name": "expires_at",
           "type": "timestamp with time zone",
@@ -7453,6 +8409,19 @@
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "school_auth_tickets_sso_connection_id_school_sso_connections_id_fk": {
+          "name": "school_auth_tickets_sso_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_auth_tickets",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "sso_connection_id"
           ],
           "columnsTo": [
             "id"
@@ -7926,6 +8895,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "sso_connection_id": {
+          "name": "sso_connection_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "authenticated_at": {
           "name": "authenticated_at",
           "type": "timestamp with time zone",
@@ -8007,6 +8982,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "school_sessions_sso_connection_id_school_sso_connections_id_fk": {
+          "name": "school_sessions_sso_connection_id_school_sso_connections_id_fk",
+          "tableFrom": "school_sessions",
+          "tableTo": "school_sso_connections",
+          "columnsFrom": [
+            "sso_connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -8064,6 +9052,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'en'"
+        },
+        "login_methods": {
+          "name": "login_methods",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{email}'::text[]"
         },
         "currency": {
           "name": "currency",
@@ -8125,7 +9120,12 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "schools_login_methods_check": {
+          "name": "schools_login_methods_check",
+          "value": "\"schools\".\"login_methods\" <@ ARRAY['email', 'google']::text[]"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.selected_schools": {
@@ -9418,6 +10418,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "refunded_amount_minor": {
+          "name": "refunded_amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "occurred_at": {
           "name": "occurred_at",

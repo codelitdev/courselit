@@ -155,6 +155,32 @@ export const OPERATION_POLICIES = {
   deleteSchoolHost: schoolOp(["school:write"]),
   verifySchoolHost: schoolOp(["school:write"]),
 
+  // Learner sign-in methods. Turning a method off can't hand anyone's account
+  // to someone else, and the policy falls back to email codes, so API keys and
+  // MCP may change it.
+  getSchoolLoginMethods: schoolOp(["school:read"]),
+  updateSchoolLoginMethods: schoolOp(["school:write"]),
+
+  // Learner single sign-on. Whoever controls a connection's IdP settings can
+  // sign in as every learner linked to it, so writes are owner-only, a
+  // signed-in admin session only (no API key or OAuth client) and need a
+  // recent sign-in. Reads are open to every credential and never carry
+  // secrets or test attributes.
+  listSsoConnections: schoolOp(["school:read"]),
+  getSsoConnection: schoolOp(["school:read"]),
+  createSsoConnection: schoolOwnerOp(["session"], true),
+  updateSsoConnection: schoolOwnerOp(["session"], true),
+  deleteSsoConnection: schoolOwnerOp(["session"], true),
+  addSsoDomain: schoolOwnerOp(["session"], true),
+  verifySsoDomain: schoolOwnerOp(["session"], true),
+  deleteSsoDomain: schoolOwnerOp(["session"], true),
+  startSsoConnectionTest: schoolOwnerOp(["session"], true),
+  // Readable by the admin who started the test, within 15 minutes of it.
+  getSsoConnectionTestResult: schoolOwnerOp(["session"]),
+  activateSsoConnection: schoolOwnerOp(["session"], true),
+  disableSsoConnection: schoolOwnerOp(["session"], true),
+  unlinkSsoIdentity: schoolOwnerOp(["session"], true),
+
   // Mailing (broadcasts, sequences, templates). Sending is kept off API keys:
   // a leaked key must not be able to send email to the school's contacts.
   getMailingSettings: schoolOp(["contacts:read"]),
@@ -365,6 +391,7 @@ export const OPERATION_POLICIES = {
   learnerRequestEmailCode: learnerOp(),
   learnerVerifyEmailCode: learnerOp(),
   learnerStartGoogleSignIn: learnerOp(),
+  learnerStartSsoSignIn: learnerOp(),
   consumeSchoolAuthTicket: learnerOp(),
   learnerSignOut: learnerOp(),
   learnerMe: learnerOp(),

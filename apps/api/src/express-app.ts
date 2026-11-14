@@ -26,6 +26,7 @@ import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
 import { registerLearnerGoogleRoutes } from "./learner-google-routes.js";
+import { registerLearnerSsoRoutes } from "./learner-sso-routes.js";
 import { assertLearnerSchool, authenticateLearner, isSecureCookieUrl } from "./learners.js";
 import { createOpenApiDocument } from "./openapi.js";
 import { authenticateHttpRequest } from "./auth/authenticate.js";
@@ -118,6 +119,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
   );
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
   registerLearnerGoogleRoutes(app, deps);
+  registerLearnerSsoRoutes(app, deps);
   const captcha = captchaSettings();
   app.use(
     createOAuthPagesRouter({
@@ -514,6 +516,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     learnerRequestEmailCode: forward,
     learnerVerifyEmailCode: forward,
     learnerStartGoogleSignIn: forward,
+    learnerStartSsoSignIn: forward,
     consumeSchoolAuthTicket: forward,
     learnerSignOut: forward,
     learnerMe: forward,
@@ -579,6 +582,21 @@ export function createExpressApp(deps: DispatchDeps): Express {
     createSchoolHost: forward,
     verifySchoolHost: forward,
     deleteSchoolHost: forward,
+    getSchoolLoginMethods: forward,
+    updateSchoolLoginMethods: forward,
+    listSsoConnections: forward,
+    createSsoConnection: forward,
+    getSsoConnection: forward,
+    updateSsoConnection: forward,
+    deleteSsoConnection: forward,
+    addSsoDomain: forward,
+    verifySsoDomain: forward,
+    deleteSsoDomain: forward,
+    startSsoConnectionTest: forward,
+    getSsoConnectionTestResult: forward,
+    activateSsoConnection: forward,
+    disableSsoConnection: forward,
+    unlinkSsoIdentity: forward,
     createSchool: forward,
     selectSchool: forward,
     listApiKeys: forward,

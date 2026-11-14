@@ -16,6 +16,8 @@ import type { Clock } from "@codelitdev/platform";
 import { createBillingAuditHook } from "./billing-audit.js";
 import { verification } from "./db/schema/auth.generated.js";
 import * as billingSchema from "./db/schema/billing.generated.js";
+import { enqueuePlanFeatureSync } from "./plan-features.js";
+import { SSO_FEATURE } from "./sso-config.js";
 import type { AppDb } from "./types.js";
 
 export type BillingBundle = {
@@ -147,11 +149,17 @@ export function composeBilling(
     hooks: {
       audit: createBillingAuditHook({ db, clock, getTransaction: () => store.getTransaction() }),
       lifecycle: {
-        async afterProjection() {
-          /* product-owned effect hook */
+        // Only queues a background job, in the billing transaction, so it commits
+        // with the plan change. The SSO work itself never runs here: a failed
+        // statement would abort the billing write. Queued on every projection;
+        // the sync reads the current plan and is safe to repeat.
+        async afterProjection({ next }) {
+          const client = (store.getTransaction() ?? db) as Pick<AppDb, "execute">;
+          await enqueuePlanFeatureSync(client, next.billableEntityId, clock);
         },
       },
     },
+    planFeatures: { business: [SSO_FEATURE] },
     mode,
     checkoutProvider: mode !== "cloud" ? "" : dodo ? "dodo" : "fake",
     requestedRevision: mode === "cloud" ? (dodo ? revision : 1) : null,

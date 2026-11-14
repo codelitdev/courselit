@@ -32,6 +32,7 @@ import {
 import type { TrackSendLitEventPayload } from "./membership-events.js";
 import type { SendSchoolEmailPayload } from "./school-emails.js";
 import { sendSystemMail } from "./system-mail.js";
+import { deleteShadowUserIfOrphaned } from "./shadow-users.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -606,14 +607,20 @@ async function eraseSendLitContactJob(
       }
     }
 
-    await db
-      .delete(schema.schoolAccounts)
-      .where(
-        and(
-          eq(schema.schoolAccounts.id, payload.schoolAccountId),
-          eq(schema.schoolAccounts.schoolId, job.schoolId),
-        ),
-      );
+    await db.transaction(async (transaction) => {
+      const tx = transaction as unknown as AppDb;
+      const [removed] = await tx
+        .delete(schema.schoolAccounts)
+        .where(
+          and(
+            eq(schema.schoolAccounts.id, payload.schoolAccountId!),
+            eq(schema.schoolAccounts.schoolId, job.schoolId),
+          ),
+        )
+        .returning({ userId: schema.schoolAccounts.userId });
+      // An SSO-created account's shadow user goes with its last school account.
+      if (removed) await deleteShadowUserIfOrphaned(tx, removed.userId);
+    });
   } finally {
     await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${lockKey}))`);
   }
@@ -705,7 +712,7 @@ async function failJob(
     message = "sendlit_quota_exceeded";
     actionRequired = true;
   }
-  if (job.type === "provision_sendlit" && job.provider !== "system") {
+  if (job.type === "provision_sendlit" && (job.provider === "sendlit" || job.provider === "medialit")) {
     await updateIntegration(db, job.schoolId, job.provider, {
       status: actionRequired ? "action_required" : "pending",
       lastError: message,
@@ -774,6 +781,56 @@ export async function processNextIntegrationJob(
   }
 
   return false;
+}
+
+/** How many times a platform job (plan sync) is retried before it is parked. */
+const MAX_PLATFORM_JOB_ATTEMPTS = 8;
+
+/**
+ * Runs one ready platform job, such as `sync_plan_features`, which the
+ * billing hook queues. Returns whether a job was processed. A failing job is
+ * retried with backoff and never touches the billing write that queued it.
+ */
+export async function processNextPlatformJob(
+  db: AppDb,
+  clock: Clock,
+  logger: Logger,
+  run: (job: { type: string; schoolId: string; payload: Record<string, unknown> }) => Promise<void>,
+): Promise<boolean> {
+  const now = clock.now();
+  await db
+    .update(schema.integrationOutboxJobs)
+    .set({ status: "pending", nextAttemptAt: now, updatedAt: now })
+    .where(
+      and(
+        eq(schema.integrationOutboxJobs.provider, "platform"),
+        eq(schema.integrationOutboxJobs.status, "processing"),
+        lt(
+          schema.integrationOutboxJobs.updatedAt,
+          new Date(now.getTime() - 15 * 60 * 1000),
+        ),
+      ),
+    );
+  const job = await claimNextJob(db, now, ["platform"]);
+  if (!job) return false;
+  try {
+    await run({ type: job.type, schoolId: job.schoolId, payload: job.payload });
+    await finishJob(db, job, clock);
+  } catch (error) {
+    const actionRequired = job.attempts + 1 >= MAX_PLATFORM_JOB_ATTEMPTS;
+    await failJob(db, job, clock, error, actionRequired);
+    logger.warn(
+      {
+        jobId: job.id,
+        schoolId: job.schoolId,
+        type: job.type,
+        attempts: job.attempts + 1,
+        error: safeError(error),
+      },
+      "Platform job failed",
+    );
+  }
+  return true;
 }
 
 /** How many times the platform sender retries one email before giving up. */
