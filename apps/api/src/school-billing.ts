@@ -5,7 +5,7 @@ import {
   type PlatformError,
   uuidv7,
 } from "@codelitdev/platform";
-import { eq } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { fromNodeHeaders } from "better-auth/node";
 import type { BillingBundle } from "./billing.js";
 import * as schema from "./db/schema/index.js";
@@ -246,6 +246,8 @@ export type SchoolPlanDto = {
   /** People can cancel now, or resume a scheduled cancellation. */
   canCancel: boolean;
   canResume: boolean;
+  /** A cardless CourseLit trial (Business features), not a paid plan. */
+  courseLitTrial: boolean;
 };
 
 const iso = (value: Date | null): string | null => (value ? value.toISOString() : null);
@@ -254,6 +256,9 @@ export async function readSchoolPlan(input: {
   billing: BillingBundle;
   billingMode: BillingMode;
   schoolInternalId: string;
+  /** With these, a running CourseLit trial is shown as Business, trialing. */
+  db?: AppDb;
+  now?: Date;
 }): Promise<SchoolPlanDto> {
   const empty: SchoolPlanDto = {
     billingAvailable: input.billingMode === "cloud",
@@ -270,6 +275,7 @@ export async function readSchoolPlan(input: {
     pendingPlanChange: false,
     canCancel: false,
     canResume: false,
+    courseLitTrial: false,
   };
   if (input.billingMode !== "cloud") return empty;
   const [state, catalog] = await Promise.all([
@@ -281,6 +287,29 @@ export async function readSchoolPlan(input: {
     ? catalog.offers.find((entry) => entry.plan === plan && entry.interval === state.billingInterval)
     : undefined;
   const live = plan !== null && state.subscriptionStatus !== "cancelled";
+  if (!plan && input.db) {
+    const [trial] = await input.db
+      .select({ endsAt: schema.schoolTrials.endsAt })
+      .from(schema.schoolTrials)
+      .where(
+        and(
+          eq(schema.schoolTrials.schoolId, input.schoolInternalId),
+          isNull(schema.schoolTrials.endedAt),
+          gt(schema.schoolTrials.endsAt, input.now ?? new Date()),
+        ),
+      )
+      .limit(1);
+    if (trial) {
+      return {
+        ...empty,
+        plan: "business",
+        status: "trialing",
+        trialEndsAt: trial.endsAt.toISOString(),
+        pendingCheckout: state.pendingCheckout,
+        courseLitTrial: true,
+      };
+    }
+  }
   return {
     ...empty,
     plan,

@@ -19,6 +19,18 @@ export async function proxy(request: NextRequest) {
     });
   }
 
+  if (resolution.status === "offline") {
+    // The school exists but isn't live: no plan yet, or suspended. Say nothing
+    // more about why.
+    return new NextResponse(
+      '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>This site isn\'t available</title></head><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#374151"><p>This site isn\'t available.</p></body></html>',
+      {
+        status: 503,
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+      },
+    );
+  }
+
   // Unknown hosts do not map to any school; refuse rather than falling through.
   if (resolution.status === "unknown") {
     return new NextResponse("School Not Found", { status: 404 });

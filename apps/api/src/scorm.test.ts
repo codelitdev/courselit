@@ -71,7 +71,7 @@ describe.serial("SCORM runtime", () => {
       }),
       deleteAsset: (input) => memoryMediaLit.deleteAsset(input),
     };
-    const runtime = await createPgliteRuntime({ clock, mediaLit });
+    const runtime = await createPgliteRuntime({ clock, mediaLit, billingMode: "oss" });
     try {
       const world = await seedWorld(runtime, clock);
       const headers = {
@@ -137,7 +137,8 @@ describe.serial("SCORM runtime", () => {
 
   it("persists production-compatible runtime state per learner enrollment", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock });
+    // OSS mode: SCORM is on every plan there (cloud gating has its own tests).
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
 
     const product = await dispatch(runtime, {

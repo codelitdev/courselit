@@ -23,7 +23,7 @@ type Onboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
 };
 
 const done = (state: Onboarding, key: string) =>
@@ -58,7 +58,9 @@ describe("school onboarding", () => {
       draft: {},
       checklistHidden: false,
       resumePromptHidden: false,
-      billing: { required: true, entitled: false },
+      // The account's first school starts a cardless trial: it can go live,
+      // but nothing has been paid.
+      billing: { required: true, entitled: true, paid: false, trialEndsAt: expect.any(String) },
     });
     expect(state.checklist.map((item) => item.key)).toEqual([
       "pay", "mail", "legal", "home", "domain", "ai", "learners", "welcome", "course", "team",
@@ -189,7 +191,7 @@ describe("school onboarding", () => {
         headers: owner(world),
       })
     ).body as Onboarding;
-    expect(state.billing).toEqual({ required: false, entitled: true });
+    expect(state.billing).toEqual({ required: false, entitled: true, paid: true, trialEndsAt: null });
     const checkout = await dispatch(runtime, {
       method: "POST",
       path: "/v1/school/billing/checkout",

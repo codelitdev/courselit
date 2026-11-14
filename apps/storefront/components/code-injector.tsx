@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { readSignedInHint } from "@/lib/header-account";
+import { learnerHeaders } from "@/lib/school";
 
 type InjectionSection = "head" | "body";
 
@@ -53,17 +55,57 @@ function injectCodeIn(targetHTMLTag: InjectionSection, html: string) {
   if (!injectedHtml) injectedHtmlByDocument.set(document, currentInjections);
 }
 
+/**
+ * Injects the school's code. While the plan keeps the code private (a trial),
+ * the public settings carry none and `ownerOnly` is set: the code is then
+ * fetched through the visitor's own session, and the API returns it only to
+ * the school's owner (docs/wip/plan-limits.md, S25). Anonymous visitors never
+ * make that call.
+ */
 export function CodeInjector({
   head,
   body,
+  ownerOnly = false,
 }: {
   head?: string | null;
   body?: string | null;
+  ownerOnly?: boolean;
 }) {
+  const [ownerCode, setOwnerCode] = useState<{ head: string; body: string } | null>(
+    null,
+  );
+
   useEffect(() => {
-    injectCodeIn("head", head ?? "");
-    injectCodeIn("body", body ?? "");
-  }, [head, body]);
+    if (!ownerOnly || !readSignedInHint()) return;
+    let active = true;
+    void fetch("/api/v1/learner/site/code-injection", {
+      cache: "no-store",
+      credentials: "include",
+      headers: learnerHeaders(),
+    })
+      .then(async (response) => {
+        if (!active || !response.ok) return;
+        const code = (await response.json()) as {
+          codeInjectionHead?: string;
+          codeInjectionBody?: string;
+        };
+        setOwnerCode({
+          head: code.codeInjectionHead ?? "",
+          body: code.codeInjectionBody ?? "",
+        });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [ownerOnly]);
+
+  const headHtml = ownerCode?.head ?? head ?? "";
+  const bodyHtml = ownerCode?.body ?? body ?? "";
+  useEffect(() => {
+    injectCodeIn("head", headHtml);
+    injectCodeIn("body", bodyHtml);
+  }, [headHtml, bodyHtml]);
 
   return null;
 }

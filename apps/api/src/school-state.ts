@@ -78,11 +78,9 @@ export function schoolStateAllows(input: {
       return READ_ONLY_LEARNER_WRITES.has(operationId);
     case "pending_checkout":
     case "imported":
-      // Offline until the owner picks a plan.
-      return (
-        actor === "owner" &&
-        (read || (operationId !== null && OWNER_BILLING_OPERATIONS.has(operationId)))
-      );
+      // Offline until the owner picks a plan: no storefront, no learners, no
+      // email. Staff can still set the school up, so it's ready when it pays.
+      return actor === "owner" || actor === "team";
     case "suspended":
       return (
         actor === "owner" &&

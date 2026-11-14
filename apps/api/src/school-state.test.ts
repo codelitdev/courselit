@@ -96,18 +96,19 @@ describe("schoolStateAllows", () => {
   describe("offline: pending_checkout and imported", () => {
     it("is closed to learners and the public, even for reads", () => {
       for (const status of ["pending_checkout", "imported"] as const) {
-        for (const actor of ["learner", "public", "team"] as const) {
+        for (const actor of ["learner", "public"] as const) {
           expect(allows(status, actor, "GET", "getPublicSiteSettings")).toBe(false);
           expect(allows(status, actor, "POST", "learnerRequestEmailCode")).toBe(false);
         }
       }
     });
 
-    it("lets the owner read and reach checkout", () => {
+    it("lets staff set the school up and the owner reach checkout", () => {
       for (const status of ["pending_checkout", "imported"] as const) {
         expect(allows(status, "owner", "GET", "getSchoolBillingPlan")).toBe(true);
         expect(allows(status, "owner", "POST", "startSchoolBillingCheckout")).toBe(true);
-        expect(allows(status, "owner", "PATCH", "updateProduct")).toBe(false);
+        expect(allows(status, "owner", "PATCH", "updateProduct")).toBe(true);
+        expect(allows(status, "team", "POST", "createProduct")).toBe(true);
       }
     });
   });

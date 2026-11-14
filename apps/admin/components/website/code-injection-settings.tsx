@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
+import { usePlanFeatures } from "@/lib/plan-features";
 
 type CodeInjectionSettingsResponse = {
   codeInjectionHead?: string;
@@ -18,6 +19,9 @@ export function CodeInjectionSettings() {
   const [codeInjectionBody, setCodeInjectionBody] = useState("");
   const [savedCodeInjectionBody, setSavedCodeInjectionBody] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Without `code_injection` (a trial) the code runs only for the owner.
+  const ownerOnly = !usePlanFeatures(schoolId).has("code_injection");
 
   const changed =
     codeInjectionHead !== savedCodeInjectionHead ||
@@ -100,7 +104,16 @@ export function CodeInjectionSettings() {
   }
 
   return (
-    <form className="w-full space-y-6" onSubmit={(event) => void saveCodeInjection(event)}>
+    <form
+      className="w-full space-y-6"
+      onSubmit={(event) => void saveCodeInjection(event)}
+    >
+      {ownerOnly ? (
+        <p className="text-sm text-muted-foreground">
+          During your free trial, this code runs only for you, the owner, when you're
+          signed in to your site. It goes live for everyone with a paid plan.
+        </p>
+      ) : null}
       <div className="space-y-1.5">
         <Label htmlFor="website-code-head">Code Injection in &lt;head&gt;</Label>
         <Textarea

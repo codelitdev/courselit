@@ -7,8 +7,8 @@ import {
   canSubmitSubdomain,
   deriveSiteDomain,
   detectLocaleDefaults,
-  emptyWizardData,
   ERROR_COPY,
+  emptyWizardData,
   formatMailingAddress,
   hasNewConnection,
   hasUploadsInFlight,
@@ -18,6 +18,7 @@ import {
   parseDraft,
   previousStep,
   resolveResumeStep,
+  resumeRows,
   sanitizeSubdomainInput,
   serializeDraft,
   slugify,
@@ -354,5 +355,21 @@ describe("site domain", () => {
     expect(
       deriveSiteDomain([{ subdomain: "a", storefrontHost: null }], "courselit.app"),
     ).toBe("courselit.app");
+  });
+});
+
+describe("resume summary", () => {
+  const env = { firstRun: false, hosted: true };
+  const plan = (trialEndsAt: string | null) =>
+    resumeRows("offer", env, emptyWizardData(), "Owner", trialEndsAt).find(
+      (row) => row.key === "plan",
+    )?.desc;
+
+  it("asks for a plan when the school has none", () => {
+    expect(plan(null)).toBe("Choose a CourseLit plan to go live");
+  });
+
+  it("names the end of a running trial instead", () => {
+    expect(plan("2026-11-28T12:00:00.000Z")).toStartWith("Free trial until");
   });
 });

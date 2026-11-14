@@ -550,6 +550,8 @@ export const schoolSchema = z.object({
   ]),
   locale: z.string(),
   currency: z.string(),
+  /** The owner asked to remove the "Powered by CourseLit" badge. */
+  hideCourseLitBranding: z.boolean(),
   permissions: z.array(z.string()).optional(),
   isOwner: z.boolean().optional(),
   selected: z.boolean().optional(),
@@ -728,10 +730,32 @@ export const publicSiteSettingsSchema = z.object({
   theme: z.record(z.string(), z.unknown()).nullable(),
   codeInjectionHead: z.string(),
   codeInjectionBody: z.string(),
+  /** The school has code to inject that only its owner sees for now (a
+   * trial): the storefront fetches it through the owner's session. */
+  ownerOnlyCodeInjection: z.boolean(),
+  /** Where the "Powered by CourseLit" badge links; null hides the badge. */
+  courseLitBadgeUrl: z.string().nullable(),
   canonicalHost: z.string().nullable(),
   /** The school has a published product (public or hidden) or a live
    * community, so learners have something to sign in to. */
   hasPublishedOffers: z.boolean(),
+});
+/** One entry in a school's audit log. */
+export const auditEventSchema = z.object({
+  id: z.string(),
+  action: z.string(),
+  resourceType: z.string(),
+  resourceId: z.string(),
+  actor: z.object({
+    kind: z.enum(["user", "system"]),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+  }),
+  createdAt: z.string(),
+});
+export const auditEventListQuerySchema = z.object({
+  cursor: z.string().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 export const schoolCodeInjectionSchema = z.object({
   codeInjectionHead: z.string(),
@@ -807,9 +831,16 @@ export const updateSchoolBodySchema = z
       .trim()
       .length(3)
       .regex(/^[A-Za-z]{3}$/)
-      .transform((value) => value.toUpperCase()),
+      .transform((value) => value.toUpperCase())
+      .optional(),
+    /** Needs a paid plan (`remove_branding`) to turn on. */
+    hideCourseLitBranding: z.boolean().optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) =>
+      value.currency !== undefined || value.hideCourseLitBranding !== undefined,
+  );
 export const schoolHostSchema = z.object({
   hostname: z.string(),
   kind: z.enum(["subdomain", "custom"]),
@@ -2062,6 +2093,8 @@ export const startSchoolBillingCheckoutResponseSchema = z.object({
 
 /** The school's CourseLit plan, for Settings > Plan. */
 export const schoolBillingPlanSchema = z.object({
+  /** A cardless CourseLit trial with Business features, not a paid plan. */
+  courseLitTrial: z.boolean(),
   /** False when this deployment has no hosted billing. */
   billingAvailable: z.boolean(),
   plan: z.enum(["pro", "business"]).nullable(),
@@ -2119,7 +2152,14 @@ export const schoolOnboardingSchema = z.object({
     z.object({ key: onboardingChecklistKeySchema, done: z.boolean() }),
   ),
   /** Hosted only: whether the school still needs a CourseLit plan to go live. */
-  billing: z.object({ required: z.boolean(), entitled: z.boolean() }),
+  billing: z.object({
+    required: z.boolean(),
+    /** A paid plan, a running trial, or self-hosted: the school can go live. */
+    entitled: z.boolean(),
+    /** An entitled paid plan: what a return from checkout confirms. */
+    paid: z.boolean(),
+    trialEndsAt: z.string().nullable(),
+  }),
   updatedAt: z.string(),
 });
 export const updateSchoolOnboardingBodySchema = z
@@ -3180,6 +3220,8 @@ export const contract = c.router({
         schoolId: z.string(),
         subdomain: z.string(),
         name: z.string(),
+        /** The site is not available: pending checkout, imported or suspended. */
+        offline: z.boolean(),
       }),
       404: platformErrorSchema,
     },
@@ -4303,6 +4345,17 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  getLearnerSiteCodeInjection: {
+    method: "GET",
+    path: "/v1/learner/site/code-injection",
+    responses: {
+      200: schoolCodeInjectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary:
+      "The school's injected code for its owner while the plan keeps it private (a trial); refused for anyone else",
+  },
   updateLearnerProfile: {
     method: "PATCH",
     path: "/v1/learner/me",
@@ -4656,6 +4709,32 @@ export const contract = c.router({
       403: platformErrorSchema,
       404: platformErrorSchema,
     },
+  },
+  getSchoolPlanFeatures: {
+    method: "GET",
+    path: "/v1/school/plan-features",
+    responses: {
+      200: z.object({ features: z.array(z.string()) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary:
+      "The features the school's CourseLit plan includes, such as scorm, audit_log and remove_branding",
+  },
+  listSchoolAuditEvents: {
+    method: "GET",
+    path: "/v1/school/audit-events",
+    query: auditEventListQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(auditEventSchema),
+        nextCursor: z.string().nullable(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: "The school's audit log, newest first (Business plan)",
   },
   getSchoolCodeInjection: {
     method: "GET",

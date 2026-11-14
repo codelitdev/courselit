@@ -36,7 +36,7 @@ export type SchoolOnboardingDto = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: OnboardingChecklistKey; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   updatedAt: string;
 };
 
@@ -249,7 +249,7 @@ export async function readSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -263,7 +263,7 @@ async function toDto(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -292,7 +292,7 @@ export async function updateSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
     patch: {
       status?: "in_progress" | "complete";
       step?: OnboardingStep;

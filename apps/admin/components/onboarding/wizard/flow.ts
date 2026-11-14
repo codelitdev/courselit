@@ -918,6 +918,7 @@ export function resumeRows(
   env: Pick<FlowEnv, "firstRun" | "hosted">,
   data: WizardData,
   accountName: string,
+  trialEndsAt: string | null = null,
 ): Array<{ key: string; name: string; desc: string; done: boolean; next: boolean }> {
   const groups = stepperGroups(env).filter((group) => group.key !== "live");
   const current = stepperIndex(stepperGroups(env), step);
@@ -928,7 +929,9 @@ export function resumeRows(
     offer: offerTitle(data) || "Not chosen yet",
     site: "Logo, colour and tagline",
     email: "Mailing address",
-    plan: "Choose a CourseLit plan to go live",
+    plan: trialEndsAt
+      ? `Free trial until ${new Date(trialEndsAt).toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
+      : "Choose a CourseLit plan to go live",
     live: "",
   };
   return groups.map((group, index) => ({

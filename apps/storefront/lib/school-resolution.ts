@@ -23,6 +23,8 @@ export interface ResolvedSchool {
   schoolId: string;
   subdomain: string;
   name: string;
+  /** The school exists but its site is offline (pending checkout, imported or suspended). */
+  offline?: boolean;
 }
 
 export type SchoolResolution =
@@ -34,7 +36,8 @@ export type SchoolResolution =
       persistDevSchool?: string;
     }
   | { status: "unknown" }
-  | { status: "unavailable" };
+  | { status: "unavailable" }
+  | { status: "offline" };
 
 /** Normalize a browser/edge Host header before using it as a cache key or
  * calling the API. In local development it is usually `slug.localhost:3002`. */
@@ -105,6 +108,7 @@ export async function fetchResolvedHost(host: string): Promise<ResolvedSchool | 
         schoolId: body.schoolId,
         subdomain: body.subdomain ?? "",
         name: body.name ?? "",
+        offline: body.offline === true,
       }
     : null;
 }
@@ -146,6 +150,7 @@ export async function resolveSchoolForRequest(
   } catch {
     return { status: "unavailable" };
   }
+  if (resolved?.offline) return { status: "offline" };
   if (resolved) return { status: "resolved", schoolId: resolved.schoolId };
 
   if (!isLoopbackHost(host)) return { status: "unknown" };

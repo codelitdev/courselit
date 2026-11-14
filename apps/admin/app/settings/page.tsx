@@ -15,6 +15,7 @@ import {
   Palette,
   RotateCcw,
   Save,
+  ScrollText,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
+import { AuditLogSettings } from "@/components/settings/audit-log-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import { LoginProviderSettings } from "@/components/settings/login-provider-settings";
@@ -60,7 +62,7 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "audit-log"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
 const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
@@ -111,6 +113,7 @@ type SchoolItem = {
   currency: string;
   isOwner?: boolean;
   selected?: boolean;
+  permissions?: string[];
 };
 
 
@@ -192,6 +195,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [canManageSchool, setCanManageSchool] = useState(false);
 
   const providerSettings = isPaymentProvider(paymentMethod)
     ? paymentSettings?.[paymentMethod]
@@ -208,6 +212,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
         if (!selected) return;
         setSchoolId(selected.id);
         setIsOwner(selected.isOwner === true);
+        setCanManageSchool(selected.permissions?.includes("school:write") === true);
         setCurrency(selected.currency || "USD");
         void fetch("/api/v1/school/payment-settings", {
           credentials: "include",
@@ -444,6 +449,16 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       ),
                       icon: <Sparkles className="size-4" />,
                     },
+                    // The audit log is for people who manage the school's settings.
+                    ...(canManageSchool
+                      ? [
+                          {
+                            value: "audit-log",
+                            label: "Audit log",
+                            icon: <ScrollText className="size-4" />,
+                          },
+                        ]
+                      : []),
                   ]
             }
           >
@@ -761,6 +776,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           {mode === "general" && selectedTab === "ai-assistants" ? (
             <div className="w-full pt-4">
               <AiAssistantSettings />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="audit-log" className="w-full">
+          {mode === "general" && selectedTab === "audit-log" && canManageSchool ? (
+            <div className="w-full pt-4">
+              <AuditLogSettings schoolId={schoolId} />
             </div>
           ) : null}
           </PlatformTabsContent>

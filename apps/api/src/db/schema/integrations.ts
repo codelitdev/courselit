@@ -41,6 +41,7 @@ export const integrationJobTypes = [
   "send_school_email",
   "send_system_email",
   "sync_plan_features",
+  "evaluate_school_lifecycle",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
 

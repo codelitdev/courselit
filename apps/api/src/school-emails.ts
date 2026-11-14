@@ -2,6 +2,12 @@ import { type Clock, uuidv7 } from "@codelitdev/platform";
 import { and, count, eq, gte } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { schoolSiteUrl } from "./membership-events.js";
+import {
+  lastKnownPlan,
+  planIncludesFeature,
+  REMOVE_BRANDING_FEATURE,
+} from "./school-plan.js";
+import { courseLitBadgeUrl } from "./storefront-plan.js";
 import { escapeHtml, type MailStream } from "./system-mail.js";
 import type { AppDb } from "./types.js";
 
@@ -45,6 +51,41 @@ export function platformMailTier(lastPlan: unknown): "trial" | "pro" | "business
     return plan.plan;
   }
   return "trial";
+}
+
+/**
+ * Whether learner mail from a school carries the "Powered by CourseLit"
+ * badge: always, unless the school hid it and its plan includes
+ * `remove_branding`. Read from the cached `last_plan`, as mail is queued
+ * outside any request that could ask billing.
+ */
+export function emailShowsCourseLitBadge(school: {
+  hideCourseLitBranding: boolean;
+  lastPlan: unknown;
+}): boolean {
+  if (!school.hideCourseLitBranding) return true;
+  if (process.env.BILLING_MODE === "oss") return false;
+  const plan = lastKnownPlan({ kind: "unknown" }, school.lastPlan);
+  return !planIncludesFeature(plan, REMOVE_BRANDING_FEATURE);
+}
+
+/** Adds the badge at the end of a rendered email. */
+export function withCourseLitBadge(
+  email: { html: string; text: string },
+  subdomain: string,
+): { html: string; text: string } {
+  const url = escapeHtml(courseLitBadgeUrl(subdomain));
+  const badge = `<p style="margin:24px 0 0;font-size:12px;color:#6b7280;text-align:center">Powered by <a href="${url}" rel="nofollow" style="color:#6b7280;font-weight:bold">CourseLit</a></p>`;
+  const html = email.html.includes("</div></body>")
+    ? email.html.replace(
+        /<\/div><\/body>(?![\s\S]*<\/div><\/body>)/,
+        `${badge}</div></body>`,
+      )
+    : `${email.html}${badge}`;
+  return {
+    html,
+    text: `${email.text}\n\nPowered by CourseLit: ${courseLitBadgeUrl(subdomain)}`,
+  };
 }
 
 function startOfUtcDay(date: Date): Date {
@@ -151,7 +192,12 @@ export async function queueSchoolEmail(
 ): Promise<"queued" | "deferred" | "skipped"> {
   const now = clock.now();
   const [school] = await db
-    .select({ name: schema.schools.name, lastPlan: schema.schools.lastPlan })
+    .select({
+      name: schema.schools.name,
+      subdomain: schema.schools.subdomain,
+      lastPlan: schema.schools.lastPlan,
+      hideCourseLitBranding: schema.schools.hideCourseLitBranding,
+    })
     .from(schema.schools)
     .where(eq(schema.schools.id, schoolId))
     .limit(1);
@@ -201,12 +247,18 @@ export async function queueSchoolEmail(
   const subject = payload.subject.includes(schoolName)
     ? payload.subject
     : `${payload.subject} | ${schoolName}`;
+  // Staff mail (team invites, owner notices) is CourseLit's own and is
+  // branded on every plan; learner mail carries the badge (section 4).
+  const body =
+    stream !== "staff" && emailShowsCourseLitBadge(school)
+      ? withCourseLitBadge({ html: payload.html, text: payload.text }, school.subdomain)
+      : { html: payload.html, text: payload.text };
   await db.insert(schema.integrationOutboxJobs).values({
     id: uuidv7(clock),
     schoolId,
     provider: "system",
     type: "send_system_email",
-    payload: { ...payload, subject, stream },
+    payload: { ...payload, ...body, subject, stream },
     status: "pending",
     attempts: 0,
     revision: 1,

@@ -169,7 +169,7 @@ export async function GET(
     if (school.status === "unavailable") {
       return NextResponse.json({ message: "Unable to load SCORM content" }, { status: 503 });
     }
-    if (school.status === "unknown") {
+    if (school.status === "unknown" || school.status === "offline") {
       return NextResponse.json({ message: "SCORM package not found" }, { status: 404 });
     }
     const media = await getMediaUrl(request, school.schoolId, productId, lessonId);

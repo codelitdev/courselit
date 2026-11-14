@@ -6,6 +6,7 @@ import * as schema from "./db/schema/index.js";
 import { processNextPlatformJob } from "./integration-provisioning.js";
 import { cleanupSsoRequests } from "./learner-sso-sign-in.js";
 import { schoolsWithSendLitTeams, syncMarketingQuota } from "./marketing-quota.js";
+import { evaluateSchoolLifecycle, schoolsForLifecycleSweep } from "./school-lifecycle.js";
 import { schoolsWithSsoConnections, syncPlanFeatures } from "./plan-features.js";
 import { SSO_DOMAIN_LABEL, ssoDnsResolver } from "./sso-admin.js";
 import { notifySsoOwner, recordSsoEvent } from "./sso-events.js";
@@ -32,9 +33,13 @@ export async function processPlatformJobs(
   let processed = 0;
   while (
     await processNextPlatformJob(db, clock, logger, async (job) => {
-      if (job.type !== "sync_plan_features") {
+      if (job.type !== "sync_plan_features" && job.type !== "evaluate_school_lifecycle") {
         throw new Error(`Unknown platform job type: ${job.type}`);
       }
+      // The lifecycle first, so the state and the cached plan are current
+      // before SSO and the SendLit quota follow them.
+      const lifecycle = await evaluateSchoolLifecycle({ db, billing, mode, clock }, job.schoolId);
+      if (lifecycle === "unknown") throw new Error("billing_unavailable");
       await syncPlanFeatures(db, billing, job.schoolId, clock);
       await syncMarketingQuota({ db, billing, mode, clock }, job.schoolId);
     })
@@ -42,6 +47,33 @@ export async function processPlatformJobs(
     processed += 1;
   }
   return processed;
+}
+
+/**
+ * The hourly lifecycle sweep: catches lapses no event announces (a cancelled
+ * plan's paid-through date passing), sends the 7-day and 1-day deletion
+ * warnings, and keeps each school's cached plan fresh for SSO enforcement.
+ */
+export async function sweepSchoolLifecycles(
+  db: AppDb,
+  billing: Billing,
+  clock: Clock,
+  mode: "cloud" | "oss",
+  logger?: Logger,
+): Promise<number> {
+  let changed = 0;
+  for (const schoolId of await schoolsForLifecycleSweep(db)) {
+    try {
+      const action = await evaluateSchoolLifecycle({ db, billing, mode, clock }, schoolId);
+      if (action !== "unchanged" && action !== "skipped") changed += 1;
+    } catch (error) {
+      logger?.warn(
+        { schoolId, error: error instanceof Error ? error.message : String(error) },
+        "school lifecycle sweep failed",
+      );
+    }
+  }
+  return changed;
 }
 
 /**
@@ -227,6 +259,11 @@ export function startSsoJobs(options: {
       await recheckSsoDomains(db, clock, { logger });
     } catch (error) {
       fail("domain_recheck", error);
+    }
+    try {
+      await sweepSchoolLifecycles(db, billing, clock, mode, logger);
+    } catch (error) {
+      fail("lifecycle_sweep", error);
     }
     try {
       if (clock.now().getTime() - lastPlanSync >= 24 * 60 * 60 * 1000) {

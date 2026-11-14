@@ -99,6 +99,14 @@ describe("school state at the dispatch edge", () => {
         headers: {},
       });
       expect(settings.status).toBe(403);
+      // The storefront asks for the host first and shows its offline page.
+      const host = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/public/resolve-host?host=school-a.localhost",
+        headers: {},
+      });
+      expect(host.status).toBe(200);
+      expect((host.body as { offline: boolean }).offline).toBe(true);
       const code = await dispatch(runtime, {
         method: "POST",
         path: "/v1/learner/auth/email-code",
@@ -117,8 +125,8 @@ describe("school state at the dispatch edge", () => {
     },
   );
 
-  it("an API key is staff, not the owner, so it can't use billing on an offline school", async () => {
-    const { runtime, world } = await setup("pending_checkout");
+  it("an API key is staff, not the owner, so it can't use billing on a suspended school", async () => {
+    const { runtime, world } = await setup("suspended");
     const products = await dispatch(runtime, {
       method: "GET",
       path: "/v1/products",

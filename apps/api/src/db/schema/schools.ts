@@ -65,6 +65,8 @@ export const schools = pgTable("schools", {
   paymentSettingsEncrypted: text("payment_settings_encrypted"),
   codeInjectionHead: text("code_injection_head").notNull().default(""),
   codeInjectionBody: text("code_injection_body").notNull().default(""),
+  /** "Remove CourseLit branding". Honoured only with `remove_branding`. */
+  hideCourseLitBranding: boolean("hide_courselit_branding").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 }, (table) => [

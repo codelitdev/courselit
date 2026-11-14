@@ -54,3 +54,22 @@ export const mediaUploadReservations = pgTable(
     check("media_upload_reservations_bytes_check", sql`${table.bytes} > 0`),
   ],
 );
+
+/**
+ * What platform staff did, through the staff CLI (S26). It has no foreign key
+ * to schools: the record outlives the school, unlike `audit_events`.
+ */
+export const platformAuditEvents = pgTable(
+  "platform_audit_events",
+  {
+    id: uuid("id").primaryKey(),
+    /** Who ran the command: the operator's name or email, from the CLI. */
+    actor: text("actor").notNull(),
+    command: text("command").notNull(),
+    schoolId: uuid("school_id"),
+    schoolSubdomain: text("school_subdomain"),
+    reason: text("reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("platform_audit_events_school_idx").on(table.schoolId, table.createdAt)],
+);

@@ -640,6 +640,16 @@ CREATE TABLE "media_upload_reservations" (
 	CONSTRAINT "media_upload_reservations_bytes_check" CHECK ("media_upload_reservations"."bytes" > 0)
 );
 --> statement-breakpoint
+CREATE TABLE "platform_audit_events" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"actor" text NOT NULL,
+	"command" text NOT NULL,
+	"school_id" uuid,
+	"school_subdomain" text,
+	"reason" text,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "school_trials" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -1003,6 +1013,7 @@ CREATE TABLE "schools" (
 	"payment_settings_encrypted" text,
 	"code_injection_head" text DEFAULT '' NOT NULL,
 	"code_injection_body" text DEFAULT '' NOT NULL,
+	"hide_courselit_branding" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "schools_public_id_unique" UNIQUE("public_id"),
@@ -1722,6 +1733,7 @@ CREATE INDEX "learner_memberships_school_account_lookup_idx" ON "learner_members
 CREATE INDEX "learner_memberships_parent_lookup_idx" ON "learner_memberships" USING btree ("parent_membership_id","status");--> statement-breakpoint
 CREATE UNIQUE INDEX "migration_mappings_source_target_uidx" ON "migration_mappings" USING btree ("source_system","source_collection","source_id","target_table");--> statement-breakpoint
 CREATE INDEX "media_upload_reservations_school_idx" ON "media_upload_reservations" USING btree ("school_id","expires_at");--> statement-breakpoint
+CREATE INDEX "platform_audit_events_school_idx" ON "platform_audit_events" USING btree ("school_id","created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_trials_user_uidx" ON "school_trials" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "school_trials_email_uidx" ON "school_trials" USING btree ("normalized_email");--> statement-breakpoint
 CREATE INDEX "school_trials_school_idx" ON "school_trials" USING btree ("school_id");--> statement-breakpoint

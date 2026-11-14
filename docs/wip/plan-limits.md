@@ -97,7 +97,7 @@ The API refuses every school and learner operation except these:
 
 | State | The owner may | Everyone else |
 |---|---|---|
-| `pending_checkout`, `imported` | read in the admin; start checkout and pick a plan | nothing |
+| `pending_checkout`, `imported` | set the school up in the admin (with the rest of the team), and start checkout | nothing: learners and the public are refused |
 | `suspended` | read in the admin; cancel or resume the CourseLit plan | nothing; learners can't sign in |
 
 `maintenance`, `migrating` and `deleted` keep their current behaviour.
@@ -288,7 +288,9 @@ A "Powered by CourseLit" badge, controlled by the school setting
    - It sits outside the page layout, so editing the page or the layout
      through the API can't remove it. FrontLit's footer block stays
      unchanged, because a CourseLit badge doesn't belong in FrontLit.
-   - The admin's page editor preview shows it too.
+   - The admin's page editor preview should show it too. **Deferred:**
+     FrontLit's `PageBuilder` has no slot under its canvas, so this needs a
+     generic slot in `@frontlit/page-builder` first.
 2. **Platform emails to learners.**
 3. **The footer of the course viewer's sidebar**, as on `main`.
 4. **The footer of the learner dashboard's sidebar.** New.

@@ -894,6 +894,16 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "learner.siteCodeInjection",
+    rest: { operationId: "getLearnerSiteCodeInjection" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "learner.me",
     rest: { operationId: "learnerMe" },
     parity: "exempt",

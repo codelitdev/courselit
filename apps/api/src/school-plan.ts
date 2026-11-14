@@ -5,15 +5,20 @@ import * as schema from "./db/schema/index.js";
 import { SSO_FEATURE } from "./sso-config.js";
 import type { AppDb } from "./types.js";
 
+export const REMOVE_BRANDING_FEATURE = "remove_branding";
+export const CODE_INJECTION_FEATURE = "code_injection";
+export const SCORM_FEATURE = "scorm";
+export const AUDIT_LOG_FEATURE = "audit_log";
+
 /** Features on Pro (docs/wip/plan-limits.md, section 4). */
-export const PRO_FEATURES = ["remove_branding", "code_injection"] as const;
+export const PRO_FEATURES = [REMOVE_BRANDING_FEATURE, CODE_INJECTION_FEATURE] as const;
 
 /** Business has everything Pro has, plus these. */
 export const BUSINESS_FEATURES = [
   ...PRO_FEATURES,
   SSO_FEATURE,
-  "scorm",
-  "audit_log",
+  SCORM_FEATURE,
+  AUDIT_LOG_FEATURE,
 ] as const;
 
 /** What each paid plan unlocks, for `planFeatures` at `createBilling`. */
@@ -45,7 +50,8 @@ export const PLAN_LIMITS: Record<
  */
 export const TRIAL = {
   features: BUSINESS_FEATURES.filter(
-    (feature) => feature !== "remove_branding" && feature !== "code_injection",
+    (feature) =>
+      feature !== REMOVE_BRANDING_FEATURE && feature !== CODE_INJECTION_FEATURE,
   ) as readonly string[],
   limits: { marketing_emails_month: 0, storage_bytes: 500 * MB },
 } as const;

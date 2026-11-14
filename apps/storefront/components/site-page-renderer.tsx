@@ -12,6 +12,7 @@ import {
   useSchoolThemeStyle,
 } from "@/lib/school-theme-context";
 import { resolveSchoolTheme } from "@/lib/site-theme";
+import { CourseLitBadgeStrip } from "./courselit-badge";
 import { useHeaderForVisitor } from "./use-header-account";
 
 registerCourseLitBlocks();
@@ -72,6 +73,7 @@ export function SitePageRenderer({
       >
         {children}
       </PageRenderer>
+      <CourseLitBadgeStrip />
     </SchoolThemeContextProvider>
   );
 }

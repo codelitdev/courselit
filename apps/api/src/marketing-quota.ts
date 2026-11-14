@@ -64,7 +64,14 @@ export async function syncMarketingQuota(
     )
     .limit(1);
   if (!integration?.remoteTeamId) return "skipped";
-  const quota = marketingQuotaFor(await schoolPlan(deps, schoolId));
+  const [school] = await deps.db
+    .select({ status: schema.schools.status })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  // A suspended school sends nothing, whatever its plan (S26).
+  const quota =
+    school?.status === "suspended" ? 0 : marketingQuotaFor(await schoolPlan(deps, schoolId));
   if (quota === undefined) throw new Error("billing_unavailable");
   await (deps.updateTeamQuota ?? updateSendLitTeamQuota)(
     integration.remoteTeamId,

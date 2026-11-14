@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
+import { CourseLitBadge } from "@/components/courselit-badge";
 import { useEffect, useState } from "react";
 import { CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import { LearnerSchoolLogo } from "@/components/layout/learner-school-logo";
@@ -245,6 +246,7 @@ export function LearnerSidebar({
             )}
           </SidebarMenuItem>
         </SidebarMenu>
+        <CourseLitBadge className="group-data-[collapsible=icon]:hidden" />
       </SidebarFooter>
 
       <SidebarRail />
