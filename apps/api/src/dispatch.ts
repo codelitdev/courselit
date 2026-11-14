@@ -447,6 +447,7 @@ import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
 import { listAuditEvents } from "./audit-log.js";
 import { lessonType, scormPlanError } from "./scorm-plan.js";
+import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
   AUDIT_LOG_FEATURE,
   REMOVE_BRANDING_FEATURE,
@@ -459,6 +460,34 @@ import {
 } from "./storefront-plan.js";
 
 export type { DispatchDeps };
+
+/** Invite limits apply on courselit.app only (S6); OSS sends its own mail. */
+async function inviteLimitCheck(
+  deps: DispatchDeps,
+  schoolId: string,
+  kind: InviteKind | "resend",
+) {
+  if (deps.billingMode !== "cloud") return null;
+  return inviteLimitError(
+    deps.db,
+    schoolId,
+    { newInvitation: kind === "team" },
+    deps.clock.now(),
+  );
+}
+
+async function inviteSent(
+  deps: DispatchDeps,
+  context: { tenantId?: string | null; principalId: string },
+  kind: InviteKind,
+) {
+  if (deps.billingMode !== "cloud" || !context.tenantId) return;
+  await recordInvite(
+    deps.db,
+    { schoolId: context.tenantId, userId: context.principalId, kind },
+    deps.clock,
+  );
+}
 
 const scormDeps = (deps: DispatchDeps) => ({
   db: deps.db,
@@ -3641,6 +3670,8 @@ export async function dispatch(
       const parsed = inviteCommunityMemberBodySchema.safeParse(request.body ?? {});
       if (!parsed.success)
         return errorResponse(createPlatformError("validation_failed"));
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "community");
+      if (limited) return errorResponse(limited);
       const result = await inviteCommunityMember(
         deps.db,
         context,
@@ -3649,6 +3680,7 @@ export async function dispatch(
         parsed.data,
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "community");
       return result.ok
         ? { status: 201, body: result.value }
         : errorResponse(result.error);
@@ -5091,12 +5123,15 @@ export async function dispatch(
     const resendInvitationMatch =
       /^\/v1\/school\/team\/invitations\/([^/]+)\/resend$/.exec(path);
     if (request.method === "POST" && resendInvitationMatch) {
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "resend");
+      if (limited) return errorResponse(limited);
       const result = await resendInvitation(
         deps.db,
         context,
         decodeURIComponent(resendInvitationMatch[1]!),
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "team");
       return result.ok ? { status: 200, body: result } : errorResponse(result.error);
     }
     const teamInvitationMatch = /^\/v1\/school\/team\/invitations\/([^/]+)$/.exec(path);
@@ -5131,6 +5166,8 @@ export async function dispatch(
       ) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "team");
+      if (limited) return errorResponse(limited);
       const result = await createInvitation(
         deps.db,
         context,
@@ -5142,6 +5179,7 @@ export async function dispatch(
         deps.clock,
       );
       if (result.ok) {
+        await inviteSent(deps, context, "team");
         const acceptUrl = new URL(
           `/team-invitations/${encodeURIComponent(result.id)}`,
           deps.auth.webOrigin,
@@ -5484,6 +5522,8 @@ export async function dispatch(
       if (typeof input?.productId !== "string" || typeof input.email !== "string") {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "product");
+      if (limited) return errorResponse(limited);
       const result = await grantLearnerMembership(
         deps.db,
         {
@@ -5498,6 +5538,7 @@ export async function dispatch(
         deps.clock,
       );
       if (!result.ok) return errorResponse(result.error);
+      await inviteSent(deps, context, "product");
       return { status: 201, body: result.value };
     }
 
