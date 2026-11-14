@@ -28,6 +28,7 @@ import {
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
 import type { AppDb } from "./types.js";
+import type { StorageGate, Uploader } from "./storage.js";
 
 export const MEDIA_RESOURCE_TYPES = [
   "school_branding",
@@ -141,6 +142,14 @@ export type MediaLitClient = {
     uploadFields: Record<string, string>;
     expiresAt: Date;
   }>;
+  /**
+   * Reads an upload before it is sealed, so CourseLit can check its group,
+   * size and type first (S1). MediaLit's seal and delete aren't scoped to a
+   * group, so nothing may be sealed or deleted before the group is checked.
+   */
+  inspectUpload(input: { schoolId: string; uploadId: string }): Promise<MediaLitAsset>;
+  /** Deletes an upload that won't be kept. Only after `inspectUpload` matched the group. */
+  discardUpload(input: { schoolId: string; uploadId: string }): Promise<void>;
   finalizeUpload(input: { schoolId: string; uploadId: string }): Promise<MediaLitAsset>;
   getAsset(input: { schoolId: string; mediaLitId: string }): Promise<MediaLitAsset>;
   deleteAsset(input: { schoolId: string; mediaLitId: string }): Promise<void>;
@@ -187,6 +196,29 @@ export class MemoryMediaLitClient implements MediaLitClient {
       uploadFields: {},
       expiresAt: input.expiresAt,
     };
+  }
+
+  async inspectUpload(input: { schoolId: string; uploadId: string }) {
+    const upload = this.uploads.get(input.uploadId);
+    if (!upload || upload.expiresAt <= this.now()) {
+      throw new Error("media_upload_invalid_or_expired");
+    }
+    return {
+      mediaLitId: input.uploadId,
+      group: upload.schoolId,
+      canonicalUrl: `https://media.test/uploads/${input.uploadId}`,
+      thumbnailUrl: null,
+      fileName: upload.fileName,
+      mimeType: upload.mimeType,
+      byteSize: upload.byteSize,
+      width: null,
+      height: null,
+    };
+  }
+
+  async discardUpload(input: { schoolId: string; uploadId: string }) {
+    void input.schoolId;
+    this.uploads.delete(input.uploadId);
   }
 
   async finalizeUpload(input: { schoolId: string; uploadId: string }) {
@@ -629,9 +661,92 @@ async function mediaForSchool(
   return rows[0] ?? null;
 }
 
+/**
+ * Checks an upload, admits it into the school's storage, then seals it
+ * (docs/wip/plan-limits.md, S1). Order matters: MediaLit's seal and delete
+ * aren't scoped to a group, so the group is checked on the unsealed upload
+ * before anything is sealed or deleted. The returned hold keeps the space
+ * until the caller saves the media row and calls `gate.release`.
+ */
+async function inspectAdmitSeal(
+  client: MediaLitClient,
+  gate: StorageGate,
+  input: {
+    schoolId: string;
+    uploadId: string;
+    uploader: Uploader;
+    /** Why the asset can't be used, or null. */
+    check: (asset: MediaLitAsset) => string | null;
+  },
+): Promise<
+  | { ok: true; asset: MediaLitAsset; holdId: string }
+  | { ok: false; error: PlatformError }
+> {
+  const notReady = {
+    ok: false as const,
+    error: createPlatformError("validation_failed", {
+      safeDetails: { reason: "upload_not_ready" },
+    }),
+  };
+  let pending: MediaLitAsset;
+  try {
+    pending = await client.inspectUpload({
+      schoolId: input.schoolId,
+      uploadId: input.uploadId,
+    });
+  } catch {
+    return notReady;
+  }
+  if (pending.group !== input.schoolId) return invalid("media_school_mismatch");
+  const discard = () =>
+    client
+      .discardUpload({ schoolId: input.schoolId, uploadId: input.uploadId })
+      .catch(() => {});
+  const rejected = input.check(pending);
+  if (rejected) {
+    await discard();
+    return invalid(rejected);
+  }
+  const admitted = await gate.admit(input.schoolId, input.uploader, pending.byteSize);
+  if (!admitted.ok) {
+    await discard();
+    return admitted;
+  }
+  let asset: MediaLitAsset;
+  try {
+    asset = await client.finalizeUpload({
+      schoolId: input.schoolId,
+      uploadId: input.uploadId,
+    });
+  } catch {
+    await gate.release(admitted.holdId);
+    return notReady;
+  }
+  const sealedRejection =
+    asset.group !== input.schoolId ? "media_school_mismatch" : input.check(asset);
+  if (sealedRejection) {
+    await gate.release(admitted.holdId);
+    return invalid(sealedRejection);
+  }
+  return { ok: true, asset, holdId: admitted.holdId };
+}
+
+/** The basic shape every stored asset must have. */
+function assetIsComplete(asset: MediaLitAsset): boolean {
+  return Boolean(
+    asset.mediaLitId &&
+      asset.canonicalUrl &&
+      asset.fileName &&
+      asset.mimeType &&
+      Number.isSafeInteger(asset.byteSize) &&
+      asset.byteSize >= 1,
+  );
+}
+
 export async function authorizeMediaUpload(
   ctx: Ctx,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   input: {
     fileName: string;
@@ -657,6 +772,8 @@ export async function authorizeMediaUpload(
   ) {
     return invalid("invalid_file_size");
   }
+  const refused = await gate.reserve(ctx.tenantId!, { kind: "staff" }, input.byteSize);
+  if (refused) return { ok: false, error: refused };
   const expiresAt = new Date(clock.now().getTime() + 10 * 60 * 1000);
   try {
     const authorization = await client.authorizeUpload({
@@ -686,6 +803,7 @@ export async function finalizeMediaUpload(
   ctx: Ctx,
   publicSchoolId: string,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   input: {
     uploadId: string;
@@ -697,91 +815,26 @@ export async function finalizeMediaUpload(
   if (!has(ctx, "media:write")) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  let asset: MediaLitAsset;
-  try {
-    asset = await client.finalizeUpload({
-      schoolId: ctx.tenantId!,
-      uploadId: input.uploadId,
-    });
-  } catch {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "upload_not_ready" },
-      }),
-    };
-  }
-  if (
-    !asset.mediaLitId ||
-    asset.group !== ctx.tenantId ||
-    !asset.canonicalUrl ||
-    !asset.fileName ||
-    !asset.mimeType ||
-    !Number.isSafeInteger(asset.byteSize) ||
-    asset.byteSize < 1
-  ) {
-    return invalid(
-      asset.group === ctx.tenantId ? "invalid_media_asset" : "media_school_mismatch",
-    );
-  }
-  const duplicate = await db
-    .select({ id: schema.media.id })
-    .from(schema.media)
-    .where(
-      and(
-        eq(schema.media.schoolId, ctx.tenantId!),
-        eq(schema.media.mediaLitId, asset.mediaLitId),
-      ),
-    )
-    .limit(1);
-  if (duplicate[0]) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "media_already_registered" },
-      }),
-    };
-  }
-  const now = clock.now();
-  const row = {
-    id: uuidv7(clock),
-    publicId: createPublicId("med", clock),
+  const sealed = await inspectAdmitSeal(client, gate, {
     schoolId: ctx.tenantId!,
-    mediaLitId: asset.mediaLitId,
-    canonicalUrl: asset.canonicalUrl,
-    thumbnailUrl: asset.thumbnailUrl,
-    fileName: asset.fileName,
-    mimeType: asset.mimeType,
-    byteSize: asset.byteSize,
-    width: asset.width,
-    height: asset.height,
-    kind: kindForMime(asset.mimeType),
-    category: "library" as const,
-    altText: input.altText,
-    caption: input.caption,
-    accessPolicy: input.accessPolicy,
-    status: "active" as const,
-    createdBy: ctx.principalId,
-    createdBySchoolAccountId: null,
-    createdAt: now,
-    updatedAt: now,
-  };
+    uploadId: input.uploadId,
+    uploader: { kind: "staff" },
+    check: (candidate) => (assetIsComplete(candidate) ? null : "invalid_media_asset"),
+  });
+  if (!sealed.ok) return sealed;
+  const asset = sealed.asset;
   try {
-    await db.transaction(async (tx) => {
-      await tx.insert(schema.media).values(row);
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: ctx.tenantId,
-        actorId: ctx.principalId,
-        action: "media.created",
-        resourceType: "media",
-        resourceId: row.publicId,
-        requestId: ctx.requestId,
-        createdAt: now,
-      });
-    });
-  } catch (error) {
-    if (String(error).includes("media_school_media_lit_uidx")) {
+    const duplicate = await db
+      .select({ id: schema.media.id })
+      .from(schema.media)
+      .where(
+        and(
+          eq(schema.media.schoolId, ctx.tenantId!),
+          eq(schema.media.mediaLitId, asset.mediaLitId),
+        ),
+      )
+      .limit(1);
+    if (duplicate[0]) {
       return {
         ok: false,
         error: createPlatformError("conflict", {
@@ -789,12 +842,73 @@ export async function finalizeMediaUpload(
         }),
       };
     }
-    throw error;
+    const now = clock.now();
+    const row = {
+      id: uuidv7(clock),
+      publicId: createPublicId("med", clock),
+      schoolId: ctx.tenantId!,
+      mediaLitId: asset.mediaLitId,
+      canonicalUrl: asset.canonicalUrl,
+      thumbnailUrl: asset.thumbnailUrl,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+      byteSize: asset.byteSize,
+      width: asset.width,
+      height: asset.height,
+      kind: kindForMime(asset.mimeType),
+      category: "library" as const,
+      altText: input.altText,
+      caption: input.caption,
+      accessPolicy: input.accessPolicy,
+      status: "active" as const,
+      createdBy: ctx.principalId,
+      createdBySchoolAccountId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(schema.media).values(row);
+        await tx.insert(schema.auditEvents).values({
+          id: uuidv7(clock),
+          schoolId: ctx.tenantId,
+          actorId: ctx.principalId,
+          action: "media.created",
+          resourceType: "media",
+          resourceId: row.publicId,
+          requestId: ctx.requestId,
+          createdAt: now,
+        });
+      });
+    } catch (error) {
+      if (String(error).includes("media_school_media_lit_uidx")) {
+        return {
+          ok: false,
+          error: createPlatformError("conflict", {
+            safeDetails: { reason: "media_already_registered" },
+          }),
+        };
+      }
+      throw error;
+    }
+    return { ok: true, value: toDto(row, publicSchoolId, 0) };
+  } finally {
+    await gate.release(sealed.holdId);
   }
-  return { ok: true, value: toDto(row, publicSchoolId, 0) };
 }
 
 const COMMUNITY_MEDIA_KINDS: readonly MediaKind[] = ["image", "video", "document"];
+
+/** What learners may upload to a community: images, video, audio and PDFs (S24). */
+export function isLearnerCommunityMime(mimeType: string): boolean {
+  const type = mimeType.toLowerCase();
+  return (
+    type.startsWith("image/") ||
+    type.startsWith("video/") ||
+    type.startsWith("audio/") ||
+    type === "application/pdf"
+  );
+}
 
 function isCommunityMediaKind(kind: MediaKind): boolean {
   return COMMUNITY_MEDIA_KINDS.includes(kind);
@@ -803,6 +917,7 @@ function isCommunityMediaKind(kind: MediaKind): boolean {
 export async function authorizeLearnerCommunityMediaUpload(
   viewer: LearnerMediaViewer,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   input: {
     fileName: string;
@@ -817,7 +932,7 @@ export async function authorizeLearnerCommunityMediaUpload(
     return invalid("invalid_file_name");
   if (!input.mimeType.trim() || input.mimeType.length > 200)
     return invalid("invalid_mime_type");
-  if (!isCommunityMediaKind(kindForMime(input.mimeType))) {
+  if (!isLearnerCommunityMime(input.mimeType)) {
     return invalid("unsupported_community_media_type");
   }
   if (
@@ -827,11 +942,19 @@ export async function authorizeLearnerCommunityMediaUpload(
   ) {
     return invalid("invalid_file_size");
   }
+  const refused = await gate.reserve(
+    viewer.schoolId,
+    { kind: "learner", schoolAccountId: viewer.schoolAccountId ?? viewer.learnerId },
+    input.byteSize,
+  );
+  if (refused) return { ok: false, error: refused };
   const expiresAt = new Date(clock.now().getTime() + 10 * 60 * 1000);
   try {
     const authorization = await client.authorizeUpload({
       ...input,
       purpose: "community_content",
+      // Always private, whatever the client asks for (S24).
+      accessPolicy: "private",
       schoolId: viewer.schoolId,
       expiresAt,
     });
@@ -855,6 +978,7 @@ export async function authorizeLearnerCommunityMediaUpload(
 export async function authorizeLearnerAvatarUpload(
   viewer: LearnerMediaViewer,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   input: { fileName: string; mimeType: string; byteSize: number },
 ): Promise<
@@ -875,6 +999,12 @@ export async function authorizeLearnerAvatarUpload(
     return invalid("invalid_file_size");
   }
   if (input.byteSize > LEARNER_AVATAR_MAX_BYTES) return invalid("file_too_large");
+  const refused = await gate.reserve(
+    viewer.schoolId,
+    { kind: "learner", schoolAccountId: viewer.schoolAccountId ?? viewer.learnerId },
+    input.byteSize,
+  );
+  if (refused) return { ok: false, error: refused };
   const expiresAt = new Date(clock.now().getTime() + 10 * 60 * 1000);
   try {
     const authorization = await client.authorizeUpload({
@@ -906,97 +1036,34 @@ export async function finalizeLearnerAvatarUpload(
   viewer: LearnerMediaViewer,
   publicSchoolId: string,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   requestId: string,
   input: { uploadId: string; altText: string; caption: string },
 ): Promise<{ ok: true; value: MediaDto } | { ok: false; error: PlatformError }> {
-  let asset: MediaLitAsset;
-  try {
-    asset = await client.finalizeUpload({
-      schoolId: viewer.schoolId,
-      uploadId: input.uploadId,
-    });
-  } catch {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "upload_not_ready" },
-      }),
-    };
-  }
-  const kind = kindForMime(asset.mimeType);
-  if (
-    !asset.mediaLitId ||
-    asset.group !== viewer.schoolId ||
-    !asset.canonicalUrl ||
-    !asset.fileName ||
-    !asset.mimeType ||
-    kind !== "image" ||
-    !Number.isSafeInteger(asset.byteSize) ||
-    asset.byteSize < 1
-  ) {
-    return invalid(
-      asset.group === viewer.schoolId ? "invalid_avatar_asset" : "media_school_mismatch",
-    );
-  }
-  const duplicate = await db
-    .select({ id: schema.media.id })
-    .from(schema.media)
-    .where(
-      and(
-        eq(schema.media.schoolId, viewer.schoolId),
-        eq(schema.media.mediaLitId, asset.mediaLitId),
-      ),
-    )
-    .limit(1);
-  if (duplicate[0]) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "media_already_registered" },
-      }),
-    };
-  }
-  const now = clock.now();
-  const row = {
-    id: uuidv7(clock),
-    publicId: createPublicId("med", clock),
+  const sealed = await inspectAdmitSeal(client, gate, {
     schoolId: viewer.schoolId,
-    mediaLitId: asset.mediaLitId,
-    canonicalUrl: asset.canonicalUrl,
-    thumbnailUrl: asset.thumbnailUrl,
-    fileName: asset.fileName,
-    mimeType: asset.mimeType,
-    byteSize: asset.byteSize,
-    width: asset.width,
-    height: asset.height,
-    kind: "image" as const,
-    category: "user_uploads" as const,
-    altText: input.altText,
-    caption: input.caption,
-    accessPolicy: "public" as const,
-    status: "active" as const,
-    createdBy: null,
-    createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
-    createdAt: now,
-    updatedAt: now,
-  };
+    uploadId: input.uploadId,
+    uploader: { kind: "learner", schoolAccountId: viewer.schoolAccountId ?? viewer.learnerId },
+    check: (candidate) =>
+      assetIsComplete(candidate) && kindForMime(candidate.mimeType) === "image"
+        ? null
+        : "invalid_avatar_asset",
+  });
+  if (!sealed.ok) return sealed;
+  const asset = sealed.asset;
   try {
-    await db.transaction(async (tx) => {
-      await tx.insert(schema.media).values(row);
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: viewer.schoolId,
-        actorId: viewer.learnerPublicId,
-        action: "media.created",
-        resourceType: "media",
-        resourceId: row.publicId,
-        requestId,
-        createdAt: now,
-      });
-    });
-  } catch (error) {
-    if (String(error).includes("media_school_media_lit_uidx")) {
+    const duplicate = await db
+      .select({ id: schema.media.id })
+      .from(schema.media)
+      .where(
+        and(
+          eq(schema.media.schoolId, viewer.schoolId),
+          eq(schema.media.mediaLitId, asset.mediaLitId),
+        ),
+      )
+      .limit(1);
+    if (duplicate[0]) {
       return {
         ok: false,
         error: createPlatformError("conflict", {
@@ -1004,9 +1071,59 @@ export async function finalizeLearnerAvatarUpload(
         }),
       };
     }
-    throw error;
+    const now = clock.now();
+    const row = {
+      id: uuidv7(clock),
+      publicId: createPublicId("med", clock),
+      schoolId: viewer.schoolId,
+      mediaLitId: asset.mediaLitId,
+      canonicalUrl: asset.canonicalUrl,
+      thumbnailUrl: asset.thumbnailUrl,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+      byteSize: asset.byteSize,
+      width: asset.width,
+      height: asset.height,
+      kind: "image" as const,
+      category: "user_uploads" as const,
+      altText: input.altText,
+      caption: input.caption,
+      accessPolicy: "public" as const,
+      status: "active" as const,
+      createdBy: null,
+      createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(schema.media).values(row);
+        await tx.insert(schema.auditEvents).values({
+          id: uuidv7(clock),
+          schoolId: viewer.schoolId,
+          actorId: viewer.learnerPublicId,
+          action: "media.created",
+          resourceType: "media",
+          resourceId: row.publicId,
+          requestId,
+          createdAt: now,
+        });
+      });
+    } catch (error) {
+      if (String(error).includes("media_school_media_lit_uidx")) {
+        return {
+          ok: false,
+          error: createPlatformError("conflict", {
+            safeDetails: { reason: "media_already_registered" },
+          }),
+        };
+      }
+      throw error;
+    }
+    return { ok: true, value: toDto(row, publicSchoolId, 0) };
+  } finally {
+    await gate.release(sealed.holdId);
   }
-  return { ok: true, value: toDto(row, publicSchoolId, 0) };
 }
 
 export async function finalizeLearnerCommunityMediaUpload(
@@ -1014,6 +1131,7 @@ export async function finalizeLearnerCommunityMediaUpload(
   viewer: LearnerMediaViewer,
   publicSchoolId: string,
   client: MediaLitClient,
+  gate: StorageGate,
   clock: Clock,
   requestId: string,
   input: {
@@ -1023,95 +1141,30 @@ export async function finalizeLearnerCommunityMediaUpload(
     accessPolicy: MediaAccessPolicy;
   },
 ): Promise<{ ok: true; value: MediaDto } | { ok: false; error: PlatformError }> {
-  let asset: MediaLitAsset;
-  try {
-    asset = await client.finalizeUpload({
-      schoolId: viewer.schoolId,
-      uploadId: input.uploadId,
-    });
-  } catch {
-    return {
-      ok: false,
-      error: createPlatformError("validation_failed", {
-        safeDetails: { reason: "upload_not_ready" },
-      }),
-    };
-  }
-  const kind = kindForMime(asset.mimeType);
-  if (
-    !asset.mediaLitId ||
-    asset.group !== viewer.schoolId ||
-    !asset.canonicalUrl ||
-    !asset.fileName ||
-    !asset.mimeType ||
-    !isCommunityMediaKind(kind) ||
-    !Number.isSafeInteger(asset.byteSize) ||
-    asset.byteSize < 1
-  ) {
-    return invalid(
-      asset.group === viewer.schoolId
-        ? "invalid_community_media_asset"
-        : "media_school_mismatch",
-    );
-  }
-  const duplicate = await db
-    .select({ id: schema.media.id })
-    .from(schema.media)
-    .where(
-      and(
-        eq(schema.media.schoolId, viewer.schoolId),
-        eq(schema.media.mediaLitId, asset.mediaLitId),
-      ),
-    )
-    .limit(1);
-  if (duplicate[0]) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "media_already_registered" },
-      }),
-    };
-  }
-  const now = clock.now();
-  const row = {
-    id: uuidv7(clock),
-    publicId: createPublicId("med", clock),
+  const sealed = await inspectAdmitSeal(client, gate, {
     schoolId: viewer.schoolId,
-    mediaLitId: asset.mediaLitId,
-    canonicalUrl: asset.canonicalUrl,
-    thumbnailUrl: asset.thumbnailUrl,
-    fileName: asset.fileName,
-    mimeType: asset.mimeType,
-    byteSize: asset.byteSize,
-    width: asset.width,
-    height: asset.height,
-    kind,
-    category: "user_uploads" as const,
-    altText: input.altText,
-    caption: input.caption,
-    accessPolicy: input.accessPolicy,
-    status: "active" as const,
-    createdBy: null,
-    createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
-    createdAt: now,
-    updatedAt: now,
-  };
+    uploadId: input.uploadId,
+    uploader: { kind: "learner", schoolAccountId: viewer.schoolAccountId ?? viewer.learnerId },
+    check: (candidate) =>
+      assetIsComplete(candidate) && isLearnerCommunityMime(candidate.mimeType)
+        ? null
+        : "invalid_community_media_asset",
+  });
+  if (!sealed.ok) return sealed;
+  const asset = sealed.asset;
+  const kind = kindForMime(asset.mimeType);
   try {
-    await db.transaction(async (tx) => {
-      await tx.insert(schema.media).values(row);
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: viewer.schoolId,
-        actorId: viewer.learnerPublicId,
-        action: "media.created",
-        resourceType: "media",
-        resourceId: row.publicId,
-        requestId,
-        createdAt: now,
-      });
-    });
-  } catch (error) {
-    if (String(error).includes("media_school_media_lit_uidx")) {
+    const duplicate = await db
+      .select({ id: schema.media.id })
+      .from(schema.media)
+      .where(
+        and(
+          eq(schema.media.schoolId, viewer.schoolId),
+          eq(schema.media.mediaLitId, asset.mediaLitId),
+        ),
+      )
+      .limit(1);
+    if (duplicate[0]) {
       return {
         ok: false,
         error: createPlatformError("conflict", {
@@ -1119,9 +1172,59 @@ export async function finalizeLearnerCommunityMediaUpload(
         }),
       };
     }
-    throw error;
+    const now = clock.now();
+    const row = {
+      id: uuidv7(clock),
+      publicId: createPublicId("med", clock),
+      schoolId: viewer.schoolId,
+      mediaLitId: asset.mediaLitId,
+      canonicalUrl: asset.canonicalUrl,
+      thumbnailUrl: asset.thumbnailUrl,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+      byteSize: asset.byteSize,
+      width: asset.width,
+      height: asset.height,
+      kind,
+      category: "user_uploads" as const,
+      altText: input.altText,
+      caption: input.caption,
+      accessPolicy: "private" as const,
+      status: "active" as const,
+      createdBy: null,
+      createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(schema.media).values(row);
+        await tx.insert(schema.auditEvents).values({
+          id: uuidv7(clock),
+          schoolId: viewer.schoolId,
+          actorId: viewer.learnerPublicId,
+          action: "media.created",
+          resourceType: "media",
+          resourceId: row.publicId,
+          requestId,
+          createdAt: now,
+        });
+      });
+    } catch (error) {
+      if (String(error).includes("media_school_media_lit_uidx")) {
+        return {
+          ok: false,
+          error: createPlatformError("conflict", {
+            safeDetails: { reason: "media_already_registered" },
+          }),
+        };
+      }
+      throw error;
+    }
+    return { ok: true, value: toDto(row, publicSchoolId, 0) };
+  } finally {
+    await gate.release(sealed.holdId);
   }
-  return { ok: true, value: toDto(row, publicSchoolId, 0) };
 }
 
 export async function listLearnerCommunityMedia(

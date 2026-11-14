@@ -2,6 +2,7 @@ import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  bigint,
   boolean,
   check,
   index,
@@ -67,6 +68,10 @@ export const schools = pgTable("schools", {
   codeInjectionBody: text("code_injection_body").notNull().default(""),
   /** "Remove CourseLit branding". Honoured only with `remove_branding`. */
   hideCourseLitBranding: boolean("hide_courselit_branding").notNull().default(false),
+  /** Each learner's upload budget (S2): 100 MB unless the school changes it, up to 1 GB. */
+  learnerUploadLimitBytes: bigint("learner_upload_limit_bytes", { mode: "number" })
+    .notNull()
+    .default(104857600),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 }, (table) => [

@@ -193,7 +193,8 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     clean === "/settings/notifications" ||
     clean === "/settings/api-keys" ||
     clean === "/settings/ai-assistants" ||
-    clean === "/settings/audit-log"
+    clean === "/settings/audit-log" ||
+    clean === "/settings/storage"
   ) {
     const tabLabels: Record<string, string> = {
       payment: "Payments",
@@ -202,6 +203,7 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
       "api-keys": "API keys",
       "ai-assistants": "AI assistants",
       "audit-log": "Audit log",
+      storage: "Storage",
     };
     const tab = clean.split("/")[2];
     return [{ label: "Settings", href: "/settings" }, { label: tabLabels[tab] }];

@@ -1,5 +1,5 @@
 {
-  "id": "b0abcda5-0971-4b27-8309-347c44978e04",
+  "id": "715b606d-2458-408e-a78e-e1c715600342",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -9402,6 +9402,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "learner_upload_limit_bytes": {
+          "name": "learner_upload_limit_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 104857600
         },
         "created_at": {
           "name": "created_at",

@@ -12,6 +12,8 @@ import { SSO_DOMAIN_LABEL, ssoDnsResolver } from "./sso-admin.js";
 import { notifySsoOwner, recordSsoEvent } from "./sso-events.js";
 import { createDomainVerification, type DnsResolver } from "@codelitdev/platform";
 import type { AppDb } from "./types.js";
+import type { MediaLitClient } from "./media.js";
+import { pruneReservations, sweepUnusedLearnerUploads } from "./storage.js";
 
 type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 
@@ -221,6 +223,8 @@ export function startSsoJobs(options: {
   clock: Clock;
   logger: Logger;
   billingMode?: "cloud" | "oss";
+  /** For storage cleanup; skipped when absent. */
+  mediaLit?: MediaLitClient;
   onError?: (task: string, error: unknown) => void;
 }): () => void {
   const { db, billing, clock, logger } = options;
@@ -264,6 +268,12 @@ export function startSsoJobs(options: {
       await sweepSchoolLifecycles(db, billing, clock, mode, logger);
     } catch (error) {
       fail("lifecycle_sweep", error);
+    }
+    try {
+      await pruneReservations(db, clock.now());
+      if (options.mediaLit) await sweepUnusedLearnerUploads(db, options.mediaLit, clock);
+    } catch (error) {
+      fail("storage_sweep", error);
     }
     try {
       if (clock.now().getTime() - lastPlanSync >= 24 * 60 * 60 * 1000) {

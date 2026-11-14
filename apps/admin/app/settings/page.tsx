@@ -15,6 +15,7 @@ import {
   Palette,
   RotateCcw,
   Save,
+  HardDrive,
   ScrollText,
   Sparkles,
   Users,
@@ -27,6 +28,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
 import { AuditLogSettings } from "@/components/settings/audit-log-settings";
+import { StorageSettings } from "@/components/settings/storage-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
 import { LoginProviderSettings } from "@/components/settings/login-provider-settings";
@@ -62,7 +64,7 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "audit-log"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "storage", "audit-log"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
 const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
@@ -449,9 +451,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       ),
                       icon: <Sparkles className="size-4" />,
                     },
-                    // The audit log is for people who manage the school's settings.
+                    // Storage and the audit log are for people who manage the school's settings.
                     ...(canManageSchool
                       ? [
+                          {
+                            value: "storage",
+                            label: "Storage",
+                            icon: <HardDrive className="size-4" />,
+                          },
                           {
                             value: "audit-log",
                             label: "Audit log",
@@ -776,6 +783,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           {mode === "general" && selectedTab === "ai-assistants" ? (
             <div className="w-full pt-4">
               <AiAssistantSettings />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="storage" className="w-full">
+          {mode === "general" && selectedTab === "storage" && canManageSchool ? (
+            <div className="w-full pt-4">
+              <StorageSettings schoolId={schoolId} />
             </div>
           ) : null}
           </PlatformTabsContent>

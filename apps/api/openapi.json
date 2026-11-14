@@ -63911,6 +63911,9 @@
                           "hideCourseLitBranding": {
                             "type": "boolean"
                           },
+                          "learnerUploadLimitBytes": {
+                            "type": "integer"
+                          },
                           "permissions": {
                             "type": "array",
                             "items": {
@@ -63994,7 +63997,8 @@
                           "status",
                           "locale",
                           "currency",
-                          "hideCourseLitBranding"
+                          "hideCourseLitBranding",
+                          "learnerUploadLimitBytes"
                         ]
                       }
                     }
@@ -64216,6 +64220,9 @@
                     "hideCourseLitBranding": {
                       "type": "boolean"
                     },
+                    "learnerUploadLimitBytes": {
+                      "type": "integer"
+                    },
                     "permissions": {
                       "type": "array",
                       "items": {
@@ -64302,7 +64309,8 @@
                     "status",
                     "locale",
                     "currency",
-                    "hideCourseLitBranding"
+                    "hideCourseLitBranding",
+                    "learnerUploadLimitBytes"
                   ]
                 }
               }
@@ -77182,6 +77190,11 @@
                   },
                   "hideCourseLitBranding": {
                     "type": "boolean"
+                  },
+                  "learnerUploadLimitBytes": {
+                    "type": "integer",
+                    "minimum": 1048576,
+                    "maximum": 1073741824
                   }
                 },
                 "additionalProperties": false
@@ -77235,6 +77248,9 @@
                     },
                     "hideCourseLitBranding": {
                       "type": "boolean"
+                    },
+                    "learnerUploadLimitBytes": {
+                      "type": "integer"
                     },
                     "permissions": {
                       "type": "array",
@@ -77319,7 +77335,8 @@
                     "status",
                     "locale",
                     "currency",
-                    "hideCourseLitBranding"
+                    "hideCourseLitBranding",
+                    "learnerUploadLimitBytes"
                   ]
                 }
               }

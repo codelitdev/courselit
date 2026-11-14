@@ -44,6 +44,7 @@ import { provisionSchoolCommunity } from "./spaces.js";
 import type { AppDb } from "./types.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionWebsite } from "./website.js";
+import { LEARNER_UPLOAD_LIMIT_DEFAULT } from "./storage.js";
 
 export type SchoolDto = {
   id: string;
@@ -56,6 +57,7 @@ export type SchoolDto = {
   locale: string;
   currency: string;
   hideCourseLitBranding: boolean;
+  learnerUploadLimitBytes: number;
   permissions?: CourseLitPermission[];
   /** Whether the caller owns this school (owner-only settings such as API keys). */
   isOwner?: boolean;
@@ -103,6 +105,7 @@ export function toSchoolDto(
     locale: row.locale,
     currency: row.currency,
     hideCourseLitBranding: row.hideCourseLitBranding,
+    learnerUploadLimitBytes: row.learnerUploadLimitBytes,
     ...(permissions === undefined ? {} : { permissions: [...permissions] }),
     ...(selected === undefined ? {} : { selected }),
     ...(website === undefined ? {} : { website }),
@@ -164,6 +167,7 @@ export async function createSchool(
     codeInjectionHead: "",
     codeInjectionBody: "",
     hideCourseLitBranding: false,
+    learnerUploadLimitBytes: LEARNER_UPLOAD_LIMIT_DEFAULT,
     graceEndsAt: null,
     suspendedReason: null,
     lastPlan: null,
@@ -437,6 +441,7 @@ export async function updateSchool(
     actorId: string;
     currency?: string;
     hideCourseLitBranding?: boolean;
+    learnerUploadLimitBytes?: number;
     requestId?: string;
   },
   clock: Clock,
@@ -479,6 +484,9 @@ export async function updateSchool(
         ...(input.hideCourseLitBranding === undefined
           ? {}
           : { hideCourseLitBranding: input.hideCourseLitBranding }),
+        ...(input.learnerUploadLimitBytes === undefined
+          ? {}
+          : { learnerUploadLimitBytes: input.learnerUploadLimitBytes }),
         updatedAt: now,
       })
       .where(eq(schema.schools.id, input.schoolId))

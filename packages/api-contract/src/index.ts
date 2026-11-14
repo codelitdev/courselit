@@ -552,6 +552,8 @@ export const schoolSchema = z.object({
   currency: z.string(),
   /** The owner asked to remove the "Powered by CourseLit" badge. */
   hideCourseLitBranding: z.boolean(),
+  /** How much each learner may upload, in bytes. */
+  learnerUploadLimitBytes: z.number().int(),
   permissions: z.array(z.string()).optional(),
   isOwner: z.boolean().optional(),
   selected: z.boolean().optional(),
@@ -835,11 +837,20 @@ export const updateSchoolBodySchema = z
       .optional(),
     /** Needs a paid plan (`remove_branding`) to turn on. */
     hideCourseLitBranding: z.boolean().optional(),
+    /** Each learner's upload budget: 1 MB to 1 GB. */
+    learnerUploadLimitBytes: z
+      .number()
+      .int()
+      .min(1024 * 1024)
+      .max(1024 * 1024 * 1024)
+      .optional(),
   })
   .strict()
   .refine(
     (value) =>
-      value.currency !== undefined || value.hideCourseLitBranding !== undefined,
+      value.currency !== undefined ||
+      value.hideCourseLitBranding !== undefined ||
+      value.learnerUploadLimitBytes !== undefined,
   );
 export const schoolHostSchema = z.object({
   hostname: z.string(),

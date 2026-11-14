@@ -1014,6 +1014,7 @@ CREATE TABLE "schools" (
 	"code_injection_head" text DEFAULT '' NOT NULL,
 	"code_injection_body" text DEFAULT '' NOT NULL,
 	"hide_courselit_branding" boolean DEFAULT false NOT NULL,
+	"learner_upload_limit_bytes" bigint DEFAULT 104857600 NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "schools_public_id_unique" UNIQUE("public_id"),

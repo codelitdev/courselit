@@ -447,6 +447,7 @@ import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
 import { listAuditEvents } from "./audit-log.js";
 import { lessonType, scormPlanError } from "./scorm-plan.js";
+import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
 import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
   AUDIT_LOG_FEATURE,
@@ -488,6 +489,13 @@ async function inviteSent(
     deps.clock,
   );
 }
+
+const storageDeps = (deps: DispatchDeps) => ({
+  db: deps.db,
+  billing: deps.billing.billing,
+  mode: deps.billingMode,
+  clock: deps.clock,
+});
 
 const scormDeps = (deps: DispatchDeps) => ({
   db: deps.db,
@@ -1247,6 +1255,7 @@ export async function dispatch(
         const result = await authorizeLearnerAvatarUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1266,6 +1275,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -1284,9 +1294,20 @@ export async function dispatch(
         if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
+        // Only members who can post may upload community media (S24).
+        if (
+          !(await learnerMayUploadCommunityMedia(
+            deps.db,
+            learnerAuth.value.school.id,
+            learnerAuth.value.learner.id,
+          ))
+        ) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
         const result = await authorizeLearnerCommunityMediaUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1304,6 +1325,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -2885,6 +2907,7 @@ export async function dispatch(
           actorId: context.principalId,
           currency: parsed.data.currency,
           hideCourseLitBranding: parsed.data.hideCourseLitBranding,
+          learnerUploadLimitBytes: parsed.data.learnerUploadLimitBytes,
           requestId: context.requestId,
         },
         deps.clock,
@@ -4748,6 +4771,7 @@ export async function dispatch(
       const result = await authorizeMediaUpload(
         context,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );
@@ -4765,6 +4789,7 @@ export async function dispatch(
         context,
         school.value.publicId,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );

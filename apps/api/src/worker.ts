@@ -85,6 +85,7 @@ try {
     db: runtime.db,
     billing: runtime.billing.billing,
     billingMode: runtime.billingMode,
+    mediaLit: runtime.mediaLit,
     clock: runtime.clock,
     logger: observability.logger,
     onError: (task, error) =>

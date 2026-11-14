@@ -65,6 +65,8 @@ describe.serial("SCORM runtime", () => {
     const mediaLit: MediaLitClient = {
       authorizeUpload: (input) => memoryMediaLit.authorizeUpload(input),
       finalizeUpload: (input) => memoryMediaLit.finalizeUpload(input),
+      inspectUpload: (input) => memoryMediaLit.inspectUpload(input),
+      discardUpload: (input) => memoryMediaLit.discardUpload(input),
       getAsset: async (input) => ({
         ...(await memoryMediaLit.getAsset(input)),
         canonicalUrl: `data:application/zip;base64,${Buffer.from(packageBytes).toString("base64")}`,
