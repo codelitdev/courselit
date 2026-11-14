@@ -14,6 +14,7 @@ import { createDomainVerification, type DnsResolver } from "@codelitdev/platform
 import type { AppDb } from "./types.js";
 import type { MediaLitClient } from "./media.js";
 import { pruneReservations, sweepUnusedLearnerUploads } from "./storage.js";
+import { sweepUsageWarnings } from "./usage.js";
 
 type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 
@@ -219,7 +220,7 @@ export async function recheckSsoDomains(
  */
 export function startSsoJobs(options: {
   db: AppDb;
-  billing: Billing;
+  billing: Billing & Pick<BillingEngine, "getLimit">;
   clock: Clock;
   logger: Logger;
   billingMode?: "cloud" | "oss";
@@ -274,6 +275,11 @@ export function startSsoJobs(options: {
       if (options.mediaLit) await sweepUnusedLearnerUploads(db, options.mediaLit, clock);
     } catch (error) {
       fail("storage_sweep", error);
+    }
+    try {
+      await sweepUsageWarnings({ db, billing, mode, clock });
+    } catch (error) {
+      fail("usage_warnings", error);
     }
     try {
       if (clock.now().getTime() - lastPlanSync >= 24 * 60 * 60 * 1000) {

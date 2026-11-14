@@ -30,11 +30,11 @@ export type LifecycleAction =
   | "expired_pending"
   | "unchanged";
 
-function adminOrigin(): string {
+export function adminOrigin(): string {
   return (process.env.WEB_ORIGIN ?? "http://localhost:3000").replace(/\/+$/, "");
 }
 
-async function ownerEmail(db: AppDb, schoolId: string): Promise<string | null> {
+export async function ownerEmail(db: AppDb, schoolId: string): Promise<string | null> {
   const [owner] = await db
     .select({ email: schema.schoolAccounts.email })
     .from(schema.memberships)
@@ -90,7 +90,7 @@ async function noticeOwnerOnce(
   const rendered = renderSchoolEmail({
     schoolName: input.schoolName,
     paragraphs: input.lines,
-    button: { label: "Choose a plan", url: `${adminOrigin()}/settings/billing` },
+    button: { label: "Choose a plan", url: `${adminOrigin()}/account/billing` },
     footer: { text: "You're receiving this because you own this school." },
   });
   await queueSchoolEmail(

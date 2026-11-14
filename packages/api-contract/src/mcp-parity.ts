@@ -445,6 +445,17 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "school.billing.usage.get",
+    rest: { operationId: "getSchoolBillingUsage" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Plan usage is billing information: owner-only in a browser session, off MCP (S9).",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "school.billing.plan.get",
     rest: { operationId: "getSchoolBillingPlan" },
     parity: "exempt",

@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import { UsageMeters } from "@/components/settings/usage-meters";
 
 type SchoolPlan = {
   billingAvailable: boolean;
@@ -276,6 +277,9 @@ export function PlanSettings({ schoolId }: { schoolId: string | null }) {
           {plan.pendingPlanChange ? (
             <p className="text-muted-foreground">A plan change is being processed.</p>
           ) : null}
+          <div className="pt-3">
+            <UsageMeters schoolId={schoolId} trial={plan.courseLitTrial === true} />
+          </div>
         </CardContent>
       </Card>
 

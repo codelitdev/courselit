@@ -5335,6 +5335,27 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  getSchoolBillingUsage: {
+    method: "GET",
+    path: "/v1/school/billing/usage",
+    summary: "What the school has used against each limit of its CourseLit plan",
+    responses: {
+      200: z.object({
+        items: z.array(
+          z.object({
+            key: z.enum(["storage_bytes", "marketing_emails_month"]),
+            /** Null when it can't be read right now. */
+            used: z.number().nullable(),
+            /** Null for unlimited. */
+            allowed: z.number().nullable(),
+            resetsAt: z.string().nullable(),
+          }),
+        ),
+      }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
   cancelSchoolBillingPlan: {
     method: "POST",
     path: "/v1/school/billing/cancel",

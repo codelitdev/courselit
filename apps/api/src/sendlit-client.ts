@@ -431,6 +431,30 @@ export async function updateSendLitTeamQuota(
   );
 }
 
+/** A team's marketing email this month, as SendLit counts it. */
+export type SendLitMonthUsage = { limit: number | null; accepted: number; reserved: number; resetsAt: string };
+
+export async function getSendLitTeamUsage(
+  teamId: string,
+  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+): Promise<SendLitMonthUsage> {
+  const config = options.config ?? sendLitConfig();
+  if (!config.provisioningApiKey) {
+    throw new SendLitApiError(
+      "SENDLIT_ORGANIZATION_API_KEY is not configured",
+      undefined,
+      false,
+    );
+  }
+  const usage = await requestJson<{ month: SendLitMonthUsage }>(
+    config,
+    `/provisioning/teams/${encodeURIComponent(teamId)}/usage`,
+    { method: "GET", provisioningApiKey: config.provisioningApiKey },
+    options.fetcher,
+  );
+  return usage.month;
+}
+
 export async function rotateSendLitTeamKey(
   teamId: string,
   input: { name: string },

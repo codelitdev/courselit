@@ -448,6 +448,7 @@ import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
 import { listAuditEvents } from "./audit-log.js";
 import { lessonType, scormPlanError } from "./scorm-plan.js";
 import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
+import { schoolUsage } from "./usage.js";
 import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
   AUDIT_LOG_FEATURE,
@@ -5594,6 +5595,12 @@ export async function dispatch(
       return checkout.ok
         ? { status: 200, body: { checkoutUrl: checkout.checkoutUrl } }
         : errorResponse(checkout.error);
+    }
+    if (request.method === "GET" && path === "/v1/school/billing/usage") {
+      return {
+        status: 200,
+        body: { items: await schoolUsage(storageDeps(deps), context.tenantId!) },
+      };
     }
     if (request.method === "GET" && path === "/v1/school/billing") {
       return {

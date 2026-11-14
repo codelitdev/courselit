@@ -348,6 +348,7 @@ export const OPERATION_POLICIES = {
   // Starting the CourseLit plan checkout is a billing action, so also owner only.
   startSchoolBillingCheckout: schoolOwnerOp(["session"]),
   getSchoolBillingPlan: schoolOwnerOp(["session"]),
+  getSchoolBillingUsage: schoolOwnerOp(["session"]),
   cancelSchoolBillingPlan: schoolOwnerOp(["session"]),
   resumeSchoolBillingPlan: schoolOwnerOp(["session"]),
   getSchoolOnboarding: schoolOwnerOp(["session"]),
