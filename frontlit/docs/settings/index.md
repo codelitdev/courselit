@@ -4,7 +4,7 @@ description: Manage your team, payments, notifications, AI assistants, API keys,
 nav_order: 10
 ---
 
-Settings is where you run the school itself rather than its content. Open **Settings** at the bottom of the sidebar. The screen has tabs for **Payments**, **Team**, **Notifications**, **API keys** and **AI assistants**. Your **Account** and **Billing and plan** pages are in the menu under your name at the bottom of the sidebar.
+Settings is where you run the school itself rather than its content. Open **Settings** at the bottom of the sidebar. The screen has tabs for **Payments**, **Team**, **Notifications**, **API keys**, **AI assistants**, **Audit log** and **Storage**. Your **Account** and **Billing and plan** pages are in the menu under your name at the bottom of the sidebar.
 
 Settings for your website, such as branding, domain and code injection, live under **Website** then **Settings**. See [Website](/docs/website). Mailing address settings are under **Marketing** then **Settings**. See [Marketing](/docs/marketing).
 
@@ -45,6 +45,18 @@ Connect Claude, ChatGPT, Cursor or another assistant to your school.
 <Card title="API keys" href="/docs/settings/api-keys">
 
 Create and revoke keys for your own integrations.
+
+</Card>
+
+<Card title="Audit log" href="/docs/settings/audit-log">
+
+See who changed what in your school. Business plan only.
+
+</Card>
+
+<Card title="Storage" href="/docs/settings/storage">
+
+Set how much each learner can upload.
 
 </Card>
 

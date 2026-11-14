@@ -6,6 +6,12 @@ nav_order: 70
 
 A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it. The SCORM type is marked **Alpha** in the lesson editor.
 
+## Plan
+
+SCORM lessons come with the Business plan, and with a free trial. On a plan without them, such as Pro, the **SCORM** lesson type is disabled in the lesson editor. It carries a **Business** tag and the note "SCORM lessons come with the Business plan."
+
+SCORM lessons you already added keep playing. If you try to replace a package, you see "This lesson keeps playing. Replacing its package needs the Business plan." See [Billing and plan](/docs/settings/billing-and-plan).
+
 ## Before you begin
 
 - Export your content as a SCORM 1.2 or SCORM 2004 package in ZIP format.

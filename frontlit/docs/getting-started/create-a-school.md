@@ -32,7 +32,7 @@ On your first run, the wizard asks "First, what should we call you?" Enter **You
 Fill in:
 
 - **School name**, for example "Inkwell Studio".
-- **Site address**, which is suggested from your name and checked for availability. It must be 3 to 63 characters, using lowercase letters, numbers and single hyphens. If it is taken, the wizard suggests alternatives.
+- **Site address**, which is suggested from your name and checked for availability. It must be 3 to 63 characters, using lowercase letters, numbers and single hyphens. If it is taken, the wizard suggests alternatives. Reserved addresses such as `www`, `app`, `api`, `admin`, `login`, `billing`, `support` and `docs` can't be used and show as taken.
 - **Currency**, which sets the prices learners see. The choices are USD, EUR, GBP, INR, AUD and CAD.
 - **Language**, for your site and learner emails. The choices are English, Español, Français, Deutsch, हिन्दी and Português.
 
@@ -88,7 +88,11 @@ You can choose **Skip for now**. Email then stays off until you add a mailing ad
 
 ### Choose a plan (hosted CourseLit only)
 
-On hosted CourseLit, the wizard asks you to pick a plan and billing period, then continues to checkout. If you cancel the checkout, you return to the wizard with your choices kept. Self-hosted installations do not show this step.
+On hosted CourseLit, your first school starts a free 14-day trial with no card, so the wizard skips this step. Each account gets one trial.
+
+Every later school shows the **Pick a plan to go live** step. Pick a plan and billing period, then continue to checkout. Your site stays offline, showing "This site isn't available.", until you pay. If you cancel the checkout, you return to the wizard with your choices kept. Self-hosted installations do not show this step.
+
+See [Billing and plan](/docs/settings/billing-and-plan) for what each plan includes. Sites must follow the [Acceptable Use Policy](/docs/policies/acceptable-use-policy).
 
 </Step>
 
