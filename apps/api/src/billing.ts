@@ -6,7 +6,7 @@ import {
   createReturnUrlValidator,
 } from "@codelitdev/platform/billing";
 import { drizzleVerificationGrantStore } from "@codelitdev/platform/billing/drizzle";
-import { createDodoBillingProvider } from "@codelitdev/billing/providers/dodo";
+import { createLemonSqueezyBillingProvider } from "@codelitdev/billing/providers/lemonsqueezy";
 import { COURSELIT_OFFER_KEYS, REFERENCE_OFFERS } from "@codelitdev/billing/testing";
 import {
   type BillingEngine,
@@ -29,59 +29,78 @@ export type BillingBundle = {
 
 type OfferKey = (typeof COURSELIT_OFFER_KEYS)[number];
 
-type DodoConfig = {
+export type LemonSqueezyConfig = {
   apiKey: string;
-  environment: "test_mode" | "live_mode";
-  webhookSecret: string;
-  brandId?: string;
-  /** Base64 of 32 bytes; encrypts stored checkout URLs and webhook payloads. */
-  dataEncryptionKey: string;
+  storeId: string;
+  /** The current signing secret first, then an optional previous one during rotation. */
+  webhookSecrets: Array<{ version: string; secret: string }>;
   revision: number;
   offers: Array<{
     key: OfferKey;
     currency: string;
     amountMinor: number;
+    /** The Lemon Squeezy variant id. */
     providerProductId: string;
     providerTrialDays: number;
   }>;
 };
 
 /**
- * Dodo is opted into with BILLING_CHECKOUT_PROVIDER=dodo; otherwise cloud mode uses the fake.
- * Prices, currency, revision and product ids all come from env and must be set, so a
- * deploy can never sell at a price nobody configured.
+ * Lemon Squeezy is opted into with BILLING_PROVIDER=lemonsqueezy; otherwise cloud
+ * mode uses the fake. Prices, currency, revision and variant ids all come from env
+ * and must be set, so a deploy can never sell at a price nobody configured. The
+ * variants must have no trial: the cardless trial is CourseLit's, not the
+ * provider's (see docs/wip/plan-limits.md, S17).
  */
-function readDodoConfig(env: NodeJS.ProcessEnv): DodoConfig | null {
-  if (env.BILLING_CHECKOUT_PROVIDER !== "dodo" || env.NODE_ENV === "test") return null;
+export function readLemonSqueezyConfig(env: NodeJS.ProcessEnv): LemonSqueezyConfig | null {
+  const provider = env.BILLING_PROVIDER?.trim();
+  if (!provider || env.NODE_ENV === "test") return null;
+  if (provider !== "lemonsqueezy") throw new Error("BILLING_PROVIDER_invalid");
   const need = (name: string): string => {
     const value = env[name]?.trim();
     if (!value) throw new Error(`${name}_required`);
     return value;
   };
   const positiveInt = (name: string): number => {
-    const value = Number(need(name));
-    if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`${name}_invalid`);
+    const raw = need(name);
+    const value = Number(raw);
+    if (!/^[1-9][0-9]*$/.test(raw) || !Number.isSafeInteger(value)) {
+      throw new Error(`${name}_invalid`);
+    }
     return value;
   };
-  const currency = need("BILLING_CURRENCY");
+  // Checked here, though only read by aesGcmSensitiveValuesFromEnv, so a missing key
+  // fails at startup rather than at the first checkout.
+  need("BILLING_DATA_ENCRYPTION_KEY");
+  const currency = need("BILLING_CURRENCY").toUpperCase();
+  if (!/^[A-Z]{3}$/.test(currency)) throw new Error("BILLING_CURRENCY_invalid");
+  const previous = env.LEMONSQUEEZY_WEBHOOK_SECRET_PREVIOUS?.trim();
+  const offers = COURSELIT_OFFER_KEYS.map((key) => {
+    const name = key.toUpperCase();
+    const providerProductId = need(`BILLING_${name}_PRODUCT_ID`);
+    if (!/^[0-9]+$/.test(providerProductId)) {
+      throw new Error(`BILLING_${name}_PRODUCT_ID_invalid`);
+    }
+    return {
+      key,
+      currency,
+      amountMinor: positiveInt(`BILLING_${name}_AMOUNT_MINOR`),
+      providerProductId,
+      providerTrialDays: 0,
+    };
+  });
+  if (new Set(offers.map((offer) => offer.providerProductId)).size !== offers.length) {
+    throw new Error("BILLING_PRODUCT_IDS_must_be_unique");
+  }
   return {
-    apiKey: need("DODO_PAYMENTS_API_KEY"),
-    environment: env.DODO_PAYMENTS_ENVIRONMENT === "live_mode" ? "live_mode" : "test_mode",
-    webhookSecret: need("DODO_PAYMENTS_WEBHOOK_KEY_CURRENT"),
-    ...(env.DODO_BRAND_ID?.trim() ? { brandId: env.DODO_BRAND_ID.trim() } : {}),
-    dataEncryptionKey: need("BILLING_DATA_ENCRYPTION_KEY"),
+    apiKey: need("LEMONSQUEEZY_API_KEY"),
+    storeId: need("LEMONSQUEEZY_STORE_ID"),
+    webhookSecrets: [
+      { version: "current", secret: need("LEMONSQUEEZY_WEBHOOK_SECRET") },
+      ...(previous ? [{ version: "previous", secret: previous }] : []),
+    ],
     revision: positiveInt("BILLING_CATALOG_REVISION"),
-    offers: COURSELIT_OFFER_KEYS.map((key) => {
-      const name = key.toUpperCase();
-      const trial = env[`BILLING_${name}_TRIAL_DAYS`]?.trim();
-      return {
-        key,
-        currency,
-        amountMinor: positiveInt(`BILLING_${name}_AMOUNT_MINOR`),
-        providerProductId: need(`DODO_${name}_PRODUCT_ID`),
-        providerTrialDays: trial ? Number(trial) : 0,
-      };
-    }),
+    offers,
   };
 }
 
@@ -93,28 +112,27 @@ export function composeBilling(
   const mode = options.mode ?? "cloud";
   const fake = new FakeBillingProvider({ clock });
   const env: NodeJS.ProcessEnv = process.env;
-  const dodoConfig = mode === "cloud" ? readDodoConfig(env) : null;
+  const lsConfig = mode === "cloud" ? readLemonSqueezyConfig(env) : null;
   // The fake provider takes no money, so a production deployment must never fall back to it.
-  if (mode === "cloud" && !dodoConfig && env.NODE_ENV === "production") {
+  if (mode === "cloud" && !lsConfig && env.NODE_ENV === "production") {
     throw new Error("billing_provider_required_in_production");
   }
-  if (mode === "cloud" && !dodoConfig) fake.seedDefaultCatalog();
+  if (mode === "cloud" && !lsConfig) fake.seedDefaultCatalog();
   // Revision numbers are unique across providers, so switching providers needs a new one.
-  const revision = dodoConfig?.revision ?? 1;
-  const dodoOffers = dodoConfig
+  const revision = lsConfig?.revision ?? 1;
+  const lsOffers = lsConfig
     ? REFERENCE_OFFERS.map((offer) => ({
         ...offer,
-        provider: "dodo",
+        provider: "lemonsqueezy",
         revision,
-        ...dodoConfig.offers.find((entry) => entry.key === offer.key)!,
+        ...lsConfig.offers.find((entry) => entry.key === offer.key)!,
       }))
     : null;
-  const dodo = dodoConfig
-    ? createDodoBillingProvider({
-        apiKey: dodoConfig.apiKey,
-        environment: dodoConfig.environment,
-        webhookSecrets: [{ version: "current", secret: dodoConfig.webhookSecret }],
-        ...(dodoConfig.brandId ? { brandId: dodoConfig.brandId } : {}),
+  const lemonsqueezy = lsConfig
+    ? createLemonSqueezyBillingProvider({
+        apiKey: lsConfig.apiKey,
+        storeId: lsConfig.storeId,
+        webhookSecrets: lsConfig.webhookSecrets,
         clock,
       })
     : null;
@@ -142,8 +160,8 @@ export function composeBilling(
   const billing = createBilling({
     database: store,
     // Without this the engine stores no checkout URL and cannot resume an open checkout.
-    ...(dodoConfig ? { sensitiveValues: aesGcmSensitiveValuesFromEnv(process.env) } : {}),
-    providers: mode !== "cloud" ? [] : dodo ? [dodo] : [fake],
+    ...(lsConfig ? { sensitiveValues: aesGcmSensitiveValuesFromEnv(process.env) } : {}),
+    providers: mode !== "cloud" ? [] : lemonsqueezy ? [lemonsqueezy] : [fake],
     clock,
     authorization: grants.authorization,
     hooks: {
@@ -161,10 +179,10 @@ export function composeBilling(
     },
     planFeatures: { business: [SSO_FEATURE] },
     mode,
-    checkoutProvider: mode !== "cloud" ? "" : dodo ? "dodo" : "fake",
-    requestedRevision: mode === "cloud" ? (dodo ? revision : 1) : null,
+    checkoutProvider: mode !== "cloud" ? "" : lemonsqueezy ? "lemonsqueezy" : "fake",
+    requestedRevision: mode === "cloud" ? (lemonsqueezy ? revision : 1) : null,
     requiredOfferKeys: mode === "cloud" ? [...COURSELIT_OFFER_KEYS] : [],
-    offers: mode !== "cloud" ? [] : (dodoOffers ?? REFERENCE_OFFERS),
+    offers: mode !== "cloud" ? [] : (lsOffers ?? REFERENCE_OFFERS),
     returnUrlValidator: createReturnUrlValidator(origins),
   });
   return { billing, fake, grants };

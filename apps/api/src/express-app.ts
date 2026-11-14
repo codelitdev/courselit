@@ -202,14 +202,14 @@ export function createExpressApp(deps: DispatchDeps): Express {
     express.raw({ type: "application/json", limit: "256kb" }),
     async (req, res, next) => {
       try {
-        if (deps.billingMode !== "cloud" || req.params.provider !== "dodo") {
+        if (deps.billingMode !== "cloud" || req.params.provider !== "lemonsqueezy") {
           res.status(404).json({ error: "not_found" });
           return;
         }
         let failure: unknown;
         const response = await handleBillingWebhook({
           billing: deps.billing.billing,
-          provider: "dodo",
+          provider: "lemonsqueezy",
           rawBody: Buffer.isBuffer(req.body) && req.body.length > 0 ? req.body : undefined,
           headers: req.headers,
           workerId: `courselit-billing-webhook-${process.pid}`,
