@@ -8,6 +8,7 @@ import {
   deriveSiteDomain,
   detectLocaleDefaults,
   emptyWizardData,
+  ERROR_COPY,
   formatMailingAddress,
   hasNewConnection,
   hasUploadsInFlight,
@@ -163,6 +164,13 @@ describe("validation", () => {
       validateSchool({ school: "A", subdomain: "abc" }, "taken").subdomain,
     ).toBeDefined();
     expect(validateSchool({ school: "A", subdomain: "abc" }, "ok")).toEqual({});
+    expect(
+      validateSchool({ school: "paypal.com support", subdomain: "abc" }, "ok").school,
+    ).toBe(ERROR_COPY.schoolLink);
+    expect(validateSchool({ school: "x".repeat(81), subdomain: "abc" }, "ok").school).toBe(
+      ERROR_COPY.schoolLong,
+    );
+    expect(validateSchool({ school: "St. Mary's Guitar School", subdomain: "abc" }, "ok")).toEqual({});
   });
 
   it("validates each offer form", () => {

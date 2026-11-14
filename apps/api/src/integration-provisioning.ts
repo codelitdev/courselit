@@ -890,8 +890,16 @@ export async function processNextSystemEmailJob(
       subject: payload.subject,
       text: payload.text ?? "",
       ...(payload.html ? { html: payload.html } : {}),
+      stream: payload.stream ?? "transactional",
+      idempotencyKey: payload.idempotencyKey ?? job.id,
     });
     await finishJob(db, job, clock);
+    // Every platform send is traceable to its school, so a complaint about
+    // one school's mail can be found and acted on (S14).
+    logger.info(
+      { jobId: job.id, schoolId: job.schoolId, stream: payload.stream ?? "transactional" },
+      "platform email sent",
+    );
   } catch (error) {
     const actionRequired =
       error instanceof IntegrationActionRequiredError ||

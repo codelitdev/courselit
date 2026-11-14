@@ -16,13 +16,26 @@ export type TrackSendLitEventPayload = {
   occurredAt: string;
 };
 
-/** The school's storefront origin: its verified primary custom host, or its
- * platform subdomain. */
+/**
+ * The school's storefront origin, as used in email: its verified primary
+ * custom host, or its platform subdomain. Mail goes out under CourseLit's
+ * reputation, so it links to a custom domain only once the school is known to
+ * be on a paid plan (or self-hosted). A trial's mail links to its platform
+ * subdomain (docs/wip/plan-limits.md, S31).
+ */
 export async function schoolSiteUrl(
   db: AppDb,
   schoolId: string,
 ): Promise<string | null> {
-  const [customHost] = await db
+  const [plan] = await db
+    .select({ lastPlan: schema.schools.lastPlan })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  const kind = (plan?.lastPlan as { kind?: string } | null)?.kind;
+  const customDomainAllowed =
+    process.env.BILLING_MODE === "oss" || kind === "paid" || kind === "oss";
+  const [customHost] = !customDomainAllowed ? [] : await db
     .select({ hostname: schema.schoolHosts.hostname })
     .from(schema.schoolHosts)
     .where(

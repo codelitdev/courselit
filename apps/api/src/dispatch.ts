@@ -350,6 +350,7 @@ import {
 } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
 import { schoolStateAllows, schoolStateError } from "./school-state.js";
+import { assertTriggeredMailAllowed } from "./mail-abuse-limits.js";
 import {
   checkSchoolSubdomain,
   disconnectAiConnection,
@@ -963,6 +964,19 @@ export async function dispatch(
           }
           const human = await verifyCaptcha(request.headers);
           if (!human.ok) return errorResponse(human.error);
+          // Anyone can type anyone's address here (S14, S28).
+          const leadIp = request.headers[CLIENT_IP_HEADER];
+          const allowed = await assertTriggeredMailAllowed(
+            deps.db,
+            {
+              schoolId: school.id,
+              kind: "lead_magnet",
+              email: parsed.data.email,
+              clientIp: (Array.isArray(leadIp) ? leadIp[0] : leadIp) ?? null,
+            },
+            deps.clock,
+          );
+          if (!allowed.ok) return errorResponse(allowed.error);
           const result = await signUpForLeadMagnet(
             deps.db,
             {
@@ -1033,9 +1047,14 @@ export async function dispatch(
       if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
       const human = await verifyCaptcha(request.headers);
       if (!human.ok) return errorResponse(human.error);
+      const clientIp = request.headers[CLIENT_IP_HEADER];
       const result = await requestLearnerEmailCode(
         deps.db,
-        { schoolPublicId, email: parsed.data.email },
+        {
+          schoolPublicId,
+          email: parsed.data.email,
+          clientIp: (Array.isArray(clientIp) ? clientIp[0] : clientIp) ?? null,
+        },
         deps.clock,
       );
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);

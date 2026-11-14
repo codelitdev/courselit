@@ -3,10 +3,7 @@ import { uuidv7 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
-import {
-  processNextIntegrationJob,
-  type SendLitOperations,
-} from "./integration-provisioning.js";
+import { processNextSystemEmailJob } from "./integration-provisioning.js";
 import { createLearnerNotification } from "./notifications.js";
 import { createLearnerSpacePost, followSpace } from "./spaces.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
@@ -68,7 +65,7 @@ async function queuedEmails(runtime: Awaited<ReturnType<typeof setUp>>["runtime"
   const jobs = await runtime.db
     .select()
     .from(schema.integrationOutboxJobs)
-    .where(eq(schema.integrationOutboxJobs.type, "send_school_email"));
+    .where(eq(schema.integrationOutboxJobs.type, "send_system_email"));
   return jobs.map((job) => job.payload as SendSchoolEmailPayload);
 }
 
@@ -88,7 +85,7 @@ describe("school emails", () => {
     expect(emails).toHaveLength(1);
     expect(emails[0]).toMatchObject({
       to: "buyer@example.com",
-      subject: "You have been invited to Starter kit",
+      subject: "You have been invited to Starter kit | School A",
     });
     expect(emails[0]!.html).toContain(`/dashboard/courses/${productId}`);
     await runtime.close();
@@ -132,45 +129,23 @@ describe("school emails", () => {
     expect(emails).toEqual([
       expect.objectContaining({
         to: "visitor@example.com",
-        subject: "Thank you for signing up for Starter kit",
+        subject: "Thank you for signing up for Starter kit | School A",
       }),
     ]);
     expect(emails[0]!.html).toContain("Download now");
 
-    // The worker sends it through the school's mailing team.
-    await runtime.db
-      .update(schema.integrationOutboxJobs)
-      .set({ status: "done" })
-      .where(eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"));
-    await runtime.db
-      .update(schema.integrationOutboxJobs)
-      .set({ status: "done" })
-      .where(eq(schema.integrationOutboxJobs.type, "track_sendlit_event"));
-    const sent: unknown[] = [];
-    const operations: SendLitOperations = {
-      provisionTeam: async () => {
-        throw new Error("unexpected");
-      },
-      rotateKey: async () => {
-        throw new Error("unexpected");
-      },
-      sendEmail: async (key, input) => {
-        sent.push({ key, ...input });
-        return { txeId: "txe_1" };
-      },
-    };
-    await processNextIntegrationJob(
-      runtime.db,
-      clock,
-      runtime.logger,
-      operations,
-      sendLitConfig,
-    );
+    // The platform sender delivers it, never the school's mailing team, so no
+    // school quota can block it (docs/wip/plan-limits.md, section 6).
+    const sent: Array<Record<string, unknown>> = [];
+    await processNextSystemEmailJob(runtime.db, clock, runtime.logger, async (message) => {
+      sent.push(message as Record<string, unknown>);
+      return "console";
+    });
     expect(sent).toEqual([
       expect.objectContaining({
-        key: "sl_team_key",
         to: "visitor@example.com",
-        subject: "Thank you for signing up for Starter kit",
+        subject: "Thank you for signing up for Starter kit | School A",
+        stream: "transactional",
       }),
     ]);
     await runtime.close();
@@ -194,7 +169,7 @@ describe("school emails", () => {
     await createLearnerNotification(runtime.db, target, notification, clock);
     let emails = await queuedEmails(runtime);
     expect(emails).toEqual([
-      expect.objectContaining({ to: account!.email, subject: "New reply" }),
+      expect.objectContaining({ to: account!.email, subject: "New reply | School A" }),
     ]);
     expect(emails[0]!.html).toContain("/communities/com_1/posts/pst_1");
     expect(emails[0]!.html).toContain("/dashboard/account/notifications");
@@ -319,7 +294,7 @@ describe("space post notifications", () => {
     ).toBe(true);
     await runtime.db
       .delete(schema.integrationOutboxJobs)
-      .where(eq(schema.integrationOutboxJobs.type, "send_school_email"));
+      .where(eq(schema.integrationOutboxJobs.type, "send_system_email"));
 
     const posted = await createLearnerSpacePost(
       runtime.db,
@@ -333,7 +308,7 @@ describe("space post notifications", () => {
     const recipients = emails.map((email) => email.to).sort();
     expect(recipients).toContain("follower@example.com");
     expect(recipients).not.toContain("author@example.com");
-    expect(emails.every((email) => email.subject === "New space post")).toBe(true);
+    expect(emails.every((email) => email.subject === "New space post | School A")).toBe(true);
     // Staff get a link to the post on the school site.
     const staffEmail = emails.find((email) => email.to !== "follower@example.com");
     expect(staffEmail?.html).toContain(`/dashboard/s/${space!.publicId}/`);

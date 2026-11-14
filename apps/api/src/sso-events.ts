@@ -80,5 +80,6 @@ export async function notifySsoOwner(
     input.schoolId,
     { to, subject: input.subject, ...rendered, idempotencyKey: input.idempotencyKey },
     clock,
+    "staff",
   );
 }

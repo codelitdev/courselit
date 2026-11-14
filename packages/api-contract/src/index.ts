@@ -10,6 +10,8 @@ export * from "./learner-avatar.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";
+export * from "./school-name.js";
+import { schoolNameSchema } from "./school-name.js";
 
 const c = initContract();
 
@@ -2019,7 +2021,7 @@ export const learnerDownloadLinkSchema = z.object({
 });
 
 export const createSchoolBodySchema = z.object({
-  name: z.string().trim().min(1).max(200),
+  name: schoolNameSchema,
   subdomain: z
     .string()
     .trim()
