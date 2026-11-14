@@ -69,6 +69,6 @@
     "@types/swagger-ui-express": "4.1.8",
     "drizzle-kit": "0.31.10",
     "typescript": "5.9.3",
-    "@types/bun": "1.4.1"
+    "@types/bun": "1.4.4"
   }
 }

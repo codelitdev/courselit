@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.1
+          bun-version: 1.4.4
       # `platform-cli create` intentionally does not resolve dependencies.
       # Bootstrap the product lockfile on its first run; all subsequent CI
       # installs are immutable and use the frozen lockfile below.
@@ -23,7 +23,7 @@ jobs:
         if: ${{ !hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       # Pinned to the CLI release that wrote this file. `sync` moves it.
-      - run: bunx @codelitdev/platform-cli@0.5.0 doctor
+      - run: bunx @codelitdev/platform-cli@0.11.0 doctor
       - run: bun run --filter "*/api" check:drift
       # Fails when the API package has no `test:conformance` script.
       - run: bun run --filter "*/api" test:conformance

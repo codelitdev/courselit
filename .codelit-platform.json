@@ -4,10 +4,10 @@
     "name": "courselit",
     "slug": "courselit"
   },
-  "cliVersion": "0.5.0",
+  "cliVersion": "0.11.0",
   "capabilities": ["auth", "mcp", "observability", "billing"],
   "managedFiles": {
-    ".github/workflows/platform-conformance.yml": "5106f2dfc34ee460dc128fac1d4dd066744d2abbfc56ee905db687741e98eb55"
+    ".github/workflows/platform-conformance.yml": "b7c9e20a0b409aafd0eb61cf097d08d005a107215caa4051d72eb560b2e6e0ca"
   },
   "productOwnedGlobs": ["apps/**", "packages/api-contract/**"]
 }

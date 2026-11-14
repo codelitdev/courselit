@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.1
+          bun-version: 1.4.4
       - run: bun install --frozen-lockfile
       - run: bun run test
       - run: bun run typecheck
@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.1
+          bun-version: 1.4.4
       - run: bun install --frozen-lockfile
       - run: >-
           bunx --bun commitlint
