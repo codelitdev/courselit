@@ -134,6 +134,7 @@ export async function createSchool(
     status: "active" as const,
     locale: input.locale,
     currency: input.currency,
+    loginMethods: ["email" as const],
     paymentSettingsEncrypted: null,
     codeInjectionHead: "",
     codeInjectionBody: "",

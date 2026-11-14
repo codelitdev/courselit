@@ -28,7 +28,16 @@ import {
   subscribeNewsletter,
 } from "./contacts.js";
 import { CONTACT_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
+import {
+  deleteShadowUserIfOrphaned,
+  isShadowUser,
+  isShadowUserEmail,
+} from "./shadow-users.js";
+import { sessionMethodAllowed } from "./sign-in-policy.js";
 import type { AppDb } from "./types.js";
+
+/** How a learner proved who they are to a school. */
+export type LearnerAuthenticationMethod = "email" | "google" | "sso";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
 // When cookies are secure the learner session is a `__Host-` cookie (Secure,
@@ -116,8 +125,14 @@ export type LearnerSession = {
   learner: typeof schema.schoolAccounts.$inferSelect & { name: string };
   school: typeof schema.schools.$inferSelect;
   sessionId: string;
+  /**
+   * The platform user behind the school account. For an `sso` learner it can
+   * be a real platform user, so it must only ever be used inside school-scoped
+   * queries; never on `user`, `session`, `account`, `selected_schools` or
+   * `memberships` (a test scans the source for this).
+   */
   userId: string;
-  authenticationMethod: "email" | "google";
+  authenticationMethod: LearnerAuthenticationMethod;
 };
 
 export function digestToken(token: string): string {
@@ -542,6 +557,7 @@ export async function authenticateLearner(
         session: schema.schoolSessions,
         account: schema.schoolAccounts,
         school: schema.schools,
+        ssoStatus: schema.schoolSsoConnections.status,
       })
       .from(schema.schoolSessions)
       .innerJoin(
@@ -549,6 +565,10 @@ export async function authenticateLearner(
         eq(schema.schoolAccounts.id, schema.schoolSessions.schoolAccountId),
       )
       .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolSessions.schoolId))
+      .leftJoin(
+        schema.schoolSsoConnections,
+        eq(schema.schoolSsoConnections.id, schema.schoolSessions.ssoConnectionId),
+      )
       .where(eq(schema.schoolSessions.tokenDigest, digest))
       .limit(1);
     const row = rows[0];
@@ -558,12 +578,32 @@ export async function authenticateLearner(
     if (row.account.status !== "active") {
       return { kind: "rejected", error: createPlatformError("unauthenticated") };
     }
-    const hasGoogle = Boolean(
-      process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-    );
-    const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
-    if (!allowedMethods.includes(row.session.authenticationMethod)) {
-      return { kind: "rejected", error: createPlatformError("unauthenticated") };
+    if (row.session.authenticationMethod === "sso") {
+      // An sso session lives only while its connection is active; this is
+      // read in the same query, so disabling a connection (or losing the plan,
+      // which suspends it) takes effect at once.
+      if (!row.session.ssoConnectionId || row.ssoStatus !== "active") {
+        return { kind: "rejected", error: createPlatformError("unauthenticated") };
+      }
+      // Team members sign in to the website with email or Google. An account
+      // that joined the team after signing in with sso loses the session.
+      const [team] = await db
+        .select({ id: schema.memberships.id })
+        .from(schema.memberships)
+        .where(eq(schema.memberships.schoolAccountId, row.account.id))
+        .limit(1);
+      if (team) {
+        return { kind: "rejected", error: createPlatformError("unauthenticated") };
+      }
+    } else {
+      const policy = await sessionMethodAllowed(db, {
+        school: row.school,
+        email: row.account.email,
+        method: row.session.authenticationMethod,
+      });
+      if (!policy.allowed) {
+        return { kind: "rejected", error: createPlatformError("unauthenticated") };
+      }
     }
     return {
       kind: "authenticated",
@@ -636,17 +676,36 @@ export async function ensureSchoolAccount(
         : input.image
           ? { url: input.image }
           : byEmail[0].avatar;
-    const updated = await db
-      .update(schema.schoolAccounts)
-      .set({
-        userId: input.userId,
-        displayName: input.displayName?.trim() || byEmail[0].displayName,
-        avatar,
-        updatedAt: now,
-      })
-      .where(eq(schema.schoolAccounts.id, byEmail[0].id))
-      .returning();
-    return updated[0];
+    const previousUserId = byEmail[0].userId;
+    return db.transaction(async (transaction) => {
+      const tx = transaction as unknown as AppDb;
+      const updated = await tx
+        .update(schema.schoolAccounts)
+        .set({
+          userId: input.userId,
+          displayName: input.displayName?.trim() || byEmail[0]!.displayName,
+          avatar,
+          updatedAt: now,
+        })
+        .where(eq(schema.schoolAccounts.id, byEmail[0]!.id))
+        .returning();
+      if (previousUserId !== input.userId) {
+        // The account moves to the person who proved the address. Keep any
+        // session it holds pointing at the account's current user, then drop
+        // the shadow user the account no longer needs. The SSO identity row
+        // stays linked to the account.
+        await tx
+          .update(schema.schoolSessions)
+          .set({ userId: input.userId })
+          .where(eq(schema.schoolSessions.schoolAccountId, byEmail[0]!.id));
+        await tx
+          .update(schema.schoolAuthTickets)
+          .set({ userId: input.userId })
+          .where(eq(schema.schoolAuthTickets.schoolAccountId, byEmail[0]!.id));
+        await deleteShadowUserIfOrphaned(tx, previousUserId);
+      }
+      return updated[0]!;
+    });
   }
   const publicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, input.clock);
   const name = input.displayName?.trim() || learnerNameFromEmail(email);
@@ -680,13 +739,49 @@ export async function issueSchoolSession(
     school: typeof schema.schools.$inferSelect;
     schoolAccount: typeof schema.schoolAccounts.$inferSelect;
     userId: string;
-    authenticationMethod: "email" | "google";
+    authenticationMethod: LearnerAuthenticationMethod;
+    /** For `sso`: the connection the session belongs to. */
+    ssoConnectionId?: string | null;
+    /** An earlier end than the default, e.g. the IdP's session end. Never later. */
+    expiresAt?: Date | null;
     clock: Clock;
   },
-): Promise<{ token: string; dto: LearnerDto; session: LearnerSession }> {
+): Promise<
+  | { ok: true; value: { token: string; dto: LearnerDto; session: LearnerSession } }
+  | { ok: false; error: PlatformError }
+> {
+  // The only place a school session is created, so the sign-in policy
+  // (methods turned on, SSO enforcement) holds on every path.
+  if (input.authenticationMethod === "sso" && !input.ssoConnectionId) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
+  if (input.authenticationMethod !== "sso" && input.ssoConnectionId) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
+  const policy = await sessionMethodAllowed(db, {
+    school: input.school,
+    email: input.schoolAccount.email,
+    method: input.authenticationMethod,
+    ssoConnectionId: input.ssoConnectionId,
+  });
+  if (!policy.allowed) {
+    return {
+      ok: false,
+      error: createPlatformError("forbidden", {
+        safeDetails: { reason: policy.reason },
+      }),
+    };
+  }
   const token = randomBytes(32).toString("base64url");
   const sessionId = uuidv7(input.clock);
   const now = input.clock.now();
+  const defaultExpiry = now.getTime() + SESSION_TTL_MS;
+  const expiresAt = new Date(
+    input.expiresAt ? Math.min(defaultExpiry, input.expiresAt.getTime()) : defaultExpiry,
+  );
+  if (expiresAt.getTime() <= now.getTime()) {
+    return { ok: false, error: createPlatformError("unauthenticated") };
+  }
   await db.insert(schema.schoolSessions).values({
     id: sessionId,
     schoolId: input.school.id,
@@ -694,8 +789,9 @@ export async function issueSchoolSession(
     userId: input.userId,
     tokenDigest: digestToken(token),
     authenticationMethod: input.authenticationMethod,
+    ssoConnectionId: input.ssoConnectionId ?? null,
     authenticatedAt: now,
-    expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
+    expiresAt,
     createdAt: now,
   });
   const session: LearnerSession = {
@@ -707,9 +803,12 @@ export async function issueSchoolSession(
     authenticationMethod: input.authenticationMethod,
   };
   return {
-    token,
-    dto: toLearnerDto(input.schoolAccount, input.school.publicId),
-    session,
+    ok: true,
+    value: {
+      token,
+      dto: toLearnerDto(input.schoolAccount, input.school.publicId),
+      session,
+    },
   };
 }
 
@@ -784,12 +883,18 @@ export async function admitLearner(
   | { ok: false; error: PlatformError }
 > {
   const { school } = input;
-  const hasGoogle = Boolean(
-    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-  );
-  const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
-  if (!allowedMethods.includes(input.authenticationMethod)) {
-    return { ok: false, error: createPlatformError("forbidden") };
+  const policy = await sessionMethodAllowed(db, {
+    school,
+    email: normalizeEmail(input.email),
+    method: input.authenticationMethod,
+  });
+  if (!policy.allowed) {
+    return {
+      ok: false,
+      error: createPlatformError("forbidden", {
+        safeDetails: { reason: policy.reason },
+      }),
+    };
   }
 
   const schoolAccount = await ensureSchoolAccount(db, {
@@ -887,11 +992,12 @@ export async function signInLearnerWithIdentity(
     authenticationMethod,
     clock,
   });
+  if (!issued.ok) return issued;
   return {
     ok: true,
-    value: issued.dto,
-    token: issued.token,
-    session: issued.session,
+    value: issued.value.dto,
+    token: issued.value.token,
+    session: issued.value.session,
   };
 }
 
@@ -906,9 +1012,16 @@ export async function findOrCreateVerifiedUser(
   name?: string,
 ): Promise<typeof schema.user.$inferSelect> {
   const normalized = normalizeEmail(email);
+  // Shadow users own SSO-created school accounts and must never be handed to
+  // a sign-in, verified, or taken over. Their address can't be anyone's real
+  // address; refuse it anyway.
+  if (isShadowUserEmail(normalized)) throw new Error("shadow_user_email");
   const existing = (
     await db.select().from(schema.user).where(eq(schema.user.email, normalized)).limit(1)
   )[0];
+  if (existing && (await isShadowUser(db, existing.id))) {
+    throw new Error("shadow_user_email");
+  }
   if (existing?.emailVerified) return existing;
   if (existing) {
     // Whoever created this user never proved they own the address; the

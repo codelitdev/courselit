@@ -1,6 +1,7 @@
 import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   index,
@@ -13,6 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
+import { schoolSsoConnections } from "./school-sso.js";
 
 export const schools = pgTable("schools", {
   id: uuid("id").primaryKey(),
@@ -24,6 +26,15 @@ export const schools = pgTable("schools", {
     .notNull()
     .default("active"),
   locale: text("locale").notNull().default("en"),
+  /**
+   * Sign-in methods the school has turned on. SSO isn't listed: it is on
+   * exactly when the school has an active connection.
+   */
+  loginMethods: text("login_methods")
+    .array()
+    .$type<("email" | "google")[]>()
+    .notNull()
+    .default(sql`'{email}'::text[]`),
   currency: text("currency").notNull().default("USD"),
   /** Encrypted provider credentials and the school's selected checkout gateway. */
   paymentSettingsEncrypted: text("payment_settings_encrypted"),
@@ -31,7 +42,12 @@ export const schools = pgTable("schools", {
   codeInjectionBody: text("code_injection_body").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-});
+}, (table) => [
+  check(
+    "schools_login_methods_check",
+    sql`${table.loginMethods} <@ ARRAY['email', 'google']::text[]`,
+  ),
+]);
 
 /** Setup wizard progress and onboarding checklist state, one row per school. */
 export const schoolOnboarding = pgTable("school_onboarding", {
@@ -183,8 +199,13 @@ export const schoolSessions = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     tokenDigest: text("token_digest").notNull().unique(),
     authenticationMethod: text("authentication_method")
-      .$type<"email" | "google">()
+      .$type<"email" | "google" | "sso">()
       .notNull(),
+    /** Set for `sso` sessions: ending the connection ends the session. */
+    ssoConnectionId: uuid("sso_connection_id").references(
+      (): AnyPgColumn => schoolSsoConnections.id,
+      { onDelete: "cascade" },
+    ),
     authenticatedAt: timestamp("authenticated_at", { withTimezone: true }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -215,8 +236,15 @@ export const schoolAuthTickets = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     authenticationMethod: text("authentication_method")
-      .$type<"email" | "google">()
+      .$type<"email" | "google" | "sso">()
       .notNull(),
+    /** Set for `sso` tickets: the connection the session will belong to. */
+    ssoConnectionId: uuid("sso_connection_id").references(
+      (): AnyPgColumn => schoolSsoConnections.id,
+      { onDelete: "cascade" },
+    ),
+    /** Set for `sso` tickets: when the IdP session ends, if earlier than the default. */
+    sessionExpiresAt: timestamp("session_expires_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

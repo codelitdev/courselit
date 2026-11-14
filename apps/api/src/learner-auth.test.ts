@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { and, eq } from "drizzle-orm";
@@ -14,6 +14,19 @@ import {
 import { learnerNameIsPlaceholder } from "./learners.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
+
+
+// These tests decide for themselves whether Google keys exist. Bun loads the
+// developer's .env, so start each test without them and restore them after.
+const savedGoogleKeys = [process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET];
+beforeEach(() => {
+  delete process.env.GOOGLE_CLIENT_ID;
+  delete process.env.GOOGLE_CLIENT_SECRET;
+});
+afterAll(() => {
+  if (savedGoogleKeys[0] !== undefined) process.env.GOOGLE_CLIENT_ID = savedGoogleKeys[0];
+  if (savedGoogleKeys[1] !== undefined) process.env.GOOGLE_CLIENT_SECRET = savedGoogleKeys[1];
+});
 
 describe.serial("learner authentication", () => {
   it("does not expose legacy unauthenticated learner OTP endpoints", async () => {
@@ -70,7 +83,7 @@ describe.serial("learner authentication", () => {
     });
     expect(unknownSchoolRes.status).toBe(404);
 
-    // Admin login-methods endpoint no longer exists, and routes outside the
+    // The admin endpoint reads the same settings, and routes outside the
     // contract are closed to every credential.
     const adminRes = await dispatch(runtime, {
       method: "GET",
@@ -80,7 +93,17 @@ describe.serial("learner authentication", () => {
         cookie: world.owner.sessionCookie,
       },
     });
-    expect(adminRes.status).toBe(403);
+    expect(adminRes.status).toBe(200);
+    expect(adminRes.body).toMatchObject({ loginMethods: ["email"], googleAvailable: false });
+    const unknownRoute = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/login-methods-legacy",
+      headers: {
+        "x-school-id": world.schoolA.publicId,
+        cookie: world.owner.sessionCookie,
+      },
+    });
+    expect(unknownRoute.status).toBe(403);
 
     await runtime.close();
   });
@@ -324,6 +347,9 @@ describe.serial("learner authentication", () => {
     });
     try {
       const world = await seedWorld(runtime, clock);
+      await runtime.db
+        .update(schema.schools)
+        .set({ loginMethods: ["email", "google"] });
       const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
       const email = "victim@example.com";
 
@@ -417,6 +443,9 @@ describe.serial("learner authentication", () => {
     };
     process.env.GOOGLE_CLIENT_ID = "test-google-client";
     process.env.GOOGLE_CLIENT_SECRET = "test-google-secret";
+    await runtime.db
+      .update(schema.schools)
+      .set({ loginMethods: ["email", "google"] });
     try {
       const host = "school-a.localhost:3001";
       const nonce = "n".repeat(43);
@@ -548,6 +577,9 @@ describe.serial("learner authentication", () => {
     });
     try {
       const world = await seedWorld(runtime, clock);
+      await runtime.db
+        .update(schema.schools)
+        .set({ loginMethods: ["email", "google"] });
       const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
       const started = await startLearnerGoogleSignIn(
         runtime.db,

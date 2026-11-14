@@ -10,6 +10,7 @@ import {
   Globe,
   Info,
   Key,
+  LogIn,
   Mail,
   Palette,
   RotateCcw,
@@ -26,6 +27,7 @@ import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
+import { LoginProviderSettings } from "@/components/settings/login-provider-settings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
@@ -58,7 +60,7 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "api-keys", "ai-assistants"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
 const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
 type SettingsMode = "general" | "website" | "mails";
@@ -144,7 +146,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             }
           : {
               title: "Settings",
-              description: "Manage payments, team access, notifications, and API keys for this school.",
+              description: "Manage payments, team access, notifications, login providers, and API keys for this school.",
             };
 
   function selectWebsiteTab(tab: string) {
@@ -420,6 +422,11 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       value: "notifications",
                       label: "Notifications",
                       icon: <Bell className="size-4" />,
+                    },
+                    {
+                      value: "login-providers",
+                      label: "Login providers",
+                      icon: <LogIn className="size-4" />,
                     },
                     // API keys belong to the school; only its owner manages them.
                     ...(isOwner
@@ -730,6 +737,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                   ) : null}
                 </div>
               </form>
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="login-providers" className="w-full">
+          {mode === "general" && selectedTab === "login-providers" ? (
+            <div className="w-full pt-4">
+              <LoginProviderSettings />
             </div>
           ) : null}
           </PlatformTabsContent>

@@ -20,6 +20,8 @@ import {
   signInLearnerWithIdentity,
 } from "./learners.js";
 import { queueSchoolEmail, renderSchoolEmail } from "./school-emails.js";
+import { isShadowUserEmail } from "./shadow-users.js";
+import { type SignInMethod, sessionMethodAllowed } from "./sign-in-policy.js";
 import { loadSchoolByPublicId, resolveSchoolByHost } from "./schools.js";
 import type { AppDb } from "./types.js";
 
@@ -39,6 +41,22 @@ type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 
 const signInFailed = (reason: string) =>
   createPlatformError("unauthenticated", { safeDetails: { reason } });
+
+/**
+ * Refuse a sign-in method the school has switched off, or that its SSO
+ * enforcement forbids for this address, before anything is sent or admitted.
+ */
+async function methodRefusal(
+  db: AppDb,
+  school: typeof schema.schools.$inferSelect,
+  method: SignInMethod,
+  email: string | null,
+): Promise<PlatformError | null> {
+  const policy = await sessionMethodAllowed(db, { school, email, method });
+  return policy.allowed
+    ? null
+    : createPlatformError("forbidden", { safeDetails: { reason: policy.reason } });
+}
 
 function codeDigest(codeId: string, code: string): string {
   return digestToken(`${codeId}:${code}`);
@@ -83,6 +101,11 @@ export async function requestLearnerEmailCode(
   const school = await loadSchoolByPublicId(db, input.schoolPublicId);
   if (!school) return { ok: false, error: createPlatformError("tenant_required") };
   const email = normalizeEmail(input.email);
+  if (isShadowUserEmail(email)) {
+    return { ok: false, error: createPlatformError("validation_failed") };
+  }
+  const refusal = await methodRefusal(db, school, "email", email);
+  if (refusal) return { ok: false, error: refusal };
   const now = clock.now();
   const recent = await db
     .select({
@@ -227,7 +250,7 @@ export async function verifyLearnerEmailCode(
   };
 }
 
-function originForHost(host: string): string | null {
+export function originForHost(host: string): string | null {
   const value = host.trim().toLowerCase();
   if (!/^[a-z0-9.-]+(:\d{1,5})?$/.test(value)) return null;
   const hostname = value.replace(/:\d+$/, "");
@@ -264,6 +287,9 @@ export async function startLearnerGoogleSignIn(
   if (!origin || !school || school.publicId !== input.schoolPublicId) {
     return { ok: false, error: createPlatformError("tenant_forbidden") };
   }
+  // The address isn't known until Google returns; the finish step checks it.
+  const refusal = await methodRefusal(db, school, "google", null);
+  if (refusal) return { ok: false, error: refusal };
   const token = randomBytes(32).toString("base64url");
   const now = clock.now();
   await db.insert(schema.schoolLoginRequests).values({
@@ -331,6 +357,8 @@ export async function finishLearnerGoogleSignIn(
     .where(eq(schema.schools.id, request.schoolId))
     .limit(1);
   if (!school) return { ok: false, error: createPlatformError("tenant_required") };
+  const refusal = await methodRefusal(db, school, "google", input.user.email);
+  if (refusal) return { ok: false, error: refusal };
   const admitted = await admitLearner(
     db,
     {
@@ -382,7 +410,11 @@ export async function createSchoolAuthTicket(
     schoolId: string;
     schoolAccountId: string;
     userId: string;
-    authenticationMethod: "email" | "google";
+    authenticationMethod: "email" | "google" | "sso";
+    /** For `sso`: the connection the session will belong to. */
+    ssoConnectionId?: string | null;
+    /** For `sso`: the IdP's session end, when earlier than the default. */
+    sessionExpiresAt?: Date | null;
     nonceDigest: string;
     clock: Clock;
   },
@@ -397,6 +429,8 @@ export async function createSchoolAuthTicket(
     ticketDigest: digestToken(ticket),
     nonceDigest: input.nonceDigest,
     authenticationMethod: input.authenticationMethod,
+    ssoConnectionId: input.ssoConnectionId ?? null,
+    sessionExpiresAt: input.sessionExpiresAt ?? null,
     expiresAt: new Date(now.getTime() + TICKET_TTL_MS),
     createdAt: now,
   });
@@ -447,10 +481,17 @@ export async function consumeSchoolAuthTicket(
     schoolAccount: account,
     userId: ticket.userId,
     authenticationMethod: ticket.authenticationMethod,
+    ssoConnectionId: ticket.ssoConnectionId,
+    expiresAt: ticket.sessionExpiresAt,
     clock,
   });
+  if (!issued.ok) return issued;
   return {
     ok: true,
-    value: { sessionToken: issued.token, dto: issued.dto, session: issued.session },
+    value: {
+      sessionToken: issued.value.token,
+      dto: issued.value.dto,
+      session: issued.value.session,
+    },
   };
 }

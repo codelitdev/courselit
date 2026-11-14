@@ -55,6 +55,7 @@ import {
   learnerAvatarMediaAuthorizationBodySchema,
   learnerEmailCodeBodySchema,
   learnerStartGoogleBodySchema,
+  learnerStartSsoBodySchema,
   learnerVerifyEmailCodeBodySchema,
   learnerAvatarMediaFinalizeBodySchema,
   learnerCommunityMediaAuthorizationBodySchema,
@@ -372,6 +373,10 @@ import {
   updateSchoolCurrency,
   updateSchoolPaymentSettings,
 } from "./schools.js";
+import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
+import { startLearnerSsoSignIn } from "./learner-sso-sign-in.js";
+import { usableLearnerMethods } from "./login-methods.js";
+import { handleSsoAdminRequest } from "./sso-admin-routes.js";
 import {
   getScormRuntimeState,
   processScormPackage,
@@ -881,6 +886,7 @@ export async function dispatch(
                 schoolPublicId: learner.school.publicId,
                 learnerId: learner.learner.id,
                 learnerPublicId: learner.learner.publicId,
+                authenticationMethod: learner.authenticationMethod,
               })
             : await getPublicCommunity(deps.db, publicSchool, segment(1));
           return respond(result);
@@ -892,13 +898,15 @@ export async function dispatch(
           );
         }
         if (route === "/login-methods") {
-          const hasGoogle = Boolean(
-            process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-          );
+          // What the school's sign-in policy allows right now, including SSO
+          // when the school has an active connection and the plan for it.
+          const usable = await usableLearnerMethods(deps.db, deps.billing.billing, school);
           return ok({
             schoolId: school.publicId,
-            loginMethods: hasGoogle ? ["email", "google"] : ["email"],
-            hasGoogle,
+            loginMethods: usable.methods,
+            hasGoogle: usable.methods.includes("google"),
+            hasSso: usable.methods.includes("sso"),
+            ssoDisplayName: usable.ssoDisplayName,
           });
         }
         if ((routeMatch = /^\/checkout-sessions\/([^/]+)$/.exec(route))) {
@@ -1045,6 +1053,29 @@ export async function dispatch(
       );
       return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
+    if (request.method === "POST" && path === "/v1/learner/auth/sso") {
+      const parsed = learnerStartSsoBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const schoolPublicId = headerSchoolId(request.headers);
+      if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const clientIp = request.headers[CLIENT_IP_HEADER];
+      const result = await startLearnerSsoSignIn(
+        deps.db,
+        {
+          schoolPublicId,
+          host: parsed.data.host,
+          nonce: parsed.data.nonce,
+          next: parsed.data.next,
+          publicApiUrl: deps.auth.publicApiUrl,
+          billing: deps.billing.billing,
+          clientIp: Array.isArray(clientIp) ? clientIp[0] : clientIp,
+        },
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
+    }
     if (request.method === "POST" && path === "/v1/learner/auth/sign-out") {
       if (learnerAuth.kind === "authenticated") {
         await signOutLearner(deps.db, learnerAuth.value);
@@ -1080,6 +1111,7 @@ export async function dispatch(
         schoolPublicId: learnerAuth.value.school.publicId,
         learnerId: learnerAuth.value.learner.id,
         learnerPublicId: learnerAuth.value.learner.publicId,
+        authenticationMethod: learnerAuth.value.authenticationMethod,
       };
       const learnerCommunitySchool = {
         schoolId: learnerAuth.value.school.id,
@@ -4616,6 +4648,9 @@ export async function dispatch(
       );
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
+
+    const ssoResponse = await handleSsoAdminRequest(deps, request, path, school.value);
+    if (ssoResponse) return ssoResponse;
 
     if (request.method === "GET" && path === "/v1/school/hosts") {
       if (!context.permissions.has("school:read")) {

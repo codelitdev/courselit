@@ -254,6 +254,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   const [plansLoaded, setPlansLoaded] = useState(false);
   const [learner, setLearner] = useState<Learner | null>(null);
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
+  const [ssoDisplayName, setSsoDisplayName] = useState<string | null>(null);
   const [googleProviderId, setGoogleProviderId] = useState<string | null>("google");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -299,9 +300,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         const body = (await response.json()) as {
           loginMethods?: string[];
           googleProviderId?: string | null;
+          ssoDisplayName?: string | null;
         };
         if (Array.isArray(body.loginMethods)) setLoginMethods(body.loginMethods);
         setGoogleProviderId(body.googleProviderId ?? null);
+        setSsoDisplayName(body.ssoDisplayName ?? null);
       }),
     ])
       .catch((caught) => {
@@ -628,6 +631,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             <CheckoutLoginForm
               checkoutPath={loginPath}
               loginMethods={loginMethods}
+              ssoDisplayName={ssoDisplayName}
               googleProviderId={googleProviderId}
               onComplete={setLearner}
             />

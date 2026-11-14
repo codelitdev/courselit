@@ -733,6 +733,137 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "school.sso.create",
+    rest: { operationId: "createSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.update",
+    rest: { operationId: "updateSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.delete",
+    rest: { operationId: "deleteSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.add",
+    rest: { operationId: "addSsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.verify",
+    rest: { operationId: "verifySsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.delete",
+    rest: { operationId: "deleteSsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.test.start",
+    rest: { operationId: "startSsoConnectionTest" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.test.result",
+    rest: { operationId: "getSsoConnectionTestResult" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.activate",
+    rest: { operationId: "activateSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.disable",
+    rest: { operationId: "disableSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.identity.unlink",
+    rest: { operationId: "unlinkSsoIdentity" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.startSsoSignIn",
+    rest: { operationId: "learnerStartSsoSignIn" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "learner.startGoogleSignIn",
     rest: { operationId: "learnerStartGoogleSignIn" },
     parity: "exempt",
@@ -938,6 +1069,7 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "deleteContactTag",
   "updateSchoolCodeInjection",
   "updateSchoolPaymentSettings",
+  "updateSchoolLoginMethods",
 ]);
 
 /** `listWebsitePages` -> `list_website_pages`: one snake_case tool per operation. */

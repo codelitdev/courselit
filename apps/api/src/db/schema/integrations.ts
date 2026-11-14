@@ -15,7 +15,7 @@ export const integrationProviders = ["sendlit", "medialit"] as const;
 export type IntegrationProvider = (typeof integrationProviders)[number];
 /** Outbox jobs also run for the platform's own sender ("system"), which
  * delivers school email when the school has no mailing team. */
-export type OutboxProvider = IntegrationProvider | "system";
+export type OutboxProvider = IntegrationProvider | "system" | "platform";
 
 export const integrationStatuses = [
   "pending",
@@ -40,6 +40,7 @@ export const integrationJobTypes = [
   "track_sendlit_event",
   "send_school_email",
   "send_system_email",
+  "sync_plan_features",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
 

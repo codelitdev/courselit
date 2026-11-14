@@ -661,7 +661,7 @@ export async function listLearnerSpaces(
   db: AppDb,
   viewer: CommunityLearnerViewer,
 ): Promise<Result<{ items: SpaceDto[] }>> {
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (accessible.size === 0) return { ok: true, value: { items: [] } };
   const rows = await db
     .select()
@@ -703,7 +703,7 @@ export async function listLearnerSpaces(
   const communityMembership = memberships.find(
     (membership) => membership.entityType === "community",
   );
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   const onlyComment =
     communityMembership?.role === "comment" &&
     memberships.every(
@@ -736,7 +736,7 @@ export async function followSpace(
 ): Promise<Result<{ followed: true }>> {
   const row = await loadSpace(db, viewer.schoolId, spacePublicId);
   if (!row) return notFound();
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(row.id)) return notFound();
   const existing = await db
     .select({ id: schema.spaceFollowers.id })
@@ -767,7 +767,7 @@ export async function unfollowSpace(
 ): Promise<Result<{ followed: false }>> {
   const row = await loadSpace(db, viewer.schoolId, spacePublicId);
   if (!row) return notFound();
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(row.id)) return notFound();
   await db
     .delete(schema.spaceFollowers)
@@ -794,7 +794,7 @@ export async function createLearnerSpacePost(
 ): Promise<Result<{ id: string; spaceId: string; title: string; content: string }>> {
   const space = await loadSpace(db, viewer.schoolId, spacePublicId);
   if (!space) return notFound();
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(space.id)) return notFound();
   const memberships = await db
     .select()
@@ -810,7 +810,7 @@ export async function createLearnerSpacePost(
   const onlyComment =
     communityMembership?.role === "comment" &&
     memberships.every((row) => row.entityType === "community" || row.isIncludedInPlan);
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   // Team members may post wherever their role reaches them.
   if (!staff.has(space.id)) {
     if (space.whoCanPost === "admin") {
@@ -906,7 +906,7 @@ async function notifySpacePost(
   for (const { schoolAccountId } of followers) {
     if (schoolAccountId === viewer.learnerId) continue;
     // Following outlives access; only notify people who can still read it.
-    const accessible = await accessibleSpaceIds(db, viewer.schoolId, schoolAccountId);
+    const accessible = await accessibleSpaceIds(db, viewer.schoolId, schoolAccountId, viewer.authenticationMethod);
     if (!accessible.has(space.id)) continue;
     await createLearnerNotification(
       db,
@@ -964,7 +964,7 @@ export async function listLearnerSpaceFeed(
 > {
   const community = await schoolCommunity(db, viewer.schoolId);
   const banner = community?.banner ?? "";
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   const cursorWhere = await feedCursorCondition(db, viewer.schoolId, options.cursor);
   if (options.spaceId) {
     const space = await loadSpace(db, viewer.schoolId, options.spaceId);
@@ -1036,7 +1036,7 @@ export async function getLearnerSpacePost(
 ): Promise<Result<LearnerSpaceFeedPostDto>> {
   const space = await loadSpace(db, viewer.schoolId, spacePublicId);
   if (!space) return notFound();
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(space.id)) return notFound();
   const rows = await db
     .select({ post: schema.communityPosts })
@@ -1054,7 +1054,7 @@ export async function getLearnerSpacePost(
   if (!post) return notFound();
   const [item] = await mapLearnerSpaceFeedPosts(db, viewer, [{ post, space }]);
   if (!item) return notFound();
-  const canModerate = await moderatesSpace(db, viewer.schoolId, viewer.learnerId, space.id);
+  const canModerate = await moderatesSpace(db, viewer.schoolId, viewer.learnerId, space.id, viewer.authenticationMethod);
   return { ok: true, value: { ...item, canModerate } };
 }
 
@@ -1089,7 +1089,7 @@ export async function createLearnerSpaceReport(
 ) {
   const space = await loadSpace(db, viewer.schoolId, spacePublicId);
   if (!space) return notFound();
-  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId);
+  const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(space.id)) return notFound();
   const community = await schoolCommunity(db, viewer.schoolId);
   if (!community) return notFound();

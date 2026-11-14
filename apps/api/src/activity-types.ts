@@ -19,6 +19,7 @@ export const ActivityType = {
   NEWSLETTER_SUBSCRIBED: "newsletter_subscribed",
   NEWSLETTER_UNSUBSCRIBED: "newsletter_unsubscribed",
   USER_CREATED: "user_created",
+  LEARNER_SIGNED_IN: "learner_signed_in",
   TAG_ADDED: "tag_added",
   TAG_REMOVED: "tag_removed",
   COMMUNITY_JOINED: "community_joined",

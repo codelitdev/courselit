@@ -16,8 +16,15 @@ import {
 import {
   requestEmailCode,
   signInWithGoogle,
+  signInWithSso,
   verifyEmailCode,
 } from "@/lib/learner-sign-in";
+import {
+  DEFAULT_LOGIN_OPTIONS,
+  isSsoRequired,
+  loginErrorFromQuery,
+  resolveLoginOptions,
+} from "@/lib/login-methods";
 import {
   clearLearnerIdentityLink,
   learnerHeaders,
@@ -53,12 +60,11 @@ export function PublicLoginBlock() {
   });
   const [error, setError] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
-    return new URLSearchParams(window.location.search).get("error") === "google"
-      ? "Google sign-in didn't finish. Please try again."
-      : null;
+    return loginErrorFromQuery(new URLSearchParams(window.location.search).get("error"));
   });
   const [loading, setLoading] = useState(false);
-  const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
+  const [loginMethods, setLoginMethods] = useState(DEFAULT_LOGIN_OPTIONS);
+  const [ssoRequired, setSsoRequired] = useState(false);
 
   // A learner who is already signed in (Back after signing in, a bookmark, a
   // page restored from the back/forward cache) goes straight on. Only browsers
@@ -92,10 +98,8 @@ export function PublicLoginBlock() {
   useEffect(() => {
     void fetch(publicApiPath(schoolId, "/login-methods"))
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { loginMethods?: string[] } | null) => {
-        if (data?.loginMethods && Array.isArray(data.loginMethods)) {
-          setLoginMethods(data.loginMethods);
-        }
+      .then((data) => {
+        if (data) setLoginMethods(resolveLoginOptions(data));
       })
       .catch(() => {});
   }, [schoolId]);
@@ -108,6 +112,7 @@ export function PublicLoginBlock() {
       await requestEmailCode(email);
       setOtpStep("otp");
     } catch (caught) {
+      if (isSsoRequired(caught)) setSsoRequired(true);
       setError(
         caught instanceof Error ? caught.message : "Unable to send a sign-in code.",
       );
@@ -166,9 +171,18 @@ export function PublicLoginBlock() {
     signInWithGoogle(destinationAfterLogin());
   }
 
-  const showEmail = loginMethods.includes("email");
-  const showGoogle = loginMethods.includes("google");
-  const hasExternal = showGoogle;
+  function handleSsoSignIn() {
+    setError(null);
+    setLoading(true);
+    if (identityLinkToken) writeLearnerIdentityLink(identityLinkToken);
+    signInWithSso(destinationAfterLogin());
+  }
+
+  // When the email's domain requires SSO, the email form gives way to the SSO button.
+  const showEmail = loginMethods.showEmail && !ssoRequired;
+  const showGoogle = loginMethods.showGoogle && !ssoRequired;
+  const showSso = loginMethods.showSso;
+  const hasExternal = showGoogle || showSso;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 py-12">
@@ -274,6 +288,14 @@ export function PublicLoginBlock() {
               provider="google"
               disabled={loading}
               onClick={handleGoogleSignIn}
+            />
+          ) : null}
+          {showSso ? (
+            <ExternalLoginButton
+              provider="sso"
+              label={loginMethods.ssoLabel}
+              disabled={loading}
+              onClick={handleSsoSignIn}
             />
           ) : null}
         </div>

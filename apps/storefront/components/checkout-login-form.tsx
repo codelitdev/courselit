@@ -13,8 +13,10 @@ import {
 import {
   requestEmailCode,
   signInWithGoogle as startGoogleSignIn,
+  signInWithSso as startSsoSignIn,
   verifyEmailCode,
 } from "@/lib/learner-sign-in";
+import { isSsoRequired, resolveLoginOptions } from "@/lib/login-methods";
 import { learnerHeaders } from "@/lib/school";
 type Learner = {
   id: string;
@@ -26,12 +28,13 @@ type Learner = {
 export function CheckoutLoginForm({
   checkoutPath,
   loginMethods,
+  ssoDisplayName,
   onComplete,
 }: {
   checkoutPath: string;
   loginMethods: string[];
+  ssoDisplayName?: string | null;
   googleProviderId?: string | null;
-  ssoProviderId?: string | null;
   onComplete: (learner: Learner) => void;
 }) {
   const [otpStep, setOtpStep] = useState<"email" | "otp" | "name">("email");
@@ -40,9 +43,13 @@ export function CheckoutLoginForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const showEmail = loginMethods.includes("email");
-  const showGoogle = loginMethods.includes("google");
-  const hasExternal = showGoogle;
+  const [ssoRequired, setSsoRequired] = useState(false);
+  const options = resolveLoginOptions({ loginMethods, ssoDisplayName });
+  // When the email's domain requires SSO, the email form gives way to the SSO button.
+  const showEmail = options.showEmail && !ssoRequired;
+  const showGoogle = options.showGoogle && !ssoRequired;
+  const showSso = options.showSso;
+  const hasExternal = showGoogle || showSso;
 
   async function completeFromSession() {
     const response = await fetch("/api/v1/learner/me", {
@@ -62,6 +69,7 @@ export function CheckoutLoginForm({
       await requestEmailCode(email);
       setOtpStep("otp");
     } catch (caught) {
+      if (isSsoRequired(caught)) setSsoRequired(true);
       setError(
         caught instanceof Error ? caught.message : "Unable to send a sign-in code.",
       );
@@ -95,6 +103,12 @@ export function CheckoutLoginForm({
     setError(null);
     setLoading(true);
     startGoogleSignIn(checkoutPath);
+  }
+
+  function signInWithSso() {
+    setError(null);
+    setLoading(true);
+    startSsoSignIn(checkoutPath);
   }
 
   return (
@@ -188,6 +202,14 @@ export function CheckoutLoginForm({
               provider="google"
               disabled={loading}
               onClick={signInWithGoogle}
+            />
+          ) : null}
+          {showSso ? (
+            <ExternalLoginButton
+              provider="sso"
+              label={options.ssoLabel}
+              disabled={loading}
+              onClick={signInWithSso}
             />
           ) : null}
         </div>

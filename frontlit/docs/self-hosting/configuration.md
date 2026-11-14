@@ -24,7 +24,7 @@ The worker is the API image started with `bun apps/api/src/worker.ts`. Give it t
 | `PORT` | Optional | `4000` | The port the API listens on |
 | `NODE_ENV` | Optional | `production` in the image | Set to `production` for deployments. In other modes, system mail is printed to the log instead of sent. |
 | `INTEGRATIONS_ENCRYPTION_KEY` | Recommended | `AUTH_SECRET` | Key that encrypts credentials that schools save, such as payment provider keys. Use a dedicated random value. |
-| `BILLING_MODE` | Recommended | `cloud` | Use `oss` for a self-hosted deployment. `cloud` is for CourseLit's hosted service and requires its billing provider settings. |
+| `BILLING_MODE` | Recommended | `cloud` | Use `oss` for a self-hosted deployment. It makes every plan feature available to every school, including [single sign-on](/docs/self-hosting/single-sign-on). `cloud` is for CourseLit's hosted service and requires its billing provider settings. |
 | `SEED` | Do not set | unset | Seeds sample data for development. Leave it unset. |
 
 ### Domains

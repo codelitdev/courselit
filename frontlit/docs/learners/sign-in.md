@@ -50,9 +50,13 @@ If the learner arrived from a page that needs sign-in, for example a course or a
 
 When Google sign-in is available for your school, a Google button appears below the email form, separated by **or**. Learners who use it come back to the same destination as the email flow. If Google does not complete, the page shows "Google sign-in didn't finish. Please try again."
 
+## Sign in with your organization's account (SSO)
+
+When your school has turned on single sign-on, a button labelled **Sign in with** followed by the name you chose appears on the sign-in page. Learners sign in at your identity provider and come back to the same destination as the email flow. If you require SSO for an email domain, learners with an address on that domain can only use this button. Setting it up is described in [Single sign-on (SSO)](/docs/self-hosting/single-sign-on).
+
 ## How long a sign-in lasts
 
-A session lasts 7 days on a device. A learner can end it earlier with **Log out** in the dashboard menu.
+A session lasts 7 days on a device. A learner can end it earlier with **Log out** in the dashboard menu. An SSO sign-in can end sooner, when your identity provider or the connection's **Longest session** setting sets a shorter limit.
 
 ## Learners who cannot sign in
 

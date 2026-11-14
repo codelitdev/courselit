@@ -159,6 +159,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (
     isPathOrChild(path, "/api/school") ||
     isPathOrChild(path, "/v1/api-keys") ||
+    isPathOrChild(path, "/v1/sso") ||
     isPathOrChild(path, "/v1/ai-connections") ||
     isPathOrChild(path, "/v1/invitations") ||
     isPathOrChild(path, "/v1/team-invitations") ||

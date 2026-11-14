@@ -114,7 +114,12 @@ describe("createContact", () => {
     const [job] = await runtime.db
       .select()
       .from(schema.integrationOutboxJobs)
-      .where(eq(schema.integrationOutboxJobs.schoolId, world.schoolA.id));
+      .where(
+        and(
+          eq(schema.integrationOutboxJobs.schoolId, world.schoolA.id),
+          eq(schema.integrationOutboxJobs.type, "sync_sendlit_contact"),
+        ),
+      );
     expect((job!.payload as { ensureSubscribed?: boolean }).ensureSubscribed).toBe(
       false,
     );

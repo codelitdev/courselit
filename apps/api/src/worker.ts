@@ -3,6 +3,7 @@ import { startBillingWorkers } from "@codelitdev/platform/billing";
 import { processDripEmails } from "./drip-emails.js";
 import { startIntegrationWorker } from "./integration-provisioning.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
+import { startSsoJobs } from "./sso-jobs.js";
 import { createPostgresRuntime } from "./runtime.js";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -78,6 +79,16 @@ try {
     runtime.clock,
     observability.logger,
   );
+  // Plan-feature syncs queued by the billing hook, the daily plan sync, the
+  // weekly SSO domain re-check and cleanup of expired SSO requests.
+  const stopSsoJobs = startSsoJobs({
+    db: runtime.db,
+    billing: runtime.billing.billing,
+    clock: runtime.clock,
+    logger: observability.logger,
+    onError: (task, error) =>
+      observability.captureException({ error, source: "worker.sso", context: { task } }),
+  });
   let dripRunning = false;
   const dripTimer = setInterval(async () => {
     if (dripRunning) return;
@@ -96,6 +107,7 @@ try {
     const stop = () => {
       clearInterval(dripTimer);
       stopIntegrationWorker();
+      stopSsoJobs();
       void (billingWorkers?.stop() ?? Promise.resolve()).finally(resolve);
     };
     process.once("SIGTERM", stop);
