@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0-alpha.0",
   "type": "module",
-  "packageManager": "bun@1.4.1",
+  "packageManager": "bun@1.4.4",
   "engines": {
     "bun": ">=1.4.1"
   },
@@ -27,7 +27,7 @@
     "@biomejs/biome": "2.5.12",
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
-    "@types/bun": "1.4.1",
+    "@types/bun": "1.4.4",
     "husky": "9.1.7",
     "puppeteer": "^25.11.0"
   },

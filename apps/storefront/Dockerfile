@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.1-alpine AS base
+FROM oven/bun:1.4.4-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY packages/api-contract ./packages/api-contract
 COPY packages/page-blocks ./packages/page-blocks
 RUN bun --bun run --filter @courselit/storefront build
 
-FROM oven/bun:1.4.1-alpine AS runner
+FROM oven/bun:1.4.4-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

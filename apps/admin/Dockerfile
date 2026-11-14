@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.1-alpine AS base
+FROM oven/bun:1.4.4-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -19,7 +19,7 @@ COPY packages/components-library ./packages/components-library
 COPY packages/page-blocks ./packages/page-blocks
 RUN bun --bun run --filter @courselit/admin build
 
-FROM oven/bun:1.4.1-alpine AS runner
+FROM oven/bun:1.4.4-alpine AS runner
 WORKDIR /app
 # The commit the image is built from, shown on the hidden /about page.
 ARG COURSELIT_BUILD_SHA=""
