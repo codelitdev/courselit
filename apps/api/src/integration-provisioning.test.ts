@@ -185,6 +185,76 @@ describe("CourseLit SendLit provisioning", () => {
     await runtime.close();
   }, 20000);
 
+  it("keeps a new team when a later step fails, and resumes with it instead of creating another", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    process.env.AUTH_SECRET ??= "integration-test-auth-secret";
+    const created = await createSchool(
+      runtime.db,
+      {
+        name: "Retry School",
+        subdomain: "retry-school",
+        locale: "en",
+        currency: "USD",
+        principalId: world.owner.id,
+        requestId: "request-sendlit-retry",
+      },
+      clock,
+    );
+    if (!created.ok) throw new Error("school_creation_failed");
+
+    let creates = 0;
+    let quotaFails = true;
+    const sendLitOperations: SendLitOperations = {
+      provisionTeam: async (input) => {
+        creates += 1;
+        return {
+          teamId: "sl_team_retry",
+          externalId: input.externalId,
+          name: input.name,
+          created: true,
+          // SendLit hands over the key only here, when it creates the team.
+          apiKey: "sl_live_key_once",
+        };
+      },
+      rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
+      updateTeamQuota: async () => {
+        if (quotaFails) throw new Error("SendLit API error 403: organization_scope_required");
+      },
+    };
+    const config = { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" };
+    const integration = async () =>
+      (
+        await runtime.db
+          .select()
+          .from(schema.schoolIntegrations)
+          .where(
+            and(
+              eq(schema.schoolIntegrations.externalId, created.value.id),
+              eq(schema.schoolIntegrations.provider, "sendlit"),
+            ),
+          )
+      )[0]!;
+
+    await processNextIntegrationJob(runtime.db, clock, runtime.logger, sendLitOperations, config);
+    // The quota step failed, but the team and its one-time key are kept.
+    const afterFailure = await integration();
+    expect(afterFailure.remoteTeamId).toBe("sl_team_retry");
+    expect(afterFailure.encryptedTeamKey).toBeTruthy();
+    expect(afterFailure.status).not.toBe("ready");
+
+    quotaFails = false;
+    await runtime.db
+      .update(schema.integrationOutboxJobs)
+      .set({ nextAttemptAt: clock.now() })
+      .where(eq(schema.integrationOutboxJobs.type, "provision_sendlit"));
+    await processNextIntegrationJob(runtime.db, clock, runtime.logger, sendLitOperations, config);
+    expect(creates).toBe(1);
+    expect(await integration()).toMatchObject({ status: "ready", remoteTeamId: "sl_team_retry" });
+    await runtime.close();
+  }, 20000);
+
   it("syncs new learner contact to SendLit via outbox with deferred retries if SendLit is unavailable", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });

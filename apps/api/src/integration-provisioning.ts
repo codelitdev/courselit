@@ -211,34 +211,36 @@ async function provisionOneSendLitSchool(
       );
     }
 
-    // Fail closed: no marketing sends until the plan sync sets the school's
-    // real allowance. The sync is queued with the ready mark, below. Until
-    // this PATCH succeeds the integration is not ready, and the job retries.
-    if (!operations.updateTeamQuota) {
-      throw new Error("SendLit updateTeamQuota operation is required to provision");
-    }
-    await operations.updateTeamQuota(teamId, { monthlyLimit: 0 }, { config });
-
-    await db.transaction(async (tx) => {
-      await updateIntegration(tx as unknown as AppDb, job.schoolId, "sendlit", {
-        remoteTeamId: teamId,
-        encryptedTeamKey: encryptIntegrationSecret(teamApiKey!),
-        status: "ready",
-        lastSuccessfulSyncAt: clock.now(),
-        lastError: null,
-        updatedAt: clock.now(),
-      });
-      await enqueuePlanFeatureSync(tx as unknown as AppDb, job.schoolId, clock);
-    });
-  } else {
+    // Save the team before anything else can fail. SendLit returns the key
+    // only when it creates the team, so a later failure (the quota below)
+    // must not lose it: a retry resumes with this team instead of creating
+    // it again, which SendLit refuses once the request has changed.
     await updateIntegration(db, job.schoolId, "sendlit", {
       remoteTeamId: teamId,
+      encryptedTeamKey: encryptIntegrationSecret(teamApiKey),
+      updatedAt: clock.now(),
+    });
+  }
+
+  // Fail closed: no marketing sends until the plan sync sets the school's
+  // real allowance. The sync is queued with the ready mark, below. Until this
+  // PATCH succeeds the integration is not ready, and the job retries.
+  if (!operations.updateTeamQuota) {
+    throw new Error("SendLit updateTeamQuota operation is required to provision");
+  }
+  await operations.updateTeamQuota(teamId, { monthlyLimit: 0 }, { config });
+
+  await db.transaction(async (tx) => {
+    await updateIntegration(tx as unknown as AppDb, job.schoolId, "sendlit", {
+      remoteTeamId: teamId,
+      encryptedTeamKey: encryptIntegrationSecret(teamApiKey!),
       status: "ready",
       lastSuccessfulSyncAt: clock.now(),
       lastError: null,
       updatedAt: clock.now(),
     });
-  }
+    await enqueuePlanFeatureSync(tx as unknown as AppDb, job.schoolId, clock);
+  });
 }
 
 async function syncSendLitContactJob(
