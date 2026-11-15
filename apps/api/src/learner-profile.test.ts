@@ -19,6 +19,7 @@ describe("learner SendLit profile mapping", () => {
         [LEARNER_AVATAR_URL_FIELD]: "https://media.example/avatar.webp",
       },
       tags: ["learner"],
+      unsubscribeToken: "tok_1",
       createdAt: null,
       updatedAt: null,
     });

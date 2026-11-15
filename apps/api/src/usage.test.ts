@@ -29,6 +29,10 @@ const deps = (t: Setup, accepted = 0) => ({
     limit: planLimits().pro.marketing_emails_month,
     accepted,
     reserved: 0,
+    remaining:
+      planLimits().pro.marketing_emails_month === null
+        ? null
+        : planLimits().pro.marketing_emails_month! - accepted,
     resetsAt: "2026-04-01T00:00:00.000Z",
   }),
 });

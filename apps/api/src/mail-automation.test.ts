@@ -343,10 +343,10 @@ describe("section drip emails", () => {
     const sent: Array<{ to: string; subject?: string; html?: string }> = [];
     const sendEmail = async (
       _key: string,
-      input: { to: string; subject?: string; html?: string },
+      input: { to: string; subject: string; html?: string },
     ) => {
       sent.push(input);
-      return { txeId: `txe_${sent.length}` };
+      return { txeId: `txe_${sent.length}`, status: "queued" as const };
     };
 
     const beforeUnlock = freezeRuntimeClock(new Date("2026-03-01T12:00:00.000Z"));
@@ -412,17 +412,22 @@ describe("section drip emails", () => {
     let attempts = 0;
     let quotaLeft = false;
     const sent: string[] = [];
-    const sendEmail = async (_key: string, input: { to: string }) => {
+    const sendEmail = async (
+      _key: string,
+      input: { to: string; subject: string },
+    ) => {
       attempts += 1;
       if (!quotaLeft) {
         throw new SendLitApiError(
-          "SendLit request failed with HTTP 429: organization_team_quota_exhausted",
+          "SendLit API error 429: Team quota exhausted",
           429,
           true,
+          "organization_team_quota_exhausted",
+          "organization_team_quota_exhausted",
         );
       }
       sent.push(input.to);
-      return { txeId: "txe_1" };
+      return { txeId: "txe_1", status: "queued" as const };
     };
     const warnings: unknown[] = [];
     const logger = { warn: (...args: unknown[]) => warnings.push(args), info: () => {} };

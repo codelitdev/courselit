@@ -6,6 +6,7 @@ import { createSchool } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { startSequence } from "./sendlit-service.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 
 describe("starting a sequence", () => {
   it("asks for a mailing address instead of failing with a vague error", async () => {
@@ -52,11 +53,10 @@ describe("starting a sequence", () => {
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/settings/general") && (init?.method ?? "GET") === "GET") {
-        return new Response(JSON.stringify({ mailingAddress }));
+        return jsonResponse({ mailingAddress });
       }
       if (url.endsWith("/sequences/seq_1") && (init?.method ?? "GET") === "GET") {
-        return new Response(
-          JSON.stringify({
+        return jsonResponse({
             sequenceId: "seq_1",
             type: "broadcast",
             emails: [
@@ -66,14 +66,13 @@ describe("starting a sequence", () => {
                 content: { content: [{ blockType: "text", settings: { content: "Hi all" } }] },
               },
             ],
-          }),
-        );
+          });
       }
       if (url.includes("/start")) {
         started.push(url);
-        return new Response(JSON.stringify({ status: "active" }));
+        return jsonResponse({ status: "active" });
       }
-      return new Response("{}", { status: 404 });
+      return jsonResponse({}, 404);
     }) as typeof fetch;
 
     try {

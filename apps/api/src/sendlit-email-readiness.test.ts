@@ -10,6 +10,7 @@ import {
   updateSequenceEmail,
 } from "./sendlit-service.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 
 const text = (content: string) => ({ blockType: "text", settings: { content } });
 const placeholder = {
@@ -142,20 +143,21 @@ describe("sending through the service", () => {
       const url = String(input);
       const method = init?.method ?? "GET";
       if (url.includes("/settings/general")) {
-        return new Response(JSON.stringify({ mailingAddress: "12 Sprite Lane" }));
+        return jsonResponse({ mailingAddress: "12 Sprite Lane" });
       }
       if (url.endsWith("/sequences/seq_1") && method === "GET") {
-        return new Response(JSON.stringify(state.sequence));
+        return jsonResponse(state.sequence);
       }
       if (url.includes("/emails/e1") && method === "PATCH") {
         state.patched.push(JSON.parse(String(init?.body)));
-        return new Response(JSON.stringify(email()));
+        // SendLit answers an email update with the whole sequence.
+        return jsonResponse({ ...state.sequence, emailsOrder: ["e1"], emails: [email()] });
       }
       if (url.includes("/start")) {
         state.started.push(url);
-        return new Response(JSON.stringify({ status: "active" }));
+        return jsonResponse({ status: "active" });
       }
-      return new Response("{}", { status: 404 });
+      return jsonResponse({}, 404);
     }) as typeof fetch;
   }
 

@@ -136,10 +136,16 @@ describe("CourseLit SendLit provisioning", () => {
           externalId: input.externalId,
           name: input.name,
           created: true,
+          deliverySource: { type: "organization" },
           apiKey: "sl_live_key_999",
         };
       },
-      rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "key_1",
+        keyPrefix: "sl_live_rotat",
+        key: "sl_live_rotated_key",
+      }),
       updateTeamQuota: async (teamId, quota) => {
         quotas.push({ teamId, monthlyLimit: quota.monthlyLimit });
       },
@@ -150,7 +156,7 @@ describe("CourseLit SendLit provisioning", () => {
       clock,
       runtime.logger,
       sendLitOperations,
-      { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" },
+      { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_live_test" },
     );
     expect(processed).toBe(true);
     // Its email goes out under the school's name, not the shared account's.
@@ -216,16 +222,22 @@ describe("CourseLit SendLit provisioning", () => {
           externalId: input.externalId,
           name: input.name,
           created: true,
+          deliverySource: { type: "organization" },
           // SendLit hands over the key only here, when it creates the team.
           apiKey: "sl_live_key_once",
         };
       },
-      rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "key_1",
+        keyPrefix: "sl_live_rotat",
+        key: "sl_live_rotated_key",
+      }),
       updateTeamQuota: async () => {
         if (quotaFails) throw new Error("SendLit API error 403: organization_scope_required");
       },
     };
-    const config = { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" };
+    const config = { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_live_test" };
     const integration = async () =>
       (
         await runtime.db
@@ -353,9 +365,15 @@ describe("CourseLit SendLit provisioning", () => {
         externalId: created.value.id,
         name: "Test",
         created: true,
+        deliverySource: { type: "organization" },
         apiKey: "sl_live_key",
       }),
-      rotateKey: async () => ({ keyId: "kid_1", key: "sl_live_key" }),
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "kid_1",
+        keyPrefix: "sl_live_key",
+        key: "sl_live_key",
+      }),
       listContacts: async () => ({ items: [], total: 0 }),
       createContact: async (_key, input) => {
         syncAttempts += 1;
@@ -370,6 +388,7 @@ describe("CourseLit SendLit provisioning", () => {
           subscribed: true,
           tags: [],
           customFields: {},
+          unsubscribeToken: "tok_1",
           createdAt: clock.now().toISOString(),
           updatedAt: clock.now().toISOString(),
         };
@@ -383,6 +402,7 @@ describe("CourseLit SendLit provisioning", () => {
           subscribed: input.subscribed ?? true,
           tags: input.tags ?? [],
           customFields: input.customFields ?? {},
+          unsubscribeToken: "tok_1",
           createdAt: clock.now().toISOString(),
           updatedAt: clock.now().toISOString(),
         };

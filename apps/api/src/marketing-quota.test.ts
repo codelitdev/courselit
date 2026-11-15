@@ -9,7 +9,7 @@ import { seedWorld } from "./seed.js";
 import { provisionSendLitTeam, updateSendLitTeamQuota } from "./sendlit-client.js";
 import { planLimits } from "./plan-limits-config.js";
 
-const config = { server: "http://sendlit.test", provisioningApiKey: "sl_org_key" };
+const config = { server: "http://sendlit.test", provisioningApiKey: "sl_org_live_test" };
 
 describe("marketingQuotaFor", () => {
   it("follows the plan limits", () => {
@@ -149,7 +149,14 @@ function capture() {
       body: init?.body ? JSON.parse(String(init.body)) : {},
     });
     return new Response(
-      JSON.stringify({ teamId: "t1", externalId: "e1", name: "n", created: true, apiKey: "k" }),
+      JSON.stringify({
+        teamId: "t1",
+        externalId: "e1",
+        name: "n",
+        created: true,
+        deliverySource: { type: "organization" },
+        apiKey: "k",
+      }),
       { status: 200, headers: { "content-type": "application/json" } },
     );
   }) as typeof fetch;

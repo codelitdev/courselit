@@ -19,7 +19,6 @@ import {
   deleteTemplate,
   duplicateTemplate,
   getMailingSettings,
-  getOverview,
   getSegment,
   getSequence,
   getSequenceStats,
@@ -36,11 +35,18 @@ import {
   updateSegment,
   updateSequence,
   updateSequenceEmail,
-  updateSubscriber,
   updateTemplate,
 } from "./sendlit-service.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { dispatch } from "./dispatch.js";
+import {
+  jsonResponse,
+  sendLitContact,
+  sendLitEmail,
+  sendLitSegment,
+  sendLitSequence,
+  sendLitTemplate,
+} from "./sendlit-test-support.js";
 
 describe("SendLit Service", () => {
   it("manages all SendLit mailing and contact resources cleanly through CourseLit domain abstractions", async () => {
@@ -100,36 +106,41 @@ describe("SendLit Service", () => {
 
       if (url.includes("/settings/general")) {
         if (method === "GET") {
-          return new Response(JSON.stringify({ mailingAddress: "123 School Lane" }));
+          return jsonResponse({ mailingAddress: "123 School Lane" });
         }
         if (method === "PUT") {
-          return new Response(JSON.stringify({ mailingAddress: body.mailingAddress }));
+          return jsonResponse({ mailingAddress: body.mailingAddress });
         }
       }
 
       if (url.includes("/contacts")) {
         if (url.includes("/tags/") && method === "POST") {
-          return new Response(JSON.stringify({ contactId: "c_1", email: "learner@test.com", tags: ["vip"] }));
+          return jsonResponse(sendLitContact({ tags: ["vip"] }));
         }
         if (url.includes("/tags/") && method === "DELETE") {
-          return new Response(JSON.stringify({ contactId: "c_1", email: "learner@test.com", tags: [] }));
+          return jsonResponse(sendLitContact());
         }
         if (method === "GET") {
-          return new Response(
-            JSON.stringify({
+          return jsonResponse({
               items: [
-                { contactId: "c_1", email: "learner1@test.com", tags: ["vip", "spring"] },
-                { contactId: "c_2", email: "learner2@test.com", tags: ["vip"] },
+                sendLitContact({ email: "learner1@test.com", tags: ["vip", "spring"] }),
+                sendLitContact({
+                  contactId: "c_2",
+                  email: "learner2@test.com",
+                  tags: ["vip"],
+                }),
               ],
               total: 2,
-            }),
-          );
+            });
         }
         if (method === "POST") {
-          return new Response(JSON.stringify({ contactId: "c_new", email: body.email, tags: body.tags ?? [] }));
+          return jsonResponse(
+            sendLitContact({ contactId: "c_new", email: body.email, tags: body.tags ?? [] }),
+            201,
+          );
         }
         if (method === "PUT" || method === "PATCH") {
-          return new Response(JSON.stringify({ contactId: "c_1", email: body.email, tags: body.tags ?? [] }));
+          return jsonResponse(sendLitContact({ tags: body.tags ?? [] }));
         }
         if (method === "DELETE") {
           return new Response(null, { status: 204 });
@@ -138,13 +149,13 @@ describe("SendLit Service", () => {
 
       if (url.includes("/segments")) {
         if (method === "GET") {
-          return new Response(JSON.stringify([{ id: "seg_1", name: "VIP Segment" }]));
+          return jsonResponse([sendLitSegment()]);
         }
         if (method === "POST") {
-          return new Response(JSON.stringify({ id: "seg_2", name: body.name }));
+          return jsonResponse(sendLitSegment({ segmentId: "seg_2", name: body.name }), 201);
         }
         if (method === "PUT" || method === "PATCH") {
-          return new Response(JSON.stringify({ id: "seg_1", name: body.name }));
+          return jsonResponse(sendLitSegment({ name: body.name }));
         }
         if (method === "DELETE") {
           return new Response(null, { status: 204 });
@@ -153,47 +164,58 @@ describe("SendLit Service", () => {
 
       if (url.includes("/sequences")) {
         if (url.includes("/stats")) {
-          return new Response(JSON.stringify({ sent: 10, delivered: 9, opened: 5, clicked: 2 }));
+          return jsonResponse({
+          sent: 10,
+          openRate: 0.5,
+          clickThroughRate: 0.2,
+          subscribersCount: 9,
+        });
         }
         if (url.includes("/start")) {
-          return new Response(JSON.stringify({ status: "active" }));
+          return jsonResponse(sendLitSequence({ status: "active" }));
         }
         if (url.includes("/pause")) {
-          return new Response(JSON.stringify({ status: "paused" }));
+          return jsonResponse(sendLitSequence({ status: "paused" }));
         }
         if (url.includes("/emails") && method === "POST") {
           const sequenceId = url.match(/\/sequences\/([^/]+)\/emails/)?.[1] ?? "seq_1";
-          return new Response(
-            JSON.stringify({
+          return jsonResponse(
+            sendLitSequence({
               sequenceId,
               emailsOrder: ["em_1"],
-              emails: [
-                {
-                  emailId: "em_1",
-                  subject: "Welcome",
-                  content: { content: [] },
-                  delayInMillis: 24 * 60 * 60 * 1000,
-                  published: false,
-                },
-              ],
+              emails: [sendLitEmail()],
             }),
-            { status: 201 },
+            201,
           );
         }
         if (url.includes("/emails/") && (method === "PATCH" || method === "PUT")) {
-          return new Response(JSON.stringify({ id: "em_1", subject: body.subject }));
+          return jsonResponse(
+            sendLitSequence({
+              emailsOrder: ["em_1"],
+              emails: [sendLitEmail({ subject: body.subject })],
+            }),
+          );
         }
         if (url.includes("/emails/") && method === "DELETE") {
           return new Response(null, { status: 204 });
         }
         if (method === "GET") {
-          return new Response(JSON.stringify({ items: [{ id: "seq_1", title: "Welcome Sequence" }], total: 1 }));
+          return jsonResponse({ items: [sendLitSequence()], total: 1 });
         }
         if (method === "POST") {
-          return new Response(JSON.stringify({ id: "seq_2", title: body.title, type: body.type }));
+          return jsonResponse(
+            // SendLit ignores a title on create; the client sets it with an update.
+            sendLitSequence({ sequenceId: "seq_2", title: "Untitled", type: body.type }),
+            201,
+          );
         }
         if (method === "PUT" || method === "PATCH") {
-          return new Response(JSON.stringify({ id: "seq_1", title: body.title }));
+          return jsonResponse(
+            sendLitSequence({
+              sequenceId: url.match(/\/sequences\/([^/]+)$/)?.[1] ?? "seq_1",
+              title: body.title,
+            }),
+          );
         }
         if (method === "DELETE") {
           return new Response(null, { status: 204 });
@@ -202,27 +224,23 @@ describe("SendLit Service", () => {
 
       if (url.includes("/templates")) {
         if (url.includes("/duplicate")) {
-          return new Response(JSON.stringify({ id: "tmpl_2", name: "Welcome Copy" }));
+          return jsonResponse(sendLitTemplate({ templateId: "tmpl_2", title: "Welcome Copy" }), 201);
         }
         if (method === "GET") {
-          return new Response(JSON.stringify({ items: [{ id: "tmpl_1", name: "Welcome Template" }] }));
+          return jsonResponse([sendLitTemplate()]);
         }
         if (method === "POST") {
-          return new Response(JSON.stringify({ id: "tmpl_3", name: body.name }));
+          return jsonResponse(sendLitTemplate({ templateId: "tmpl_3", title: body.title }), 201);
         }
         if (method === "PUT" || method === "PATCH") {
-          return new Response(JSON.stringify({ id: "tmpl_1", name: body.name }));
+          return jsonResponse(sendLitTemplate({ title: body.title }));
         }
         if (method === "DELETE") {
           return new Response(null, { status: 204 });
         }
       }
 
-      if (url.includes("/overview")) {
-        return new Response(JSON.stringify({ totalSubscribers: 100, activeSubscribers: 95 }));
-      }
-
-      return new Response(JSON.stringify({ ok: true }));
+      return jsonResponse({ ok: true });
     }) as any;
 
     try {
@@ -254,11 +272,6 @@ describe("SendLit Service", () => {
         tags: ["vip"],
       });
       expect(createdSub.ok).toBe(true);
-
-      const updatedSub = await updateSubscriber(runtime.db, schoolId, clock, "c_1", {
-        email: "updated@test.com",
-      });
-      expect(updatedSub.ok).toBe(true);
 
       const deletedSub = await deleteSubscriber(runtime.db, schoolId, clock, "c_1");
       expect(deletedSub.ok).toBe(true);
@@ -393,11 +406,6 @@ describe("SendLit Service", () => {
 
       const deletedTmpl = await deleteTemplate(runtime.db, schoolId, clock, "tmpl_1");
       expect(deletedTmpl.ok).toBe(true);
-
-      // 7. Overview
-      const overview = await getOverview(runtime.db, schoolId, clock);
-      expect(overview.ok).toBe(true);
-      if (overview.ok) expect(overview.value.totalSubscribers).toBe(100);
     } finally {
       globalThis.fetch = originalFetch;
       await runtime.close();
@@ -436,24 +444,24 @@ describe("SendLit Service", () => {
       const body = init?.body ? JSON.parse(init.body as string) : undefined;
 
       if (url.includes("/settings/general")) {
-        return new Response(JSON.stringify({ mailingAddress: body?.mailingAddress ?? "100 Education Way" }));
+        return jsonResponse({ mailingAddress: body?.mailingAddress ?? "100 Education Way" });
       }
       if (url.includes("/contacts")) {
-        return new Response(JSON.stringify({ items: [{ contactId: "c_1", email: "learner@test.com", tags: ["vip"] }], total: 1 }));
+        return jsonResponse({ items: [sendLitContact({ tags: ["vip"] })], total: 1 });
       }
       if (url.includes("/segments")) {
-        return new Response(JSON.stringify([{ id: "seg_1", name: "High Achievers" }]));
+        return jsonResponse([sendLitSegment({ name: "High Achievers" })]);
       }
       if (url.includes("/sequences")) {
-        return new Response(JSON.stringify({ items: [{ id: "seq_1", title: "Welcome Flow" }], total: 1 }));
+        return jsonResponse({
+          items: [sendLitSequence({ title: "Welcome Flow" })],
+          total: 1,
+        });
       }
       if (url.includes("/templates")) {
-        return new Response(JSON.stringify({ items: [{ id: "tmpl_1", name: "Clean Newsletter" }] }));
+        return jsonResponse([sendLitTemplate({ title: "Clean Newsletter" })]);
       }
-      if (url.includes("/overview")) {
-        return new Response(JSON.stringify({ totalSubscribers: 50, activeSubscribers: 48 }));
-      }
-      return new Response(JSON.stringify({ ok: true }));
+      return jsonResponse({ ok: true });
     }) as any;
 
     try {
@@ -489,7 +497,7 @@ describe("SendLit Service", () => {
         headers: adminHeaders,
       });
       expect(getSequencesRes.status).toBe(200);
-      expect(getSequencesRes.body).toMatchObject({ items: [{ id: "seq_1" }] });
+      expect(getSequencesRes.body).toMatchObject({ items: [{ sequenceId: "seq_1" }] });
 
       // 7. GET /v1/school/mails/templates
       const getTemplatesRes = await dispatch(runtime, {
@@ -498,7 +506,7 @@ describe("SendLit Service", () => {
         headers: adminHeaders,
       });
       expect(getTemplatesRes.status).toBe(200);
-      expect(getTemplatesRes.body).toMatchObject({ items: [{ id: "tmpl_1" }] });
+      expect(getTemplatesRes.body).toMatchObject({ items: [{ templateId: "tmpl_1" }] });
     } finally {
       globalThis.fetch = originalFetch;
       await runtime.close();
