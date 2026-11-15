@@ -6,6 +6,14 @@
     {
       "name": "hero",
       "settings": {
+        "verticalPadding": "py-24",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "radial-gradient(ellipse 130% 90% at 50% 158%, var(--background) 0 68%, rgba(198,91,76,.55) 68.8%, rgba(198,91,76,.12) 70.5%, transparent 75%), radial-gradient(42% 55% at 12% 8%, rgba(198,91,76,.20), transparent 70%), radial-gradient(38% 50% at 90% 4%, rgba(207,123,38,.16), transparent 70%), url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2722%27%20height%3D%2722%27%3E%3Ccircle%20cx%3D%273%27%20cy%3D%273%27%20r%3D%271.1%27%20fill%3D%27rgba%2838%2C29%2C22%2C.08%29%27%2F%3E%3C%2Fsvg%3E\")",
+          "backgroundImageDark": "radial-gradient(ellipse 130% 90% at 50% 158%, var(--background) 0 68%, rgba(235,131,115,.6) 68.8%, rgba(235,131,115,.14) 70.5%, transparent 75%), radial-gradient(42% 55% at 12% 8%, rgba(235,131,115,.22), transparent 70%), radial-gradient(38% 50% at 90% 4%, rgba(230,160,92,.14), transparent 70%), url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2722%27%20height%3D%2722%27%3E%3Ccircle%20cx%3D%273%27%20cy%3D%273%27%20r%3D%271.1%27%20fill%3D%27rgba%28235%2C231%2C226%2C.07%29%27%2F%3E%3C%2Fsvg%3E\")",
+          "gradientBackgroundSize": "100% 100%, 100% 100%, 100% 100%, 22px 22px",
+          "gradientBackgroundRepeat": "repeat"
+        },
         "layout": "centered",
         "preTitle": "SAML 2.0 single sign-on",
         "title": "Let learners sign in with *their work accounts*",
@@ -144,6 +152,13 @@
     {
       "name": "banner",
       "settings": {
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "radial-gradient(60% 80% at 50% 100%, rgba(198,91,76,.16), transparent 70%), radial-gradient(30% 40% at 85% 20%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "radial-gradient(60% 80% at 50% 100%, rgba(235,131,115,.18), transparent 70%), radial-gradient(30% 40% at 85% 20%, rgba(230,160,92,.10), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 100%",
+          "gradientBackgroundRepeat": "no-repeat"
+        },
         "layout": "boxed",
         "title": "Give your learners one less password",
         "description": "Try CourseLit free for 14 days, then connect your identity provider on the Business plan.",

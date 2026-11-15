@@ -348,14 +348,12 @@
       {
         "label": "Blog",
         "href": "/blog"
-      },
-      {
-        "label": "GitHub",
-        "href": "https://github.com/codelitdev/courselit"
       }
     ],
     "ctaLabel": "Start free trial",
-    "ctaHref": "https://app.courselit.app"
+    "ctaHref": "https://app.courselit.app",
+    "githubRepo": "codelitdev/courselit",
+    "showGithubStars": true
   },
   "footer": {
     "layout": "columns",
