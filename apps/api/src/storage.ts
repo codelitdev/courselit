@@ -25,6 +25,7 @@ export const LEARNER_SHARE = 0.25;
 /** Learners can't upload once the school is past this share; the rest is the staff's. */
 export const LEARNER_CUTOFF = 0.9;
 export const LEARNER_UPLOADS_PER_HOUR = 20;
+const LEARNER_UPLOAD_SCOPE = "learner_upload";
 /** How long a reservation holds space while the browser uploads. */
 const RESERVATION_MS = 2 * 60 * 60 * 1000;
 /** How long the finalize step holds space while MediaLit seals the asset. */
@@ -162,22 +163,32 @@ export async function reserveUpload(
   const now = deps.clock.now();
   const account = uploader.kind === "learner" ? uploader.schoolAccountId : null;
   if (account) {
+    // Counted from `rate_limit_events`, not reservations: a reservation is
+    // deleted when its upload finishes, so it would stop counting.
     const [recent] = await deps.db
       .select({ count: count() })
-      .from(schema.mediaUploadReservations)
+      .from(schema.rateLimitEvents)
       .where(
         and(
-          eq(schema.mediaUploadReservations.schoolId, schoolId),
-          eq(schema.mediaUploadReservations.schoolAccountId, account),
-          gte(
-            schema.mediaUploadReservations.createdAt,
-            new Date(now.getTime() - 60 * 60 * 1000),
-          ),
+          eq(schema.rateLimitEvents.schoolId, schoolId),
+          eq(schema.rateLimitEvents.scope, LEARNER_UPLOAD_SCOPE),
+          eq(schema.rateLimitEvents.subjectId, account),
+          gte(schema.rateLimitEvents.createdAt, new Date(now.getTime() - 60 * 60 * 1000)),
         ),
       );
     if (Number(recent?.count ?? 0) >= LEARNER_UPLOADS_PER_HOUR) {
       return createPlatformError("rate_limited");
     }
+    await deps.db.insert(schema.rateLimitEvents).values({
+      id: uuidv7(deps.clock),
+      schoolId,
+      userId: account,
+      scope: LEARNER_UPLOAD_SCOPE,
+      action: "authorize",
+      subjectId: account,
+      fingerprint: null,
+      createdAt: now,
+    });
   }
   const limit = await readLimit(deps, schoolId);
   if (!limit.ok) return limit.error;

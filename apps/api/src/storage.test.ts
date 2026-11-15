@@ -278,7 +278,18 @@ describe("learner uploads (S2, S24)", () => {
     try {
       const member = await learnerWithCommunity(t, "rate-l@example.com");
       for (let index = 0; index < LEARNER_UPLOADS_PER_HOUR; index += 1) {
-        expect((await learnerAuthorize(t, member.headers, 1024)).status).toBe(201);
+        const upload = await learnerAuthorize(t, member.headers, 1024);
+        expect(upload.status).toBe(201);
+        // Finished uploads still count toward the hour.
+        if (index === 0) {
+          const saved = await dispatch(t.runtime, {
+            method: "POST",
+            path: "/v1/learner/community-media",
+            headers: member.headers,
+            body: { uploadId: uploadIdOf(upload.body), altText: "", caption: "", accessPolicy: "private" },
+          });
+          expect(saved.status).toBe(201);
+        }
       }
       expect((await learnerAuthorize(t, member.headers, 1024)).status).toBe(429);
     } finally {
