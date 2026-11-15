@@ -10,14 +10,14 @@ export type SchoolSender = { fromName: string; replyTo?: string };
 
 /**
  * A school's name as a From name SendLit accepts: at most 100 characters,
- * with no control characters or angle brackets. School names are checked
+ * with no control or invisible formatting characters, `<`, `>` or `@`, so it
+ * can't pass for an address or read as something else. School names are checked
  * when they're saved (S14), but imported schools predate that. `null` when
  * nothing is left, so the sender's own name is used.
  */
 export function senderName(name: string): string | null {
   const cleaned = name
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: removing them is the point
-    .replace(/[\u0000-\u001f\u007f<>]+/g, " ")
+    .replace(/[\p{Cc}\p{Cf}<>@]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 100)

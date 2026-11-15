@@ -22,6 +22,7 @@ describe("senderName", () => {
 
   it("drops what SendLit refuses in a From name", () => {
     expect(senderName("Yoga\t<with>\u0007 Nalini")).toBe("Yoga with Nalini");
+    expect(senderName("Shop\u202E @ Pay\u200BPal")).toBe("Shop Pay Pal");
     expect(senderName("x".repeat(120))).toHaveLength(100);
   });
 
