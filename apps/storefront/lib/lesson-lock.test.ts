@@ -35,9 +35,10 @@ describe("lessonLockState", () => {
     ).toBe("empty");
   });
 
-  it("never locks a preview", () => {
+  it("never locks a preview, but says when the lesson is empty", () => {
+    expect(lessonLockState({ ...base, preview: true, enrolled: false })).toBe("unlocked");
     expect(lessonLockState({ ...base, preview: true, enrolled: false, hasContent: false })).toBe(
-      "unlocked",
+      "empty",
     );
   });
 });

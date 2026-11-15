@@ -12,7 +12,8 @@ export function lessonLockState(input: {
   hasContent: boolean;
   availableAt: string | null;
 }): "unlocked" | "enrollment" | "dripped" | "empty" {
-  if (input.preview) return "unlocked";
+  // A preview always carries the content, so no content means an empty lesson.
+  if (input.preview) return input.hasContent ? "unlocked" : "empty";
   if (!input.enrolled && (input.requiresEnrollment || input.isQuiz)) return "enrollment";
   if (input.hasContent) return "unlocked";
   if (input.availableAt) return "dripped";
