@@ -45,6 +45,18 @@ Publish a free course and give a learner access in a few minutes.
 
 </Card>
 
+<Card title="Cloud or self-hosted" href="/docs/getting-started/cloud-vs-self-hosted">
+
+Compare CourseLit Cloud with running CourseLit on your own servers.
+
+</Card>
+
+<Card title="Plans and limits" href="/docs/getting-started/plans-and-limits">
+
+What the free trial, Pro and Business include.
+
+</Card>
+
 <Card title="Finish setting up" href="/docs/getting-started/setup-checklist">
 
 Use the Onboarding checklist to get ready to sell and bring people in.
