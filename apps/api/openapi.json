@@ -58805,6 +58805,7 @@
             }
           }
         },
+        "operationId": "getLearnerSiteCodeInjection",
         "security": []
       }
     },
@@ -67837,6 +67838,7 @@
             }
           }
         },
+        "operationId": "getSchoolPlanFeatures",
         "security": [
           {
             "apiKey": []
@@ -68120,6 +68122,7 @@
             }
           }
         },
+        "operationId": "listSchoolAuditEvents",
         "security": [
           {
             "apiKey": []
@@ -84918,6 +84921,7 @@
             }
           }
         },
+        "operationId": "getSchoolBillingUsage",
         "security": []
       }
     },
