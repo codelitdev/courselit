@@ -1,0 +1,166 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Run a paid online community on your own site",
+  "description": "Host a community with spaces, free or paid plans, member approval and moderation, plus discussions inside your courses. Paid to your own account.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "Community",
+        "title": "Give your learners *a place to talk*",
+        "description": "Run a community on your own website with spaces, free or paid plans and moderation tools. Add discussions to a course too.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Read the community docs",
+        "secondaryButtonAction": "/docs/communities",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "embed",
+      "settings": {
+        "cssId": "preview",
+        "verticalPadding": "py-16",
+        "contentType": "script",
+        "content": "<div class=\"clm2-wrap\" id=\"clm2-feed\">\n<style>\n.clm2-wrap{--clm2-fg:var(--foreground,#261d16);--clm2-muted:var(--muted-foreground,#5c544b);--clm2-card:var(--card,#fefdfb);--clm2-border:var(--border,#e2ddd5);--clm2-soft:var(--muted,#eeebe5);--clm2-accent:#b54c3d;--clm2-tint:rgba(198,91,76,.10);--clm2-ok:#2d8949;--clm2-btn:#fdfcf8;color:var(--clm2-fg);font:inherit;font-family:\"fl-hanken-grotesk\",\"Hanken Grotesk\",ui-sans-serif,system-ui,sans-serif;container-type:inline-size;max-width:1000px;margin:0 auto}\n:host(.dark) .clm2-wrap,.dark .clm2-wrap{--clm2-accent:#eb8373;--clm2-tint:rgba(235,131,115,.14);--clm2-ok:#5fb37a;--clm2-btn:#250e0b}\n.clm2-wrap *,.clm2-wrap *::before,.clm2-wrap *::after{box-sizing:border-box}\n.clm2-wrap svg.clm2-i{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}\n.clm2-wrap .clm2-cap{margin:14px 0 0;text-align:center;font-size:.75rem;color:var(--clm2-muted)}\n.clm2-wrap button{font:inherit}\n\n.clm2-wrap{--clm2-panel:#efe6dd}\n:host(.dark) .clm2-wrap,.dark .clm2-wrap{--clm2-panel:#2a211b}\n.clm2-wrap .clm2-win{background:var(--clm2-card);border:1px solid var(--clm2-border);border-radius:18px;box-shadow:0 24px 48px -24px rgba(38,29,22,.35);overflow:hidden}\n.clm2-wrap .clm2-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--clm2-border);font-size:.85rem;font-weight:600}\n.clm2-wrap .clm2-bar small{font-weight:400;color:var(--clm2-muted);font-size:.75rem}\n.clm2-wrap .clm2-main{display:grid;grid-template-columns:minmax(0,210px) minmax(0,1fr)}\n.clm2-wrap .clm2-side{padding:16px 12px;border-right:1px solid var(--clm2-border);background:color-mix(in srgb,var(--clm2-soft) 45%,transparent)}\n.clm2-wrap .clm2-grp{margin:0 0 6px 8px;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--clm2-muted)}\n.clm2-wrap .clm2-sp{display:flex;align-items:center;gap:9px;padding:8px;border-radius:9px;font-size:.84rem}\n.clm2-wrap .clm2-sp .clm2-i{color:var(--clm2-muted)}\n.clm2-wrap .clm2-sp-on{background:var(--clm2-tint);font-weight:600}\n.clm2-wrap .clm2-sp-on .clm2-i{color:var(--clm2-accent)}\n.clm2-wrap .clm2-sp-t{flex:1;min-width:0}\n.clm2-wrap .clm2-badge{font-size:.64rem;font-weight:600;border-radius:99px;padding:2px 8px;background:var(--clm2-soft);color:var(--clm2-muted);white-space:nowrap}\n.clm2-wrap .clm2-badge-a{background:var(--clm2-tint);color:var(--clm2-accent)}\n.clm2-wrap .clm2-feed{padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}\n.clm2-wrap .clm2-ban{display:flex;gap:12px;background:var(--clm2-tint);border:1px solid var(--clm2-border);border-radius:14px;padding:14px;font-size:.84rem;line-height:1.5}\n.clm2-wrap .clm2-ban .clm2-i{color:var(--clm2-accent);margin-top:2px}\n.clm2-wrap .clm2-ban b{display:block;margin:0 0 2px}\n.clm2-wrap .clm2-post{border:1px solid var(--clm2-border);border-radius:14px;padding:14px}\n.clm2-wrap .clm2-au{display:flex;align-items:center;gap:10px;margin:0 0 10px}\n.clm2-wrap .clm2-av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:700;background:var(--clm2-soft);color:var(--clm2-fg)}\n.clm2-wrap .clm2-av-a{background:var(--clm2-tint);color:var(--clm2-accent)}\n.clm2-wrap .clm2-nm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.84rem;font-weight:600}\n.clm2-wrap .clm2-meta{display:block;font-size:.72rem;font-weight:400;color:var(--clm2-muted)}\n.clm2-wrap .clm2-pt{margin:0 0 4px;font-size:.92rem;font-weight:600}\n.clm2-wrap .clm2-px{margin:0 0 12px;font-size:.85rem;line-height:1.55;color:var(--clm2-muted)}\n.clm2-wrap .clm2-re{display:flex;flex-wrap:wrap;align-items:center;gap:8px}\n.clm2-wrap .clm2-rc{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--clm2-border);border-radius:99px;padding:3px 10px;font-size:.75rem;background:var(--clm2-card)}\n.clm2-wrap .clm2-rc-on{background:var(--clm2-tint);border-color:transparent;color:var(--clm2-accent);font-weight:600}\n.clm2-wrap .clm2-cm{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:.75rem;color:var(--clm2-muted)}\n.clm2-wrap .clm2-cm .clm2-i{width:14px;height:14px}\n.clm2-wrap .clm2-live{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:500;color:var(--clm2-ok)}\n.clm2-wrap .clm2-live::before{content:\"\";width:6px;height:6px;border-radius:50%;background:var(--clm2-ok);animation:clm2-pulse 2.4s ease-in-out infinite}\n@keyframes clm2-pulse{50%{opacity:.35}}\n@container (max-width:760px){\n.clm2-wrap .clm2-main{grid-template-columns:1fr}\n.clm2-wrap .clm2-side{border-right:0;border-bottom:1px solid var(--clm2-border);display:flex;flex-wrap:wrap;gap:4px 8px;padding:12px}\n.clm2-wrap .clm2-grp{width:100%;margin:0 0 2px 4px}\n}\n@media (prefers-reduced-motion:reduce){.clm2-wrap .clm2-live::before{animation:none}}\n</style>\n<div class=\"clm2-win\" role=\"img\" aria-label=\"Illustration of a community feed with spaces and posts\">\n  <div class=\"clm2-bar\"><span>Brushwork Studio community <small>· 248 members</small></span></div>\n  <div class=\"clm2-main\">\n    <div class=\"clm2-side\">\n      <p class=\"clm2-grp\">Spaces</p>\n      <div class=\"clm2-sp\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m3 11 9-8 9 8M5 10v10h14V10\"/></svg><span class=\"clm2-sp-t\">Home</span></div>\n      <div class=\"clm2-sp clm2-sp-on\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z\"/></svg><span class=\"clm2-sp-t\">General</span></div>\n      <div class=\"clm2-sp\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 4h8v6a4 4 0 0 1-8 0zM8 6H4v1a3 3 0 0 0 4 3M16 6h4v1a3 3 0 0 1-4 3M12 14v4M8 21h8\"/></svg><span class=\"clm2-sp-t\">Wins</span></div>\n      <div class=\"clm2-sp\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01\"/></svg><span class=\"clm2-sp-t\">Q&amp;A</span></div>\n      <div class=\"clm2-sp\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"4\" y=\"11\" width=\"16\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/></svg><span class=\"clm2-sp-t\">Critique room</span><span class=\"clm2-badge\">Paid plan</span></div>\n    </div>\n    <div class=\"clm2-feed\">\n      <div class=\"clm2-ban\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z\"/></svg><div><b>Welcome to Brushwork Studio</b>Say hello in General, share a finished piece in Wins, and ask anything in Q&amp;A. New live session every Thursday.</div></div>\n      <div class=\"clm2-post\">\n        <div class=\"clm2-au\"><span class=\"clm2-av clm2-av-a\">MR</span><div class=\"clm2-nm\">Maya Rao <span class=\"clm2-badge clm2-badge-a\">Moderator</span><span class=\"clm2-meta\">General · 2 hours ago</span></div></div>\n        <p class=\"clm2-pt\">This week's prompt: a rainy window</p>\n        <p class=\"clm2-px\">Try a graded wash for the sky and let the colour bleed into the glass. Post your attempt below, rough edges welcome.</p>\n        <div class=\"clm2-re\"><span class=\"clm2-rc clm2-rc-on\">&#128077; 18</span><span class=\"clm2-rc\">&#10084;&#65039; 12</span><span class=\"clm2-rc\">&#127881; 4</span><span class=\"clm2-cm\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z\"/></svg>9 comments</span></div>\n      </div>\n      <div class=\"clm2-post\">\n        <div class=\"clm2-au\"><span class=\"clm2-av\">JT</span><div class=\"clm2-nm\">Jon Takeda<span class=\"clm2-meta\">Wins · yesterday</span></div></div>\n        <p class=\"clm2-pt\">First landscape I'm proud of</p>\n        <p class=\"clm2-px\">Week 4 finally clicked. Thin layers and patience made all the difference. Thank you all for the feedback.</p>\n        <div class=\"clm2-re\"><span class=\"clm2-rc\">&#10084;&#65039; 31</span><span class=\"clm2-rc\">&#128522; 9</span><span class=\"clm2-rc\">&#128558; 3</span><span class=\"clm2-cm\"><svg class=\"clm2-i \" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z\"/></svg>14 comments</span></div>\n      </div>\n    </div>\n  </div>\n</div>\n<p class=\"clm2-cap\">Illustration with sample data.</p>\n</div>\n"
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "What your community includes",
+        "description": "Every school has one community, ready to set up and make live.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Spaces",
+            "description": "Organise talk into spaces like channels. Choose who can post in each one, and whether members follow it automatically.",
+            "icon": "LayoutGrid"
+          },
+          {
+            "title": "Posts and reactions",
+            "description": "Members write posts with images, videos, files and GIFs, comment, reply and react with six emoji.",
+            "icon": "MessagesSquare"
+          },
+          {
+            "title": "Welcome banner",
+            "description": "Pin a message to the top of the members' home page for launches, events or breaks.",
+            "icon": "Megaphone"
+          },
+          {
+            "title": "Approval or open doors",
+            "description": "Let everyone in, or ask a question and approve each request yourself.",
+            "icon": "UserCheck"
+          },
+          {
+            "title": "Roles",
+            "description": "Give trusted members the Moderator role so they can pin posts and delete others' posts and comments.",
+            "icon": "ShieldCheck"
+          },
+          {
+            "title": "Invitations",
+            "description": "Invite people by email on a plan of your choice. They join right away, without paying.",
+            "icon": "MailPlus"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Charge for *membership*",
+        "body": "Offer one plan or several, so people can join the way they prefer. Paid plans use your own Stripe, Lemon Squeezy or Razorpay account.\n\n- Free, one-time, subscription (monthly or yearly) and instalment plans\n- Choose which plan is shown first on the sales page\n- Archive an old plan without affecting the members already on it\n\n[See payment options](/payments)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Bundle *courses and downloads* with a plan",
+        "body": "Add published courses and digital downloads to a community plan. Everyone who joins on that plan gets them automatically, with no extra checkout.\n\nIncluded products follow the membership. If a member leaves or you remove them, access to the included products ends with it.\n\n[Explore courses](/courses)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "moderation",
+        "layout": "grid",
+        "title": "Moderate with confidence",
+        "description": "Members can report any post, comment or reply that someone else wrote.",
+        "items": [
+          {
+            "title": "A reports queue",
+            "description": "Review reports and choose to keep or remove each item. Removed content is hidden at once.",
+            "icon": "Flag"
+          },
+          {
+            "title": "Private notes",
+            "description": "When you keep reported content, you note why. The note stays with the report for your team.",
+            "icon": "NotebookPen"
+          },
+          {
+            "title": "Reporters stay private",
+            "description": "The author is never told who reported their content.",
+            "icon": "EyeOff"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Discussions inside your courses",
+        "body": "Turn on discussions for a course and learners get a **Discussions** panel beside every lesson. They can post, comment, reply and react, the same way members do in your community.\n\nDiscussions have their own reports list, in the course settings. They are separate from your school's community.\n\n[See how courses work](/courses)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Community questions",
+        "items": [
+          {
+            "question": "How many communities can I run?",
+            "answer": "Every school has exactly one community. It is created with your school, starts offline and has one space called General."
+          },
+          {
+            "question": "Can I keep some spaces for paying members?",
+            "answer": "Yes. Set a space's access to selected plans or products, and only members on those plans or with those products can see it."
+          },
+          {
+            "question": "What happens when someone leaves?",
+            "answer": "They lose access to the community and any included products right away. If they pay by subscription or instalments, billing is cancelled at the same time."
+          },
+          {
+            "question": "Do I need payments set up to go live?",
+            "answer": "Only if a plan is paid. To go live you need a name and at least one starred plan. Free plans work without a payment provider."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Start your community",
+        "description": "Set up your plans, choose who gets in and go live. No card needed for the trial.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

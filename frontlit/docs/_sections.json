@@ -7,6 +7,11 @@
       "order": 10
     },
     {
+      "folder": "migrate",
+      "name": "Migrate to CourseLit",
+      "order": 15
+    },
+    {
       "folder": "products",
       "name": "Courses and downloads",
       "order": 20

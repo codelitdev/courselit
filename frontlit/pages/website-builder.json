@@ -1,0 +1,164 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Build a website and blog for your online school",
+  "description": "Edit pages with a block-based visual editor, write a blog, set your theme and logo, and use your own domain. Your school's website is built in.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "Website and blog",
+        "title": "A website for your school, *built right in*",
+        "description": "Edit your pages in a visual block editor, write a blog, choose a theme and serve everything from your own domain.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Read the website docs",
+        "secondaryButtonAction": "/docs/website",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "embed",
+      "settings": {
+        "cssId": "preview",
+        "verticalPadding": "py-16",
+        "contentType": "script",
+        "content": "<div class=\"clw-wrap\" id=\"clw-editor\">\n<style>\n.clw-wrap{--clw-fg:var(--foreground,#261d16);--clw-muted:var(--muted-foreground,#5c544b);--clw-card:var(--card,#fefdfb);--clw-border:var(--border,#e2ddd5);--clw-soft:var(--muted,#eeebe5);--clw-accent:#b54c3d;--clw-tint:rgba(198,91,76,.10);--clw-ok:#2d8949;--clw-btn-fg:#fdfcf8;color:var(--clw-fg);font:inherit;font-family:\"fl-hanken-grotesk\",\"Hanken Grotesk\",ui-sans-serif,system-ui,sans-serif;container-type:inline-size;max-width:1000px;margin:0 auto}\n:host(.dark) .clw-wrap,.dark .clw-wrap{--clw-accent:#eb8373;--clw-tint:rgba(235,131,115,.14);--clw-ok:#5fb37a;--clw-btn-fg:#250e0b}\n.clw-wrap *,.clw-wrap *::before,.clw-wrap *::after{box-sizing:border-box}\n.clw-wrap svg{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}\n.clw-wrap .clw-card{background:var(--clw-card);border:1px solid var(--clw-border);border-radius:18px;box-shadow:0 24px 48px -24px rgba(38,29,22,.35)}\n.clw-wrap .clw-mono{font-family:\"fl-spline-sans-mono\",\"Spline Sans Mono\",ui-monospace,monospace}\n.clw-wrap .clw-badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--clw-soft);color:var(--clw-muted)}\n.clw-wrap .clw-ok{color:var(--clw-ok);background:color-mix(in srgb,var(--clw-ok) 12%,transparent)}\n.clw-wrap .clw-ok::before{content:\"\";width:6px;height:6px;border-radius:50%;background:var(--clw-ok)}\n.clw-wrap .clw-chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;border-radius:8px;padding:3px 8px;background:var(--clw-tint);color:var(--clw-accent);white-space:nowrap}\n.clw-wrap .clw-cap{margin:14px 0 0;text-align:center;font-size:.75rem;color:var(--clw-muted)}\n.clw-wrap .clw-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;background:var(--clw-accent);color:var(--clw-btn-fg);font:inherit;font-size:.88rem;font-weight:600;padding:11px 18px;cursor:default;white-space:nowrap}\n\n.clw-wrap .clw-win{overflow:hidden}\n.clw-wrap .clw-chrome{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--clw-border);background:var(--clw-soft)}\n.clw-wrap .clw-dots{display:flex;gap:6px}.clw-wrap .clw-dots i{width:10px;height:10px;border-radius:50%;background:var(--clw-border)}\n.clw-wrap .clw-name{font-size:.82rem;font-weight:600;white-space:nowrap}\n.clw-wrap .clw-sp{flex:1}\n.clw-wrap .clw-tgs{display:flex;gap:2px;background:var(--clw-card);border:1px solid var(--clw-border);border-radius:10px;padding:2px}\n.clw-wrap .clw-tg{display:grid;place-items:center;width:28px;height:26px;border-radius:8px;color:var(--clw-muted)}\n.clw-wrap .clw-tg.clw-on{background:var(--clw-soft);color:var(--clw-fg)}\n.clw-wrap .clw-chrome .clw-btn{padding:7px 12px;font-size:.78rem;border-radius:10px}\n.clw-wrap .clw-body{display:grid;grid-template-columns:200px minmax(0,1fr)}\n.clw-wrap .clw-panel{padding:14px;border-right:1px solid var(--clw-border);display:flex;flex-direction:column;gap:6px}\n.clw-wrap .clw-k{margin:0 0 4px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clw-muted)}\n.clw-wrap .clw-blk{display:flex;align-items:center;gap:9px;border:1px solid var(--clw-border);border-radius:10px;padding:8px 10px;font-size:.82rem;background:var(--clw-card)}\n.clw-wrap .clw-blk svg{color:var(--clw-muted)}\n.clw-wrap .clw-blk.clw-bs{border-color:var(--clw-accent);background:var(--clw-tint);font-weight:600}\n.clw-wrap .clw-blk.clw-bs svg{color:var(--clw-accent)}\n.clw-wrap .clw-add{margin-top:4px;font-size:.78rem;color:var(--clw-muted);display:flex;gap:6px;align-items:center;padding:6px 4px}\n.clw-wrap .clw-canvas{padding:22px;background:var(--clw-soft)}\n.clw-wrap .clw-page{background:var(--clw-card);border:1px solid var(--clw-border);border-radius:12px;padding:30px 24px;outline:2px solid var(--clw-accent);outline-offset:3px}\n.clw-wrap .clw-hero{text-align:center;margin-bottom:22px}\n.clw-wrap .clw-hero h3{margin:0 0 8px;font-size:clamp(1.15rem,3cqw,1.6rem);line-height:1.2;font-weight:600;letter-spacing:-.02em}\n.clw-wrap .clw-hero p{margin:0 auto 14px;max-width:360px;font-size:.82rem;color:var(--clw-muted);line-height:1.5}\n.clw-wrap .clw-hero .clw-btn{padding:8px 16px;font-size:.8rem}\n.clw-wrap .clw-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}\n.clw-wrap .clw-mini{border:1px solid var(--clw-border);border-radius:12px;padding:12px;font-size:.78rem}\n.clw-wrap .clw-mini b{display:block;margin:8px 0 3px;font-size:.84rem}\n.clw-wrap .clw-mini span{color:var(--clw-muted);line-height:1.4;display:block}\n.clw-wrap .clw-sw{height:46px;border-radius:8px}\n@container (max-width:760px){.clw-wrap .clw-body{grid-template-columns:1fr}.clw-wrap .clw-panel{border-right:0;border-bottom:1px solid var(--clw-border)}.clw-wrap .clw-cards{grid-template-columns:1fr}.clw-wrap .clw-tgs{display:none}.clw-wrap .clw-dots{display:none}.clw-wrap .clw-canvas{padding:14px}}\n</style>\n\n<div class=\"clw-card clw-win\" aria-label=\"Example page editor\">\n  <div class=\"clw-chrome\">\n    <span class=\"clw-dots\" aria-hidden=\"true\"><i></i><i></i><i></i></span>\n    <span class=\"clw-name\">Home</span><span class=\"clw-badge\">Draft</span>\n    <span class=\"clw-sp\"></span>\n    <span class=\"clw-tgs\" aria-hidden=\"true\"><span class=\"clw-tg clw-on\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 20h8M12 16v4\"/></svg></span><span class=\"clw-tg\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M11 18h2\"/></svg></span><span class=\"clw-tg\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"8\" y=\"3\" width=\"8\" height=\"18\" rx=\"2\"/></svg></span></span>\n    <span class=\"clw-tgs\" aria-hidden=\"true\"><span class=\"clw-tg clw-on\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg></span><span class=\"clw-tg\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg></span></span>\n    <span class=\"clw-btn\">Publish changes</span>\n  </div>\n  <div class=\"clw-body\">\n    <div class=\"clw-panel\"><p class=\"clw-k clw-mono\">Blocks</p>\n      <div class=\"clw-blk clw-bs\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 10h10M7 14h6\"/></svg>Hero</div>\n      <div class=\"clw-blk\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg>Feature grid</div>\n      <div class=\"clw-blk\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"/></svg>Pricing</div>\n      <div class=\"clw-blk\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01\"/></svg>FAQs</div>\n      <div class=\"clw-blk\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>Newsletter signup</div>\n      <div class=\"clw-add\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Add block</div>\n    </div>\n    <div class=\"clw-canvas\"><div class=\"clw-page\">\n      <div class=\"clw-hero\"><h3>Learn watercolour at your own pace</h3><p>Short lessons, real brushwork and a friendly community of painters.</p><span class=\"clw-btn\">Start the first lesson</span></div>\n      <div class=\"clw-cards\">\n        <div class=\"clw-mini\"><div class=\"clw-sw\" style=\"background:linear-gradient(135deg,#f3d9c4,#e7a98f)\"></div><b>Watercolour basics</b><span>Washes, mixing and layering.</span></div>\n        <div class=\"clw-mini\"><div class=\"clw-sw\" style=\"background:linear-gradient(135deg,#dfe7d6,#a9c29b)\"></div><b>Botanical sketchbook</b><span>Leaves, petals and ink lines.</span></div>\n        <div class=\"clw-mini\"><div class=\"clw-sw\" style=\"background:linear-gradient(135deg,#d6e0ea,#9db6cf)\"></div><b>Painters' circle</b><span>Share work and get feedback.</span></div>\n      </div>\n    </div></div>\n  </div>\n</div>\n<p class=\"clw-cap\">Illustration with sample data.</p>\n</div>\n"
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "Everything you need to publish",
+        "description": "Your courses, downloads and community already live on this website.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Page editor",
+            "description": "A full-screen visual editor with desktop, tablet and mobile previews, plus light and dark mode.",
+            "icon": "PanelsTopLeft"
+          },
+          {
+            "title": "Blocks",
+            "description": "Hero, content, grid, FAQs, pricing, banner, media, embed, newsletter signup and more.",
+            "icon": "Blocks"
+          },
+          {
+            "title": "Themes and branding",
+            "description": "Set your title, subtitle and logo, pick a ready-made theme or create your own.",
+            "icon": "Palette"
+          },
+          {
+            "title": "Blog",
+            "description": "Write in a distraction-free editor with a slug, excerpt, tags and a featured image.",
+            "icon": "PenLine"
+          },
+          {
+            "title": "Custom domain",
+            "description": "Serve your site from an address such as learn.example.com. Your default address keeps working.",
+            "icon": "Globe"
+          },
+          {
+            "title": "Code injection",
+            "description": "Paste analytics, tracking pixels or chat widgets into the head or body of every page.",
+            "icon": "Code"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Draft first, *publish when ready*",
+        "body": "Every change you make in the page editor is saved to a draft automatically. Visitors only see it after you click **Publish changes**, and you can discard unpublished edits to go back to the live version.\n\nSet the page title, description and social card image for each page with **Edit SEO settings**.\n\n[How the page editor works](/docs/website/page-editor)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Make it *look like you*",
+        "body": "Choose one of six ready-made themes: **Classic**, **Editorial**, **Midnight**, **Neo-Brutalism**, **Studio** or **Terminal**. Or change colours, fonts, corner radius and shadows, with separate values for light and dark mode.\n\nYour custom themes belong to your school and are available on every page. Theme and branding changes go live as soon as you save them.\n\n[Branding and themes](/docs/website/branding-and-themes)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "pages",
+        "layout": "grid",
+        "title": "Pages for every part of your school",
+        "description": "",
+        "items": [
+          {
+            "title": "Sales pages",
+            "description": "Every course, download and community has its own page that you edit in the same editor.",
+            "icon": "ShoppingBag"
+          },
+          {
+            "title": "Legal pages",
+            "description": "Terms of Service and Privacy policy pages start as drafts with starter text that names your school.",
+            "icon": "Scale"
+          },
+          {
+            "title": "Newsletter signup",
+            "description": "A signup block adds visitors to your contacts as subscribers, ready for email.",
+            "icon": "MailPlus"
+          },
+          {
+            "title": "Media library",
+            "description": "Upload once and reuse images and files across pages, posts, products and branding. Edit alt text for accessibility.",
+            "icon": "Images"
+          }
+        ]
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Website questions",
+        "items": [
+          {
+            "question": "Can I use my own domain?",
+            "answer": "Yes. Add your domain, create the CNAME and TXT records CourseLit shows you, then click Check DNS. A school can have one custom domain at a time."
+          },
+          {
+            "question": "Does the pricing block take payments?",
+            "answer": "No. It is a display block you fill in by hand. To sell something, add a payment plan to a product or community and send visitors to its sales page."
+          },
+          {
+            "question": "Are stock photos stored in my media library?",
+            "answer": "No. Free stock photos you pick in an image picker are used directly. Only files you upload are stored in the media library."
+          },
+          {
+            "question": "Can I add my analytics script?",
+            "answer": "Yes. Code injection lets you paste HTML, JavaScript or CSS into the head or body of every page. Only add code from providers you trust."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Launch your school's website",
+        "description": "Pick a theme, edit your homepage and publish. No card needed for the trial.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

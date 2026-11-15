@@ -39,6 +39,7 @@ import { ensureLearnerAccountByEmail } from "./learners.js";
 import { queueCommunityInviteEmail } from "./school-emails.js";
 import { queueMembershipEvents, schoolSiteUrl } from "./membership-events.js";
 import * as schema from "./db/schema/index.js";
+import { commentWasEdited, postWasEdited } from "./community-edits.js";
 import {
   findLearnerMembership,
   type LearnerMembershipStatus,
@@ -164,6 +165,7 @@ export type CommunityPostDto = {
   commentsCount: number;
   subscribed: boolean;
   pinned: boolean;
+  editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -201,6 +203,7 @@ export type CommunityCommentDto = {
   content: string;
   media: CommunityMediaDto[];
   reactions: CommunityReactionDto[];
+  editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -725,6 +728,7 @@ function postToDto(
     commentsCount,
     subscribed,
     pinned: row.pinned,
+    editedAt: row.editedAt ? serializeDate(row.editedAt) : null,
     deletedAt: row.deletedAt ? serializeDate(row.deletedAt) : null,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
@@ -753,6 +757,7 @@ function commentToDto(
     content: row.deletedAt ? DELETED_COMMUNITY_CONTENT : row.content,
     media,
     reactions,
+    editedAt: row.editedAt ? serializeDate(row.editedAt) : null,
     deletedAt: row.deletedAt ? serializeDate(row.deletedAt) : null,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
@@ -3497,6 +3502,7 @@ export async function createPost(
     gifUrls: communityGifUrls(input.gifUrls ?? []),
     pinned: false,
     spaceId: null,
+    editedAt: null,
     deletedAt: null,
     createdAt: now,
     updatedAt: now,
@@ -3713,6 +3719,23 @@ export async function updatePost(
   }
   if (!next.title || !communityContentHasText(next.content))
     return { ok: false, error: createPlatformError("validation_failed") };
+  const mediaBefore =
+    input.mediaIds === undefined
+      ? []
+      : (
+          (await communityMediaMap(db, school.schoolId, [existing.id])).get(existing.id) ??
+          []
+        ).map((media) => media.id);
+  const edited = postWasEdited(
+    {
+      title: existing.title,
+      content: existing.content,
+      gifUrls: communityGifUrls(existing.gifUrls),
+    },
+    next,
+    { before: mediaBefore, after: input.mediaIds },
+  );
+  const saved = { ...next, editedAt: edited ? now : existing.editedAt };
   const richTextMediaIds =
     input.content !== undefined
       ? await mediaIdsForRichTextContent(db, school.schoolId, input.content)
@@ -3738,7 +3761,7 @@ export async function updatePost(
   }
   await db
     .update(schema.communityPosts)
-    .set(next)
+    .set(saved)
     .where(eq(schema.communityPosts.id, existing.id));
   const reactions = await communityReactionMap(
     db,
@@ -3761,7 +3784,7 @@ export async function updatePost(
   return {
     ok: true,
     value: postToDto(
-      { ...existing, ...next },
+      { ...existing, ...saved },
       existing.schoolAccountId
         ? (await learnerPublicIds(db, [existing.schoolAccountId])).get(
             existing.schoolAccountId,
@@ -3972,6 +3995,7 @@ export async function createComment(
     parentCommentId,
     ...identityColumns(identity),
     content: input.content,
+    editedAt: null,
     deletedAt: null,
     createdAt: now,
     updatedAt: now,
@@ -4121,6 +4145,16 @@ export async function updateComment(
   if (!(await authorCanChange(viewer, existing.schoolAccountId))) return forbidden();
   if (input.content.length > 20_000 || !communityContentHasText(input.content))
     return { ok: false, error: createPlatformError("validation_failed") };
+  const mediaBefore =
+    input.mediaIds === undefined
+      ? []
+      : ((await communityMediaMap(db, schoolId, [existing.id])).get(existing.id) ?? []).map(
+          (media) => media.id,
+        );
+  const edited = commentWasEdited(existing, input, {
+    before: mediaBefore,
+    after: input.mediaIds,
+  });
   const richTextMediaIds = await mediaIdsForRichTextContent(
     db,
     schoolId,
@@ -4149,7 +4183,12 @@ export async function updateComment(
     );
     if (!references.ok) return references;
   }
-  const next = { content: input.content, updatedAt: clock.now() };
+  const now = clock.now();
+  const next = {
+    content: input.content,
+    updatedAt: now,
+    editedAt: edited ? now : existing.editedAt,
+  };
   await db
     .update(schema.communityComments)
     .set(next)

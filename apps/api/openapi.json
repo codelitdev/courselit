@@ -43,6 +43,7 @@
             }
           }
         },
+        "operationId": "health",
         "security": []
       }
     },
@@ -113,6 +114,7 @@
             }
           }
         },
+        "operationId": "ready",
         "security": []
       }
     },
@@ -536,6 +538,7 @@
             }
           }
         },
+        "operationId": "listCommunities",
         "security": [
           {
             "apiKey": []
@@ -1080,6 +1083,7 @@
             }
           }
         },
+        "operationId": "createCommunity",
         "security": [
           {
             "apiKey": []
@@ -1522,6 +1526,7 @@
             }
           }
         },
+        "operationId": "getCommunity",
         "security": [
           {
             "apiKey": []
@@ -2176,6 +2181,7 @@
             }
           }
         },
+        "operationId": "updateCommunity",
         "security": [
           {
             "apiKey": []
@@ -2387,6 +2393,7 @@
             }
           }
         },
+        "operationId": "deleteCommunity",
         "security": [
           {
             "apiKey": []
@@ -2629,6 +2636,7 @@
             }
           }
         },
+        "operationId": "getSalesPage",
         "security": [
           {
             "apiKey": []
@@ -3203,6 +3211,7 @@
             }
           }
         },
+        "operationId": "addCommunityCategory",
         "security": [
           {
             "apiKey": []
@@ -3727,6 +3736,7 @@
             }
           }
         },
+        "operationId": "deleteCommunityCategory",
         "security": [
           {
             "apiKey": []
@@ -4108,6 +4118,7 @@
             }
           }
         },
+        "operationId": "listCommunityMembers",
         "security": [
           {
             "apiKey": []
@@ -4506,6 +4517,7 @@
             }
           }
         },
+        "operationId": "inviteCommunityMember",
         "security": [
           {
             "apiKey": []
@@ -4909,6 +4921,7 @@
             }
           }
         },
+        "operationId": "updateCommunityMembership",
         "security": [
           {
             "apiKey": []
@@ -5137,6 +5150,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -5163,6 +5180,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -5407,6 +5425,7 @@
             }
           }
         },
+        "operationId": "listCommunityPosts",
         "security": [
           {
             "apiKey": []
@@ -5642,6 +5661,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -5668,6 +5691,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -5901,6 +5925,7 @@
             }
           }
         },
+        "operationId": "createCommunityPost",
         "security": [
           {
             "apiKey": []
@@ -6137,6 +6162,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -6163,6 +6192,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -6396,6 +6426,7 @@
             }
           }
         },
+        "operationId": "updateCommunityPost",
         "security": [
           {
             "apiKey": []
@@ -6607,6 +6638,7 @@
             }
           }
         },
+        "operationId": "deleteCommunityPost",
         "security": [
           {
             "apiKey": []
@@ -6819,6 +6851,10 @@
                               ]
                             }
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -6841,6 +6877,7 @@
                           "content",
                           "media",
                           "reactions",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -7085,6 +7122,7 @@
             }
           }
         },
+        "operationId": "listCommunityComments",
         "security": [
           {
             "apiKey": []
@@ -7288,6 +7326,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -7310,6 +7352,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -7543,6 +7586,7 @@
             }
           }
         },
+        "operationId": "createCommunityComment",
         "security": [
           {
             "apiKey": []
@@ -7743,6 +7787,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -7765,6 +7813,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -7998,6 +8047,7 @@
             }
           }
         },
+        "operationId": "updateCommunityComment",
         "security": [
           {
             "apiKey": []
@@ -8209,6 +8259,7 @@
             }
           }
         },
+        "operationId": "deleteCommunityComment",
         "security": [
           {
             "apiKey": []
@@ -8526,6 +8577,7 @@
             }
           }
         },
+        "operationId": "toggleCommunityReaction",
         "security": [
           {
             "apiKey": []
@@ -8757,6 +8809,7 @@
             }
           }
         },
+        "operationId": "toggleCommunityPostSubscription",
         "security": [
           {
             "apiKey": []
@@ -9320,6 +9373,7 @@
             }
           }
         },
+        "operationId": "createCommunityReport",
         "security": [
           {
             "apiKey": []
@@ -9855,6 +9909,7 @@
             }
           }
         },
+        "operationId": "listCommunityReports",
         "security": [
           {
             "apiKey": []
@@ -10392,6 +10447,7 @@
             }
           }
         },
+        "operationId": "listProductDiscussionReports",
         "security": [
           {
             "apiKey": []
@@ -10893,6 +10949,7 @@
             }
           }
         },
+        "operationId": "updateCommunityReport",
         "security": [
           {
             "apiKey": []
@@ -11348,6 +11405,7 @@
             }
           }
         },
+        "operationId": "listLearnerCommunities",
         "security": []
       }
     },
@@ -11630,6 +11688,7 @@
             }
           }
         },
+        "operationId": "listSpaces",
         "security": [
           {
             "apiKey": []
@@ -12082,6 +12141,7 @@
             }
           }
         },
+        "operationId": "createSpace",
         "security": [
           {
             "apiKey": []
@@ -12425,6 +12485,7 @@
             }
           }
         },
+        "operationId": "getSpace",
         "security": [
           {
             "apiKey": []
@@ -12939,6 +13000,7 @@
             }
           }
         },
+        "operationId": "updateSpace",
         "security": [
           {
             "apiKey": []
@@ -13222,6 +13284,7 @@
             }
           }
         },
+        "operationId": "deleteSpace",
         "security": [
           {
             "apiKey": []
@@ -13590,6 +13653,7 @@
             }
           }
         },
+        "operationId": "orderSpaces",
         "security": [
           {
             "apiKey": []
@@ -13823,6 +13887,7 @@
             }
           }
         },
+        "operationId": "listLearnerSpaces",
         "security": []
       }
     },
@@ -13976,6 +14041,7 @@
             }
           }
         },
+        "operationId": "followLearnerSpace",
         "security": []
       },
       "delete": {
@@ -14127,6 +14193,7 @@
             }
           }
         },
+        "operationId": "unfollowLearnerSpace",
         "security": []
       }
     },
@@ -14444,6 +14511,7 @@
             }
           }
         },
+        "operationId": "createLearnerSpacePost",
         "security": []
       }
     },
@@ -14632,6 +14700,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -14760,6 +14832,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt",
@@ -14938,6 +15011,7 @@
             }
           }
         },
+        "operationId": "getLearnerSpacePost",
         "security": []
       }
     },
@@ -15151,6 +15225,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -15279,6 +15357,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt",
@@ -15416,6 +15495,7 @@
             }
           }
         },
+        "operationId": "listLearnerFeed",
         "security": []
       }
     },
@@ -15851,6 +15931,7 @@
             }
           }
         },
+        "operationId": "getLearnerCommunity",
         "security": []
       }
     },
@@ -16072,6 +16153,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -16098,6 +16183,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -16342,6 +16428,7 @@
             }
           }
         },
+        "operationId": "listLearnerCommunityPosts",
         "security": []
       },
       "post": {
@@ -16570,6 +16657,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -16596,6 +16687,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -16829,6 +16921,7 @@
             }
           }
         },
+        "operationId": "createLearnerCommunityPost",
         "security": []
       }
     },
@@ -17009,6 +17102,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -17035,6 +17132,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -17212,6 +17310,7 @@
             }
           }
         },
+        "operationId": "getLearnerCommunityPost",
         "security": []
       }
     },
@@ -17417,6 +17516,10 @@
                               ]
                             }
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -17439,6 +17542,7 @@
                           "content",
                           "media",
                           "reactions",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -17683,6 +17787,7 @@
             }
           }
         },
+        "operationId": "listLearnerCommunityComments",
         "security": []
       },
       "post": {
@@ -17879,6 +17984,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -17901,6 +18010,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -18134,6 +18244,7 @@
             }
           }
         },
+        "operationId": "createLearnerCommunityComment",
         "security": []
       }
     },
@@ -18327,6 +18438,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -18349,6 +18464,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -18582,6 +18698,7 @@
             }
           }
         },
+        "operationId": "updateLearnerCommunityComment",
         "security": []
       },
       "delete": {
@@ -18786,6 +18903,7 @@
             }
           }
         },
+        "operationId": "deleteLearnerCommunityComment",
         "security": []
       }
     },
@@ -19063,6 +19181,7 @@
             }
           }
         },
+        "operationId": "authorizeLearnerCommunityMediaUpload",
         "security": []
       }
     },
@@ -19395,6 +19514,7 @@
             }
           }
         },
+        "operationId": "finalizeLearnerCommunityMediaUpload",
         "security": []
       },
       "get": {
@@ -19674,6 +19794,7 @@
             }
           }
         },
+        "operationId": "listLearnerCommunityMedia",
         "security": []
       }
     },
@@ -19942,6 +20063,7 @@
             }
           }
         },
+        "operationId": "authorizeLearnerAvatarMediaUpload",
         "security": []
       }
     },
@@ -20266,6 +20388,7 @@
             }
           }
         },
+        "operationId": "finalizeLearnerAvatarMediaUpload",
         "security": []
       }
     },
@@ -20516,6 +20639,7 @@
             }
           }
         },
+        "operationId": "searchLearnerGifs",
         "security": []
       }
     },
@@ -20826,6 +20950,7 @@
             }
           }
         },
+        "operationId": "toggleLearnerCommunityReaction",
         "security": []
       }
     },
@@ -21050,6 +21175,7 @@
             }
           }
         },
+        "operationId": "toggleLearnerCommunityPostSubscription",
         "security": []
       }
     },
@@ -21606,6 +21732,7 @@
             }
           }
         },
+        "operationId": "createLearnerCommunityReport",
         "security": []
       }
     },
@@ -21808,6 +21935,7 @@
             }
           }
         },
+        "operationId": "listLearnerNotifications",
         "security": []
       }
     },
@@ -22010,6 +22138,7 @@
             }
           }
         },
+        "operationId": "listAdminNotifications",
         "security": []
       }
     },
@@ -22123,6 +22252,7 @@
             }
           }
         },
+        "operationId": "listLearnerNotificationPreferences",
         "security": []
       }
     },
@@ -22321,6 +22451,7 @@
             }
           }
         },
+        "operationId": "updateLearnerNotificationPreference",
         "security": []
       }
     },
@@ -22509,6 +22640,7 @@
             }
           }
         },
+        "operationId": "markLearnerNotificationRead",
         "security": []
       }
     },
@@ -22606,6 +22738,7 @@
             }
           }
         },
+        "operationId": "markAllLearnerNotificationsRead",
         "security": []
       }
     },
@@ -22794,6 +22927,7 @@
             }
           }
         },
+        "operationId": "markAdminNotificationRead",
         "security": []
       }
     },
@@ -22891,6 +23025,7 @@
             }
           }
         },
+        "operationId": "markAllAdminNotificationsRead",
         "security": []
       }
     },
@@ -23262,6 +23397,7 @@
             }
           }
         },
+        "operationId": "listLearnerProducts",
         "security": []
       }
     },
@@ -23533,6 +23669,7 @@
             }
           }
         },
+        "operationId": "cancelLearnerProductSubscription",
         "security": []
       }
     },
@@ -23751,6 +23888,7 @@
             }
           }
         },
+        "operationId": "leaveLearnerCommunity",
         "security": []
       }
     },
@@ -24085,6 +24223,7 @@
             }
           }
         },
+        "operationId": "listLearnerCommunityPlans",
         "security": []
       }
     },
@@ -24520,6 +24659,7 @@
             }
           }
         },
+        "operationId": "startLearnerCommunityCheckout",
         "security": []
       }
     },
@@ -24815,6 +24955,7 @@
             }
           }
         },
+        "operationId": "getLearnerCommunityCheckout",
         "security": []
       }
     },
@@ -25206,6 +25347,7 @@
             }
           }
         },
+        "operationId": "listProducts",
         "security": [
           {
             "apiKey": []
@@ -25584,6 +25726,7 @@
             }
           }
         },
+        "operationId": "createProduct",
         "security": [
           {
             "apiKey": []
@@ -25932,6 +26075,7 @@
             }
           }
         },
+        "operationId": "listPublicProducts",
         "security": []
       }
     },
@@ -25971,6 +26115,7 @@
             }
           }
         },
+        "operationId": "getCaptchaConfig",
         "security": []
       }
     },
@@ -26080,6 +26225,7 @@
             }
           }
         },
+        "operationId": "resolvePublicHost",
         "security": []
       }
     },
@@ -26432,6 +26578,7 @@
             }
           }
         },
+        "operationId": "createCheckoutSession",
         "security": []
       }
     },
@@ -26709,6 +26856,7 @@
             }
           }
         },
+        "operationId": "getCheckoutSession",
         "security": []
       }
     },
@@ -27152,6 +27300,7 @@
             }
           }
         },
+        "operationId": "listPublicCommunities",
         "security": []
       }
     },
@@ -27541,6 +27690,7 @@
             }
           }
         },
+        "operationId": "getPublicCommunity",
         "security": []
       }
     },
@@ -27913,6 +28063,7 @@
             }
           }
         },
+        "operationId": "listPublicCommunityPlans",
         "security": []
       }
     },
@@ -28163,6 +28314,7 @@
             }
           }
         },
+        "operationId": "getPublicSiteSettings",
         "security": []
       }
     },
@@ -28503,6 +28655,7 @@
             }
           }
         },
+        "operationId": "getPublicSitePage",
         "security": []
       }
     },
@@ -28784,6 +28937,7 @@
             }
           }
         },
+        "operationId": "listPublicSiteBlogs",
         "security": []
       }
     },
@@ -29116,6 +29270,7 @@
             }
           }
         },
+        "operationId": "getPublicSiteBlog",
         "security": []
       }
     },
@@ -29545,6 +29700,7 @@
             }
           }
         },
+        "operationId": "listContacts",
         "security": [
           {
             "apiKey": []
@@ -30143,6 +30299,7 @@
             }
           }
         },
+        "operationId": "createContact",
         "security": [
           {
             "apiKey": []
@@ -30531,6 +30688,7 @@
             }
           }
         },
+        "operationId": "getContact",
         "security": [
           {
             "apiKey": []
@@ -31053,6 +31211,7 @@
             }
           }
         },
+        "operationId": "updateContact",
         "security": [
           {
             "apiKey": []
@@ -31391,6 +31550,7 @@
             }
           }
         },
+        "operationId": "deleteContact",
         "security": [
           {
             "apiKey": []
@@ -31744,6 +31904,7 @@
             }
           }
         },
+        "operationId": "updateContactMarketing",
         "security": [
           {
             "apiKey": []
@@ -32656,6 +32817,7 @@
             }
           }
         },
+        "operationId": "filterPreviewContacts",
         "security": [
           {
             "apiKey": []
@@ -33136,6 +33298,7 @@
             }
           }
         },
+        "operationId": "listContactSegments",
         "security": [
           {
             "apiKey": []
@@ -33920,6 +34083,7 @@
             }
           }
         },
+        "operationId": "createContactSegment",
         "security": [
           {
             "apiKey": []
@@ -34505,6 +34669,7 @@
             }
           }
         },
+        "operationId": "getContactSegment",
         "security": [
           {
             "apiKey": []
@@ -35406,6 +35571,7 @@
             }
           }
         },
+        "operationId": "updateContactSegment",
         "security": [
           {
             "apiKey": []
@@ -35688,6 +35854,7 @@
             }
           }
         },
+        "operationId": "deleteContactSegment",
         "security": [
           {
             "apiKey": []
@@ -35908,6 +36075,7 @@
             }
           }
         },
+        "operationId": "listContactTags",
         "security": [
           {
             "apiKey": []
@@ -36264,6 +36432,7 @@
             }
           }
         },
+        "operationId": "getContactTagReferences",
         "security": [
           {
             "apiKey": []
@@ -36632,6 +36801,7 @@
             }
           }
         },
+        "operationId": "renameContactTag",
         "security": [
           {
             "apiKey": []
@@ -37015,6 +37185,7 @@
             }
           }
         },
+        "operationId": "deleteContactTag",
         "security": [
           {
             "apiKey": []
@@ -37766,6 +37937,7 @@
             }
           }
         },
+        "operationId": "getContactSegmentMembers",
         "security": [
           {
             "apiKey": []
@@ -37962,6 +38134,7 @@
             }
           }
         },
+        "operationId": "subscribeNewsletter",
         "security": []
       }
     },
@@ -38470,6 +38643,7 @@
             }
           }
         },
+        "operationId": "updateProduct",
         "security": [
           {
             "apiKey": []
@@ -38737,6 +38911,7 @@
             }
           }
         },
+        "operationId": "deleteProduct",
         "security": [
           {
             "apiKey": []
@@ -39282,6 +39457,7 @@
             }
           }
         },
+        "operationId": "getProduct",
         "security": [
           {
             "apiKey": []
@@ -39531,6 +39707,7 @@
             }
           }
         },
+        "operationId": "getProductCertificateTemplate",
         "security": [
           {
             "apiKey": []
@@ -39884,6 +40061,7 @@
             }
           }
         },
+        "operationId": "upsertProductCertificateTemplate",
         "security": [
           {
             "apiKey": []
@@ -40225,6 +40403,7 @@
             }
           }
         },
+        "operationId": "listPlans",
         "security": [
           {
             "apiKey": []
@@ -40766,6 +40945,7 @@
             }
           }
         },
+        "operationId": "createPlan",
         "security": [
           {
             "apiKey": []
@@ -41061,6 +41241,7 @@
             }
           }
         },
+        "operationId": "listPublicPlans",
         "security": []
       }
     },
@@ -41592,6 +41773,7 @@
             }
           }
         },
+        "operationId": "updatePlan",
         "security": [
           {
             "apiKey": []
@@ -41990,6 +42172,7 @@
             }
           }
         },
+        "operationId": "setDefaultPlan",
         "security": [
           {
             "apiKey": []
@@ -42332,6 +42515,7 @@
             }
           }
         },
+        "operationId": "archivePlan",
         "security": [
           {
             "apiKey": []
@@ -42673,6 +42857,7 @@
             }
           }
         },
+        "operationId": "listCommunityPlans",
         "security": [
           {
             "apiKey": []
@@ -43214,6 +43399,7 @@
             }
           }
         },
+        "operationId": "createCommunityPlan",
         "security": [
           {
             "apiKey": []
@@ -43752,6 +43938,7 @@
             }
           }
         },
+        "operationId": "updateCommunityPlan",
         "security": [
           {
             "apiKey": []
@@ -44150,6 +44337,7 @@
             }
           }
         },
+        "operationId": "setDefaultCommunityPlan",
         "security": [
           {
             "apiKey": []
@@ -44548,6 +44736,7 @@
             }
           }
         },
+        "operationId": "archiveCommunityPlan",
         "security": [
           {
             "apiKey": []
@@ -44938,6 +45127,7 @@
             }
           }
         },
+        "operationId": "getPublicProduct",
         "security": []
       }
     },
@@ -45059,6 +45249,7 @@
             }
           }
         },
+        "operationId": "getPublicLoginMethods",
         "security": []
       }
     },
@@ -45410,6 +45601,7 @@
             }
           }
         },
+        "operationId": "signUpForLeadMagnet",
         "security": []
       }
     },
@@ -45792,6 +45984,7 @@
             }
           }
         },
+        "operationId": "getProductAnalytics",
         "security": [
           {
             "apiKey": []
@@ -46314,6 +46507,7 @@
             }
           }
         },
+        "operationId": "listProductCustomers",
         "security": [
           {
             "apiKey": []
@@ -46689,6 +46883,7 @@
             }
           }
         },
+        "operationId": "getProductCustomerProgress",
         "security": [
           {
             "apiKey": []
@@ -47031,6 +47226,7 @@
             }
           }
         },
+        "operationId": "cancelProductCustomerSubscription",
         "security": [
           {
             "apiKey": []
@@ -47393,6 +47589,7 @@
             }
           }
         },
+        "operationId": "removeProductCustomerAccess",
         "security": [
           {
             "apiKey": []
@@ -47770,6 +47967,7 @@
             }
           }
         },
+        "operationId": "getSchoolOverview",
         "security": [
           {
             "apiKey": []
@@ -48069,6 +48267,7 @@
             }
           }
         },
+        "operationId": "createPreviewGrant",
         "security": [
           {
             "apiKey": []
@@ -48513,6 +48712,7 @@
             }
           }
         },
+        "operationId": "readPreviewProduct",
         "security": [
           {
             "apiKey": []
@@ -48769,6 +48969,7 @@
             }
           }
         },
+        "operationId": "getPublicLessonMedia",
         "security": []
       }
     },
@@ -49017,6 +49218,7 @@
             }
           }
         },
+        "operationId": "getPreviewLessonMedia",
         "security": [
           {
             "apiKey": []
@@ -49233,6 +49435,7 @@
             }
           }
         },
+        "operationId": "getLearnerScormRuntime",
         "security": []
       },
       "post": {
@@ -49540,6 +49743,7 @@
             }
           }
         },
+        "operationId": "updateLearnerScormRuntime",
         "security": []
       }
     },
@@ -49860,6 +50064,7 @@
             }
           }
         },
+        "operationId": "processScormPackage",
         "security": [
           {
             "apiKey": []
@@ -50177,6 +50382,7 @@
             }
           }
         },
+        "operationId": "evaluateLearnerQuiz",
         "security": []
       }
     },
@@ -50590,6 +50796,7 @@
             }
           }
         },
+        "operationId": "createLesson",
         "security": [
           {
             "apiKey": []
@@ -50902,6 +51109,7 @@
             }
           }
         },
+        "operationId": "listSections",
         "security": [
           {
             "apiKey": []
@@ -51243,6 +51451,7 @@
             }
           }
         },
+        "operationId": "createSection",
         "security": [
           {
             "apiKey": []
@@ -51577,6 +51786,7 @@
             }
           }
         },
+        "operationId": "reorderSections",
         "security": [
           {
             "apiKey": []
@@ -51977,6 +52187,7 @@
             }
           }
         },
+        "operationId": "reorderLessons",
         "security": [
           {
             "apiKey": []
@@ -52380,6 +52591,7 @@
             }
           }
         },
+        "operationId": "updateLesson",
         "security": [
           {
             "apiKey": []
@@ -52647,6 +52859,7 @@
             }
           }
         },
+        "operationId": "deleteLesson",
         "security": [
           {
             "apiKey": []
@@ -52987,6 +53200,7 @@
             }
           }
         },
+        "operationId": "updateSection",
         "security": [
           {
             "apiKey": []
@@ -53254,6 +53468,7 @@
             }
           }
         },
+        "operationId": "deleteSection",
         "security": [
           {
             "apiKey": []
@@ -53488,6 +53703,7 @@
             }
           }
         },
+        "operationId": "getSectionDripEmail",
         "security": [
           {
             "apiKey": []
@@ -53807,6 +54023,7 @@
             }
           }
         },
+        "operationId": "updateSectionDripEmail",
         "security": [
           {
             "apiKey": []
@@ -54109,6 +54326,7 @@
             }
           }
         },
+        "operationId": "authorizeMediaUpload",
         "security": [
           {
             "apiKey": []
@@ -54504,6 +54722,7 @@
             }
           }
         },
+        "operationId": "finalizeMediaUpload",
         "security": [
           {
             "apiKey": []
@@ -54858,6 +55077,7 @@
             }
           }
         },
+        "operationId": "listMedia",
         "security": [
           {
             "apiKey": []
@@ -55102,6 +55322,7 @@
             }
           }
         },
+        "operationId": "searchUnsplash",
         "security": [
           {
             "apiKey": []
@@ -55412,6 +55633,7 @@
             }
           }
         },
+        "operationId": "getMedia",
         "security": [
           {
             "apiKey": []
@@ -55803,6 +56025,7 @@
             }
           }
         },
+        "operationId": "updateMedia",
         "security": [
           {
             "apiKey": []
@@ -56060,6 +56283,7 @@
             }
           }
         },
+        "operationId": "deleteMedia",
         "security": [
           {
             "apiKey": []
@@ -56310,6 +56534,7 @@
             }
           }
         },
+        "operationId": "listMediaReferences",
         "security": [
           {
             "apiKey": []
@@ -56666,6 +56891,7 @@
             }
           }
         },
+        "operationId": "grantLearnerMembership",
         "security": [
           {
             "apiKey": []
@@ -56880,6 +57106,7 @@
             }
           }
         },
+        "operationId": "learnerRequestEmailCode",
         "security": []
       }
     },
@@ -57194,6 +57421,7 @@
             }
           }
         },
+        "operationId": "learnerVerifyEmailCode",
         "security": []
       }
     },
@@ -57423,6 +57651,7 @@
             }
           }
         },
+        "operationId": "learnerStartGoogleSignIn",
         "security": []
       }
     },
@@ -57708,6 +57937,7 @@
             }
           }
         },
+        "operationId": "learnerStartSsoSignIn",
         "security": []
       }
     },
@@ -57902,6 +58132,7 @@
             }
           }
         },
+        "operationId": "consumeSchoolAuthTicket",
         "security": []
       }
     },
@@ -57989,6 +58220,7 @@
             }
           }
         },
+        "operationId": "learnerSignOut",
         "security": []
       }
     },
@@ -58162,6 +58394,7 @@
             }
           }
         },
+        "operationId": "learnerMe",
         "security": []
       },
       "patch": {
@@ -58425,6 +58658,7 @@
             }
           }
         },
+        "operationId": "updateLearnerProfile",
         "security": []
       }
     },
@@ -58909,6 +59143,7 @@
             }
           }
         },
+        "operationId": "createLearnerMembership",
         "security": []
       }
     },
@@ -59190,6 +59425,7 @@
             }
           }
         },
+        "operationId": "learnerCreateDownloadLink",
         "security": []
       }
     },
@@ -59718,6 +59954,7 @@
             }
           }
         },
+        "operationId": "learnerCheckout",
         "security": []
       }
     },
@@ -60460,6 +60697,7 @@
             }
           }
         },
+        "operationId": "startLearnerCheckoutSession",
         "security": []
       }
     },
@@ -60755,6 +60993,7 @@
             }
           }
         },
+        "operationId": "getLearnerCheckout",
         "security": []
       }
     },
@@ -61050,6 +61289,7 @@
             }
           }
         },
+        "operationId": "learnerCompleteLesson",
         "security": []
       }
     },
@@ -61269,6 +61509,7 @@
             }
           }
         },
+        "operationId": "stripeWebhook",
         "security": []
       }
     },
@@ -61488,6 +61729,7 @@
             }
           }
         },
+        "operationId": "lemonSqueezyWebhook",
         "security": []
       }
     },
@@ -61707,6 +61949,7 @@
             }
           }
         },
+        "operationId": "razorpayWebhook",
         "security": []
       }
     },
@@ -61994,6 +62237,7 @@
             }
           }
         },
+        "operationId": "listLearnerProgress",
         "security": []
       }
     },
@@ -62227,6 +62471,7 @@
             }
           }
         },
+        "operationId": "listLearnerPurchases",
         "security": []
       }
     },
@@ -62412,6 +62657,7 @@
             }
           }
         },
+        "operationId": "listLearnerCertificates",
         "security": []
       }
     },
@@ -62576,6 +62822,7 @@
             }
           }
         },
+        "operationId": "verifyCertificate",
         "security": []
       }
     },
@@ -62751,6 +62998,7 @@
             }
           }
         },
+        "operationId": "listCertificateTemplates",
         "security": [
           {
             "apiKey": []
@@ -63059,6 +63307,7 @@
             }
           }
         },
+        "operationId": "createCertificateTemplate",
         "security": [
           {
             "apiKey": []
@@ -63430,6 +63679,7 @@
             }
           }
         },
+        "operationId": "updateCertificateTemplate",
         "security": [
           {
             "apiKey": []
@@ -63676,6 +63926,7 @@
             }
           }
         },
+        "operationId": "getBillingCatalog",
         "security": [
           {
             "oauth": []
@@ -63891,6 +64142,7 @@
             }
           }
         },
+        "operationId": "getEntitlement",
         "security": [
           {
             "oauth": []
@@ -64168,6 +64420,7 @@
             }
           }
         },
+        "operationId": "listSchools",
         "security": [
           {
             "oauth": []
@@ -64530,6 +64783,7 @@
             }
           }
         },
+        "operationId": "createSchool",
         "security": []
       }
     },
@@ -64828,6 +65082,7 @@
             }
           }
         },
+        "operationId": "listSchoolTeam",
         "security": []
       }
     },
@@ -65081,6 +65336,7 @@
             }
           }
         },
+        "operationId": "removeSchoolTeamMember",
         "security": []
       },
       "patch": {
@@ -65476,6 +65732,7 @@
             }
           }
         },
+        "operationId": "updateSchoolTeamMember",
         "security": []
       }
     },
@@ -65663,6 +65920,7 @@
             }
           }
         },
+        "operationId": "leaveSchoolTeam",
         "security": []
       }
     },
@@ -65994,6 +66252,7 @@
             }
           }
         },
+        "operationId": "transferSchoolOwnership",
         "security": []
       }
     },
@@ -66231,6 +66490,7 @@
             }
           }
         },
+        "operationId": "createSchoolTeamInvitation",
         "security": []
       }
     },
@@ -66445,6 +66705,7 @@
             }
           }
         },
+        "operationId": "resendSchoolTeamInvitation",
         "security": []
       }
     },
@@ -66642,6 +66903,7 @@
             }
           }
         },
+        "operationId": "revokeSchoolTeamInvitation",
         "security": []
       }
     },
@@ -66972,6 +67234,7 @@
             }
           }
         },
+        "operationId": "getSchoolPaymentSettings",
         "security": [
           {
             "oauth": []
@@ -67424,6 +67687,7 @@
             }
           }
         },
+        "operationId": "updateSchoolPaymentSettings",
         "security": [
           {
             "oauth": []
@@ -68064,6 +68328,7 @@
             }
           }
         },
+        "operationId": "getSchoolCodeInjection",
         "security": [
           {
             "apiKey": []
@@ -68347,6 +68612,7 @@
             }
           }
         },
+        "operationId": "updateSchoolCodeInjection",
         "security": [
           {
             "oauth": []
@@ -68704,6 +68970,7 @@
             }
           }
         },
+        "operationId": "listSchoolWebsitePages",
         "security": [
           {
             "apiKey": []
@@ -69128,6 +69395,7 @@
             }
           }
         },
+        "operationId": "createSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -69685,6 +69953,7 @@
             }
           }
         },
+        "operationId": "getSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -70371,6 +70640,7 @@
             }
           }
         },
+        "operationId": "updateSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -70685,6 +70955,7 @@
             }
           }
         },
+        "operationId": "deleteSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -71009,6 +71280,7 @@
             }
           }
         },
+        "operationId": "getSchoolWebsiteBranding",
         "security": [
           {
             "apiKey": []
@@ -71466,6 +71738,7 @@
             }
           }
         },
+        "operationId": "updateSchoolWebsiteBranding",
         "security": [
           {
             "apiKey": []
@@ -71758,6 +72031,7 @@
             }
           }
         },
+        "operationId": "listSchoolWebsiteBrandingThemes",
         "security": [
           {
             "apiKey": []
@@ -72120,6 +72394,7 @@
             }
           }
         },
+        "operationId": "createSchoolWebsiteBrandingTheme",
         "security": [
           {
             "apiKey": []
@@ -72546,6 +72821,7 @@
             }
           }
         },
+        "operationId": "updateSchoolWebsiteBrandingTheme",
         "security": [
           {
             "apiKey": []
@@ -72961,6 +73237,7 @@
             }
           }
         },
+        "operationId": "publishSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -73518,6 +73795,7 @@
             }
           }
         },
+        "operationId": "discardSchoolWebsitePage",
         "security": [
           {
             "apiKey": []
@@ -73933,6 +74211,7 @@
             }
           }
         },
+        "operationId": "publishSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -74293,6 +74572,7 @@
             }
           }
         },
+        "operationId": "listSchoolWebsiteBlogs",
         "security": [
           {
             "apiKey": []
@@ -74717,6 +74997,7 @@
             }
           }
         },
+        "operationId": "createSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -75236,6 +75517,7 @@
             }
           }
         },
+        "operationId": "getSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -75898,6 +76180,7 @@
             }
           }
         },
+        "operationId": "updateSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -76212,6 +76495,7 @@
             }
           }
         },
+        "operationId": "deleteSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -76675,6 +76959,7 @@
             }
           }
         },
+        "operationId": "unpublishSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -77194,6 +77479,7 @@
             }
           }
         },
+        "operationId": "discardSchoolWebsiteBlog",
         "security": [
           {
             "apiKey": []
@@ -77668,6 +77954,7 @@
             }
           }
         },
+        "operationId": "updateSchool",
         "security": [
           {
             "apiKey": []
@@ -77894,6 +78181,7 @@
             }
           }
         },
+        "operationId": "listSchoolHosts",
         "security": [
           {
             "apiKey": []
@@ -78266,6 +78554,7 @@
             }
           }
         },
+        "operationId": "createSchoolHost",
         "security": [
           {
             "apiKey": []
@@ -78667,6 +78956,7 @@
             }
           }
         },
+        "operationId": "verifySchoolHost",
         "security": [
           {
             "apiKey": []
@@ -78927,6 +79217,7 @@
             }
           }
         },
+        "operationId": "deleteSchoolHost",
         "security": [
           {
             "apiKey": []
@@ -79241,6 +79532,7 @@
             }
           }
         },
+        "operationId": "listSsoConnections",
         "security": [
           {
             "apiKey": []
@@ -79723,6 +80015,7 @@
             }
           }
         },
+        "operationId": "createSsoConnection",
         "security": []
       }
     },
@@ -80086,6 +80379,7 @@
             }
           }
         },
+        "operationId": "getSsoConnection",
         "security": [
           {
             "apiKey": []
@@ -80570,6 +80864,7 @@
             }
           }
         },
+        "operationId": "updateSsoConnection",
         "security": []
       },
       "delete": {
@@ -80767,6 +81062,7 @@
             }
           }
         },
+        "operationId": "deleteSsoConnection",
         "security": []
       }
     },
@@ -81150,6 +81446,7 @@
             }
           }
         },
+        "operationId": "addSsoDomain",
         "security": []
       }
     },
@@ -81533,6 +81830,7 @@
             }
           }
         },
+        "operationId": "verifySsoDomain",
         "security": []
       }
     },
@@ -81741,6 +82039,7 @@
             }
           }
         },
+        "operationId": "deleteSsoDomain",
         "security": []
       }
     },
@@ -82028,6 +82327,7 @@
             }
           }
         },
+        "operationId": "startSsoConnectionTest",
         "security": []
       }
     },
@@ -82290,6 +82590,7 @@
             }
           }
         },
+        "operationId": "getSsoConnectionTestResult",
         "security": []
       }
     },
@@ -82777,6 +83078,7 @@
             }
           }
         },
+        "operationId": "activateSsoConnection",
         "security": []
       }
     },
@@ -83152,6 +83454,7 @@
             }
           }
         },
+        "operationId": "disableSsoConnection",
         "security": []
       }
     },
@@ -83350,6 +83653,7 @@
             }
           }
         },
+        "operationId": "unlinkSsoIdentity",
         "security": []
       }
     },
@@ -83536,6 +83840,7 @@
             }
           }
         },
+        "operationId": "getSchoolLoginMethods",
         "security": [
           {
             "apiKey": []
@@ -83810,6 +84115,7 @@
             }
           }
         },
+        "operationId": "updateSchoolLoginMethods",
         "security": [
           {
             "apiKey": []
@@ -83933,6 +84239,7 @@
             }
           }
         },
+        "operationId": "checkSchoolSubdomain",
         "security": []
       }
     },
@@ -84223,6 +84530,7 @@
             }
           }
         },
+        "operationId": "startSchoolBillingCheckout",
         "security": []
       }
     },
@@ -84437,6 +84745,7 @@
             }
           }
         },
+        "operationId": "getSchoolBillingPlan",
         "security": []
       }
     },
@@ -84955,6 +85264,7 @@
             }
           }
         },
+        "operationId": "cancelSchoolBillingPlan",
         "security": []
       }
     },
@@ -85301,6 +85611,7 @@
             }
           }
         },
+        "operationId": "resumeSchoolBillingPlan",
         "security": []
       }
     },
@@ -85535,6 +85846,7 @@
             }
           }
         },
+        "operationId": "getSchoolOnboarding",
         "security": []
       },
       "patch": {
@@ -85885,6 +86197,7 @@
             }
           }
         },
+        "operationId": "updateSchoolOnboarding",
         "security": []
       }
     },
@@ -85999,6 +86312,7 @@
             }
           }
         },
+        "operationId": "listAiConnections",
         "security": []
       }
     },
@@ -86141,6 +86455,7 @@
             }
           }
         },
+        "operationId": "disconnectAiConnection",
         "security": []
       }
     },
@@ -86347,6 +86662,7 @@
             }
           }
         },
+        "operationId": "selectSchool",
         "security": []
       }
     },
@@ -86585,6 +86901,7 @@
             }
           }
         },
+        "operationId": "listApiKeys",
         "security": []
       },
       "post": {
@@ -86994,6 +87311,7 @@
             }
           }
         },
+        "operationId": "createApiKey",
         "security": []
       }
     },
@@ -87191,6 +87509,7 @@
             }
           }
         },
+        "operationId": "revokeApiKey",
         "security": []
       }
     },
@@ -87424,6 +87743,7 @@
             }
           }
         },
+        "operationId": "createInvitation",
         "security": []
       }
     },
@@ -87725,6 +88045,7 @@
             }
           }
         },
+        "operationId": "previewTeamInvitation",
         "security": []
       }
     },
@@ -88009,6 +88330,7 @@
             }
           }
         },
+        "operationId": "acceptTeamInvitation",
         "security": []
       }
     },
@@ -88276,6 +88598,7 @@
             }
           }
         },
+        "operationId": "rejectTeamInvitation",
         "security": []
       }
     },
@@ -88560,6 +88883,7 @@
             }
           }
         },
+        "operationId": "acceptInvitation",
         "security": []
       }
     },
@@ -88756,6 +89080,7 @@
             }
           }
         },
+        "operationId": "revokeInvitation",
         "security": []
       }
     },
@@ -89183,6 +89508,7 @@
             }
           }
         },
+        "operationId": "getSchoolCommunity",
         "security": [
           {
             "apiKey": []
@@ -89360,6 +89686,7 @@
             }
           }
         },
+        "operationId": "listStaffNotificationPreferences",
         "security": []
       }
     },
@@ -89662,6 +89989,7 @@
             }
           }
         },
+        "operationId": "updateStaffNotificationPreference",
         "security": []
       }
     },
@@ -89810,6 +90138,7 @@
             }
           }
         },
+        "operationId": "getMailingSettings",
         "security": [
           {
             "apiKey": []
@@ -90040,6 +90369,7 @@
             }
           }
         },
+        "operationId": "updateMailingSettings",
         "security": [
           {
             "apiKey": []
@@ -90198,6 +90528,7 @@
             }
           }
         },
+        "operationId": "getSchoolEmailDelivery",
         "security": [
           {
             "apiKey": []
@@ -90392,6 +90723,7 @@
             }
           }
         },
+        "operationId": "listMailSequences",
         "security": [
           {
             "apiKey": []
@@ -90622,6 +90954,7 @@
             }
           }
         },
+        "operationId": "createMailSequence",
         "security": [
           {
             "apiKey": []
@@ -90830,6 +91163,7 @@
             }
           }
         },
+        "operationId": "getMailSequence",
         "security": [
           {
             "apiKey": []
@@ -91135,6 +91469,7 @@
             }
           }
         },
+        "operationId": "updateMailSequence",
         "security": [
           {
             "apiKey": []
@@ -91337,6 +91672,7 @@
             }
           }
         },
+        "operationId": "deleteMailSequence",
         "security": [
           {
             "apiKey": []
@@ -91545,6 +91881,7 @@
             }
           }
         },
+        "operationId": "getMailSequenceStats",
         "security": [
           {
             "apiKey": []
@@ -91853,6 +92190,7 @@
             }
           }
         },
+        "operationId": "listMailSequenceSubscribers",
         "security": [
           {
             "apiKey": []
@@ -92129,6 +92467,7 @@
             }
           }
         },
+        "operationId": "startMailSequence",
         "security": [
           {
             "oauth": []
@@ -92402,6 +92741,7 @@
             }
           }
         },
+        "operationId": "pauseMailSequence",
         "security": [
           {
             "apiKey": []
@@ -92696,6 +93036,7 @@
             }
           }
         },
+        "operationId": "createMailSequenceEmail",
         "security": [
           {
             "apiKey": []
@@ -93003,6 +93344,7 @@
             }
           }
         },
+        "operationId": "updateMailSequenceEmail",
         "security": [
           {
             "apiKey": []
@@ -93213,6 +93555,7 @@
             }
           }
         },
+        "operationId": "deleteMailSequenceEmail",
         "security": [
           {
             "apiKey": []
@@ -93506,6 +93849,7 @@
             }
           }
         },
+        "operationId": "sendMailSequenceTestEmail",
         "security": [
           {
             "oauth": []
@@ -93662,6 +94006,7 @@
             }
           }
         },
+        "operationId": "listSystemMailTemplates",
         "security": [
           {
             "apiKey": []
@@ -93838,6 +94183,7 @@
             }
           }
         },
+        "operationId": "listMailTemplates",
         "security": [
           {
             "apiKey": []
@@ -94086,6 +94432,7 @@
             }
           }
         },
+        "operationId": "createMailTemplate",
         "security": [
           {
             "apiKey": []
@@ -94306,6 +94653,7 @@
             }
           }
         },
+        "operationId": "duplicateMailTemplate",
         "security": [
           {
             "apiKey": []
@@ -94514,6 +94862,7 @@
             }
           }
         },
+        "operationId": "getMailTemplate",
         "security": [
           {
             "apiKey": []
@@ -94827,6 +95176,7 @@
             }
           }
         },
+        "operationId": "updateMailTemplate",
         "security": [
           {
             "apiKey": []
@@ -95029,6 +95379,7 @@
             }
           }
         },
+        "operationId": "deleteMailTemplate",
         "security": [
           {
             "apiKey": []

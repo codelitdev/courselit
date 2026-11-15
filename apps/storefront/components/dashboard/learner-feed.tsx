@@ -29,6 +29,7 @@ import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
+import { editedNote } from "@/lib/community-edited";
 import { requestJson } from "@/lib/request-json";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { LearnerSpacePost } from "@/components/communities/learner-community";
@@ -97,6 +98,7 @@ const feedPostSchema = z.object({
   pinned: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  editedAt: z.string().nullable().optional(),
   spaceId: z.string().nullable().optional(),
   space: z
     .object({
@@ -347,7 +349,8 @@ function FeedPostCard({
 }) {
   const postSpace = post.space ?? space;
   const authorName = post.author?.name || post.author?.email || "Learner";
-  const date = formatPostDate(post.updatedAt ?? post.createdAt);
+  const date = formatPostDate(post.createdAt ?? post.updatedAt);
+  const edited = editedNote(post.editedAt);
   const spaceName = postSpace?.name ?? post.category ?? "Space";
 
   return (
@@ -369,7 +372,14 @@ function FeedPostCard({
           <div className="min-w-0 flex-1">
             <LearnerText2 className="font-medium">{authorName}</LearnerText2>
             <LearnerText2 className="text-sm text-muted-foreground">
-              {date ? `${date} · ${spaceName}` : spaceName}
+              {date ? `${date} · ` : null}
+              {edited ? (
+                <>
+                  <span title={edited.title}>{edited.label}</span>
+                  {" · "}
+                </>
+              ) : null}
+              {spaceName}
             </LearnerText2>
           </div>
           {post.pinned ? (

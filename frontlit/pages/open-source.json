@@ -1,0 +1,122 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Open-source course platform you can self-host",
+  "description": "CourseLit is open source under AGPL-3.0 and has been public on GitHub since 2019. Self-host it with every feature, or use our cloud and skip the servers.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "AGPL-3.0. Open source since 2019.",
+        "title": "A course platform *you can read, run and fork*",
+        "description": "Every line of CourseLit is public on GitHub. Self-hosted CourseLit has every feature with no licence key, and the cloud is there if you would rather not run servers.",
+        "buttonCaption": "Read the self-hosting guide",
+        "buttonAction": "/docs/self-hosting",
+        "secondaryButtonCaption": "View on GitHub",
+        "secondaryButtonAction": "https://github.com/codelitdev/courselit",
+        "smallPrint": "CourseLit 1.0 is in pre-release. Self-hosting is for experienced operators."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "why",
+        "layout": "grid",
+        "title": "Why open source matters here",
+        "description": "Your school should not depend on one company staying in business.",
+        "items": [
+          {
+            "title": "No lock-in",
+            "description": "The code is public, so you can host it, change it or fork it. Your data stays in a PostgreSQL database you control.",
+            "icon": "Unlock"
+          },
+          {
+            "title": "Every feature, no licence key",
+            "description": "Set BILLING_MODE to oss and every school on your deployment gets every plan feature, including SCORM and single sign-on.",
+            "icon": "KeyRound"
+          },
+          {
+            "title": "Built in the open",
+            "description": "Read the code, report issues and send changes on GitHub, or ask questions in the community on Discord.",
+            "icon": "GitBranch"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "what-runs",
+        "title": "What a self-hosted deployment is made of",
+        "body": "Each release publishes three container images:\n\n- `codelit/courselit-api`: the REST API, the MCP server and all business logic. The same image also runs the background worker.\n- `codelit/courselit-admin`: the dashboard where you manage your school.\n- `codelit/courselit-storefront`: the public websites your learners use.\n\nThe only data store is **PostgreSQL**. You also bring an external **media storage** service and an **email** service, either SMTP or a team key. One deployment can serve many schools.\n\n[Deploy the services](/docs/self-hosting/deploy)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "honest",
+        "title": "What to expect today",
+        "body": "CourseLit 1.0 is in pre-release, and self-hosting is for experienced operators. There is **no one-command installer** and **no production Compose file**, so you assemble the services yourself. Details can change between pre-releases, and moving between them may need a fresh database.\n\nIf you only want to teach and sell, the cloud is the easier path.\n\n[Read the self-hosting overview](/docs/self-hosting)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "compare",
+        "title": "Cloud or self-hosted",
+        "body": "| | Cloud | Self-hosted |\n| --- | --- | --- |\n| Price | Pro $29/mo or Business $79/mo, with a 14-day free trial | Free. You pay for your own servers and services |\n| Features | SCORM, learner SSO and the audit log need Business | Every feature, no licence key |\n| Setup | Sign up and start | Assemble the services yourself |\n| Hosting and updates | We run them | You run them |\n| Media storage and email | Included | You connect your own services |\n| Sales fee | None | None |\n| Support | Priority support on Business | Community support on Discord |\n\n[Compare cloud plans](/pricing)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Questions, answered",
+        "items": [
+          {
+            "question": "What licence is CourseLit under?",
+            "answer": "AGPL-3.0. The code is public on GitHub and has been since 2019."
+          },
+          {
+            "question": "Is there a paid edition of self-hosted CourseLit?",
+            "answer": "No. Self-hosted CourseLit has every feature and needs no licence key. You pay only for the servers and services you run."
+          },
+          {
+            "question": "Can I run more than one school?",
+            "answer": "Yes. One deployment serves many schools. Each gets a subdomain of your platform domain and can attach a custom domain."
+          },
+          {
+            "question": "Which version should I deploy?",
+            "answer": "Pin an explicit version tag and use the same one for all three images. Pre-releases never move the latest tag, which still points at the older 0.x line."
+          },
+          {
+            "question": "Where do I get help?",
+            "answer": "Ask in the community on Discord, and report bugs or send changes on GitHub."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Run it yourself, or let us run it",
+        "description": "Read the self-hosting guide, or start a free trial on the cloud. No card needed.",
+        "buttonCaption": "Read the self-hosting guide",
+        "buttonAction": "/docs/self-hosting",
+        "secondaryButtonCaption": "Start free trial",
+        "secondaryButtonAction": "https://app.courselit.cluster.clqa.site"
+      }
+    }
+  ]
+}
