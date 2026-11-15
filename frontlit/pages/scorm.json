@@ -1,0 +1,136 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "SCORM lessons for your online courses",
+  "description": "Upload a SCORM 1.2 or 2004 ZIP package to a course. CourseLit remembers each learner's progress, and the lesson counts toward course completion.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "SCORM 1.2 and 2004. Alpha.",
+        "title": "Deliver SCORM packages *inside your courses*",
+        "description": "Add a package from your authoring tool as a lesson. Learners launch it, leave and come back where they stopped, and it counts toward finishing the course.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Read the SCORM docs",
+        "secondaryButtonAction": "/docs/products/scorm",
+        "smallPrint": "Business plan on the cloud. Included in self-hosted CourseLit."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "features",
+        "layout": "grid",
+        "title": "What you get",
+        "description": "SCORM is one lesson type among text, video, audio, PDF and quiz.",
+        "items": [
+          {
+            "title": "SCORM 1.2 and 2004",
+            "description": "Upload a ZIP package of up to 300 MB from any SCORM authoring tool.",
+            "icon": "Package"
+          },
+          {
+            "title": "Progress remembered",
+            "description": "CourseLit saves each learner's progress in the package, so they can leave and return.",
+            "icon": "History"
+          },
+          {
+            "title": "Counts toward completion",
+            "description": "A SCORM lesson counts like any other lesson toward finishing a course and earning its certificate.",
+            "icon": "Award"
+          }
+        ]
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "how-it-works",
+        "layout": "numbered",
+        "title": "Add a package in three steps",
+        "description": "",
+        "items": [
+          {
+            "title": "Create a SCORM lesson",
+            "description": "In a course, add a lesson, choose the SCORM type, give it a title and save it.",
+            "icon": "FilePlus"
+          },
+          {
+            "title": "Upload your ZIP",
+            "description": "CourseLit checks the package and shows its title, version and file count.",
+            "icon": "Upload"
+          },
+          {
+            "title": "Learners enter the activity",
+            "description": "Learners select Enter SCORM content, which opens the activity in a separate window.",
+            "icon": "Play"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "requirements",
+        "title": "What your package needs",
+        "body": "- A SCORM 1.2 or SCORM 2004 package in ZIP format\n- Under 300 MB\n- An `imsmanifest.xml` file at the top level of the ZIP, with an entry point (a launch file) listed in it\n\nIf a package is rejected, CourseLit tells you why, for example that the manifest or the launch file is missing.\n\nA learner cannot mark a SCORM lesson complete until the package has reported progress, such as a completed status or a recorded interaction.\n\n[Certificates](/docs/products/certificates)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "alpha",
+        "title": "Honest about Alpha",
+        "body": "The SCORM lesson type is marked **Alpha** in the lesson editor. Before you sell a SCORM course, invite yourself with a second email address and work through the lesson as a learner.\n\nOn the cloud, SCORM is part of the **Business** plan. Self-hosted CourseLit includes it with every other feature.\n\n[See pricing](/pricing)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Questions, answered",
+        "items": [
+          {
+            "question": "Which SCORM versions are supported?",
+            "answer": "SCORM 1.2 and SCORM 2004, uploaded as a ZIP package of up to 300 MB."
+          },
+          {
+            "question": "Do SCORM lessons count toward certificates?",
+            "answer": "Yes. A course issues its certificate when the learner has completed every live lesson, and a SCORM lesson counts once the package has reported progress."
+          },
+          {
+            "question": "Which plan includes SCORM?",
+            "answer": "Business on the cloud. Self-hosted CourseLit includes it with every other feature."
+          },
+          {
+            "question": "Is SCORM ready for production?",
+            "answer": "The lesson type is marked Alpha. Test your package as a learner before you sell the course."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Bring your SCORM content online",
+        "description": "Start a free trial and test your package as a learner. No card needed.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Compare plans",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

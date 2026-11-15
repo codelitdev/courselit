@@ -1,0 +1,147 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Pricing: course platform with no transaction fees",
+  "description": "CourseLit Pro is $29 a month and Business $79 a month, with a 14-day free trial and no fee on your sales. Self-hosting is free with every feature.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "Pricing",
+        "title": "One price for your whole school, *no cut of your sales*",
+        "description": "Pick a plan for our cloud, or host CourseLit yourself for free. Every cloud plan starts with a 14-day trial.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": "No credit card needed for the trial. Prices in US dollars."
+      }
+    },
+    {
+      "name": "pricing",
+      "settings": {
+        "cssId": "plans",
+        "title": "Choose your plan",
+        "description": "Pay yearly and get two months free.",
+        "pricingSwitcher": true,
+        "monthlyPriceCaption": "Monthly",
+        "yearlyPriceCaption": "Yearly, 2 months free",
+        "defaultPeriod": "monthly",
+        "tiers": [
+          {
+            "name": "Self-hosted",
+            "price": "Free",
+            "priceYearly": "Free",
+            "description": "Run CourseLit on your own servers. Every feature included.",
+            "features": [
+              "All Business features",
+              "Your own infrastructure and data",
+              "Bring your own email and storage services",
+              "Community support on Discord"
+            ],
+            "buttonCaption": "Self-hosting guide",
+            "buttonAction": "/docs/self-hosting"
+          },
+          {
+            "name": "Pro",
+            "price": "$29/mo",
+            "priceYearly": "$290/yr",
+            "description": "For creators and coaches running their own school.",
+            "features": [
+              "Unlimited courses, downloads and learners",
+              "Community with free and paid plans",
+              "Website, blog and custom domain",
+              "10,000 marketing emails a month",
+              "20 GB storage",
+              "Remove CourseLit branding",
+              "Email support"
+            ],
+            "buttonCaption": "Start free trial",
+            "buttonAction": "https://app.courselit.cluster.clqa.site",
+            "highlighted": true
+          },
+          {
+            "name": "Business",
+            "price": "$79/mo",
+            "priceYearly": "$790/yr",
+            "description": "For academies and teams training at scale.",
+            "features": [
+              "Everything in Pro, plus:",
+              "Learner single sign-on (SAML)",
+              "SCORM lessons",
+              "Audit log",
+              "50,000 marketing emails a month",
+              "200 GB storage",
+              "Priority support"
+            ],
+            "buttonCaption": "Start free trial",
+            "buttonAction": "https://app.courselit.cluster.clqa.site"
+          }
+        ]
+      }
+    },
+    {
+      "name": "embed",
+      "settings": {
+        "cssId": "compare",
+        "contentType": "script",
+        "content": "<div class=\"cl-plans\" id=\"cl-plans\">\n<style>\n.cl-plans{--cl-fg:var(--foreground,#261d16);--cl-muted-fg:var(--muted-foreground,#5c544b);--cl-card:var(--card,#fefdfb);--cl-border:var(--border,#e2ddd5);--cl-muted:var(--muted,#eeebe5);--cl-accent:#b54c3d;--cl-tint:rgba(198,91,76,.07);color:var(--cl-fg);font:inherit;font-family:\"fl-hanken-grotesk\",\"Hanken Grotesk\",ui-sans-serif,system-ui,sans-serif;container-type:inline-size}\n:host(.dark) .cl-plans,.dark .cl-plans{--cl-accent:#eb8373;--cl-tint:rgba(235,131,115,.09)}\n.cl-plans *,.cl-plans *::before,.cl-plans *::after{box-sizing:border-box}\n.cl-plans .cl-scroll{overflow-x:auto;border:1px solid var(--cl-border);border-radius:16px;background:var(--cl-card)}\n.cl-plans table{width:100%;min-width:640px;border-collapse:collapse;font-size:.95rem}\n.cl-plans th,.cl-plans td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--cl-border);vertical-align:top}\n.cl-plans thead th{font-weight:600;font-size:1rem;position:sticky;top:0;background:var(--cl-card)}\n.cl-plans thead th small{display:block;font-weight:400;color:var(--cl-muted-fg);font-size:.85rem}\n.cl-plans tbody th{font-weight:400}\n.cl-plans td{width:20%}\n.cl-plans td:nth-child(3),.cl-plans thead th:nth-child(3){background:var(--cl-tint)}\n.cl-plans .cl-group th{background:var(--cl-muted);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cl-muted-fg);font-weight:600;padding:8px 16px}\n.cl-plans tr:last-child th,.cl-plans tr:last-child td{border-bottom:0}\n.cl-plans .cl-yes{color:var(--cl-accent);font-weight:600}\n.cl-plans .cl-no{color:var(--cl-muted-fg)}\n.cl-plans .cl-note{margin:12px 4px 0;color:var(--cl-muted-fg);font-size:.85rem}\n</style>\n<div class=\"cl-scroll\" role=\"region\" aria-label=\"Compare CourseLit plans\" tabindex=\"0\">\n<table>\n<thead><tr><th scope=\"col\">Compare plans</th><th scope=\"col\">Self-hosted<small>Free, open source</small></th><th scope=\"col\">Pro<small>$29/mo or $290/yr</small></th><th scope=\"col\">Business<small>$79/mo or $790/yr</small></th></tr></thead>\n<tbody>\n<tr class=\"cl-group\"><th colspan=\"4\" scope=\"colgroup\">Selling</th></tr>\n<tr><th scope=\"row\">Courses, digital downloads and learners</th><td>Unlimited</td><td>Unlimited</td><td>Unlimited</td></tr>\n<tr><th scope=\"row\">Community with free and paid plans</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Stripe, Lemon Squeezy or Razorpay on your own account</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Transaction fee on your sales</th><td>None</td><td>None</td><td>None</td></tr>\n<tr><th scope=\"row\">One-time, subscription and instalment plans</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr class=\"cl-group\"><th colspan=\"4\" scope=\"colgroup\">Teaching</th></tr>\n<tr><th scope=\"row\">Text, video, audio, PDF, file, embed and quiz lessons</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Drip schedules and certificates</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">SCORM lessons</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-no\" aria-label=\"Not included\">–</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr class=\"cl-group\"><th colspan=\"4\" scope=\"colgroup\">Website and marketing</th></tr>\n<tr><th scope=\"row\">Page builder, themes and blog</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Custom domain</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Remove CourseLit branding</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Code injection</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Marketing emails a month</th><td>Your own email service</td><td>10,000</td><td>50,000</td></tr>\n<tr><th scope=\"row\">Storage</th><td>Your own storage service</td><td>20 GB</td><td>200 GB</td></tr>\n<tr class=\"cl-group\"><th colspan=\"4\" scope=\"colgroup\">Teams and integrations</th></tr>\n<tr><th scope=\"row\">Team members with roles and permissions</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">REST API, API keys and MCP server</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Learner single sign-on (SAML)</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-no\" aria-label=\"Not included\">–</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr><th scope=\"row\">Audit log</th><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td><td><span class=\"cl-no\" aria-label=\"Not included\">–</span></td><td><span class=\"cl-yes\" aria-label=\"Included\">✓</span></td></tr>\n<tr class=\"cl-group\"><th colspan=\"4\" scope=\"colgroup\">Support</th></tr>\n<tr><th scope=\"row\">Support</th><td>Community on Discord</td><td>Email</td><td>Priority</td></tr>\n</tbody>\n</table>\n</div>\n<p class=\"cl-note\">Your free trial includes every Business feature, except removing CourseLit branding. Marketing emails start once you're on a paid plan.</p>\n</div>\n"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "layout": "list",
+        "title": "Billing questions",
+        "items": [
+          {
+            "question": "How does the free trial work?",
+            "answer": "Your trial lasts 14 days, needs no card and includes every Business feature except removing CourseLit branding. You get one trial per account."
+          },
+          {
+            "question": "What happens if I don't pick a plan after the trial?",
+            "answer": "Your school becomes read-only for 15 days so you can still choose a plan. After that, the school and its data are deleted."
+          },
+          {
+            "question": "Why can't I send marketing emails during the trial?",
+            "answer": "Marketing emails, such as broadcasts, sequences and drip emails, start once you're on Pro or Business. Your learners still get sign-in codes, receipts and access emails during the trial."
+          },
+          {
+            "question": "Do you charge a fee on my sales?",
+            "answer": "No. Learners pay through your own Stripe, Lemon Squeezy or Razorpay account, and CourseLit takes no transaction fee on any plan. Your payment provider's own fees still apply."
+          },
+          {
+            "question": "Can I cancel my plan?",
+            "answer": "Yes, from Billing and plan in your dashboard. Your plan stays active until the end of the period you paid for, and you can resume it before then."
+          },
+          {
+            "question": "Is the self-hosted version limited in any way?",
+            "answer": "No. Self-hosted CourseLit has every feature, with no licence key and no limits. You run and pay for your own servers, database, storage and email service."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Try CourseLit free for 14 days",
+        "description": "Set up your school, add a course and see how it feels before you pay.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Compare features",
+        "secondaryButtonAction": "/features"
+      }
+    }
+  ]
+}
