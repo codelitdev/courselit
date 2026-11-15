@@ -48,6 +48,21 @@ import {
   sendLitTemplate,
 } from "./sendlit-test-support.js";
 
+/** A valid email body, standing in for SendLit's `system:blank` starter. */
+const BLANK_SYSTEM_CONTENT = {
+  style: {
+    colors: {
+      background: "#ffffff",
+      foreground: "#000000",
+      border: "#e5e5e5",
+      accent: "#2563eb",
+      accentForeground: "#ffffff",
+    },
+  },
+  meta: { previewText: "" },
+  content: [{ blockType: "text", settings: { content: "Hello" } }],
+};
+
 describe("SendLit Service", () => {
   it("manages all SendLit mailing and contact resources cleanly through CourseLit domain abstractions", async () => {
     process.env.AUTH_SECRET = "test-secret-that-is-at-least-thirty-two-characters";
@@ -222,6 +237,22 @@ describe("SendLit Service", () => {
         }
       }
 
+      if (url.includes("/system-templates")) {
+        return jsonResponse({
+          items: [
+            {
+              templateId: "system:blank",
+              title: "Blank",
+              description: "A blank marketing starter with a managed footer.",
+              purpose: "marketing",
+              content: BLANK_SYSTEM_CONTENT,
+              requiredVariables: [],
+              variableDefinitions: [],
+            },
+          ],
+        });
+      }
+
       if (url.includes("/templates")) {
         if (url.includes("/duplicate")) {
           return jsonResponse(sendLitTemplate({ templateId: "tmpl_2", title: "Welcome Copy" }), 201);
@@ -297,7 +328,9 @@ describe("SendLit Service", () => {
       expect(deletedSeg.ok).toBe(true);
 
       // 5. Sequences
-      const sequences = await listSequences(runtime.db, schoolId, clock);
+      const sequences = await listSequences(runtime.db, schoolId, clock, {
+        type: "sequence",
+      });
       expect(sequences.ok).toBe(true);
 
       const createdSeq = await createSequence(runtime.db, schoolId, clock, {
@@ -395,6 +428,14 @@ describe("SendLit Service", () => {
         name: "Welcome Newsletter",
       });
       expect(createdTmpl.ok).toBe(true);
+      // Without content, the template starts from SendLit's blank starter.
+      const templateCreate = fetchCalls.find(
+        (call) => call.method === "POST" && call.url.endsWith("/templates"),
+      );
+      expect(templateCreate?.body).toMatchObject({
+        title: "Welcome Newsletter",
+        content: BLANK_SYSTEM_CONTENT,
+      });
 
       const dupTmpl = await duplicateTemplate(runtime.db, schoolId, clock, "tmpl_1");
       expect(dupTmpl.ok).toBe(true);
@@ -490,10 +531,17 @@ describe("SendLit Service", () => {
       expect(patchSettings.body).toMatchObject({ mailingAddress: "200 University Ave" });
 
 
-      // 6. GET /v1/school/mails/sequences
-      const getSequencesRes = await dispatch(runtime, {
+      // 6. GET /v1/school/mails/sequences needs a type: SendLit lists
+      // broadcasts and sequences separately.
+      const untypedSequencesRes = await dispatch(runtime, {
         method: "GET",
         path: "/v1/school/mails/sequences",
+        headers: adminHeaders,
+      });
+      expect(untypedSequencesRes.status).toBe(400);
+      const getSequencesRes = await dispatch(runtime, {
+        method: "GET",
+        path: "/v1/school/mails/sequences?type=sequence",
         headers: adminHeaders,
       });
       expect(getSequencesRes.status).toBe(200);

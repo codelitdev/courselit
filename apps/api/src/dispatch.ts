@@ -3084,8 +3084,16 @@ export async function dispatch(
         if (!context.permissions.has("contacts:read")) {
           return errorResponse(createPlatformError("forbidden"));
         }
+        const type = query.get("type");
+        if (type !== "broadcast" && type !== "sequence") {
+          return errorResponse(
+            createPlatformError("validation_failed", {
+              safeDetails: { reason: "type must be broadcast or sequence" },
+            }),
+          );
+        }
         const result = await listSequences(deps.db, context.tenantId!, deps.clock, {
-          type: query.get("type") ?? undefined,
+          type,
           status: query.get("status") ?? undefined,
           search: query.get("search") ?? undefined,
           cursor: query.get("cursor") ?? undefined,

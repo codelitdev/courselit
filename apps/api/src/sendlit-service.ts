@@ -44,7 +44,6 @@ import {
   sendLitConfig,
   sendSendLitSequenceEmailTest,
   startSendLitSequence,
-  updateSendLitContact,
   updateSendLitGeneralSettings,
   updateSendLitSegment,
   updateSendLitSequence,
@@ -56,7 +55,6 @@ import {
   type SendLitGeneralSettings,
   type SendLitCreateSequenceInput,
   type SendLitCustomFields,
-  type SendLitListSequencesQuery,
   type SendLitUpdateSequenceEmailInput,
   type SendLitUpdateSequenceInput,
   type SendLitSegment,
@@ -651,12 +649,12 @@ export async function listSequences(
   schoolId: string,
   clock: Clock,
   query: {
-    type?: "broadcast" | "sequence" | string;
+    type: "broadcast" | "sequence";
     status?: string;
     search?: string;
     cursor?: string;
     limit?: number;
-  } = {},
+  },
   config?: SendLitConfig,
 ): Promise<Result<{ items: SendLitSequence[]; total: number }, PlatformError>> {
   return withSendLitAuth(
@@ -667,14 +665,9 @@ export async function listSequences(
       const res = await listSendLitSequences(
         auth.teamApiKey,
         {
-          // SendLit requires `type`; without one it answers 400, which is
-          // what the caller gets.
-          type:
-            query.type === "broadcast" || query.type === "sequence"
-              ? query.type
-              : undefined,
+          type: query.type,
           itemsPerPage: query.limit,
-        } as SendLitListSequencesQuery,
+        },
         { config: cfg },
       );
       let items = res.items;
@@ -1136,6 +1129,26 @@ export async function listTemplates(
   );
 }
 
+/** SendLit's built-in blank template, used when a template is created
+ * without content. */
+const BLANK_SYSTEM_TEMPLATE_ID = "system:blank";
+
+async function blankTemplateContent(
+  teamApiKey: string,
+  options: { config: SendLitConfig },
+): Promise<SendLitTemplateContent> {
+  const { items } = await listSendLitSystemTemplates(teamApiKey, options);
+  const blank = items.find((item) => item.templateId === BLANK_SYSTEM_TEMPLATE_ID);
+  if (!blank) {
+    throw new SendLitApiError(
+      `SendLit has no ${BLANK_SYSTEM_TEMPLATE_ID} template to start from`,
+      undefined,
+      false,
+    );
+  }
+  return blank.content as SendLitTemplateContent;
+}
+
 export async function createTemplate(
   db: AppDb,
   schoolId: string,
@@ -1153,16 +1166,16 @@ export async function createTemplate(
     db,
     schoolId,
     clock,
-    (auth, cfg) =>
+    async (auth, cfg) =>
       createSendLitTemplate(
         auth.teamApiKey,
         {
           title: input.title ?? input.name ?? "Untitled Template",
-          // The default is not a valid SendLit template body, so SendLit
-          // rejects a create without content.
-          content: (input.content ?? {
-            content: { html: "" },
-          }) as SendLitTemplateContent,
+          // Without content, start from SendLit's own blank starter, which
+          // is a complete, valid email (style, meta and footer).
+          content:
+            input.content ??
+            (await blankTemplateContent(auth.teamApiKey, { config: cfg })),
           purpose: input.purpose,
         },
         { config: cfg },
