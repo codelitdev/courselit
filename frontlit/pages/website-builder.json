@@ -20,7 +20,7 @@
         "title": "A website for your school, *built right in*",
         "description": "Edit your pages in a visual block editor, write a blog, choose a theme and serve everything from your own domain.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the website docs",
         "secondaryButtonAction": "/docs/website",
         "smallPrint": "14-day free trial. No credit card needed."
@@ -155,7 +155,7 @@
         "title": "Launch your school's website",
         "description": "Pick a theme, edit your homepage and publish. No card needed for the trial.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing"
       }

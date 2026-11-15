@@ -20,7 +20,7 @@
         "title": "Create and sell online courses *on your own website*",
         "description": "Organise lessons into sections, release them over time, test learners with quizzes and issue certificates. Learners pay through your own payment account.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the course docs",
         "secondaryButtonAction": "/docs/products",
         "smallPrint": "14-day free trial. No credit card needed."
@@ -176,7 +176,7 @@
         "title": "Build your first course",
         "description": "Start a free trial and have a draft course ready today. No card needed.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing"
       }

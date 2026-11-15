@@ -20,7 +20,7 @@
         "title": "Deliver SCORM packages *inside your courses*",
         "description": "Add a package from your authoring tool as a lesson. Learners launch it, leave and come back where they stopped, and it counts toward finishing the course.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the SCORM docs",
         "secondaryButtonAction": "/docs/products/scorm",
         "smallPrint": "Business plan on the cloud. Included in self-hosted CourseLit."
@@ -127,7 +127,7 @@
         "title": "Bring your SCORM content online",
         "description": "Start a free trial and test your package as a learner. No card needed.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Compare plans",
         "secondaryButtonAction": "/pricing"
       }

@@ -20,7 +20,7 @@
         "title": "Everything you need to *teach and sell online*",
         "description": "CourseLit replaces the course platform, newsletter tool, community app and website builder you would otherwise stitch together.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing",
         "smallPrint": ""
@@ -155,7 +155,7 @@
         "title": "See it with your own content",
         "description": "Start a 14-day free trial and build your first course today.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app"
+        "buttonAction": "https://app.courselit.cluster.clqa.site"
       }
     }
   ]

@@ -20,7 +20,7 @@
         "title": "Sell files, or *give one away* to grow your list",
         "description": "Upload your guide, template, preset or ebook and sell it from your own website. Or offer it free in exchange for an email address.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the downloads docs",
         "secondaryButtonAction": "/docs/products/digital-downloads",
         "smallPrint": "14-day free trial. No credit card needed."
@@ -154,7 +154,7 @@
         "title": "Share your first download",
         "description": "Upload a file and publish it in minutes. No card needed for the trial.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Explore payments",
         "secondaryButtonAction": "/payments"
       }

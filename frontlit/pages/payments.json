@@ -20,7 +20,7 @@
         "title": "Get paid *directly*, with no fee on your sales",
         "description": "Learners pay through your own payment provider account, so the money goes straight to you. CourseLit charges no transaction fee on any plan.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the payments docs",
         "secondaryButtonAction": "/docs/settings/payments",
         "smallPrint": "Your provider's own fees still apply."
@@ -141,7 +141,7 @@
         "title": "Keep what you earn",
         "description": "Start a free trial, connect your provider and set your first price.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing"
       }

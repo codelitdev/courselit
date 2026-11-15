@@ -20,7 +20,7 @@
         "title": "Give your learners *a place to talk*",
         "description": "Run a community on your own website with spaces, free or paid plans and moderation tools. Add discussions to a course too.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the community docs",
         "secondaryButtonAction": "/docs/communities",
         "smallPrint": "14-day free trial. No credit card needed."
@@ -157,7 +157,7 @@
         "title": "Start your community",
         "description": "Set up your plans, choose who gets in and go live. No card needed for the trial.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing"
       }

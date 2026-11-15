@@ -208,7 +208,7 @@
         "title": "Try it on your own school",
         "description": "Start a free trial, create an API key and make your first request in a few minutes.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the developer docs",
         "secondaryButtonAction": "/docs/developers"
       }

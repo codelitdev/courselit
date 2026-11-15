@@ -20,7 +20,7 @@
         "title": "Email your audience *without another tool*",
         "description": "Everyone who signs up or buys becomes a contact. Tag and segment them, then send one-off broadcasts or automated sequences from the same school.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "Read the marketing docs",
         "secondaryButtonAction": "/docs/marketing",
         "smallPrint": "Marketing emails start once you are on a paid plan."
@@ -154,7 +154,7 @@
         "title": "Send your first broadcast",
         "description": "Start a free trial, set up your school and be ready to email your audience.",
         "buttonCaption": "Start free trial",
-        "buttonAction": "https://app.courselit.app",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
         "secondaryButtonCaption": "See pricing",
         "secondaryButtonAction": "/pricing"
       }
