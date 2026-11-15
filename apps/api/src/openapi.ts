@@ -222,8 +222,13 @@ export function createOpenApiDocument(publicApiUrl: string) {
     {
       operationMapper: (operation, route) => {
         const security = securityFor(route);
+        const operationId = operationIdByRoute.get(route);
+        if (!operationId) throw new Error("OpenAPI route is missing from the contract");
         return {
           ...operation,
+          // The contract key, so tools such as the docs API reference get
+          // stable, readable operation URLs (and MCP tool names match).
+          operationId,
           tags: [tagForPath((route as { path?: string }).path)],
           ...(security ? { security } : {}),
         };

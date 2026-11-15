@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { contract } from "@courselit/api-contract";
 import { createOpenApiDocument } from "./openapi.js";
 
 describe("CourseLit OpenAPI tags", () => {
@@ -27,9 +28,9 @@ describe("CourseLit OpenAPI tags", () => {
     expect(document.paths["/v1/learner/auth/email-code/verify"]?.post?.tags).toEqual([
       "Learners",
     ]);
-    expect(document.paths["/v1/public/{schoolId}/checkout-sessions"]?.post?.tags).toEqual([
-      "Storefront & Payments",
-    ]);
+    expect(
+      document.paths["/v1/public/{schoolId}/checkout-sessions"]?.post?.tags,
+    ).toEqual(["Storefront & Payments"]);
     expect(document.paths["/v1/public/{schoolId}/site/pages"]?.get?.tags).toEqual([
       "Public Website",
     ]);
@@ -100,5 +101,32 @@ describe("CourseLit OpenAPI tags", () => {
     for (const parameter of listCommunities.parameters ?? []) {
       expect(parameter.schema).not.toEqual({});
     }
+  });
+});
+
+describe("CourseLit OpenAPI operation ids", () => {
+  const document = createOpenApiDocument("https://api.example.test");
+  const operations = Object.values(document.paths).flatMap((item) =>
+    ["get", "post", "put", "patch", "delete"].flatMap((method) => {
+      const operation = (item as Record<string, { operationId?: string } | undefined>)[
+        method
+      ];
+      return operation ? [operation] : [];
+    }),
+  );
+
+  it("names every operation after its contract key, once", () => {
+    const ids = operations.map((operation) => operation.operationId);
+    expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(ids)).toEqual(new Set(Object.keys(contract)));
+  });
+
+  it("uses the contract key for representative routes", () => {
+    expect(document.paths["/v1/products"]?.get?.operationId).toBe(
+      Object.entries(contract).find(
+        ([, route]) => route.method === "GET" && route.path === "/v1/products",
+      )?.[0],
+    );
   });
 });
