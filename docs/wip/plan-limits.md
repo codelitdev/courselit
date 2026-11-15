@@ -1,10 +1,38 @@
 # Plans, trials and limits on courselit.app
 
-Status: ready for development, 2026-11-14, after three security reviews.
-Only the `learner_sso` feature gate exists so far. Everything else here is
-to be built. Security requirements are tagged S1–S31. The IDs are stable, so
-some numbers are skipped or merged; see
+Status (2026-11-15): built. Steps 0–10 of the
+[order of work](#9-order-of-work) are done on `feat/plan-limits` (PR #881),
+with browser tests on the local stack. Security requirements are tagged
+S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 [Security requirements](#7-security-requirements).
+
+**Deferred until another change ships:**
+- **Platform mail sender name:** the school's name as the From name of
+  learner mail (section 6) needs a sender name per message in SendLit.
+  Until then the From name is "CourseLit". Marketing mail already uses the
+  school's name and replies go to the owner (#886).
+- **Message tags (S21):** bounce and complaint tracking per school needs
+  tags per message in SendLit. Until then, the daily caps and the suspend
+  command are the controls.
+- **Captcha** on sign-in codes and lead magnets: waits for Turnstile.
+- **The badge in the page editor's preview:** needs a slot under the canvas
+  in `@frontlit/page-builder`.
+- **S8:** until the billing package rejects test-mode events, keep the
+  LemonSqueezy test and live webhook secrets different.
+- **Out of scope** ([section 8](#8-out-of-scope)): school deletion (expired
+  schools stay read-only until it ships), and buying more email or storage.
+
+**Before the trial is switched on in QA or production:**
+- set the six `PLAN_*` variables (section 5); in cloud mode the API won't
+  start without them. The QA example in `infra` still lacks them and has
+  the old Pro price;
+- create the LemonSqueezy variants at the section 2 prices, with a new
+  `BILLING_CATALOG_REVISION`;
+- give CourseLit's SendLit organization key `teams:provision`, `teams:read`,
+  `teams:manage`, `teams:keys` and `usage:read`. Since SendLit #202, a
+  bootstrap-registered key gets them when SendLit restarts;
+- create the platform SendLit organization and its four teams (section 6);
+- set up the `abuse@` mailbox.
 
 ## 1. Decisions at a glance
 
