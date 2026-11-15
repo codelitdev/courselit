@@ -1,0 +1,145 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Email marketing for course creators and coaches",
+  "description": "Send broadcasts and automated sequences to the learners and subscribers in your school. Tag, segment and write emails in a visual editor, all built in.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Email marketing",
+        "title": "Email your audience *without another tool*",
+        "description": "Everyone who signs up or buys becomes a contact. Tag and segment them, then send one-off broadcasts or automated sequences from the same school.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the marketing docs",
+        "secondaryButtonAction": "/docs/marketing",
+        "smallPrint": "Marketing emails start once you are on a paid plan."
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "From contact to inbox",
+        "description": "Contacts, audiences and emails live next to your courses and sales.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Contacts",
+            "description": "Learners, customers and newsletter signups are added on their own. See who is subscribed, a learner or newsletter only.",
+            "icon": "Contact"
+          },
+          {
+            "title": "Tags",
+            "description": "Label contacts, rename a tag everywhere at once, and see which broadcasts and sequences use it.",
+            "icon": "Tags"
+          },
+          {
+            "title": "Segments",
+            "description": "Filter by email, tag, subscription, product, community, last active or signup date, then save the filter to reuse.",
+            "icon": "Filter"
+          },
+          {
+            "title": "Broadcasts",
+            "description": "Send a one-time email now or schedule it in your own time zone. Send a test to up to 5 addresses first.",
+            "icon": "Send"
+          },
+          {
+            "title": "Sequences",
+            "description": "Emails that send themselves after a trigger, with a wait you set between each one.",
+            "icon": "Workflow"
+          },
+          {
+            "title": "Templates",
+            "description": "Start from a built-in layout or save your own, so every email shares the same look.",
+            "icon": "LayoutTemplate"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Automate with *sequences*",
+        "body": "A sequence starts when something happens. Pick a trigger and set who can enter and who is excluded.\n\n- A new contact subscribes\n- A tag is added or removed\n- A learner gets access to a product, or any product\n- A learner joins or leaves the community\n\nEach email waits a number of days, and can add or remove a tag when it is sent, so you can see who has received it.\n\n[How sequences work](/docs/marketing/sequences)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Write once in *one editor*",
+        "body": "The same visual editor is used for broadcasts, sequence emails and templates. Build emails from text, image, link, separator and footer blocks, and see a live preview.\n\nInsert merge tags such as the subscriber's name by typing two curly brackets. Built-in templates cover announcements, newsletters, welcome emails and product promotions.\n\n[Email editor guide](/docs/marketing/email-editor)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "consent",
+        "layout": "grid",
+        "title": "Built for consent",
+        "description": "Only people who opted in get your marketing emails.",
+        "items": [
+          {
+            "title": "Subscribed contacts only",
+            "description": "Broadcasts and sequences reach only subscribed contacts who match the audience.",
+            "icon": "UserCheck"
+          },
+          {
+            "title": "Unsubscribe link and address",
+            "description": "Every marketing email carries a managed footer with your postal address and an unsubscribe link.",
+            "icon": "MailX"
+          },
+          {
+            "title": "Receipts still arrive",
+            "description": "Sign-in codes and purchase receipts reach contacts even when they unsubscribe from marketing.",
+            "icon": "Receipt"
+          }
+        ]
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Email questions",
+        "items": [
+          {
+            "question": "What do I need before I send my first email?",
+            "answer": "A postal address in Marketing settings. Until you save one, you can't send a broadcast or activate a sequence."
+          },
+          {
+            "question": "Can I send marketing emails during the free trial?",
+            "answer": "No. Learners still get sign-in codes, receipts and access emails during the trial. Broadcasts and sequences start once you are on a paid plan."
+          },
+          {
+            "question": "How many emails can I send?",
+            "answer": "Pro includes 10,000 marketing emails a month and Business includes 50,000. When you self-host, you bring your own email service."
+          },
+          {
+            "question": "Can I add contacts by hand?",
+            "answer": "Contacts are created when someone registers, gets access to a product or signs up through a newsletter form. You can't add one by hand from the Contacts screen."
+          },
+          {
+            "question": "Can I see how a broadcast performed?",
+            "answer": "Yes. Once a broadcast is sending or sent, a Performance card shows emails sent, the open rate and the click-through rate."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Send your first broadcast",
+        "description": "Start a free trial, set up your school and be ready to email your audience.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "CourseLit REST API and MCP server for developers",
+  "description": "Build on your school with the REST API, or connect Claude, ChatGPT or Cursor over MCP. Same operations, same credentials, same permission checks.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "REST API and MCP server",
+        "title": "Build on your school with *code or an AI assistant*",
+        "description": "CourseLit has a REST API for your own code and an MCP server for assistants. Both run on the same service, use the same credentials and expose the same operations.",
+        "buttonCaption": "Read the API docs",
+        "buttonAction": "/docs/developers",
+        "secondaryButtonCaption": "Connect an assistant",
+        "secondaryButtonAction": "/docs/developers/mcp-server",
+        "smallPrint": "API keys, the REST API and MCP are on every plan.",
+        "command": "curl https://api.courselit.app/health"
+      }
+    },
+    {
+      "name": "code-snippet",
+      "settings": {
+        "cssId": "first-request",
+        "code": "curl -X POST \"https://api.courselit.app/v1/products\" \\\n  -H \"x-api-key: $COURSELIT_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"kind\": \"course\",\n    \"title\": \"Intro to watercolor\",\n    \"description\": \"Learn the basics of painting with watercolor.\"\n  }'",
+        "showPrompt": false,
+        "caption": "Create a draft course with one request. New products are always drafts."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "what-you-can-build",
+        "layout": "grid",
+        "title": "What you can do with the API",
+        "description": "Every operation is listed in the API reference with its parameters and example responses.",
+        "items": [
+          {
+            "title": "Courses and downloads",
+            "description": "Create and publish products, sections, lessons and payment plans.",
+            "icon": "GraduationCap"
+          },
+          {
+            "title": "Learners and progress",
+            "description": "Grant learners access, and read customers, progress and sales figures.",
+            "icon": "Users"
+          },
+          {
+            "title": "Contacts and email",
+            "description": "Manage contacts, tags, segments, sequences and templates.",
+            "icon": "Mail"
+          },
+          {
+            "title": "Communities",
+            "description": "Work with communities, spaces, members, posts, comments and plans.",
+            "icon": "MessagesSquare"
+          },
+          {
+            "title": "Website and media",
+            "description": "Edit pages, blog posts, branding and themes, and use the media library.",
+            "icon": "LayoutTemplate"
+          },
+          {
+            "title": "School settings",
+            "description": "Read school settings and domains, and manage certificate templates.",
+            "icon": "Settings"
+          }
+        ]
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "get-started",
+        "layout": "numbered",
+        "title": "Make your first call in three steps",
+        "description": "",
+        "items": [
+          {
+            "title": "Create an API key",
+            "description": "The school owner opens Settings, then API keys, names the key and picks only the permissions it needs.",
+            "icon": "KeyRound"
+          },
+          {
+            "title": "Send it in a header",
+            "description": "Pass the key in the x-api-key header. A key belongs to one school, so no other setup is needed.",
+            "icon": "Terminal"
+          },
+          {
+            "title": "Call any operation",
+            "description": "Every operation sits under /v1. Requests and responses are JSON.",
+            "icon": "Braces"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "mcp",
+        "title": "Let an AI assistant run your school",
+        "body": "CourseLit runs a remote MCP server. Add its address as a connector in **Claude**, **ChatGPT** or **Cursor**, sign in with CourseLit, and the assistant can build courses, set up pricing, grant learner access and edit your website.\n\nThere is one named, typed tool for each REST operation, such as `list_sections`. Tools that delete data, publish, email contacts or change payment or access settings need an explicit confirmation.\n\n[Read the MCP guide](/docs/developers/mcp-server)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "code-snippet",
+      "settings": {
+        "cssId": "assistant-prompt",
+        "code": "Set up my first offer in CourseLit. Follow https://courselit.app/docs/setup.md",
+        "showPrompt": false,
+        "caption": "Set up your first offer: paste this into your assistant. It interviews you, builds a draft and asks before publishing."
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "security",
+        "title": "Credentials and permissions you can reason about",
+        "description": "REST and MCP share one set of rules, so a permission means the same thing everywhere.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "columns": 2,
+        "items": [
+          {
+            "title": "School API keys",
+            "description": "A key belongs to the school, not a person, and never has more access than the permissions you gave it. Keys can expire, and you can revoke one at any time.",
+            "icon": "KeyRound",
+            "buttonCaption": "API key docs",
+            "buttonAction": "/docs/developers/authentication"
+          },
+          {
+            "title": "OAuth for assistants",
+            "description": "OAuth 2.1 with PKCE. The token carries the permissions the person has in the school, narrowed to the scopes they approved.",
+            "icon": "ShieldCheck",
+            "buttonCaption": "Permissions and scopes",
+            "buttonAction": "/docs/developers/permissions-and-scopes"
+          },
+          {
+            "title": "Cursor pagination",
+            "description": "Most lists return items and a nextCursor, with 1 to 50 items per page. Contacts and customers use page numbers and return a total.",
+            "icon": "ListOrdered",
+            "buttonCaption": "Pagination guide",
+            "buttonAction": "/docs/developers/pagination-and-filtering"
+          },
+          {
+            "title": "Clear errors and limits",
+            "description": "Errors share one JSON shape with a stable code. The default limit is 1,200 requests per minute per address, and a 429 includes Retry-After.",
+            "icon": "TriangleAlert",
+            "buttonCaption": "Error codes",
+            "buttonAction": "/docs/developers/errors"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "limits",
+        "title": "What is not available yet",
+        "body": "CourseLit does **not** send outgoing webhooks to your own endpoints, and the API does not support idempotency keys. To react to changes, read the data with the API on a schedule.\n\nCourseLit does receive webhooks from the payment provider each school connects. That is handled for you.\n\n[Webhooks and events](/docs/developers/webhooks) · [Rate limits and retries](/docs/developers/rate-limits-and-retries)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Questions, answered",
+        "items": [
+          {
+            "question": "Do I need a paid plan to use the API?",
+            "answer": "No. API keys, the REST API and the MCP server are available on every plan. Self-hosted CourseLit includes them too."
+          },
+          {
+            "question": "Can an API key do everything?",
+            "answer": "No. Operations that move money, change who can sign in or run code on the learner site are limited to signed-in people. The reference shows what each operation accepts."
+          },
+          {
+            "question": "Which assistants work with the MCP server?",
+            "answer": "Claude, ChatGPT and Cursor connect with OAuth. Any other client that supports remote MCP servers can connect with the server address, or with an API key if it cannot complete a browser sign-in."
+          },
+          {
+            "question": "Can an assistant publish or delete things by itself?",
+            "answer": "Not without you. Deleting, publishing, emailing contacts and changing payment or access settings need an explicit confirmation, and the assistant is expected to ask first."
+          },
+          {
+            "question": "Is there an API for self-hosted CourseLit?",
+            "answer": "Yes. The base URL is the PUBLIC_API_URL your operator configured. Hosted CourseLit uses https://api.courselit.app."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Try it on your own school",
+        "description": "Start a free trial, create an API key and make your first request in a few minutes.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the developer docs",
+        "secondaryButtonAction": "/docs/developers"
+      }
+    }
+  ]
+}

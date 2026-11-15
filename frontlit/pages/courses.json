@@ -1,0 +1,167 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Sell online courses from your own website",
+  "description": "Build online courses with text, video, audio, PDF and quiz lessons, drip schedules and certificates. Sell them on your own site, paid to your own account.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Courses",
+        "title": "Create and sell online courses *on your own website*",
+        "description": "Organise lessons into sections, release them over time, test learners with quizzes and issue certificates. Learners pay through your own payment account.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the course docs",
+        "secondaryButtonAction": "/docs/products",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "lessons",
+        "title": "Teach in the format that fits",
+        "description": "Each lesson has its own type. Mix them freely inside a section.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Text lessons",
+            "description": "Write in a rich-text editor and add JPEG, PNG, GIF or WebP images from your media library.",
+            "icon": "FileText"
+          },
+          {
+            "title": "Video and audio",
+            "description": "Attach a file from your media library. Lesson files are stored privately, so only people with access can open them.",
+            "icon": "Video"
+          },
+          {
+            "title": "PDF and file lessons",
+            "description": "Hand out worksheets, workbooks or any other file as part of the lesson.",
+            "icon": "FileDown"
+          },
+          {
+            "title": "Embeds",
+            "description": "Paste a YouTube link or embed code to show a video or other outside content.",
+            "icon": "Code"
+          },
+          {
+            "title": "Quizzes",
+            "description": "Write multiple-choice questions. Learners see their score straight away, and you can set a passing grade.",
+            "icon": "ListChecks"
+          },
+          {
+            "title": "SCORM (Alpha)",
+            "description": "Upload a SCORM 1.2 or 2004 package of up to 300 MB. This lesson type is still marked Alpha, so test it before you sell.",
+            "icon": "Package"
+          }
+        ]
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "learning",
+        "layout": "grid",
+        "title": "Keep learners moving",
+        "description": "Pace the course, let people sample it and reward them for finishing.",
+        "items": [
+          {
+            "title": "Drip schedules",
+            "description": "Hold back a section until a number of days after the previous one, or until a date. You can email learners when it unlocks.",
+            "icon": "CalendarClock"
+          },
+          {
+            "title": "Free preview lessons",
+            "description": "Let visitors open chosen lessons from your sales page without joining.",
+            "icon": "Eye"
+          },
+          {
+            "title": "Certificates",
+            "description": "Learners who complete every live lesson get a certificate with your own wording, signature and logo. Anyone with its address can verify it.",
+            "icon": "Award"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Keep the conversation *next to the lesson*",
+        "body": "Turn on discussions for a course and learners get a **Discussions** panel beside every lesson. They can post, comment, reply and react without leaving the course viewer.\n\nLearners can report content. You review reports in the course settings and choose to keep or remove each item.\n\n[See how communities work](/communities)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Offer several ways to *join*",
+        "body": "Every course gets a sales page on your site that you edit in the same page editor as the rest of your website. Add several payment plans and learners pick one at checkout.\n\n- Free, one-time, subscription (monthly or yearly) and instalment plans of 2 to 60 payments\n- Choose which plan is shown first\n- Payments go to your own Stripe, Lemon Squeezy or Razorpay account\n\n[How payments work](/payments)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "how-it-works",
+        "layout": "numbered",
+        "title": "From draft to live course",
+        "description": "",
+        "items": [
+          {
+            "title": "Create a draft",
+            "description": "Pick Course, name it and add your first section. Nothing is visible until you publish.",
+            "icon": "FilePlus"
+          },
+          {
+            "title": "Add lessons and a plan",
+            "description": "Write or upload your lessons, then add at least one payment plan.",
+            "icon": "ListPlus"
+          },
+          {
+            "title": "Publish",
+            "description": "Go live, choose who can find the course and share its link.",
+            "icon": "Rocket"
+          }
+        ]
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Course questions",
+        "items": [
+          {
+            "question": "Which lesson types can I use?",
+            "answer": "Text, video, audio, PDF, file, embed, quiz and SCORM. A lesson's type can't be changed after you create it."
+          },
+          {
+            "question": "Is SCORM ready to use?",
+            "answer": "SCORM lessons are marked Alpha in the lesson editor. Test your package as a learner before you sell the course. SCORM is on the Business plan in our cloud and included when you self-host."
+          },
+          {
+            "question": "Can learners try a course before buying?",
+            "answer": "Yes. Switch on Free preview for a lesson and visitors can open it from the sales page. Quiz lessons can't be free previews, and neither can lessons in a section with a drip schedule."
+          },
+          {
+            "question": "When does a learner get a certificate?",
+            "answer": "When they have completed every live lesson, with quizzes passed. Certificates are issued only while Issue certificates is on for the course."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Build your first course",
+        "description": "Start a free trial and have a draft course ready today. No card needed.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

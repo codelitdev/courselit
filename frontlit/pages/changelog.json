@@ -1,6 +1,22 @@
 {
   "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "CourseLit changelog",
+  "description": "Every CourseLit release: new features, improvements and fixes, newest first.",
   "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Changelog",
+        "title": "What's new in *CourseLit*",
+        "description": "New features, improvements and fixes, newest first.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": ""
+      }
+    },
     {
       "name": "content-feed"
     }

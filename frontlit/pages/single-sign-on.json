@@ -1,0 +1,157 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Learner single sign-on (SAML) for your school",
+  "description": "Let learners sign in with Okta, Microsoft Entra ID, Google Workspace or Keycloak over SAML 2.0. Set up per school, for learners only.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "SAML 2.0 single sign-on",
+        "title": "Let learners sign in with *their work accounts*",
+        "description": "Connect your school to your identity provider so learners use the account they already have. Each school sets up its own connection.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the setup guide",
+        "secondaryButtonAction": "/docs/self-hosting/single-sign-on",
+        "smallPrint": "Business plan on the cloud. Included in self-hosted CourseLit."
+      }
+    },
+    {
+      "name": "marquee",
+      "settings": {
+        "cssId": "providers",
+        "items": [
+          {
+            "text": "Okta",
+            "href": "",
+            "icon": ""
+          },
+          {
+            "text": "Microsoft Entra ID",
+            "href": "",
+            "icon": ""
+          },
+          {
+            "text": "Google Workspace",
+            "href": "",
+            "icon": ""
+          },
+          {
+            "text": "Keycloak",
+            "href": "",
+            "icon": ""
+          }
+        ],
+        "direction": "left",
+        "speed": 30
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "features",
+        "layout": "grid",
+        "title": "Built for organisations training their people",
+        "description": "",
+        "items": [
+          {
+            "title": "One connection per school",
+            "description": "Each school connects its own identity provider. Learners see a Sign in with button on the school's sign-in page.",
+            "icon": "School"
+          },
+          {
+            "title": "Require SSO by email domain",
+            "description": "Verify a domain with a DNS record, then require SSO for it. Other learners keep using email codes or Google.",
+            "icon": "ShieldCheck"
+          },
+          {
+            "title": "Test before you switch on",
+            "description": "Run a test sign-in and see what the provider sent, with a reason code and a fix if it fails.",
+            "icon": "FlaskConical"
+          }
+        ]
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "how-it-works",
+        "layout": "numbered",
+        "title": "Set it up in the admin",
+        "description": "The school owner does this under Settings, then Login providers.",
+        "items": [
+          {
+            "title": "Create the connection",
+            "description": "Name the sign-in button and paste your identity provider's metadata.",
+            "icon": "Plug"
+          },
+          {
+            "title": "Register CourseLit and verify domains",
+            "description": "Copy the ACS URL and entity ID into your provider, then add a DNS TXT record for each email domain.",
+            "icon": "Globe"
+          },
+          {
+            "title": "Test, then turn it on",
+            "description": "Run a test sign-in. When it passes, turn the connection on for your learners.",
+            "icon": "ToggleRight"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "learners-only",
+        "title": "For learners only",
+        "body": "Single sign-on is for the people who learn on your school's website. Team members always sign in to the admin with an email code or Google, and an account that signs in with SSO never gets team access.\n\nThe SSO setup is done by the school owner in the admin. It cannot be done with an API key or an AI assistant.\n\n[How learners sign in](/docs/learners/sign-in)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "plans",
+        "title": "Availability",
+        "body": "On the cloud, learner SSO is part of the **Business** plan. Self-hosted CourseLit includes it with every other feature when `BILLING_MODE` is set to `oss`.\n\n[See pricing](/pricing) · [Self-hosting](/docs/self-hosting/single-sign-on)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Questions, answered",
+        "items": [
+          {
+            "question": "Which identity providers work?",
+            "answer": "Any SAML 2.0 provider. The setup guide shows the field names for Okta, Microsoft Entra ID, Google Workspace and Keycloak."
+          },
+          {
+            "question": "Can my team sign in to the admin with SSO?",
+            "answer": "No. SSO is for learners only. Team members sign in to the admin with an email code or Google."
+          },
+          {
+            "question": "What must my identity provider send?",
+            "answer": "A signed assertion using RSA-SHA256 or stronger, a persistent NameID, and the learner's email address."
+          },
+          {
+            "question": "Does every learner have to use SSO?",
+            "answer": "Only if you choose. You can require SSO for verified email domains, and learners with other addresses keep their usual sign-in methods."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Give your learners one less password",
+        "description": "Try CourseLit free for 14 days, then connect your identity provider on the Business plan.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Compare plans",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

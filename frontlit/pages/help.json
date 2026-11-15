@@ -1,8 +1,31 @@
 {
   "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Help and contact",
+  "description": "Get help with CourseLit: search the docs, ask the community on Discord, or send us a message and we'll reply by email.",
   "layout": [
     {
-      "name": "support-form"
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Help",
+        "title": "How can we *help*?",
+        "description": "Most answers are in the [docs](/docs). For anything else, ask the community or write to us.",
+        "buttonCaption": "Search the docs",
+        "buttonAction": "/docs",
+        "secondaryButtonCaption": "Ask on Discord",
+        "secondaryButtonAction": "https://discord.com/invite/GR4bQsN",
+        "smallPrint": ""
+      }
+    },
+    {
+      "name": "support-form",
+      "settings": {
+        "cssId": "contact",
+        "title": "Send us a message",
+        "description": "Tell us what you need and we'll reply to your email address.",
+        "buttonCaption": "Send message",
+        "successMessage": "Thanks. We've got your message and will reply by email."
+      }
     }
   ]
 }

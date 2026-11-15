@@ -1,0 +1,146 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Build a website and blog for your online school",
+  "description": "Edit pages with a block-based visual editor, write a blog, set your theme and logo, and use your own domain. Your school's website is built in.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Website and blog",
+        "title": "A website for your school, *built right in*",
+        "description": "Edit your pages in a visual block editor, write a blog, choose a theme and serve everything from your own domain.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the website docs",
+        "secondaryButtonAction": "/docs/website",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "Everything you need to publish",
+        "description": "Your courses, downloads and community already live on this website.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Page editor",
+            "description": "A full-screen visual editor with desktop, tablet and mobile previews, plus light and dark mode.",
+            "icon": "PanelsTopLeft"
+          },
+          {
+            "title": "Blocks",
+            "description": "Hero, content, grid, FAQs, pricing, banner, media, embed, newsletter signup and more.",
+            "icon": "Blocks"
+          },
+          {
+            "title": "Themes and branding",
+            "description": "Set your title, subtitle and logo, pick a ready-made theme or create your own.",
+            "icon": "Palette"
+          },
+          {
+            "title": "Blog",
+            "description": "Write in a distraction-free editor with a slug, excerpt, tags and a featured image.",
+            "icon": "PenLine"
+          },
+          {
+            "title": "Custom domain",
+            "description": "Serve your site from an address such as learn.example.com. Your default address keeps working.",
+            "icon": "Globe"
+          },
+          {
+            "title": "Code injection",
+            "description": "Paste analytics, tracking pixels or chat widgets into the head or body of every page.",
+            "icon": "Code"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Draft first, *publish when ready*",
+        "body": "Every change you make in the page editor is saved to a draft automatically. Visitors only see it after you click **Publish changes**, and you can discard unpublished edits to go back to the live version.\n\nSet the page title, description and social card image for each page with **Edit SEO settings**.\n\n[How the page editor works](/docs/website/page-editor)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Make it *look like you*",
+        "body": "Choose one of six ready-made themes: **Classic**, **Editorial**, **Midnight**, **Neo-Brutalism**, **Studio** or **Terminal**. Or change colours, fonts, corner radius and shadows, with separate values for light and dark mode.\n\nYour custom themes belong to your school and are available on every page. Theme and branding changes go live as soon as you save them.\n\n[Branding and themes](/docs/website/branding-and-themes)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "pages",
+        "layout": "grid",
+        "title": "Pages for every part of your school",
+        "description": "",
+        "items": [
+          {
+            "title": "Sales pages",
+            "description": "Every course, download and community has its own page that you edit in the same editor.",
+            "icon": "ShoppingBag"
+          },
+          {
+            "title": "Legal pages",
+            "description": "Terms of Service and Privacy policy pages start as drafts with starter text that names your school.",
+            "icon": "Scale"
+          },
+          {
+            "title": "Newsletter signup",
+            "description": "A signup block adds visitors to your contacts as subscribers, ready for email.",
+            "icon": "MailPlus"
+          },
+          {
+            "title": "Media library",
+            "description": "Upload once and reuse images and files across pages, posts, products and branding. Edit alt text for accessibility.",
+            "icon": "Images"
+          }
+        ]
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Website questions",
+        "items": [
+          {
+            "question": "Can I use my own domain?",
+            "answer": "Yes. Add your domain, create the CNAME and TXT records CourseLit shows you, then click Check DNS. A school can have one custom domain at a time."
+          },
+          {
+            "question": "Does the pricing block take payments?",
+            "answer": "No. It is a display block you fill in by hand. To sell something, add a payment plan to a product or community and send visitors to its sales page."
+          },
+          {
+            "question": "Are stock photos stored in my media library?",
+            "answer": "No. Free stock photos you pick in an image picker are used directly. Only files you upload are stored in the media library."
+          },
+          {
+            "question": "Can I add my analytics script?",
+            "answer": "Yes. Code injection lets you paste HTML, JavaScript or CSS into the head or body of every page. Only add code from providers you trust."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Launch your school's website",
+        "description": "Pick a theme, edit your homepage and publish. No card needed for the trial.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

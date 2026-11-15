@@ -1,0 +1,132 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Accept payments for courses with no fee on sales",
+  "description": "Connect your own Stripe, Lemon Squeezy or Razorpay account and sell with one-time, subscription or instalment plans. CourseLit takes no cut of your sales.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Payments",
+        "title": "Get paid *directly*, with no fee on your sales",
+        "description": "Learners pay through your own payment provider account, so the money goes straight to you. CourseLit charges no transaction fee on any plan.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the payments docs",
+        "secondaryButtonAction": "/docs/settings/payments",
+        "smallPrint": "Your provider's own fees still apply."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "providers",
+        "layout": "grid",
+        "title": "Bring your own provider",
+        "description": "Choose one provider for your school and enter its keys.",
+        "items": [
+          {
+            "title": "Stripe",
+            "description": "Add your publishable key and secret key.",
+            "icon": "CreditCard"
+          },
+          {
+            "title": "Lemon Squeezy",
+            "description": "Add your key, store ID and variant IDs for one-time, monthly and yearly plans.",
+            "icon": "Citrus"
+          },
+          {
+            "title": "Razorpay",
+            "description": "Add your key and secret key.",
+            "icon": "Wallet"
+          }
+        ]
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "plans",
+        "title": "Flexible plans for every offer",
+        "description": "Add several plans to a course, download or community, and learners pick one at checkout.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "columns": 2,
+        "items": [
+          {
+            "title": "Free",
+            "description": "Learners get access straight away. Free plans need no payment setup.",
+            "icon": "Gift"
+          },
+          {
+            "title": "One time",
+            "description": "A single payment for access to the product.",
+            "icon": "Banknote"
+          },
+          {
+            "title": "Subscription",
+            "description": "A recurring payment, monthly or yearly, for as long as the learner stays.",
+            "icon": "RefreshCw"
+          },
+          {
+            "title": "Instalments",
+            "description": "A fixed number of monthly payments, from 2 to 60.",
+            "icon": "CalendarDays"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Bundle products into *a community plan*",
+        "body": "Include published courses and digital downloads in a community plan. Members get them automatically when their membership becomes active, with no extra checkout.\n\nYou choose which plan is shown first on the sales page. Archive an old plan to stop offering it, and the people already on it keep their access.\n\n[See communities](/communities)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Know *what you set up*",
+        "body": "Your school has one currency, set when you create it, and every price uses it. Once your school has taken a payment, the currency can't be changed.\n\nAfter you save your keys, CourseLit creates the payment confirmation webhook on your provider account for you, so learners get access straight after they pay.\n\n[Set up payments](/docs/settings/payments)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Payment questions",
+        "items": [
+          {
+            "question": "Does CourseLit take a percentage of my sales?",
+            "answer": "No. CourseLit charges no fee on your sales on any plan. Your payment provider's own fees still apply."
+          },
+          {
+            "question": "Can I sell before connecting a provider?",
+            "answer": "You can create products and use free plans without one. Paid plans need a connected provider."
+          },
+          {
+            "question": "Does the currency work with Lemon Squeezy?",
+            "answer": "The currency you choose in CourseLit is not applied at checkout for Lemon Squeezy. Set your currency in your Lemon Squeezy dashboard and match each subscription variant's price."
+          },
+          {
+            "question": "What if I reset my payment method?",
+            "answer": "Paid plans of every product fail at checkout until you choose a provider again. Free plans keep working and your saved keys are kept."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Keep what you earn",
+        "description": "Start a free trial, connect your provider and set your first price.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

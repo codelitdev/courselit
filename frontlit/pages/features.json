@@ -1,0 +1,153 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Features for selling courses, downloads and communities",
+  "description": "Everything CourseLit includes: courses, digital downloads, communities, a website builder, email marketing, payments, SCORM, learner SSO and an API.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Features",
+        "title": "Everything you need to *teach and sell online*",
+        "description": "CourseLit replaces the course platform, newsletter tool, community app and website builder you would otherwise stitch together.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing",
+        "smallPrint": ""
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "Explore the platform",
+        "description": "",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Courses",
+            "description": "Sections and lessons in eight formats, with quizzes, drip schedules, previews and certificates.",
+            "icon": "GraduationCap",
+            "buttonCaption": "Explore courses",
+            "buttonAction": "/courses"
+          },
+          {
+            "title": "Digital downloads",
+            "description": "Sell files learners get straight away, or trade one for an email address as a lead magnet.",
+            "icon": "Download",
+            "buttonCaption": "Explore downloads",
+            "buttonAction": "/digital-downloads"
+          },
+          {
+            "title": "Communities",
+            "description": "Spaces for posts, comments and reactions, with member approval, roles and moderation.",
+            "icon": "Users",
+            "buttonCaption": "Explore communities",
+            "buttonAction": "/communities"
+          },
+          {
+            "title": "Website builder",
+            "description": "A block-based page editor, themes, a blog and your own domain, all published from drafts.",
+            "icon": "LayoutTemplate",
+            "buttonCaption": "Explore the website builder",
+            "buttonAction": "/website-builder"
+          },
+          {
+            "title": "Email marketing",
+            "description": "Contacts, tags and segments, plus broadcasts and automated sequences in a visual editor.",
+            "icon": "Mail",
+            "buttonCaption": "Explore email marketing",
+            "buttonAction": "/email-marketing"
+          },
+          {
+            "title": "Payments",
+            "description": "Free, one-time, subscription and instalment plans through your own payment provider.",
+            "icon": "CreditCard",
+            "buttonCaption": "Explore payments",
+            "buttonAction": "/payments"
+          },
+          {
+            "title": "SCORM",
+            "description": "Upload SCORM 1.2 and 2004 packages as lessons. Progress counts towards completion.",
+            "icon": "Package",
+            "buttonCaption": "Explore SCORM",
+            "buttonAction": "/scorm"
+          },
+          {
+            "title": "Learner single sign-on",
+            "description": "Let learners sign in with their work account through SAML, such as Okta or Entra ID.",
+            "icon": "KeyRound",
+            "buttonCaption": "Explore single sign-on",
+            "buttonAction": "/single-sign-on"
+          },
+          {
+            "title": "API and MCP server",
+            "description": "Automate your school with the REST API, or let Claude, ChatGPT or Cursor manage it.",
+            "icon": "Code",
+            "buttonCaption": "Explore the API",
+            "buttonAction": "/developers"
+          }
+        ]
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "layout": "compact",
+        "title": "And the details that matter",
+        "description": "",
+        "items": [
+          {
+            "title": "Free preview lessons",
+            "description": "Let visitors try a lesson before they buy.",
+            "icon": "Eye"
+          },
+          {
+            "title": "Graded quizzes",
+            "description": "Set a passing grade learners must reach.",
+            "icon": "ListChecks"
+          },
+          {
+            "title": "Certificates",
+            "description": "Issued automatically when a learner finishes.",
+            "icon": "Award"
+          },
+          {
+            "title": "Team roles",
+            "description": "Share the work with co-teachers and assistants.",
+            "icon": "UserCog"
+          },
+          {
+            "title": "Media library",
+            "description": "Reuse your uploads across lessons and pages.",
+            "icon": "Image"
+          },
+          {
+            "title": "Learner dashboard",
+            "description": "Progress, purchases and certificates in one place.",
+            "icon": "LayoutDashboard"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Cloud or self-hosted, the same product",
+        "body": "Every feature on this page is in the open-source code. On our cloud, Pro covers most schools, and Business adds SCORM, learner single sign-on and the audit log. Self-hosted CourseLit includes all of it.\n\n[Compare plans](/pricing) or [read about self-hosting](/open-source)."
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "See it with your own content",
+        "description": "Start a 14-day free trial and build your first course today.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app"
+      }
+    }
+  ]
+}

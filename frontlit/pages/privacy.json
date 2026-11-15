@@ -1,4 +1,28 @@
 {
   "$schema": "https://frontlit.app/schema/page.v1.json",
-  "layout": []
+  "title": "Privacy policy",
+  "description": "What personal data CourseLit collects when you sign up, how it is used and when it is disclosed.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Legal",
+        "title": "Privacy Policy",
+        "description": "",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": "Last updated: 30 Oct, 2022"
+      }
+    },
+    {
+      "name": "rich-text",
+      "settings": {
+        "maxWidth": "max-w-3xl",
+        "text": "## This document explains what personal data we collect and how it is used.\n\n## 1. Information we collect\n\nWhen you sign up for an account, we may collect your email address, your name and your basic profile.\n\n## 2. How your personal data is used\n\nWe use your personal data to provide account related services like associating incoming emails with the correct accounts. We may use your email to communicate with you regarding account related services and changes to our terms, policies etc.\n\n## 3. How we disclose personal data\n\nWe disclose your data only if it required to do so by law.\n\n## 4. Contact us\n\nIf you have any questions related to our Privacy Policy, please send an email to [support@courselit.app](mailto:support@courselit.app)."
+      }
+    }
+  ]
 }

@@ -1,6 +1,22 @@
 {
   "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "CourseLit documentation",
+  "description": "Guides for setting up your school, building courses, running a community, taking payments, using the API and self-hosting CourseLit.",
   "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Docs",
+        "title": "CourseLit *documentation*",
+        "description": "Set up your school, build courses, take payments, use the API and host CourseLit yourself.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": ""
+      }
+    },
     {
       "name": "content-feed"
     }

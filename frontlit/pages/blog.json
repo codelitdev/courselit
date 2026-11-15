@@ -1,6 +1,22 @@
 {
   "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "CourseLit blog",
+  "description": "News, guides and stories about teaching and selling online with CourseLit.",
   "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Blog",
+        "title": "Notes on teaching and *selling online*",
+        "description": "Product news, guides and lessons from running online schools.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": ""
+      }
+    },
     {
       "name": "content-feed"
     }

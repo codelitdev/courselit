@@ -1,0 +1,28 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Refund policy",
+  "description": "CourseLit offers a two-day, no-questions-asked refund on its plans. Here is how to ask for one.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Legal",
+        "title": "Refund Policy",
+        "description": "",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": "Last updated: 01 Aug, 2024"
+      }
+    },
+    {
+      "name": "rich-text",
+      "settings": {
+        "maxWidth": "max-w-3xl",
+        "text": "We offer **2 days** no-questions-asked refund policy.\n\nJust mail us at support (at) courselit (dot) app."
+      }
+    }
+  ]
+}

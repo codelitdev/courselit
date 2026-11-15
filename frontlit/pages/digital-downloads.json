@@ -1,0 +1,145 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Sell digital downloads and lead magnets online",
+  "description": "Sell ebooks, templates and presets from your own website, or give a download away for an email address and grow your mailing list. Paid to your account.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Digital downloads",
+        "title": "Sell files, or *give one away* to grow your list",
+        "description": "Upload your guide, template, preset or ebook and sell it from your own website. Or offer it free in exchange for an email address.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the downloads docs",
+        "secondaryButtonAction": "/docs/products/digital-downloads",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "features",
+        "layout": "grid",
+        "title": "Everything a download needs",
+        "description": "Files, a sales page and a plan, without a separate storefront.",
+        "items": [
+          {
+            "title": "Any file type",
+            "description": "Attach any file from your media library. Files are stored privately, so only people with access can download them.",
+            "icon": "FileArchive"
+          },
+          {
+            "title": "One ZIP for the buyer",
+            "description": "A buyer selects Download files and gets one ZIP, named after the product, with every live file in it.",
+            "icon": "Download"
+          },
+          {
+            "title": "Draft and live files",
+            "description": "Keep a file in draft until it is ready. Learners only get the live files.",
+            "icon": "ToggleRight"
+          },
+          {
+            "title": "A sales page",
+            "description": "Each download gets a sales page on your site that you edit in the page editor.",
+            "icon": "LayoutTemplate"
+          },
+          {
+            "title": "Free or paid plans",
+            "description": "Sell it once, or offer several plans. Paid plans use your own payment account.",
+            "icon": "CreditCard"
+          },
+          {
+            "title": "Download tracking",
+            "description": "See how many downloads you have, and whether each customer has downloaded yet.",
+            "icon": "ChartBar"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Turn a free download into *subscribers*",
+        "body": "A **lead magnet** is a free download that people get for an email address. Choose **Lead magnet** when you create the download, or switch it on later in Settings.\n\nWhen someone signs up, they:\n\n- Join your contacts as a subscriber\n- Get access to the download\n- Receive an email with a link to get it\n\nThen you can email them with [broadcasts and sequences](/email-marketing)."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "how-it-works",
+        "layout": "numbered",
+        "title": "Launch a download in four steps",
+        "description": "",
+        "items": [
+          {
+            "title": "Create the draft",
+            "description": "Choose Digital download, then Sell it or Lead magnet.",
+            "icon": "FilePlus"
+          },
+          {
+            "title": "Add your files",
+            "description": "Name each file, save it, then attach the file from your media library.",
+            "icon": "Upload"
+          },
+          {
+            "title": "Set a plan",
+            "description": "Use a free plan to give it away or a paid plan to sell it.",
+            "icon": "Tag"
+          },
+          {
+            "title": "Publish and share",
+            "description": "Go live and share the link to your sales page.",
+            "icon": "Share2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Be clear about the *limits*",
+        "body": "Downloads are simple on purpose. The ZIP a learner gets holds up to 300 MB of files in total. A download keeps a single section, and it has no drip schedules, quizzes, certificates or discussions.\n\nIf you want lessons, take a look at [courses](/courses).",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Download questions",
+        "items": [
+          {
+            "question": "Can I sell a download and give it away at the same time?",
+            "answer": "Not as a lead magnet. A lead magnet needs exactly one plan, and it must be free. Switch Lead magnet off if you want to add paid plans."
+          },
+          {
+            "question": "How big can a download be?",
+            "answer": "The ZIP a learner receives can hold up to 300 MB of files in total. Files uploaded to your media library can be up to 1 GB each."
+          },
+          {
+            "question": "Do I need payments set up first?",
+            "answer": "Only for paid plans. Free downloads and lead magnets work without a payment provider."
+          },
+          {
+            "question": "Can I change a download into a course later?",
+            "answer": "No. The product type is fixed when you create it, so pick the one that fits."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Share your first download",
+        "description": "Upload a file and publish it in minutes. No card needed for the trial.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Explore payments",
+        "secondaryButtonAction": "/payments"
+      }
+    }
+  ]
+}

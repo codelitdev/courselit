@@ -1,0 +1,148 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Run a paid online community on your own site",
+  "description": "Host a community with spaces, free or paid plans, member approval and moderation, plus discussions inside your courses. Paid to your own account.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "Community",
+        "title": "Give your learners *a place to talk*",
+        "description": "Run a community on your own website with spaces, free or paid plans and moderation tools. Add discussions to a course too.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "Read the community docs",
+        "secondaryButtonAction": "/docs/communities",
+        "smallPrint": "14-day free trial. No credit card needed."
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "features",
+        "title": "What your community includes",
+        "description": "Every school has one community, ready to set up and make live.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "items": [
+          {
+            "title": "Spaces",
+            "description": "Organise talk into spaces like channels. Choose who can post in each one, and whether members follow it automatically.",
+            "icon": "LayoutGrid"
+          },
+          {
+            "title": "Posts and reactions",
+            "description": "Members write posts with images, videos, files and GIFs, comment, reply and react with six emoji.",
+            "icon": "MessagesSquare"
+          },
+          {
+            "title": "Welcome banner",
+            "description": "Pin a message to the top of the members' home page for launches, events or breaks.",
+            "icon": "Megaphone"
+          },
+          {
+            "title": "Approval or open doors",
+            "description": "Let everyone in, or ask a question and approve each request yourself.",
+            "icon": "UserCheck"
+          },
+          {
+            "title": "Roles",
+            "description": "Give trusted members the Moderator role so they can pin posts and delete others' posts and comments.",
+            "icon": "ShieldCheck"
+          },
+          {
+            "title": "Invitations",
+            "description": "Invite people by email on a plan of your choice. They join right away, without paying.",
+            "icon": "MailPlus"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Charge for *membership*",
+        "body": "Offer one plan or several, so people can join the way they prefer. Paid plans use your own Stripe, Lemon Squeezy or Razorpay account.\n\n- Free, one-time, subscription (monthly or yearly) and instalment plans\n- Choose which plan is shown first on the sales page\n- Archive an old plan without affecting the members already on it\n\n[See payment options](/payments)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Bundle *courses and downloads* with a plan",
+        "body": "Add published courses and digital downloads to a community plan. Everyone who joins on that plan gets them automatically, with no extra checkout.\n\nIncluded products follow the membership. If a member leaves or you remove them, access to the included products ends with it.\n\n[Explore courses](/courses)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "moderation",
+        "layout": "grid",
+        "title": "Moderate with confidence",
+        "description": "Members can report any post, comment or reply that someone else wrote.",
+        "items": [
+          {
+            "title": "A reports queue",
+            "description": "Review reports and choose to keep or remove each item. Removed content is hidden at once.",
+            "icon": "Flag"
+          },
+          {
+            "title": "Private notes",
+            "description": "When you keep reported content, you note why. The note stays with the report for your team.",
+            "icon": "NotebookPen"
+          },
+          {
+            "title": "Reporters stay private",
+            "description": "The author is never told who reported their content.",
+            "icon": "EyeOff"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Discussions inside your courses",
+        "body": "Turn on discussions for a course and learners get a **Discussions** panel beside every lesson. They can post, comment, reply and react, the same way members do in your community.\n\nDiscussions have their own reports list, in the course settings. They are separate from your school's community.\n\n[See how courses work](/courses)"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Community questions",
+        "items": [
+          {
+            "question": "How many communities can I run?",
+            "answer": "Every school has exactly one community. It is created with your school, starts offline and has one space called General."
+          },
+          {
+            "question": "Can I keep some spaces for paying members?",
+            "answer": "Yes. Set a space's access to selected plans or products, and only members on those plans or with those products can see it."
+          },
+          {
+            "question": "What happens when someone leaves?",
+            "answer": "They lose access to the community and any included products right away. If they pay by subscription or instalments, billing is cancelled at the same time."
+          },
+          {
+            "question": "Do I need payments set up to go live?",
+            "answer": "Only if a plan is paid. To go live you need a name and at least one starred plan. Free plans work without a payment provider."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Start your community",
+        "description": "Set up your plans, choose who gets in and go live. No card needed for the trial.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.app",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

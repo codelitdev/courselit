@@ -1,0 +1,84 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "About CourseLit: the open-source course platform",
+  "description": "CourseLit is built by CodeLit with one goal: an affordable, open-source alternative to costly course and membership platforms. Open source since 2019.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "layout": "centered",
+        "preTitle": "About CourseLit",
+        "title": "The *WordPress* of course and membership platforms",
+        "description": "We are building a modern, open-source alternative to costly course platforms, one that stays affordable and that you can take with you.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "secondaryButtonCaption": "",
+        "secondaryButtonAction": "",
+        "smallPrint": ""
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "problem",
+        "title": "Why we built it",
+        "body": "Established course platforms often charge high monthly fees, which is hard on solo creators and small businesses, especially those bootstrapping or working in emerging markets.\n\nEssential features such as certificates, subscriptions or your own payment gateway are often locked behind expensive tiers. And proprietary platforms control your data, branding and features, so you carry the risk if prices rise or the platform shuts down."
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "principles",
+        "layout": "grid",
+        "title": "Two commitments",
+        "description": "Affordability and freedom.",
+        "items": [
+          {
+            "title": "Affordable",
+            "description": "Core functionality should not be a premium add-on. The essential tools live in one Pro plan, so a solo creator can launch without financial strain.",
+            "icon": "Wallet"
+          },
+          {
+            "title": "Open source",
+            "description": "The code is public on GitHub. If the company behind CourseLit ever stopped, anyone could still use, extend or fork it.",
+            "icon": "Unlock"
+          },
+          {
+            "title": "Community-driven",
+            "description": "Developers can contribute code, docs and ideas on GitHub, so the platform follows what creators need.",
+            "icon": "Users"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "story",
+        "title": "Built by CodeLit, in the open",
+        "body": "CourseLit is built by CodeLit and has been open source since 2019. It was started by Rajat Saxena.\n\nYou can use CourseLit on our cloud, or self-host it. Technical users can run the whole stack at no licence cost, and the project's code lives on [GitHub](https://github.com/codelitdev/courselit).\n\n[Learn about open source](/open-source)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "cssId": "community",
+        "title": "Join the community",
+        "body": "Get help, request features or just say hello in the CourseLit community on [Discord](https://discord.com/invite/GR4bQsN). Contributions on [GitHub](https://github.com/codelitdev/courselit) are welcome too."
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "See what CourseLit can do",
+        "description": "Explore the features, or try CourseLit free for 14 days. No card needed.",
+        "buttonCaption": "See the features",
+        "buttonAction": "/features",
+        "secondaryButtonCaption": "Start free trial",
+        "secondaryButtonAction": "https://app.courselit.app"
+      }
+    }
+  ]
+}
