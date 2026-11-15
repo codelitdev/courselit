@@ -40,7 +40,7 @@ Learners can upload files in your communities only if they are active members wh
 - Uploads are private.
 - At most 20 uploads an hour per learner.
 - An upload that no post uses is deleted after a day.
-- Together, learners can use at most 25% of your school's storage. Once the school is past 90% of its storage, learners can't upload.
+- During a free trial, which has limited storage, learners together can use at most 25% of it, and none once the school is past 90%.
 
 When an upload is refused, the learner sees "This upload can't be added right now. Try a smaller file." Set the size limit for each learner in [Storage](/docs/settings/storage).
 

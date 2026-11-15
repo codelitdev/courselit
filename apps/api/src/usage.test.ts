@@ -6,8 +6,10 @@ import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { schoolUsage, usageShare, warnUsage } from "./usage.js";
+import { planLimits } from "./plan-limits-config.js";
 
-const MB = 1024 * 1024;
+/** A share of the trial's storage, in bytes. */
+const trialShare = (share: number) => Math.round(planLimits().trial.storage_bytes! * share);
 
 async function setup(at = "2026-03-01T00:00:00.000Z") {
   const clock = freezeRuntimeClock(new Date(at));
@@ -24,7 +26,7 @@ const deps = (t: Setup, accepted = 0) => ({
   mode: "cloud" as const,
   clock: t.clock,
   teamUsage: async () => ({
-    limit: 10_000,
+    limit: planLimits().pro.marketing_emails_month,
     accepted,
     reserved: 0,
     resetsAt: "2026-04-01T00:00:00.000Z",
@@ -89,10 +91,13 @@ describe("usage", () => {
     const t = await setup();
     try {
       await startTrial(t, t.world.schoolB.id);
-      await store(t, t.world.schoolB.id, 100 * MB);
+      await store(t, t.world.schoolB.id, trialShare(0.2));
       const items = await schoolUsage(deps(t), t.world.schoolB.id);
       const storage = items.find((item) => item.key === "storage_bytes")!;
-      expect(storage).toMatchObject({ used: 100 * MB, allowed: 500 * MB });
+      expect(storage).toMatchObject({
+        used: trialShare(0.2),
+        allowed: planLimits().trial.storage_bytes,
+      });
       expect(usageShare(storage)).toBeCloseTo(0.2);
       // No mailing team yet: the count is unknown, the trial's quota is 0.
       expect(items.find((item) => item.key === "marketing_emails_month")).toMatchObject({
@@ -140,15 +145,15 @@ describe("usage warnings", () => {
     try {
       await startTrial(t, t.world.schoolB.id);
       const school = { id: t.world.schoolB.id, name: "School B" };
-      await store(t, t.world.schoolB.id, 410 * MB, "big");
+      await store(t, t.world.schoolB.id, trialShare(0.82), "big");
       expect(await warnUsage(deps(t), school)).toEqual(["storage"]);
       expect(await warnUsage(deps(t), school)).toEqual([]);
       expect(await warnings(t)).toHaveLength(1);
 
       await t.runtime.db.delete(schema.media).where(eq(schema.media.publicId, "med_big"));
-      await store(t, t.world.schoolB.id, 300 * MB, "smaller");
+      await store(t, t.world.schoolB.id, trialShare(0.6), "smaller");
       expect(await warnUsage(deps(t), school)).toEqual([]);
-      await store(t, t.world.schoolB.id, 120 * MB, "again");
+      await store(t, t.world.schoolB.id, trialShare(0.24), "again");
       expect(await warnUsage(deps(t), school)).toEqual(["storage"]);
     } finally {
       await t.runtime.close();
@@ -158,12 +163,14 @@ describe("usage warnings", () => {
   it("warns about marketing email once a month on a paid plan, never during a trial", async () => {
     const t = await setup("2026-03-15T00:00:00.000Z");
     try {
-      // School A is on Pro: 10,000 emails a month.
+      // School A is on Pro.
+      const quota = planLimits().pro.marketing_emails_month!;
+      const sent = (share: number) => Math.round(quota * share);
       await readySendLit(t, t.world.schoolA.id);
       const school = { id: t.world.schoolA.id, name: "School A" };
-      expect(await warnUsage(deps(t, 7_000), school)).toEqual([]);
-      expect(await warnUsage(deps(t, 8_500), school)).toEqual(["email:2026-03"]);
-      expect(await warnUsage(deps(t, 9_500), school)).toEqual([]);
+      expect(await warnUsage(deps(t, sent(0.6)), school)).toEqual([]);
+      expect(await warnUsage(deps(t, sent(0.84)), school)).toEqual(["email:2026-03"]);
+      expect(await warnUsage(deps(t, sent(0.96)), school)).toEqual([]);
 
       await startTrial(t, t.world.schoolB.id);
       await readySendLit(t, t.world.schoolB.id);

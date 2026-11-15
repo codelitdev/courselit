@@ -14,9 +14,9 @@ CourseLit offers a **Pro** plan and a **Business** plan, billed monthly or yearl
 
 | | Pro | Business |
 | --- | --- | --- |
-| Price | $19 a month or $190 a year | $79 a month or $790 a year |
-| Marketing email | 10,000 a month | 50,000 a month |
-| Storage | 20 GB | 200 GB |
+| Price | $29 a month or $290 a year | $79 a month or $790 a year |
+| Marketing email | 25,000 a month | 100,000 a month |
+| Storage | Unlimited | Unlimited |
 | Remove CourseLit branding and add code to your site | Yes | Yes |
 | SCORM lessons, learner SSO, the audit log and priority support | No | Yes |
 
@@ -37,18 +37,18 @@ If you haven't chosen a plan yet, the page says "This school has no paid plan ye
 The page shows two meters.
 
 - **Storage** shows what you use against your limit, for example "425 MB of 500 MB".
-- **Marketing email this month** shows, for example, "8,500 of 10,000". During a trial it says "Not included" with the note "Sending marketing email starts with a paid plan. Sign-in codes and receipts go out during your trial."
+- **Marketing email this month** shows, for example, "21,000 of 25,000". During a trial it says "Not included" with the note "Sending marketing email starts with a paid plan. Sign-in codes and receipts go out during your trial."
 
 At 80% of a limit, you see a banner such as "Inkwell Studio has used 85% of its storage." with a **See your plan** link, and you get one email.
 
-- For storage, you get an email each time usage crosses 80%. You get another only after usage drops below 70% and crosses 80% again.
+- For storage, which is limited only during a trial, you get an email each time usage crosses 80%. You get another only after usage drops below 70% and crosses 80% again.
 - For marketing email, you get one email a calendar month, on paid plans only.
 
 If you go over a limit, nothing is deleted.
 
 | Limit | What happens |
 | --- | --- |
-| Storage | New uploads are refused. |
+| Storage (trial only) | New uploads are refused. |
 | Marketing email | Broadcasts, sequences and drip emails wait until next month. Sign-in codes and receipts still go out. |
 
 ## When a trial or plan ends

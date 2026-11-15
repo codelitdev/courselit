@@ -1,47 +1,55 @@
 /**
- * What each CourseLit plan includes on courselit.app (docs/wip/plan-limits.md,
- * sections 2, 4 and 5). The API enforces these limits and the admin shows
- * them when someone picks a plan, so both read them from here.
+ * How CourseLit plans are described when someone picks one
+ * (docs/wip/plan-limits.md, sections 2 and 4). The limits themselves are the
+ * deployment's settings, served in the billing catalog; only the wording
+ * lives here.
  */
 const GB = 1024 * 1024 * 1024;
+const MB = 1024 * 1024;
 
 export type CourseLitPlanKey = "pro" | "business";
 
-export const COURSELIT_PLAN_LIMITS: Record<
-  CourseLitPlanKey,
-  { marketing_emails_month: number | null; storage_bytes: number | null }
-> = {
-  pro: { marketing_emails_month: 10_000, storage_bytes: 20 * GB },
-  business: { marketing_emails_month: 50_000, storage_bytes: 200 * GB },
+/** A plan's limits; `null` is unlimited. */
+export type CourseLitPlanLimits = {
+  marketing_emails_month: number | null;
+  storage_bytes: number | null;
 };
 
 function emails(count: number | null): string {
-  return count === null
-    ? "Unlimited marketing email"
-    : `${count.toLocaleString("en-US")} marketing emails a month`;
+  if (count === null) return "Unlimited marketing email";
+  if (count === 0) return "No marketing email";
+  return `${count.toLocaleString("en-US")} marketing emails a month`;
 }
 
 function storage(bytes: number | null): string {
-  return bytes === null ? "Unlimited storage" : `${Math.round(bytes / GB)} GB of storage`;
+  if (bytes === null) return "Unlimited storage";
+  return bytes >= GB
+    ? `${Math.round(bytes / GB)} GB of storage`
+    : `${Math.round(bytes / MB)} MB of storage`;
 }
 
-/** The short list shown on each plan when someone picks one. */
-export const COURSELIT_PLAN_HIGHLIGHTS: Record<CourseLitPlanKey, readonly string[]> = {
-  pro: [
-    "Courses, downloads, communities, website and blog",
-    emails(COURSELIT_PLAN_LIMITS.pro.marketing_emails_month),
-    storage(COURSELIT_PLAN_LIMITS.pro.storage_bytes),
-    "Remove CourseLit branding",
-    "Add your own code to your site",
-    "Unlimited team members",
-  ],
-  business: [
-    "Everything in Pro",
-    emails(COURSELIT_PLAN_LIMITS.business.marketing_emails_month),
-    storage(COURSELIT_PLAN_LIMITS.business.storage_bytes),
-    "SCORM lessons",
-    "Single sign-on (SSO) for learners",
-    "Audit log",
-    "Priority support",
-  ],
-};
+/** The short list shown on a plan. Without limits, only the features. */
+export function courseLitPlanHighlights(
+  plan: CourseLitPlanKey,
+  limits?: CourseLitPlanLimits | null,
+): string[] {
+  const allowance = limits
+    ? [emails(limits.marketing_emails_month), storage(limits.storage_bytes)]
+    : [];
+  return plan === "pro"
+    ? [
+        "Courses, downloads, communities, website and blog",
+        ...allowance,
+        "Remove CourseLit branding",
+        "Add your own code to your site",
+        "Unlimited team members",
+      ]
+    : [
+        "Everything in Pro",
+        ...allowance,
+        "SCORM lessons",
+        "Single sign-on (SSO) for learners",
+        "Audit log",
+        "Priority support",
+      ];
+}

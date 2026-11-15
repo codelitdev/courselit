@@ -10,6 +10,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import type { BillingBundle } from "./billing.js";
 import * as schema from "./db/schema/index.js";
 import type { AppDb } from "./types.js";
+import { type PlanLimitValues, planLimits } from "./plan-limits-config.js";
 
 export type BillingMode = "cloud" | "oss";
 
@@ -25,6 +26,7 @@ export type PublicCatalogDto = {
     amountMinor: number;
     trialDays: number;
   }>;
+  limits: { pro: PlanLimitValues; business: PlanLimitValues } | null;
 };
 
 export async function readPublicBillingCatalog(
@@ -37,6 +39,7 @@ export async function readPublicBillingCatalog(
       currency: null,
       checkoutAvailable: false,
       offers: [],
+      limits: null,
     };
   }
   return {
@@ -51,6 +54,7 @@ export async function readPublicBillingCatalog(
       amountMinor: offer.amountMinor,
       trialDays: offer.displayTrialDays,
     })),
+    limits: { pro: planLimits().pro, business: planLimits().business },
   };
 }
 

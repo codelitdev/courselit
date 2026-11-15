@@ -4,7 +4,6 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { SSO_FEATURE } from "./sso-config.js";
 import type { AppDb } from "./types.js";
-import { COURSELIT_PLAN_LIMITS } from "@courselit/api-contract/courselit-plans";
 
 export const REMOVE_BRANDING_FEATURE = "remove_branding";
 export const CODE_INJECTION_FEATURE = "code_injection";
@@ -28,26 +27,17 @@ export const PLAN_FEATURES: Record<"pro" | "business", readonly string[]> = {
   business: BUSINESS_FEATURES,
 };
 
-const MB = 1024 * 1024;
-
 /**
- * What each paid plan allows (docs/wip/plan-limits.md, section 5). `null` is
- * unlimited. These are also the `planLimits` given to the billing package.
- */
-export const PLAN_LIMITS = COURSELIT_PLAN_LIMITS;
-
-/**
- * The trial's own features and limits. It is Business minus removing
- * branding and public code injection, with no marketing email and 500 MB.
- * Never derived from Business's lists, so the trial can't pick up a Business
- * allowance by accident.
+ * The trial's features: Business minus removing branding and public code
+ * injection. Its limits are the deployment's `PLAN_TRIAL_*` settings
+ * (plan-limits-config.ts), never Business's, so the trial can't pick up a
+ * Business allowance by accident.
  */
 export const TRIAL = {
   features: BUSINESS_FEATURES.filter(
     (feature) =>
       feature !== REMOVE_BRANDING_FEATURE && feature !== CODE_INJECTION_FEATURE,
   ) as readonly string[],
-  limits: { marketing_emails_month: 0, storage_bytes: 500 * MB },
 } as const;
 
 /**

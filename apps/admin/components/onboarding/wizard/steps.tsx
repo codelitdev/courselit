@@ -71,7 +71,7 @@ import {
   Tile,
   useCopy,
 } from "./ui";
-import { COURSELIT_PLAN_HIGHLIGHTS } from "@courselit/api-contract/courselit-plans";
+import { courseLitPlanHighlights } from "@courselit/api-contract/courselit-plans";
 
 const COVER_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
@@ -1274,7 +1274,7 @@ export function PlanStep({
                   </>
                 ) : null}
                 <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-muted-foreground">
-                  {COURSELIT_PLAN_HIGHLIGHTS[plan].map((line) => (
+                  {courseLitPlanHighlights(plan, catalog?.limits?.[plan]).map((line) => (
                     <li key={line} className="flex items-start gap-2">
                       <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
                       <span>{line}</span>

@@ -2,7 +2,8 @@ import type { BillingEngine } from "@codelitdev/billing/workflows";
 import type { Clock } from "@codelitdev/platform";
 import { and, eq, isNotNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { PLAN_LIMITS, type SchoolPlan, schoolPlan, TRIAL } from "./school-plan.js";
+import { planLimits } from "./plan-limits-config.js";
+import { type SchoolPlan, schoolPlan } from "./school-plan.js";
 import {
   type SendLitConfig,
   sendLitConfig,
@@ -20,9 +21,9 @@ export function marketingQuotaFor(plan: SchoolPlan): number | null | undefined {
     case "oss":
       return null;
     case "paid":
-      return PLAN_LIMITS[plan.plan].marketing_emails_month;
+      return planLimits()[plan.plan].marketing_emails_month;
     case "trial":
-      return TRIAL.limits.marketing_emails_month;
+      return planLimits().trial.marketing_emails_month;
     case "none":
       return 0;
     case "unknown":

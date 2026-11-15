@@ -2211,11 +2211,21 @@ export const billingOfferSchema = z.object({
   trialDays: z.number().int(),
 });
 
+const planLimitValuesSchema = z.object({
+  /** `null` is unlimited. */
+  marketing_emails_month: z.number().int().nullable(),
+  storage_bytes: z.number().int().nullable(),
+});
+
 export const billingCatalogSchema = z.object({
   catalogRevision: z.number().int().nullable(),
   currency: z.string().nullable(),
   checkoutAvailable: z.boolean(),
   offers: z.array(billingOfferSchema),
+  /** What each plan allows on this deployment; null when nothing is sold. */
+  limits: z
+    .object({ pro: planLimitValuesSchema, business: planLimitValuesSchema })
+    .nullable(),
 });
 
 export const createSchoolResponseSchema = schoolSchema.extend({

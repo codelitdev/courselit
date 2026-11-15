@@ -7,13 +7,18 @@ import { marketingQuotaFor, syncMarketingQuota } from "./marketing-quota.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { provisionSendLitTeam, updateSendLitTeamQuota } from "./sendlit-client.js";
+import { planLimits } from "./plan-limits-config.js";
 
 const config = { server: "http://sendlit.test", provisioningApiKey: "sl_org_key" };
 
 describe("marketingQuotaFor", () => {
   it("follows the plan limits", () => {
-    expect(marketingQuotaFor({ kind: "paid", plan: "pro", status: "active" })).toBe(10_000);
-    expect(marketingQuotaFor({ kind: "paid", plan: "business", status: "active" })).toBe(50_000);
+    expect(marketingQuotaFor({ kind: "paid", plan: "pro", status: "active" })).toBe(
+      planLimits().pro.marketing_emails_month,
+    );
+    expect(marketingQuotaFor({ kind: "paid", plan: "business", status: "active" })).toBe(
+      planLimits().business.marketing_emails_month,
+    );
     expect(marketingQuotaFor({ kind: "trial", endsAt: new Date() })).toBe(0);
     expect(marketingQuotaFor({ kind: "none", reason: "expired" })).toBe(0);
     expect(marketingQuotaFor({ kind: "oss" })).toBeNull();
@@ -71,7 +76,7 @@ describe("syncMarketingQuota", () => {
     expect(await syncMarketingQuota(deps, world.schoolA.id)).toBe("updated");
     expect(await syncMarketingQuota(deps, world.schoolB.id)).toBe("updated");
     expect(calls).toEqual([
-      { teamId: "team_a", monthlyLimit: 10_000 },
+      { teamId: "team_a", monthlyLimit: planLimits().pro.marketing_emails_month },
       { teamId: "team_b", monthlyLimit: 0 },
     ]);
     await runtime.close();

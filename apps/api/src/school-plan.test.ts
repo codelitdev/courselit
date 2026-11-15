@@ -154,7 +154,8 @@ describe("planIncludesFeature", () => {
     expect(planIncludesFeature(trial, "scorm")).toBe(true);
     expect(planIncludesFeature(trial, "remove_branding")).toBe(false);
     expect(planIncludesFeature(trial, "code_injection")).toBe(false);
-    expect(TRIAL.limits).toEqual({ marketing_emails_month: 0, storage_bytes: 500 * 1024 * 1024 });
+    // The trial's limits are deployment settings (plan-limits-config.ts).
+    expect(TRIAL.features).not.toContain("remove_branding");
   });
 
   it("gives nothing to no plan or an unknown one", () => {

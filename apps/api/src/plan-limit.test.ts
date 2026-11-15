@@ -3,8 +3,8 @@ import { uuidv7 } from "@codelitdev/platform";
 import * as schema from "./db/schema/index.js";
 import { checkLimit, type PlanLimitKey, schoolLimit } from "./plan-limit.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
-import { PLAN_LIMITS } from "./school-plan.js";
 import { seedWorld } from "./seed.js";
+import { planLimits } from "./plan-limits-config.js";
 
 const NOW = new Date("2026-03-01T00:00:00.000Z");
 const MB = 1024 * 1024;
@@ -23,9 +23,11 @@ describe("schoolLimit", () => {
   it("reads a paid plan's allowance from the billing package", async () => {
     const { runtime, world, deps } = await setup();
     expect(await schoolLimit(deps, world.schoolA.id, "storage_bytes")).toBe(
-      PLAN_LIMITS.pro.storage_bytes,
+      planLimits().pro.storage_bytes,
     );
-    expect(await schoolLimit(deps, world.schoolA.id, "marketing_emails_month")).toBe(10_000);
+    expect(await schoolLimit(deps, world.schoolA.id, "marketing_emails_month")).toBe(
+      planLimits().pro.marketing_emails_month,
+    );
     await runtime.close();
   });
 
@@ -39,7 +41,9 @@ describe("schoolLimit", () => {
       startedAt: NOW,
       endsAt: new Date(NOW.getTime() + 14 * 86_400_000),
     });
-    expect(await schoolLimit(deps, world.schoolB.id, "storage_bytes")).toBe(500 * MB);
+    expect(await schoolLimit(deps, world.schoolB.id, "storage_bytes")).toBe(
+      planLimits().trial.storage_bytes,
+    );
     expect(await schoolLimit(deps, world.schoolB.id, "marketing_emails_month")).toBe(0);
     await runtime.close();
   });
@@ -65,10 +69,10 @@ describe("schoolLimit", () => {
 describe("checkLimit", () => {
   it("allows usage that fits and refuses usage that doesn't", async () => {
     const { runtime, world, deps } = await setup();
-    const allowed = PLAN_LIMITS.pro.storage_bytes!;
+    const allowed = planLimits().pro.marketing_emails_month!;
     const fits = await checkLimit(deps, {
       schoolId: world.schoolA.id,
-      key: "storage_bytes",
+      key: "marketing_emails_month",
       used: allowed - 10,
       increment: 10,
       showNumbers: true,
@@ -76,7 +80,7 @@ describe("checkLimit", () => {
     expect(fits.ok).toBe(true);
     const over = await checkLimit(deps, {
       schoolId: world.schoolA.id,
-      key: "storage_bytes",
+      key: "marketing_emails_month",
       used: allowed - 10,
       increment: 11,
       showNumbers: true,
@@ -86,10 +90,23 @@ describe("checkLimit", () => {
     expect(over.error.code).toBe("forbidden");
     expect(over.error.safeDetails).toEqual({
       reason: "plan_limit_reached",
-      limit: "storage_bytes",
+      limit: "marketing_emails_month",
       used: allowed - 10,
       allowed,
     });
+    await runtime.close();
+  });
+
+  it("never limits storage on a paid plan", async () => {
+    const { runtime, world, deps } = await setup();
+    const result = await checkLimit(deps, {
+      schoolId: world.schoolA.id,
+      key: "storage_bytes",
+      used: 10 * 1024 ** 4,
+      increment: 1024 ** 3,
+      showNumbers: true,
+    });
+    expect(result.ok).toBe(true);
     await runtime.close();
   });
 

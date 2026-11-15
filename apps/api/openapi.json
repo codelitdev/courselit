@@ -63506,13 +63506,58 @@
                           "trialDays"
                         ]
                       }
+                    },
+                    "limits": {
+                      "type": "object",
+                      "properties": {
+                        "pro": {
+                          "type": "object",
+                          "properties": {
+                            "marketing_emails_month": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "storage_bytes": {
+                              "type": "integer",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "marketing_emails_month",
+                            "storage_bytes"
+                          ]
+                        },
+                        "business": {
+                          "type": "object",
+                          "properties": {
+                            "marketing_emails_month": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "storage_bytes": {
+                              "type": "integer",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "marketing_emails_month",
+                            "storage_bytes"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "pro",
+                        "business"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "catalogRevision",
                     "currency",
                     "checkoutAvailable",
-                    "offers"
+                    "offers",
+                    "limits"
                   ]
                 }
               }

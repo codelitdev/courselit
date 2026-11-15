@@ -37,6 +37,11 @@ import {
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { createUnsplashClientFromEnv, type UnsplashClient } from "./unsplash.js";
+import {
+  configurePlanLimits,
+  type PlanLimitsConfig,
+  readPlanLimits,
+} from "./plan-limits-config.js";
 
 export type Runtime = DispatchDeps & {
   client: PGlite | Pool;
@@ -55,6 +60,8 @@ export async function createPgliteRuntime(options: {
   observability?: Observability;
   authSecret?: string;
   billingMode?: "cloud" | "oss";
+  /** Plan limits to use instead of the `PLAN_*` environment variables. */
+  planLimits?: PlanLimitsConfig;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
   gifs?: GifClient;
@@ -90,6 +97,9 @@ export async function createPgliteRuntime(options: {
     publicApiUrl = `http://127.0.0.1:${address.port}`;
   }
   const webOrigin = options.webOrigin ?? publicApiUrl;
+  if (billingMode === "cloud") {
+    configurePlanLimits(options.planLimits ?? readPlanLimits(process.env));
+  }
   const billing = composeBilling(db, clock, {
     mode: billingMode,
     webOrigin,
@@ -210,6 +220,8 @@ export async function createPostgresRuntime(options: {
   }) as unknown as AppDb;
   const clock = options.clock ?? systemClock;
   const billingMode = process.env.BILLING_MODE === "oss" ? "oss" : ("cloud" as const);
+  // Plan limits are the deployment's; on courselit.app a missing one fails here.
+  if (billingMode === "cloud") configurePlanLimits(readPlanLimits(process.env));
   const billing = composeBilling(db, clock, {
     mode: billingMode,
     webOrigin: options.webOrigin,

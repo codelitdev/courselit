@@ -11,11 +11,11 @@ some numbers are skipped or merged; see
 | Topic | Decision |
 |---|---|
 | Modes | OSS (self-hosted) unlocks every feature with no limits. Cloud (courselit.app) has two paid plans and no free plan. |
-| Prices | Pro $19 a month or $190 a year. Business $79 a month or $790 a year. No fee on sales on either plan. |
+| Prices | Pro $29 a month or $290 a year. Business $79 a month or $790 a year. No fee on sales on either plan. (Decided 2026-11-15: Pro raised from $19 to stay under the vision's $30 with unlimited storage.) |
 | Payment provider | CourseLit's own plans are paid through LemonSqueezy (replacing Dodo), set up the same way as MediaLit. |
 | Trial | 14 days, no card, one per account. It gets every Business feature except removing branding, public code injection (the owner alone sees injected code) and priority support. No marketing email; 500 MB of storage. |
 | End of trial or subscription | 15 days read-only, then the school is hard-deleted. The deletion itself is a separate change. |
-| Limits | Marketing email per month and storage only: Pro 10,000 emails and 20 GB; Business 50,000 emails and 200 GB. No seat limit. |
+| Limits | Marketing email per month and storage only, set per deployment by environment variables. On courselit.app: Pro 25,000 emails a month and unlimited storage; Business 100,000 emails and unlimited storage; trial no marketing email and 500 MB. No seat limit. |
 | Business-only features | Learner SSO, SCORM, the audit log screen, priority support. |
 | Branding | A "Powered by CourseLit" badge in four places. Any paid plan or OSS can remove it; a trial can't. |
 | Email routing | Learner mail goes through CourseLit's own SendLit organization, in three streams: sign-in codes, transactional mail and community notifications, each with its own budget. The school's SendLit team carries only marketing (broadcasts, sequences, drip). |
@@ -33,8 +33,8 @@ some numbers are skipped or merged; see
 
   | Variable | Value |
   |---|---|
-  | `BILLING_PRO_MONTH_AMOUNT_MINOR` | `1900` |
-  | `BILLING_PRO_YEAR_AMOUNT_MINOR` | `19000` |
+  | `BILLING_PRO_MONTH_AMOUNT_MINOR` | `2900` |
+  | `BILLING_PRO_YEAR_AMOUNT_MINOR` | `29000` |
   | `BILLING_BUSINESS_MONTH_AMOUNT_MINOR` | `7900` |
   | `BILLING_BUSINESS_YEAR_AMOUNT_MINOR` | `79000` |
 
@@ -357,17 +357,27 @@ need to test analytics, pixels and chat widgets before they pay.
 
 | Limit | Key | Trial | Pro | Business |
 |---|---|---|---|---|
-| Marketing emails per month | `marketing_emails_month` | 0 | 10,000 | 50,000 |
-| Media storage | `storage_bytes` | 500 MB | 20 GB | 200 GB |
+| Marketing emails per month | `marketing_emails_month` | 0 | 25,000 | 100,000 |
+| Media storage | `storage_bytes` | 500 MB | unlimited | unlimited |
 
-These are starting values for small schools. Raising them later is easy;
-lowering them hurts existing customers.
-- **Email** costs about $0.10 per 1,000 sends. 10,000 covers a list of
-  1,000–2,000 contacts with four or five broadcasts a month, plus drip and
-  sequences. We limit emails sent, not contacts, because sending is what
-  costs money.
-- **Storage** costs about $0.02 per GB a month, but video bandwidth is the
-  real cost. The storage cap is our only indirect control on it.
+**Set by the deployment, not the code** (decided 2026-11-15). The values come
+from `PLAN_{PRO,BUSINESS,TRIAL}_MARKETING_EMAILS_MONTH` and `_STORAGE`
+(a number, a size such as `500MB`, or `unlimited`), read at startup by
+`apps/api/src/plan-limits-config.ts`. All six are required in `cloud` mode, so
+a missing one fails startup instead of reading as unlimited. The billing
+catalog serves them, and the admin's plan step builds its plan lines from it.
+
+Raising them later is easy; lowering them hurts existing customers.
+- **Email** costs about $0.10 per 1,000 sends, so 25,000 a month costs us at
+  most about $2.50 on a $29 plan. We limit emails sent, not contacts, because
+  sending is what costs money.
+- **Storage** is unlimited on paid plans, as on the hosted offering before the
+  rewrite, so video creators don't have to leave Pro. Video bandwidth is the
+  real cost; the acceptable use policy covers abuse, and the limit can be
+  turned back on per plan with an environment variable. While storage is
+  unlimited, the learner rules that depend on the school's total (25% and
+  90%, S2/S24) apply only during a trial; each learner's own budget always
+  applies.
 - **No seat limit.** An extra admin costs us nothing. Invite spam is handled
   by rate limits (S6).
 
@@ -382,8 +392,9 @@ createBilling({
     business: ["remove_branding", "code_injection", SSO_FEATURE, "scorm", "audit_log"],
   },
   planLimits: {
-    pro:      { marketing_emails_month: 10_000, storage_bytes: 20 * GB },
-    business: { marketing_emails_month: 50_000, storage_bytes: 200 * GB },
+    // From PLAN_* environment variables (plan-limits-config.ts).
+    pro:      { marketing_emails_month: 25_000, storage_bytes: null },
+    business: { marketing_emails_month: 100_000, storage_bytes: null },
   },
 });
 

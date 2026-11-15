@@ -13,8 +13,11 @@ import {
   sweepUnusedLearnerUploads,
   UNUSED_LEARNER_UPLOAD_MS,
 } from "./storage.js";
+import { planLimits } from "./plan-limits-config.js";
 
 const MB = 1024 * 1024;
+/** A share of the trial's storage, in bytes. */
+const trialShare = (share: number) => Math.round(planLimits().trial.storage_bytes! * share);
 
 describe("storageRefusal", () => {
   const usage = (schoolBytes: number, learnerBytes = 0, accountBytes = 0) => ({
@@ -67,7 +70,7 @@ async function setup() {
   const mediaLit = new MemoryMediaLitClient(() => clock.now());
   const runtime = await createPgliteRuntime({ clock, billingMode: "cloud", mediaLit });
   const world = await seedWorld(runtime, clock);
-  // School B gets a trial: 500 MB of storage.
+  // School B gets a trial, with the trial's storage (PLAN_TRIAL_STORAGE).
   await runtime.db.insert(schema.schoolTrials).values({
     id: uuidv7(clock),
     userId: "trial-user",
@@ -111,9 +114,9 @@ describe("storage on courselit.app (S1)", () => {
   it("reserves the declared size, so two uploads can't share the last space", async () => {
     const t = await setup();
     try {
-      const first = await authorize(t, t.ownerB, 400 * MB);
+      const first = await authorize(t, t.ownerB, trialShare(0.8));
       expect(first.status).toBe(201);
-      const second = await authorize(t, t.ownerB, 200 * MB);
+      const second = await authorize(t, t.ownerB, trialShare(0.4));
       expect(second.status).toBe(403);
       expect(reason(second.body)).toBe("plan_limit_reached");
       expect((await finalize(t, t.ownerB, uploadIdOf(first.body))).status).toBe(201);
@@ -125,7 +128,7 @@ describe("storage on courselit.app (S1)", () => {
   it("checks the real size at finalize and deletes what doesn't fit", async () => {
     const t = await setup();
     try {
-      const upload = await authorize(t, t.ownerB, 300 * MB);
+      const upload = await authorize(t, t.ownerB, trialShare(0.6));
       expect(upload.status).toBe(201);
       // Something else filled the school meanwhile.
       await t.runtime.db.insert(schema.media).values({
@@ -136,7 +139,7 @@ describe("storage on courselit.app (S1)", () => {
         canonicalUrl: "https://media.test/assets/filler",
         fileName: "filler.mp4",
         mimeType: "video/mp4",
-        byteSize: 300 * MB,
+        byteSize: trialShare(0.6),
         kind: "video",
         createdAt: t.clock.now(),
         updatedAt: t.clock.now(),

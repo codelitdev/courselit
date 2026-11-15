@@ -1,10 +1,10 @@
 import type { BillingEngine } from "@codelitdev/billing/workflows";
 import { type Clock, createPlatformError, type PlatformError } from "@codelitdev/platform";
-import { schoolPlan, TRIAL } from "./school-plan.js";
+import { type PlanLimitKey, planLimits } from "./plan-limits-config.js";
+import { schoolPlan } from "./school-plan.js";
 import type { AppDb } from "./types.js";
 
-/** The limits CourseLit declares in `planLimits` (school-plan.ts, PLAN_LIMITS). */
-export type PlanLimitKey = keyof typeof TRIAL.limits;
+export type { PlanLimitKey };
 
 export type PlanLimitDeps = {
   db: AppDb;
@@ -36,7 +36,7 @@ export async function schoolLimit(
         return undefined;
       }
     case "trial":
-      return TRIAL.limits[key];
+      return planLimits().trial[key];
     case "none":
       return 0;
     case "unknown":
