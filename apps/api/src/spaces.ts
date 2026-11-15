@@ -836,6 +836,7 @@ export async function createLearnerSpacePost(
     category: space.name,
     gifUrls: communityGifUrls(input.gifUrls ?? []),
     pinned: false,
+    editedAt: null,
     deletedAt: null,
     createdAt: now,
     updatedAt: now,

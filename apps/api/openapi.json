@@ -5150,6 +5150,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -5176,6 +5180,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -5656,6 +5661,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -5682,6 +5691,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -6152,6 +6162,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -6178,6 +6192,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -6836,6 +6851,10 @@
                               ]
                             }
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -6858,6 +6877,7 @@
                           "content",
                           "media",
                           "reactions",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -7306,6 +7326,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -7328,6 +7352,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -7762,6 +7787,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -7784,6 +7813,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -14670,6 +14700,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -14798,6 +14832,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt",
@@ -15190,6 +15225,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -15318,6 +15357,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt",
@@ -16113,6 +16153,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -16139,6 +16183,7 @@
                           "commentsCount",
                           "subscribed",
                           "pinned",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -16612,6 +16657,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -16638,6 +16687,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -17052,6 +17102,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -17078,6 +17132,7 @@
                     "commentsCount",
                     "subscribed",
                     "pinned",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -17461,6 +17516,10 @@
                               ]
                             }
                           },
+                          "editedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
                           "deletedAt": {
                             "type": "string",
                             "nullable": true
@@ -17483,6 +17542,7 @@
                           "content",
                           "media",
                           "reactions",
+                          "editedAt",
                           "deletedAt",
                           "createdAt",
                           "updatedAt"
@@ -17924,6 +17984,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -17946,6 +18010,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"
@@ -18373,6 +18438,10 @@
                         ]
                       }
                     },
+                    "editedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "deletedAt": {
                       "type": "string",
                       "nullable": true
@@ -18395,6 +18464,7 @@
                     "content",
                     "media",
                     "reactions",
+                    "editedAt",
                     "deletedAt",
                     "createdAt",
                     "updatedAt"

@@ -908,8 +908,14 @@ describe.serial("school spaces and included products", () => {
         body,
       });
     expect((await editPost(buyerHeaders, { pinned: true })).status).toBe(403);
+    // Saving without a change doesn't mark the post edited.
+    const unchanged = await editPost(buyerHeaders, { title: "Spam" });
+    expect(unchanged.status).toBe(200);
+    expect((unchanged.body as { editedAt: string | null }).editedAt).toBeNull();
     const edited = await editPost(buyerHeaders, { title: "Spam, edited" });
     expect(edited.status).toBe(200);
+    const postEditedAt = (edited.body as { editedAt: string | null }).editedAt;
+    expect(postEditedAt).toEqual(expect.any(String));
     // Back-date the post so a pin that touched the date would show.
     const editedAt = "2026-01-01T00:00:00.000Z";
     await runtime.db
@@ -925,6 +931,7 @@ describe.serial("school spaces and included products", () => {
     expect(pinned.body).toMatchObject({ pinned: true, title: "Spam, edited" });
     // Pinning isn't an edit, so the post keeps its date.
     expect((pinned.body as { updatedAt: string }).updatedAt).toBe(editedAt);
+    expect((pinned.body as { editedAt: string | null }).editedAt).toBe(postEditedAt);
     expect((await editPost(headers, { pinned: false })).body).toMatchObject({
       pinned: false,
     });
@@ -942,6 +949,7 @@ describe.serial("school spaces and included products", () => {
       body: { content: commentContent("First take") },
     });
     expect(commented.status).toBe(201);
+    expect((commented.body as { editedAt: string | null }).editedAt).toBeNull();
     const commentId = (commented.body as { id: string }).id;
     const editComment = (requestHeaders: Record<string, string>, text: string) =>
       dispatch(runtime, {
@@ -953,6 +961,9 @@ describe.serial("school spaces and included products", () => {
     const editedComment = await editComment(buyerHeaders, "Second take");
     expect(editedComment.status).toBe(200);
     expect((editedComment.body as { content: string }).content).toContain("Second take");
+    expect((editedComment.body as { editedAt: string | null }).editedAt).toEqual(
+      expect.any(String),
+    );
     expect((await editComment(headers, "Not yours")).status).toBe(403);
 
     const removed = await dispatch(runtime, {
