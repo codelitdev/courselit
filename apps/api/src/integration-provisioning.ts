@@ -35,6 +35,7 @@ import type { SendSchoolEmailPayload } from "./school-emails.js";
 import { sendSystemMail } from "./system-mail.js";
 import { deleteShadowUserIfOrphaned } from "./shadow-users.js";
 import { enqueuePlanFeatureSync } from "./plan-features.js";
+import { loadSchoolSender } from "./sendlit-sender.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -184,8 +185,12 @@ async function provisionOneSendLitSchool(
       {
         externalId: payload.externalId,
         name: payload.name,
-        // Learners see the school, not the shared sending account, as the sender.
-        sender: { fromName: payload.name },
+        // Learners see the school, not the shared sending account, as the
+        // sender, and replies reach the school's owner.
+        sender: await loadSchoolSender(db, {
+          schoolId: job.schoolId,
+          name: payload.name,
+        }),
         mailingAddress: payload.mailingAddress,
         // SendLit only accepts a positive quota here; it is set to 0 below
         // before the team is used, so a new team never starts unlimited (S20).

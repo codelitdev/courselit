@@ -124,7 +124,7 @@ describe("CourseLit SendLit provisioning", () => {
 
     const provisioned: Array<{
       name: string;
-      sender?: { fromName?: string };
+      sender?: { fromName?: string; replyTo?: string };
       quota?: { monthlyLimit?: number | null };
     }> = [];
     const quotas: Array<{ teamId: string; monthlyLimit: number | null }> = [];
@@ -155,6 +155,8 @@ describe("CourseLit SendLit provisioning", () => {
     expect(processed).toBe(true);
     // Its email goes out under the school's name, not the shared account's.
     expect(provisioned[0]?.sender?.fromName).toBe("SendLit School");
+    // Replies to its marketing email reach the school's owner.
+    expect(provisioned[0]?.sender?.replyTo).toBe(world.owner.email);
     // A new team never starts unlimited (S20): provisioned with the smallest
     // quota SendLit accepts, then set to 0 before it is marked ready.
     expect(provisioned[0]?.quota).toEqual({ monthlyLimit: 1 });
