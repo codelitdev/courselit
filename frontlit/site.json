@@ -93,31 +93,31 @@
         "textTransform": "uppercase"
       },
       "display": {
-        "fontFamily": "font-hanken-grotesk",
+        "fontFamily": "font-alegreya",
         "fontSize": "text-6xl",
-        "fontWeight": "font-semibold",
+        "fontWeight": "font-bold",
         "lineHeight": "leading-tight",
-        "letterSpacing": "tracking-tighter",
+        "letterSpacing": "tracking-tight",
         "fluid": {
           "min": 34,
           "max": 56
         }
       },
       "header1": {
-        "fontFamily": "font-hanken-grotesk",
+        "fontFamily": "font-alegreya",
         "fontSize": "text-5xl",
-        "fontWeight": "font-semibold",
+        "fontWeight": "font-bold",
         "lineHeight": "leading-tight",
-        "letterSpacing": "tracking-tighter",
+        "letterSpacing": "tracking-tight",
         "fluid": {
           "min": 28,
           "max": 48
         }
       },
       "header2": {
-        "fontFamily": "font-hanken-grotesk",
+        "fontFamily": "font-alegreya",
         "fontSize": "text-4xl",
-        "fontWeight": "font-semibold",
+        "fontWeight": "font-bold",
         "lineHeight": "leading-tight",
         "letterSpacing": "tracking-tight",
         "fluid": {
@@ -126,9 +126,9 @@
         }
       },
       "header3": {
-        "fontFamily": "font-hanken-grotesk",
+        "fontFamily": "font-alegreya",
         "fontSize": "text-2xl",
-        "fontWeight": "font-semibold",
+        "fontWeight": "font-bold",
         "lineHeight": "leading-snug",
         "letterSpacing": "tracking-tight"
       },
@@ -357,7 +357,7 @@
   },
   "footer": {
     "layout": "columns",
-    "tagline": "The open-source platform for courses, downloads and communities.",
+    "tagline": "Sell courses, downloads and memberships from your own website.",
     "columns": [
       {
         "title": "Product",
