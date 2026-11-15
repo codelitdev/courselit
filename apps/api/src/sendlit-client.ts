@@ -1350,6 +1350,8 @@ export async function sendSendLitTransactionalEmail(
     html?: string;
     variables?: Record<string, unknown>;
     text?: string;
+    /** The From name for this email; the address stays the team's. */
+    fromName?: string;
     replyTo?: string;
     subject?: string;
     headers?: Record<string, string>;

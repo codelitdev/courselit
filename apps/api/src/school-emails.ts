@@ -2,6 +2,7 @@ import { type Clock, uuidv7 } from "@codelitdev/platform";
 import { and, count, eq, gte } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { schoolSiteUrl } from "./membership-events.js";
+import { senderName } from "./sendlit-sender.js";
 import {
   lastKnownPlan,
   planIncludesFeature,
@@ -23,6 +24,8 @@ export type SendSchoolEmailPayload = {
   idempotencyKey: string;
   /** Which platform team sends it; set by `queueSchoolEmail`. */
   stream?: MailStream;
+  /** The From name: the school's, on learner mail; set by `queueSchoolEmail`. */
+  fromName?: string;
 };
 
 /**
@@ -178,8 +181,9 @@ export async function schoolEmailSender(
  * block sign-in codes or receipts, and the school's team carries marketing
  * only (docs/wip/plan-limits.md, section 6).
  *
- * The subject names the school, because the sender is the platform until
- * SendLit can set a sender name per message. Transactional mail over the
+ * Learner mail goes out under the school's name, at the platform's address.
+ * The subject names the school too, so the mail is recognisable wherever the
+ * From name isn't shown. Transactional mail over the
  * school's daily cap waits for the next UTC day; notifications over theirs
  * are skipped and stay in-app.
  */
@@ -258,7 +262,16 @@ export async function queueSchoolEmail(
     schoolId,
     provider: "system",
     type: "send_system_email",
-    payload: { ...payload, ...body, subject, stream },
+    payload: {
+      ...payload,
+      ...body,
+      subject,
+      stream,
+      // Staff mail is CourseLit's own, so it keeps CourseLit's name.
+      ...(stream !== "staff" && senderName(school.name)
+        ? { fromName: senderName(school.name)! }
+        : {}),
+    },
     status: "pending",
     attempts: 0,
     revision: 1,

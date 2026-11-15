@@ -35,6 +35,8 @@ export type SystemMailMessage = {
   text: string;
   html?: string;
   replyTo?: string;
+  /** The From name instead of the sender's own, at the sender's address. */
+  fromName?: string;
   /** Which platform team sends it; staff mail when unset. */
   stream?: MailStream;
   /** Lets SendLit drop a retried duplicate. */
@@ -120,6 +122,7 @@ export async function sendSystemMail(
         to: message.to,
         subject: message.subject,
         html: message.html ?? textAsHtml(message.text),
+        ...(message.fromName ? { fromName: message.fromName } : {}),
         ...(message.replyTo ? { replyTo: message.replyTo } : {}),
         ...(message.idempotencyKey ? { idempotencyKey: message.idempotencyKey } : {}),
       },
@@ -143,7 +146,7 @@ export async function sendSystemMail(
             ...(smtp.auth ? { auth: smtp.auth } : {}),
           });
       await transporter.sendMail({
-        ...(smtp.from ? { from: smtp.from } : {}),
+        ...(smtp.from ? { from: smtpFrom(smtp.from, message.fromName) } : {}),
         to: message.to,
         subject: message.subject,
         text: message.text,
@@ -164,6 +167,16 @@ export async function sendSystemMail(
 
   console.info("[CourseLit] System email", message); // eslint-disable-line no-console
   return "console";
+}
+
+/** `EMAIL_FROM` with its name replaced by `fromName`, keeping the address. */
+export function smtpFrom(
+  from: string,
+  fromName: string | undefined,
+): string | { name: string; address: string } {
+  if (!fromName) return from;
+  const address = /<([^<>]+)>\s*$/.exec(from)?.[1] ?? from.trim();
+  return { name: fromName, address };
 }
 
 export function sendTeamInvitationEmail(input: {

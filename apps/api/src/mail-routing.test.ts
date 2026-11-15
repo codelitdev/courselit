@@ -62,6 +62,20 @@ describe("queueSchoolEmail", () => {
     await runtime.close();
   });
 
+  it("signs learner mail with the school's name and staff mail with CourseLit's", async () => {
+    const { runtime, world, clock } = await setup();
+    await queueSchoolEmail(runtime.db, world.schoolA.id, email(1), clock, "sign_in");
+    await queueSchoolEmail(runtime.db, world.schoolA.id, email(2), clock, "staff");
+    const byStream = Object.fromEntries(
+      (await jobs(runtime, world.schoolA.id)).map((job) => {
+        const payload = job.payload as { stream: string; fromName?: string };
+        return [payload.stream, payload.fromName];
+      }),
+    );
+    expect(byStream).toEqual({ sign_in: "School A", staff: undefined });
+    await runtime.close();
+  });
+
   it("names the school in the subject, once", async () => {
     const { runtime, world, clock } = await setup();
     await queueSchoolEmail(runtime.db, world.schoolA.id, email(1), clock);

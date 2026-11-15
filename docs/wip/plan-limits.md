@@ -7,10 +7,12 @@ S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 [Security requirements](#7-security-requirements).
 
 **Deferred until another change ships:**
-- **Platform mail sender name:** the school's name as the From name of
-  learner mail (section 6) needs a sender name per message in SendLit.
-  Until then the From name is "CourseLit". Marketing mail already uses the
-  school's name and replies go to the owner (#886).
+- **Platform mail sender name:** CourseLit sends the school's name as the
+  From name of learner mail (section 6); staff mail keeps "CourseLit".
+  SendLit honours it once its per-message `fromName` ships (SendLit branch
+  `feat/transactional-from-name`); older SendLit ignores the field and
+  sends as "CourseLit". Marketing mail already uses the school's name, and
+  replies go to the owner (#886).
 - **Message tags (S21):** bounce and complaint tracking per school needs
   tags per message in SendLit. Until then, the daily caps and the suspend
   command are the controls.
@@ -560,8 +562,12 @@ schools' marketing.
     address, as on `main`. SendLit pins one sender name per team, so this
     needs a generic SendLit feature: a sender name per message, restricted
     to the school's name, which is already validated under S14.
-  - **Until SendLit has it:** the From name is "CourseLit", and the subject
-    names the school (for example "Sign in to <school>").
+  - **Built (2026-11-15):** `queueSchoolEmail` sends the school's name as
+    `fromName` on learner mail, cleaned by `senderName` in
+    `sendlit-sender.ts`. The subject still names the school (for example
+    "Sign in to <school>"), so mail is recognisable where the From name
+    isn't shown, and while a SendLit without `fromName` sends as
+    "CourseLit".
   - **Reply-To:** the reply-to address from the school's mailing settings,
     if one is set. `main` set no Reply-To on these emails. The rewrite has no
     reply-by-email for notifications.
