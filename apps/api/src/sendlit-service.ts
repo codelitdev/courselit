@@ -4,6 +4,7 @@ import {
   createPlatformError,
   uuidv7,
 } from "@codelitdev/platform";
+import { loadSchoolSender } from "./sendlit-sender.js";
 
 export type Result<T, E = PlatformError> =
   | { ok: true; value: T }
@@ -201,7 +202,7 @@ export async function ensureSendLitTeam(
       {
         externalId: school.publicId,
         name: school.name,
-        sender: { fromName: school.name },
+        sender: await loadSchoolSender(db, school),
       },
       { config },
     );
