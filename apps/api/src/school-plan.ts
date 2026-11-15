@@ -4,6 +4,7 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { SSO_FEATURE } from "./sso-config.js";
 import type { AppDb } from "./types.js";
+import { COURSELIT_PLAN_LIMITS } from "@courselit/api-contract/courselit-plans";
 
 export const REMOVE_BRANDING_FEATURE = "remove_branding";
 export const CODE_INJECTION_FEATURE = "code_injection";
@@ -28,19 +29,12 @@ export const PLAN_FEATURES: Record<"pro" | "business", readonly string[]> = {
 };
 
 const MB = 1024 * 1024;
-const GB = 1024 * MB;
 
 /**
  * What each paid plan allows (docs/wip/plan-limits.md, section 5). `null` is
  * unlimited. These are also the `planLimits` given to the billing package.
  */
-export const PLAN_LIMITS: Record<
-  "pro" | "business",
-  { marketing_emails_month: number | null; storage_bytes: number | null }
-> = {
-  pro: { marketing_emails_month: 10_000, storage_bytes: 20 * GB },
-  business: { marketing_emails_month: 50_000, storage_bytes: 200 * GB },
-};
+export const PLAN_LIMITS = COURSELIT_PLAN_LIMITS;
 
 /**
  * The trial's own features and limits. It is Business minus removing
