@@ -9,9 +9,9 @@ S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 **Deferred until another change ships:**
 - **Platform mail sender name:** CourseLit sends the school's name as the
   From name of learner mail (section 6); staff mail keeps "CourseLit".
-  SendLit honours it once its per-message `fromName` ships (SendLit branch
-  `feat/transactional-from-name`); older SendLit ignores the field and
-  sends as "CourseLit". Marketing mail already uses the school's name, and
+  SendLit's per-message `fromName` is merged (SendLit #204) and takes
+  effect wherever that SendLit is deployed; an older SendLit ignores the
+  field and sends as "CourseLit". Marketing mail already uses the school's name, and
   replies go to the owner (#886).
 - **Message tags (S21):** bounce and complaint tracking per school needs
   tags per message in SendLit. Until then, the daily caps and the suspend
