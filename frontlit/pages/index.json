@@ -92,6 +92,20 @@
         "defaultPeriod": "monthly",
         "tiers": [
           {
+            "name": "Self-hosted",
+            "price": "Free",
+            "priceYearly": "Free",
+            "description": "Run CourseLit on your own servers. Every feature included.",
+            "features": [
+              "All Business features",
+              "Your own infrastructure and data",
+              "Bring your own email and storage services",
+              "Community support on Discord"
+            ],
+            "buttonCaption": "Self-hosting guide",
+            "buttonAction": "/docs/self-hosting"
+          },
+          {
             "name": "Pro",
             "price": "$29/mo",
             "priceYearly": "$290/yr",
@@ -125,20 +139,6 @@
             ],
             "buttonCaption": "Start free trial",
             "buttonAction": "https://app.courselit.cluster.clqa.site"
-          },
-          {
-            "name": "Self-hosted",
-            "price": "Free",
-            "priceYearly": "Free",
-            "description": "Run CourseLit on your own servers. Every feature included.",
-            "features": [
-              "All Business features",
-              "Your own infrastructure and data",
-              "Bring your own email and storage services",
-              "Community support on Discord"
-            ],
-            "buttonCaption": "Self-hosting guide",
-            "buttonAction": "/docs/self-hosting"
           }
         ]
       }
