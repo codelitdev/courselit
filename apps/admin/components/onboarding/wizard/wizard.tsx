@@ -1423,35 +1423,36 @@ export function SetupWizard({
           aria-label="Setup"
           className="flex min-h-0 flex-col border-r border-border"
         >
-          <div
-            ref={formRef}
-            className="mx-auto flex min-h-0 w-full max-w-[640px] flex-1 flex-col gap-6 overflow-auto px-12 pb-8 pt-12 max-[1180px]:px-9 max-[1180px]:pt-10 max-md:gap-5 max-md:px-4 max-md:pb-6 max-md:pt-6"
-          >
-            {failed ? (
-              <div
-                role="alert"
-                className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
-              >
-                <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
-                <div className="min-w-0 flex-1">
-                  <b className="font-semibold">We couldn&apos;t save this step.</b>{" "}
-                  Check your connection and try again. Nothing you entered is lost.
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const retry = failed.retry;
-                    setFailed(null);
-                    retry();
-                  }}
+          {/* The pane scrolls, so its scrollbar sits on the pane's edge; the
+              form stays a centred column inside it. */}
+          <div ref={formRef} className="flex min-h-0 flex-1 flex-col overflow-auto">
+            <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col gap-6 px-12 pb-8 pt-12 max-[1180px]:px-9 max-[1180px]:pt-10 max-md:gap-5 max-md:px-4 max-md:pb-6 max-md:pt-6">
+              {failed ? (
+                <div
+                  role="alert"
+                  className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
                 >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-            {form}
+                  <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
+                  <div className="min-w-0 flex-1">
+                    <b className="font-semibold">We couldn&apos;t save this step.</b>{" "}
+                    Check your connection and try again. Nothing you entered is lost.
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const retry = failed.retry;
+                      setFailed(null);
+                      retry();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
+              {form}
+  </div>
           </div>
           {showFooter ? (
             <footer className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border bg-card px-12 py-3.5 max-[1180px]:px-9 max-md:px-4 max-md:py-3">
