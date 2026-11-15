@@ -63,7 +63,9 @@ Email marketing, contacts and segments use the email service for each school.
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `SENDLIT_SERVER` | Needed for email marketing | none | The address of the email service |
-| `SENDLIT_ORGANIZATION_API_KEY` | Needed for email marketing | none | An organization key that lets the worker provision an email team for each new school |
+| `SENDLIT_ORGANIZATION_API_KEY` | Needed for email marketing | none | An organization key that lets the worker provision an email team for each new school and set its sending limits. Give it the scopes `organization:read`, `teams:provision`, `teams:read`, `teams:manage`, `teams:keys` and `usage:read`. |
+
+In the email service, give the organization a default email provider and turn on granting it to new teams automatically. Each school then sends its marketing email through that provider, under the school's name, with replies going to the school's owner.
 
 ### Optional integrations
 

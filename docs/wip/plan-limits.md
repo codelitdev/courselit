@@ -537,6 +537,24 @@ schools' marketing.
   - **Reply-To:** the reply-to address from the school's mailing settings,
     if one is set. `main` set no Reply-To on these emails. The rewrite has no
     reply-by-email for notifications.
+- **The marketing sender** (decided 2026-11-15): each school's team sends
+  through the organization's shared provider, at its address. The team's
+  grant on that provider carries the school's name as the From name and the
+  owner's email as Reply-To, set when the team is provisioned
+  (`sendlit-sender.ts`). A school's name can't be changed after it's
+  created, so the name never needs re-syncing. When the mailing settings get
+  their own reply-to address, it should replace the owner's email here too.
+- **The school-team organization on SendLit** (set up once per deployment):
+  - a default provider sending from a subdomain address, such as
+    `hello@mail.courselit.app`, so one school's spam can't damage the domain
+    that platform mail comes from;
+  - `autoGrantDefaultEsp` on, so every new team gets a grant on it;
+  - `teamEspEnabledByDefault` off, so schools can't switch to their own
+    provider until that is offered (tracker item 60a);
+  - CourseLit's organization key (`SENDLIT_ORGANIZATION_API_KEY`) with
+    `organization:read`, `teams:provision`, `teams:read`, `teams:manage`,
+    `teams:keys` and `usage:read`. Without `teams:manage`, the plan's quota
+    can't be written to the team.
 - **Tracking each school (S14):** this needs another generic SendLit
   feature, a tag on each message. CourseLit tags every platform email with
   its school, so bounces and complaints can be counted per school.
