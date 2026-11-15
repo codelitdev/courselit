@@ -82,9 +82,22 @@ import {
 } from "./learner-gif-picker";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
+import { editedNote } from "@/lib/community-edited";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
 type Learner = z.infer<typeof learnerSchema>;
+
+/** " · Edited", with when in its tooltip, after a post's or comment's date. */
+function EditedNote({ editedAt }: { editedAt: string | null | undefined }) {
+  const note = editedNote(editedAt);
+  if (!note) return null;
+  return (
+    <>
+      {" · "}
+      <span title={note.title}>{note.label}</span>
+    </>
+  );
+}
 type Community = z.infer<typeof communitySchema>;
 type CommunityPost = z.infer<typeof communityPostSchema>;
 type CommunityComment = z.infer<typeof communityCommentSchema>;
@@ -1827,10 +1840,10 @@ export function LearnerCommunity({
                                   : "Community member")}
                             </LearnerText2>
                             <LearnerText2 className="text-sm text-muted-foreground">
-                              <time dateTime={post.updatedAt}>
-                                {new Date(post.updatedAt).toLocaleDateString()}
-                              </time>{" "}
-                              · {post.category}
+                              <time dateTime={post.createdAt}>
+                                {new Date(post.createdAt).toLocaleDateString()}
+                              </time>
+                              <EditedNote editedAt={post.editedAt} /> · {post.category}
                             </LearnerText2>
                           </div>
                         </div>
@@ -2020,6 +2033,9 @@ export function LearnerCommunity({
                                         {new Date(
                                           comment.createdAt,
                                         ).toLocaleDateString()}
+                                        {!comment.deletedAt ? (
+                                          <EditedNote editedAt={comment.editedAt} />
+                                        ) : null}
                                       </span>
                                     </div>
                                     {!comment.deletedAt ? (

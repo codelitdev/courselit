@@ -1361,6 +1361,8 @@ export const communityPostSchema = z.object({
   commentsCount: z.number().int().nonnegative(),
   subscribed: z.boolean(),
   pinned: z.boolean(),
+  /** When the author last changed it; null if never edited. */
+  editedAt: z.string().nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -1397,6 +1399,8 @@ export const communityCommentSchema = z.object({
   content: z.string(),
   media: z.array(communityMediaSchema),
   reactions: z.array(communityReactionSchema),
+  /** When the author last changed it; null if never edited. */
+  editedAt: z.string().nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
