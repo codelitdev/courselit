@@ -146,6 +146,7 @@ describe("school emails", () => {
         to: "visitor@example.com",
         subject: "Thank you for signing up for Starter kit | School A",
         stream: "transactional",
+        fromName: "School A",
       }),
     ]);
     await runtime.close();

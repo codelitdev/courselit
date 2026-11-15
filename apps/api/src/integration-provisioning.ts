@@ -896,6 +896,7 @@ export async function processNextSystemEmailJob(
       text: payload.text ?? "",
       ...(payload.html ? { html: payload.html } : {}),
       stream: payload.stream ?? "transactional",
+      ...(payload.fromName ? { fromName: payload.fromName } : {}),
       idempotencyKey: payload.idempotencyKey ?? job.id,
     });
     await finishJob(db, job, clock);
