@@ -2260,7 +2260,8 @@ export const updateMailingSettingsBodySchema = z
   .object({ mailingAddress: z.string().trim().min(1).max(1000) })
   .passthrough();
 export const mailSequenceListQuerySchema = z.object({
-  type: z.enum(["broadcast", "sequence"]).optional(),
+  /** Broadcasts and sequences are listed separately. */
+  type: z.enum(["broadcast", "sequence"]),
   status: z.string().optional(),
   search: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),

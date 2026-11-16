@@ -1,8 +1,48 @@
 /**
- * CourseLit's server-side adapter for SendLit's supported REST API. Hand-written
- * to maintain strict boundary separation: CourseLit never imports SendLit workspace
- * contracts or internal database types.
+ * CourseLit's server-side adapter for SendLit's supported REST API, built on
+ * the official `sendlit` SDK. CourseLit never imports SendLit workspace
+ * contracts or internal database types; the SDK is the only boundary.
  */
+
+import {
+  type AddSequenceEmailInput,
+  type Contact,
+  type CreateContactInput,
+  type CreatedTeamKey,
+  type CreateSegmentInput,
+  type CreateSequenceInput,
+  type CreateTeamKeyInput,
+  type CreateTemplateInput,
+  type EmailTemplate,
+  type GeneralSettings,
+  type ListContactsQuery,
+  type ListSequencesQuery,
+  type ProvisionedTeamUsage,
+  type ProvisionTeamInput,
+  type ProvisionTeamResponse,
+  type RemoveTagResult,
+  type RenameTagInput,
+  type RenameTagResult,
+  type Segment,
+  type SendEmailInput,
+  type SendEmailResponse,
+  SendLit,
+  SendLitError,
+  type SendSequenceEmailTestInput,
+  type Sequence,
+  type SequenceEmailTestResult,
+  type SequenceStats,
+  type SystemTemplate,
+  type Tag,
+  type TagReferences,
+  type TrackEventInput,
+  type TrackEventResponse,
+  type UpdateContactInput,
+  type UpdateSegmentInput,
+  type UpdateSequenceEmailInput,
+  type UpdateSequenceInput,
+  type UpdateTemplateInput,
+} from "sendlit";
 
 export type SendLitConfig = {
   server: string | null;
@@ -16,6 +56,8 @@ export class SendLitApiError extends Error {
     public readonly retryable = true,
     /** The service's own error text, safe to show to creators. */
     public readonly detail?: string,
+    /** SendLit's machine-readable error code, e.g. `plan_limit_exceeded`. */
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "SendLitApiError";
@@ -31,7 +73,7 @@ export function isSendLitQuotaExhausted(error: unknown): boolean {
   return (
     error instanceof SendLitApiError &&
     error.status === 429 &&
-    /quota_exhausted/.test(`${error.message} ${error.detail ?? ""}`)
+    /quota_exhausted/.test(`${error.code ?? ""} ${error.detail ?? ""}`)
   );
 }
 
@@ -49,339 +91,141 @@ export type FetchLike = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-export type SendLitProvisionTeamInput = {
-  externalId: string;
-  name: string;
-  sender?: {
-    fromName?: string;
-    replyTo?: string;
-  };
-  mailingAddress?: string;
-  delivery?: {
-    source: "organization" | "custom";
-    espId?: string;
-  };
-  /**
-   * SendLit's field names (`schemas/teams.ts` in SendLit's API contract). On
-   * provisioning SendLit only accepts positive numbers; use
-   * `updateSendLitTeamQuota` to set 0. `null` means unlimited.
-   */
-  quota?: {
-    monthlyLimit?: number | null;
-    dailyLimit?: number | null;
-  };
-};
+export type SendLitProvisionTeamInput = ProvisionTeamInput;
+export type SendLitCustomFields = NonNullable<CreateContactInput["customFields"]>;
+export type SendLitUpdateContactInput = UpdateContactInput;
+export type SendLitListSequencesQuery = ListSequencesQuery;
+export type SendLitCreateSequenceInput = CreateSequenceInput;
+export type SendLitUpdateSequenceInput = UpdateSequenceInput;
+export type SendLitUpdateSequenceEmailInput = UpdateSequenceEmailInput;
+export type SendLitProvisionTeamResult = ProvisionTeamResponse;
+export type SendLitContact = Contact;
+export type SendLitSegmentFilter = CreateSegmentInput["filter"];
+export type SendLitFilterCondition = SendLitSegmentFilter["filters"][number];
+export type SendLitSegment = Segment;
+export type SendLitTemplateContent = CreateTemplateInput["content"];
+export type SendLitTemplate = EmailTemplate;
+export type SendLitSystemTemplate = SystemTemplate;
+export type SendLitSequence = Sequence;
+export type SendLitSequenceEmail = Sequence["emails"][number];
+export type SendLitGeneralSettings = GeneralSettings;
+export type SendLitSequenceStats = SequenceStats;
+export type SendLitEmailTestResult = SequenceEmailTestResult;
+export type SendLitTrackEventInput = TrackEventInput;
+export type SendLitTrackEventResult = TrackEventResponse;
+/** A team's marketing email this month, as SendLit counts it. */
+export type SendLitMonthUsage = ProvisionedTeamUsage["month"];
+export type SendLitTagSummary = Tag;
+export type SendLitTagReferences = TagReferences;
+export type SendLitRenameTagResult = RenameTagResult;
+export type SendLitDeleteTagResult = RemoveTagResult;
 
-export type SendLitProvisionTeamResult = {
-  teamId: string;
-  externalId: string;
-  name: string;
-  deliverySource?: {
-    type: string;
-    espId?: string;
-  };
-  created: boolean;
-  apiKey: string | null;
-};
-
-export type SendLitContact = {
-  contactId: string;
-  email: string;
-  name: string | null;
-  subscribed: boolean;
-  customFields: Record<string, unknown>;
-  tags: string[];
-  unsubscribeToken?: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-};
-
-export type SendLitFilterCondition =
-  | { name: "email"; condition: "is" | "contains" | "not_contains"; value: string; valueLabel?: string }
-  | { name: "tag"; condition: "is" | "is_not"; value: string; valueLabel?: string }
-  | { name: "subscription"; condition: "is"; value: "subscribed" | "unsubscribed"; valueLabel?: string }
-  | { name: "signedUp"; condition: "before" | "after" | "on"; value: string; valueLabel?: string }
-  | {
-      name: "customField";
-      key: string;
-      condition:
-        | "is"
-        | "is_not"
-        | "contains"
-        | "not_contains"
-        | "has"
-        | "not_has"
-        | "before"
-        | "after"
-        | "on"
-        | "exists"
-        | "not_exists";
-      value?: string;
-      valueLabel?: string;
-    };
-
-export type SendLitSegmentFilter = {
-  aggregator: "and" | "or";
-  filters: SendLitFilterCondition[];
-};
-
-export type SendLitSegment = {
-  segmentId: string;
-  name: string;
-  filter: SendLitSegmentFilter;
-  createdAt: string | null;
-  updatedAt: string | null;
-};
-
-export type SendLitTemplateContent = {
-  style?: Record<string, unknown>;
-  meta?: Record<string, unknown>;
-  content: unknown;
-};
-
-export type SendLitTemplate = {
-  templateId: string;
-  title: string;
-  purpose: "marketing" | "transactional";
-  content: SendLitTemplateContent;
-  createdAt: string | null;
-  updatedAt: string | null;
-};
-
-export type SendLitSystemTemplate = {
-  templateId: string;
-  title: string;
-  purpose: "marketing" | "transactional";
-  content: SendLitTemplateContent;
-};
-
-export type SendLitSequenceEmail = {
-  emailId: string;
-  id?: string;
-  subject: string;
-  content: unknown;
-  delayInMillis: number;
-  published: boolean;
-  templateId?: string;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
-
-export type SendLitSequence = {
-  sequenceId: string;
-  id?: string;
-  title?: string;
-  type: "broadcast" | "sequence";
-  status?: string;
-  templateId?: string;
-  emails?: SendLitSequenceEmail[];
-  triggerType?: string | null;
-  triggerData?: string | null;
-  triggerFilter?: unknown;
-  filter?: unknown;
-  excludeFilter?: unknown;
-  emailsOrder?: string[];
-  /** Whether emails link to a hosted copy of themselves. */
-  viewInBrowser?: boolean;
-  entrantsCount?: number;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
-
-export function normalizeSendLitSequenceEmail(raw: any): SendLitSequenceEmail {
-  if (!raw || typeof raw !== "object") return raw;
-  const emailId = raw.emailId || raw.id || "";
-  return {
-    ...raw,
-    emailId,
-    id: emailId,
-  };
-}
-
-export function normalizeSendLitSequence(raw: any): SendLitSequence {
-  if (!raw || typeof raw !== "object") return raw;
-  const sequenceId = raw.sequenceId || raw.id || "";
-  const emails = Array.isArray(raw.emails)
-    ? raw.emails.map(normalizeSendLitSequenceEmail)
-    : [];
-  return {
-    ...raw,
-    sequenceId,
-    id: sequenceId,
-    emails,
-  };
-}
-
-function normalizeSequenceEmailResponse(
-  raw: any,
+/**
+ * `addEmail` and `updateEmail` answer with the whole sequence; pick the
+ * email out of it. Without an explicit id, the newest email is the one just
+ * added.
+ */
+function emailFromSequence(
+  sequence: Sequence,
   expectedEmailId?: string,
 ): SendLitSequenceEmail {
-  if (raw && typeof raw === "object" && Array.isArray(raw.emails)) {
-    const sequence = normalizeSendLitSequence(raw);
-    const emailId =
-      expectedEmailId ||
-      sequence.emailsOrder?.[sequence.emailsOrder.length - 1];
-    const email = sequence.emails?.find((item) => item.emailId === emailId);
-    if (email) return email;
-    throw new Error("SendLit did not include the email in its sequence response.");
+  const emailId =
+    expectedEmailId || sequence.emailsOrder[sequence.emailsOrder.length - 1];
+  const email = sequence.emails.find((item) => item.emailId === emailId);
+  if (email) return email;
+  throw new Error("SendLit did not include the email in its sequence response.");
+}
+
+// ---------------------------------------------------------------------------
+// Transport: the official `sendlit` SDK
+// ---------------------------------------------------------------------------
+
+/** Each attempt is aborted after this long. */
+const REQUEST_TIMEOUT_MS = 15_000;
+
+type SendLitAuth = { teamApiKey?: string; provisioningApiKey?: string };
+type SendLitClientOptions = { config?: SendLitConfig; fetcher?: FetchLike };
+
+/**
+ * The one place the SDK's `SendLitError` becomes a `SendLitApiError`.
+ * `detail` is the response's own `error` text (or its `message`), and `code`
+ * is SendLit's machine-readable error code.
+ */
+function toSendLitApiError(error: unknown): unknown {
+  if (!(error instanceof SendLitError)) return error;
+  if (error.status === 0) {
+    // No response: a timeout, an unreachable server, or a rejected argument.
+    if (error.code === "timeout")
+      return new SendLitApiError("SendLit request timed out");
+    if (error.code === "connection_error")
+      return new SendLitApiError("SendLit is unreachable");
+    return new SendLitApiError(error.message, undefined, false, undefined, error.code);
   }
-
-  // Keep compatibility with SendLit responses that return the email directly.
-  return normalizeSendLitSequenceEmail(raw);
+  const body =
+    error.body && typeof error.body === "object"
+      ? (error.body as { error?: unknown; message?: unknown })
+      : {};
+  const detailText = typeof body.error === "string" ? body.error : body.message;
+  const detail =
+    typeof detailText === "string" && detailText.trim()
+      ? detailText.trim().slice(0, 300)
+      : undefined;
+  return new SendLitApiError(
+    `SendLit API error ${error.status}: ${error.message}`.slice(0, 340),
+    error.status,
+    error.status >= 500 || error.status === 429,
+    detail,
+    error.code,
+  );
 }
 
-export function normalizeSendLitTemplate(raw: any): SendLitTemplate {
-  if (!raw || typeof raw !== "object") return raw;
-  const templateId = raw.templateId || raw.id || "";
-  const title = raw.title || raw.name || "Untitled Template";
-  return {
-    ...raw,
-    templateId,
-    id: templateId,
-    title,
-    name: title,
-    purpose: raw.purpose || "marketing",
-    content: raw.content ?? { content: { html: "" } },
-    createdAt: raw.createdAt ?? null,
-    updatedAt: raw.updatedAt ?? null,
-  };
-}
-
-export type SendLitGeneralSettings = {
-  mailingAddress: string | null;
-  updatedAt?: string | null;
-};
-
-export type SendLitSequenceStats = {
-  sent: number;
-  openRate: number;
-  clickThroughRate: number;
-  subscribersCount: number;
-  bounceRate?: number;
-  complaintRate?: number;
-};
-
-export type SendLitEmailTestResult = {
-  sent: string[];
-  skipped?: unknown;
-  lastTestSentAt: string | null;
-};
-
-export type SendLitTrackEventInput = {
-  email?: string;
-  contactId?: string;
-  eventName: string;
-  properties?: Record<string, unknown>;
-  occurredAt?: string;
-  idempotencyKey?: string;
-  createContact?: boolean;
-  contact?: { name?: string; customFields?: Record<string, unknown> };
-};
-
-export type SendLitTrackEventResult = {
-  eventId: string;
-  contactId: string;
-  duplicate: boolean;
-  contactCreated: boolean;
-};
-
-export type SendLitOverview = {
-  totalSubscribers?: number;
-  activeSubscribers?: number;
-  contacts?: { total: number; subscribed: number; unsubscribed: number };
-  deliveries?: Record<string, unknown>;
-  rangeDays?: number;
-};
-
-function errorMessage(status: number, body: string): string {
-  const detail = body.replace(/\s+/g, " ").trim().slice(0, 300);
-  return detail ? `SendLit API error ${status}: ${detail}` : `SendLit API error ${status}`;
-}
-
-function errorDetail(body: string): string | undefined {
-  try {
-    const parsed = JSON.parse(body) as { error?: unknown; message?: unknown };
-    const detail = typeof parsed.error === "string" ? parsed.error : parsed.message;
-    return typeof detail === "string" && detail.trim() ? detail.trim().slice(0, 300) : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-async function requestJson<T>(
+/**
+ * Runs `call` against a fresh SDK client. The SDK's automatic retries are off
+ * because CourseLit's outbox already retries, the timeout matches the old
+ * client, and the injected `fetcher` is the SDK's `fetch`.
+ */
+async function withSendLit<T>(
   config: SendLitConfig,
-  path: string,
-  options: {
-    method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
-    teamApiKey?: string;
-    provisioningApiKey?: string;
-    body?: unknown;
-  },
-  fetcher: FetchLike = fetch,
+  auth: SendLitAuth,
+  fetcher: FetchLike | undefined,
+  call: (sendlit: SendLit) => Promise<T>,
 ): Promise<T> {
   if (!config.server) {
     throw new SendLitApiError("SENDLIT_SERVER is not configured", undefined, false);
   }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
-    let response: Response;
-    try {
-      const authHeaders: Record<string, string> = {};
-      if (options.teamApiKey) {
-        authHeaders["x-sendlit-apikey"] = options.teamApiKey;
-      } else if (options.provisioningApiKey) {
-        authHeaders.authorization = `Bearer ${options.provisioningApiKey}`;
-      }
-
-      response = await fetcher(`${config.server}${path}`, {
-        method: options.method ?? "GET",
-        headers: {
-          accept: "application/json",
-          ...(options.body === undefined ? {} : { "content-type": "application/json" }),
-          ...authHeaders,
-        },
-        body: options.body === undefined ? undefined : JSON.stringify(options.body),
-        signal: controller.signal,
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error && error.name === "AbortError"
-          ? "SendLit request timed out"
-          : "SendLit is unreachable";
-      throw new SendLitApiError(message);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    if (!response.ok) {
-      const text = await response.text();
-      const retryable = response.status >= 500 || response.status === 429;
-      throw new SendLitApiError(
-        errorMessage(response.status, text),
-        response.status,
-        retryable,
-        errorDetail(text),
-      );
-    }
-
-    return (await response.json()) as T;
-  } finally {
-    clearTimeout(timeout);
+    const sendlit = new SendLit({
+      endpoint: config.server,
+      apiKey: auth.teamApiKey ?? auth.provisioningApiKey,
+      // Never pick this up from the process environment.
+      teamId: "",
+      maxRetries: 0,
+      timeout: REQUEST_TIMEOUT_MS,
+      fetch: fetcher as typeof fetch | undefined,
+    });
+    return await call(sendlit);
+  } catch (error) {
+    throw toSendLitApiError(error);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Provisioning operations (Organization API key scoped)
-// ---------------------------------------------------------------------------
+function team<T>(
+  teamApiKey: string,
+  options: SendLitClientOptions,
+  call: (sendlit: SendLit) => Promise<T>,
+): Promise<T> {
+  return withSendLit(
+    options.config ?? sendLitConfig(),
+    { teamApiKey },
+    options.fetcher,
+    call,
+  );
+}
 
-export async function provisionSendLitTeam(
-  input: SendLitProvisionTeamInput,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<SendLitProvisionTeamResult> {
+function provisioning<T>(
+  options: SendLitClientOptions,
+  call: (sendlit: SendLit) => Promise<T>,
+): Promise<T> {
   const config = options.config ?? sendLitConfig();
   if (!config.provisioningApiKey) {
     throw new SendLitApiError(
@@ -390,16 +234,23 @@ export async function provisionSendLitTeam(
       false,
     );
   }
-  return requestJson<SendLitProvisionTeamResult>(
+  return withSendLit(
     config,
-    "/provisioning/teams",
-    {
-      method: "POST",
-      provisioningApiKey: config.provisioningApiKey,
-      body: input,
-    },
+    { provisioningApiKey: config.provisioningApiKey },
     options.fetcher,
+    call,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Provisioning operations (Organization API key scoped)
+// ---------------------------------------------------------------------------
+
+export async function provisionSendLitTeam(
+  input: SendLitProvisionTeamInput,
+  options: SendLitClientOptions = {},
+): Promise<SendLitProvisionTeamResult> {
+  return provisioning(options, (s) => s.provisioning.provisionTeam(input));
 }
 
 /**
@@ -409,125 +260,25 @@ export async function provisionSendLitTeam(
 export async function updateSendLitTeamQuota(
   teamId: string,
   quota: { monthlyLimit: number | null; dailyLimit?: number | null },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  if (!config.provisioningApiKey) {
-    throw new SendLitApiError(
-      "SENDLIT_ORGANIZATION_API_KEY is not configured",
-      undefined,
-      false,
-    );
-  }
-  await requestJson(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}`,
-    {
-      method: "PATCH",
-      provisioningApiKey: config.provisioningApiKey,
-      body: { quota },
-    },
-    options.fetcher,
-  );
+  await provisioning(options, (s) => s.provisioning.updateTeam(teamId, { quota }));
 }
-
-/** A team's marketing email this month, as SendLit counts it. */
-export type SendLitMonthUsage = { limit: number | null; accepted: number; reserved: number; resetsAt: string };
 
 export async function getSendLitTeamUsage(
   teamId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitMonthUsage> {
-  const config = options.config ?? sendLitConfig();
-  if (!config.provisioningApiKey) {
-    throw new SendLitApiError(
-      "SENDLIT_ORGANIZATION_API_KEY is not configured",
-      undefined,
-      false,
-    );
-  }
-  const usage = await requestJson<{ month: SendLitMonthUsage }>(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}/usage`,
-    { method: "GET", provisioningApiKey: config.provisioningApiKey },
-    options.fetcher,
-  );
+  const usage = await provisioning(options, (s) => s.provisioning.getTeamUsage(teamId));
   return usage.month;
 }
 
 export async function rotateSendLitTeamKey(
   teamId: string,
-  input: { name: string },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<{ keyId: string; key: string }> {
-  const config = options.config ?? sendLitConfig();
-  if (!config.provisioningApiKey) {
-    throw new SendLitApiError(
-      "SENDLIT_ORGANIZATION_API_KEY is not configured",
-      undefined,
-      false,
-    );
-  }
-  return requestJson<{ keyId: string; key: string }>(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}/keys`,
-    {
-      method: "POST",
-      provisioningApiKey: config.provisioningApiKey,
-      body: input,
-    },
-    options.fetcher,
-  );
-}
-
-export async function getSendLitProvisionedTeam(
-  teamId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<unknown> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}`,
-    {
-      method: "GET",
-      provisioningApiKey: config.provisioningApiKey ?? undefined,
-    },
-    options.fetcher,
-  );
-}
-
-export async function updateSendLitProvisionedTeam(
-  teamId: string,
-  input: { name?: string; sender?: unknown; mailingAddress?: string },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<unknown> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}`,
-    {
-      method: "PATCH",
-      provisioningApiKey: config.provisioningApiKey ?? undefined,
-      body: input,
-    },
-    options.fetcher,
-  );
-}
-
-export async function deleteSendLitProvisionedTeam(
-  teamId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson(
-    config,
-    `/provisioning/teams/${encodeURIComponent(teamId)}`,
-    {
-      method: "DELETE",
-      provisioningApiKey: config.provisioningApiKey ?? undefined,
-    },
-    options.fetcher,
-  );
+  input: CreateTeamKeyInput,
+  options: SendLitClientOptions = {},
+): Promise<CreatedTeamKey> {
+  return provisioning(options, (s) => s.provisioning.createTeamKey(teamId, input));
 }
 
 // ---------------------------------------------------------------------------
@@ -536,29 +287,17 @@ export async function deleteSendLitProvisionedTeam(
 
 export async function getSendLitGeneralSettings(
   teamApiKey: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitGeneralSettings> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitGeneralSettings>(
-    config,
-    "/settings/general",
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.settings.general.get());
 }
 
 export async function updateSendLitGeneralSettings(
   teamApiKey: string,
   input: { mailingAddress: string },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitGeneralSettings> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitGeneralSettings>(
-    config,
-    "/settings/general",
-    { method: "PUT", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.settings.general.update(input));
 }
 
 // ---------------------------------------------------------------------------
@@ -567,256 +306,118 @@ export async function updateSendLitGeneralSettings(
 
 export async function listSendLitContacts(
   teamApiKey: string,
-  query: {
-    offset?: number;
-    rowsPerPage?: number;
-    q?: string;
-    segmentId?: string;
-    filter?: string;
-    tag?: string;
-  } = {},
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  query: ListContactsQuery = {},
+  options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitContact[]; total: number }> {
-  const config = options.config ?? sendLitConfig();
-  const search = new URLSearchParams();
-  if (query.offset !== undefined) search.set("offset", String(query.offset));
-  if (query.rowsPerPage !== undefined) search.set("rowsPerPage", String(query.rowsPerPage));
-  if (query.q) search.set("q", query.q);
-  if (query.segmentId) search.set("segmentId", query.segmentId);
-  if (query.filter) search.set("filter", query.filter);
-  if (query.tag) search.set("tag", query.tag);
-
-  const qs = search.toString();
-  return requestJson<{ items: SendLitContact[]; total: number }>(
-    config,
-    `/contacts${qs ? `?${qs}` : ""}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.list(query));
 }
 
 export async function createSendLitContact(
   teamApiKey: string,
-  input: {
-    email: string;
-    name?: string;
-    tags?: string[];
-    customFields?: Record<string, unknown>;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: CreateContactInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitContact> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitContact>(
-    config,
-    "/contacts",
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.create(input));
 }
 
 export async function getSendLitContact(
   teamApiKey: string,
   contactId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitContact> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitContact>(
-    config,
-    `/contacts/${encodeURIComponent(contactId)}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.get(contactId));
 }
 
 export async function updateSendLitContact(
   teamApiKey: string,
   contactId: string,
-  input: {
-    email?: string;
-    name?: string;
-    subscribed?: boolean;
-    tags?: string[];
-    customFields?: Record<string, unknown>;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: UpdateContactInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitContact> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitContact>(
-    config,
-    `/contacts/${encodeURIComponent(contactId)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.update(contactId, input));
 }
 
 export async function deleteSendLitContact(
   teamApiKey: string,
   contactId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<void>(
-    config,
-    `/contacts/${encodeURIComponent(contactId)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.remove(contactId));
 }
 
 export async function addSendLitContactTag(
   teamApiKey: string,
   contactId: string,
   tag: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitContact> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitContact>(
-    config,
-    `/contacts/${encodeURIComponent(contactId)}/tags/${encodeURIComponent(tag)}`,
-    { method: "POST", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.addTag(contactId, tag));
 }
 
 export async function removeSendLitContactTag(
   teamApiKey: string,
   contactId: string,
   tag: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitContact> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitContact>(
-    config,
-    `/contacts/${encodeURIComponent(contactId)}/tags/${encodeURIComponent(tag)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.contacts.removeTag(contactId, tag));
 }
 
 // ---------------------------------------------------------------------------
 // Segments operations (Team API key scoped)
 // ---------------------------------------------------------------------------
 
+/** SendLit lists segments as a bare array; callers read `{ items }`. */
 export async function listSendLitSegments(
   teamApiKey: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitSegment[] }> {
-  const config = options.config ?? sendLitConfig();
-  // SendLit answers with a bare array of segments.
-  const items = await requestJson<SendLitSegment[]>(
-    config,
-    "/segments",
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  const items = await team(teamApiKey, options, (s) => s.segments.list());
   return { items };
 }
 
 export async function createSendLitSegment(
   teamApiKey: string,
-  input: { name: string; filter: SendLitSegmentFilter },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: CreateSegmentInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSegment> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitSegment>(
-    config,
-    "/segments",
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.segments.create(input));
 }
 
 export async function getSendLitSegment(
   teamApiKey: string,
   segmentId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSegment> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitSegment>(
-    config,
-    `/segments/${encodeURIComponent(segmentId)}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.segments.get(segmentId));
 }
 
 export async function updateSendLitSegment(
   teamApiKey: string,
   segmentId: string,
-  input: { name?: string; filter?: SendLitSegmentFilter },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: UpdateSegmentInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSegment> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitSegment>(
-    config,
-    `/segments/${encodeURIComponent(segmentId)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.segments.update(segmentId, input));
 }
 
 export async function deleteSendLitSegment(
   teamApiKey: string,
   segmentId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<void>(
-    config,
-    `/segments/${encodeURIComponent(segmentId)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.segments.remove(segmentId));
 }
 
 // ---------------------------------------------------------------------------
 // Tag operations (Team API key scoped). Tags live on SendLit contacts.
 // ---------------------------------------------------------------------------
 
-export type SendLitTagSummary = { tag: string; contactCount: number };
-
-export type SendLitTagReferences = {
-  tag: string;
-  contactCount: number;
-  segments: { segmentId: string; name: string }[];
-  sequences: {
-    sequenceId: string;
-    title: string;
-    type: "broadcast" | "sequence";
-    status: string;
-    usages: ("filter" | "exclude_filter" | "trigger" | "email_action")[];
-  }[];
-  signupForms: { formId: string; name: string }[];
-};
-
-export type SendLitRenameTagResult = {
-  tag: string;
-  previousTag: string;
-  contactsUpdated: number;
-  segmentsUpdated: number;
-  sequencesUpdated: number;
-  signupFormsUpdated: number;
-};
-
-export type SendLitDeleteTagResult = {
-  tag: string;
-  contactsUpdated: number;
-  references: SendLitTagReferences;
-};
-
-type SendLitClientOptions = { config?: SendLitConfig; fetcher?: FetchLike };
-
 export async function listSendLitTags(
   teamApiKey: string,
   options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitTagSummary[] }> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<{ items: SendLitTagSummary[] }>(
-    config,
-    "/tags",
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.tags.list());
 }
 
 export async function getSendLitTagReferences(
@@ -824,28 +425,16 @@ export async function getSendLitTagReferences(
   tag: string,
   options: SendLitClientOptions = {},
 ): Promise<SendLitTagReferences> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitTagReferences>(
-    config,
-    `/tags/${encodeURIComponent(tag)}/references`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.tags.references(tag));
 }
 
 export async function renameSendLitTag(
   teamApiKey: string,
   tag: string,
-  input: { name: string },
+  input: RenameTagInput,
   options: SendLitClientOptions = {},
 ): Promise<SendLitRenameTagResult> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitRenameTagResult>(
-    config,
-    `/tags/${encodeURIComponent(tag)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.tags.rename(tag, input));
 }
 
 export async function deleteSendLitTag(
@@ -853,153 +442,69 @@ export async function deleteSendLitTag(
   tag: string,
   options: SendLitClientOptions = {},
 ): Promise<SendLitDeleteTagResult> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitDeleteTagResult>(
-    config,
-    `/tags/${encodeURIComponent(tag)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.tags.remove(tag));
 }
 
 // ---------------------------------------------------------------------------
 // Templates operations (Team API key scoped)
 // ---------------------------------------------------------------------------
 
+/** SendLit lists templates as a bare array; callers read `{ items, total }`. */
 export async function listSendLitTemplates(
   teamApiKey: string,
   query: { purpose?: "marketing" | "transactional" } = {},
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitTemplate[]; total: number }> {
-  const config = options.config ?? sendLitConfig();
-  const search = new URLSearchParams();
-  if (query.purpose) search.set("purpose", query.purpose);
-  const qs = search.toString();
-  const raw = await requestJson<any>(
-    config,
-    `/templates${qs ? `?${qs}` : ""}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  const rawList = Array.isArray(raw)
-    ? raw
-    : Array.isArray(raw?.items)
-      ? raw.items
-      : Array.isArray(raw?.templates)
-        ? raw.templates
-        : Array.isArray(raw?.data)
-          ? raw.data
-          : [];
-  const normalizedItems = rawList.map(normalizeSendLitTemplate);
-  const total = typeof raw?.total === "number" ? raw.total : normalizedItems.length;
-  return { items: normalizedItems, total };
+  const items = await team(teamApiKey, options, (s) => s.templates.list(query));
+  return { items, total: items.length };
 }
 
 export async function createSendLitTemplate(
   teamApiKey: string,
-  input: {
-    title?: string;
-    name?: string;
-    purpose?: "marketing" | "transactional";
-    content: SendLitTemplateContent;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: CreateTemplateInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitTemplate> {
-  const config = options.config ?? sendLitConfig();
-  const title = input.title ?? input.name ?? "Untitled Template";
-  const raw = await requestJson<any>(
-    config,
-    "/templates",
-    { method: "POST", teamApiKey, body: { ...input, title, name: title } },
-    options.fetcher,
-  );
-  return normalizeSendLitTemplate(raw);
+  return team(teamApiKey, options, (s) => s.templates.create(input));
 }
 
 export async function getSendLitTemplate(
   teamApiKey: string,
   templateId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitTemplate> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/templates/${encodeURIComponent(templateId)}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  return normalizeSendLitTemplate(raw);
+  return team(teamApiKey, options, (s) => s.templates.get(templateId));
 }
 
 export async function updateSendLitTemplate(
   teamApiKey: string,
   templateId: string,
-  input: {
-    title?: string;
-    name?: string;
-    purpose?: "marketing" | "transactional";
-    content?: SendLitTemplateContent;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: UpdateTemplateInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitTemplate> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/templates/${encodeURIComponent(templateId)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
-  );
-  return normalizeSendLitTemplate(raw);
+  return team(teamApiKey, options, (s) => s.templates.update(templateId, input));
 }
 
 export async function duplicateSendLitTemplate(
   teamApiKey: string,
   templateId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitTemplate> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/templates/${encodeURIComponent(templateId)}/duplicate`,
-    { method: "POST", teamApiKey },
-    options.fetcher,
-  );
-  return normalizeSendLitTemplate(raw);
+  return team(teamApiKey, options, (s) => s.templates.duplicate(templateId));
 }
 
 export async function deleteSendLitTemplate(
   teamApiKey: string,
   templateId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<void>(
-    config,
-    `/templates/${encodeURIComponent(templateId)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.templates.remove(templateId));
 }
 
 export async function listSendLitSystemTemplates(
   teamApiKey: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitSystemTemplate[] }> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    "/system-templates",
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  const rawList = Array.isArray(raw)
-    ? raw
-    : Array.isArray(raw?.items)
-      ? raw.items
-      : Array.isArray(raw?.data)
-        ? raw.data
-        : [];
-  return { items: rawList.map(normalizeSendLitTemplate) };
+  return team(teamApiKey, options, (s) => s.templates.listSystem());
 }
 
 // ---------------------------------------------------------------------------
@@ -1008,68 +513,35 @@ export async function listSendLitSystemTemplates(
 
 export async function listSendLitSequences(
   teamApiKey: string,
-  query: {
-    type?: "broadcast" | "sequence";
-    offset?: number;
-    itemsPerPage?: number;
-  } = {},
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  query: ListSequencesQuery,
+  options: SendLitClientOptions = {},
 ): Promise<{ items: SendLitSequence[]; total: number }> {
-  const config = options.config ?? sendLitConfig();
-  const search = new URLSearchParams();
-  if (query.type) search.set("type", query.type);
-  if (query.offset !== undefined) search.set("offset", String(query.offset));
-  if (query.itemsPerPage !== undefined) search.set("itemsPerPage", String(query.itemsPerPage));
-  const qs = search.toString();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences${qs ? `?${qs}` : ""}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  const rawList: any[] = Array.isArray(raw)
-    ? raw
-    : Array.isArray(raw?.items)
-      ? raw.items
-      : Array.isArray(raw?.sequences)
-        ? raw.sequences
-        : Array.isArray(raw?.data)
-          ? raw.data
-          : [];
-  const normalizedItems = rawList.map(normalizeSendLitSequence);
-  const total = typeof raw?.total === "number" ? raw.total : normalizedItems.length;
-  return { items: normalizedItems, total };
+  return team(teamApiKey, options, (s) => s.sequences.list(query));
 }
 
+/**
+ * SendLit's create call takes no title, so a given title is set with a
+ * follow-up update; if that fails the sequence is still returned with it.
+ */
 export async function createSendLitSequence(
   teamApiKey: string,
-  input: {
-    type: "broadcast" | "sequence";
-    title?: string;
-    templateId?: string;
-    deliverySource?: unknown;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: CreateSequenceInput & { title?: string },
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequence> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    "/sequences",
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
-  );
-  let created = normalizeSendLitSequence(raw);
-  if (input.title && input.title.trim() && created.title !== input.title.trim()) {
+  const { title, ...body } = input;
+  let created = await team(teamApiKey, options, (s) => s.sequences.create(body));
+  const wanted = title?.trim();
+  if (wanted && created.title !== wanted) {
     try {
       const patched = await updateSendLitSequence(
         teamApiKey,
         created.sequenceId,
-        { title: input.title.trim() },
+        { title: wanted },
         options,
       );
-      created = { ...created, ...patched, title: input.title.trim() };
+      created = { ...created, ...patched, title: wanted };
     } catch {
-      created.title = input.title.trim();
+      created = { ...created, title: wanted };
     }
   }
   return created;
@@ -1078,88 +550,48 @@ export async function createSendLitSequence(
 export async function getSendLitSequence(
   teamApiKey: string,
   sequenceId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequence> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  return normalizeSendLitSequence(raw);
+  return team(teamApiKey, options, (s) => s.sequences.get(sequenceId));
 }
 
 export async function updateSendLitSequence(
   teamApiKey: string,
   sequenceId: string,
-  input: {
-    title?: string;
-    triggerType?: string | null;
-    triggerData?: string | null;
-    triggerFilter?: unknown;
-    filter?: unknown;
-    excludeFilter?: unknown;
-    emailsOrder?: string[];
-    viewInBrowser?: boolean;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: UpdateSequenceInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequence> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
-  );
-  return normalizeSendLitSequence(raw);
+  return team(teamApiKey, options, (s) => s.sequences.update(sequenceId, input));
 }
 
 export async function deleteSendLitSequence(
   teamApiKey: string,
   sequenceId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<void>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.sequences.remove(sequenceId));
 }
 
 export async function addSendLitSequenceEmail(
   teamApiKey: string,
   sequenceId: string,
-  input: {
-    subject: string;
-    content?: unknown;
-    delayInMillis?: number;
-    delayHours?: number;
-    templateId: string;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: AddSequenceEmailInput &
+    Pick<UpdateSequenceEmailInput, "subject" | "content" | "delayInMillis"> & {
+      delayHours?: number;
+    },
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequenceEmail> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/emails`,
-    { method: "POST", teamApiKey, body: { templateId: input.templateId } },
-    options.fetcher,
+  const sequence = await team(teamApiKey, options, (s) =>
+    s.sequences.addEmail(sequenceId, { templateId: input.templateId }),
   );
-  const created = normalizeSequenceEmailResponse(raw);
+  const created = emailFromSequence(sequence);
   const delayInMillis =
     input.delayInMillis !== undefined
       ? input.delayInMillis
       : input.delayHours !== undefined
         ? input.delayHours * 3600 * 1000
         : undefined;
-  const update: {
-    subject?: string;
-    content?: unknown;
-    delayInMillis?: number;
-  } = {};
+  const update: UpdateSequenceEmailInput = {};
   if (input.subject !== created.subject) update.subject = input.subject;
   if (input.content !== undefined) update.content = input.content;
   if (delayInMillis !== undefined && delayInMillis !== created.delayInMillis) {
@@ -1180,81 +612,46 @@ export async function updateSendLitSequenceEmail(
   teamApiKey: string,
   sequenceId: string,
   emailId: string,
-  input: {
-    subject?: string;
-    content?: unknown;
-    delayInMillis?: number;
-    published?: boolean;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: UpdateSequenceEmailInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequenceEmail> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/emails/${encodeURIComponent(emailId)}`,
-    { method: "PATCH", teamApiKey, body: input },
-    options.fetcher,
+  const sequence = await team(teamApiKey, options, (s) =>
+    s.sequences.updateEmail(sequenceId, emailId, input),
   );
-  return normalizeSequenceEmailResponse(raw, emailId);
+  return emailFromSequence(sequence, emailId);
 }
 
 export async function deleteSendLitSequenceEmail(
   teamApiKey: string,
   sequenceId: string,
   emailId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<void> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<void>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/emails/${encodeURIComponent(emailId)}`,
-    { method: "DELETE", teamApiKey },
-    options.fetcher,
-  );
+  await team(teamApiKey, options, (s) => s.sequences.removeEmail(sequenceId, emailId));
 }
 
 export async function startSendLitSequence(
   teamApiKey: string,
   sequenceId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequence> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/start`,
-    { method: "POST", teamApiKey },
-    options.fetcher,
-  );
-  return normalizeSendLitSequence(raw);
+  return team(teamApiKey, options, (s) => s.sequences.start(sequenceId));
 }
 
 export async function pauseSendLitSequence(
   teamApiKey: string,
   sequenceId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequence> {
-  const config = options.config ?? sendLitConfig();
-  const raw = await requestJson<any>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/pause`,
-    { method: "POST", teamApiKey },
-    options.fetcher,
-  );
-  return normalizeSendLitSequence(raw);
+  return team(teamApiKey, options, (s) => s.sequences.pause(sequenceId));
 }
 
 export async function getSendLitSequenceStats(
   teamApiKey: string,
   sequenceId: string,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitSequenceStats> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitSequenceStats>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/stats`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.sequences.stats(sequenceId));
 }
 
 /** The mailing service reports a sequence's recipients as contact ids only. */
@@ -1262,40 +659,20 @@ export async function listSendLitSequenceSubscribers(
   teamApiKey: string,
   sequenceId: string,
   query: { page?: number; limit?: number } = {},
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<string[]> {
-  const config = options.config ?? sendLitConfig();
-  const search = new URLSearchParams();
-  if (query.page !== undefined) search.set("page", String(query.page));
-  if (query.limit !== undefined) search.set("limit", String(query.limit));
-  const qs = search.toString();
-  const raw = await requestJson<unknown>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/subscribers${qs ? `?${qs}` : ""}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
-  const list = Array.isArray(raw)
-    ? raw
-    : Array.isArray((raw as { items?: unknown })?.items)
-      ? (raw as { items: unknown[] }).items
-      : [];
-  return list.filter((id): id is string => typeof id === "string" && id !== "");
+  return team(teamApiKey, options, (s) => s.sequences.subscribers(sequenceId, query));
 }
 
 export async function sendSendLitSequenceEmailTest(
   teamApiKey: string,
   sequenceId: string,
   emailId: string,
-  input: { to: string[] },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  input: SendSequenceEmailTestInput,
+  options: SendLitClientOptions = {},
 ): Promise<SendLitEmailTestResult> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitEmailTestResult>(
-    config,
-    `/sequences/${encodeURIComponent(sequenceId)}/emails/${encodeURIComponent(emailId)}/test`,
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
+  return team(teamApiKey, options, (s) =>
+    s.sequences.sendEmailTest(sequenceId, emailId, input),
   );
 }
 
@@ -1306,36 +683,9 @@ export async function sendSendLitSequenceEmailTest(
 export async function trackSendLitEvent(
   teamApiKey: string,
   input: SendLitTrackEventInput,
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
+  options: SendLitClientOptions = {},
 ): Promise<SendLitTrackEventResult> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<SendLitTrackEventResult>(
-    config,
-    "/events",
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Overview / Metrics (Team API key scoped)
-// ---------------------------------------------------------------------------
-
-export async function getSendLitOverview(
-  teamApiKey: string,
-  query: { rangeDays?: number } = {},
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<SendLitOverview> {
-  const config = options.config ?? sendLitConfig();
-  const search = new URLSearchParams();
-  if (query.rangeDays !== undefined) search.set("rangeDays", String(query.rangeDays));
-  const qs = search.toString();
-  return requestJson<SendLitOverview>(
-    config,
-    `/overview${qs ? `?${qs}` : ""}`,
-    { method: "GET", teamApiKey },
-    options.fetcher,
-  );
+  return team(teamApiKey, options, (s) => s.events.track(input));
 }
 
 // ---------------------------------------------------------------------------
@@ -1344,26 +694,8 @@ export async function getSendLitOverview(
 
 export async function sendSendLitTransactionalEmail(
   teamApiKey: string,
-  input: {
-    to: string;
-    templateId?: string;
-    html?: string;
-    variables?: Record<string, unknown>;
-    text?: string;
-    /** The From name for this email; the address stays the team's. */
-    fromName?: string;
-    replyTo?: string;
-    subject?: string;
-    headers?: Record<string, string>;
-    idempotencyKey?: string;
-  },
-  options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<{ txeId: string; status?: string }> {
-  const config = options.config ?? sendLitConfig();
-  return requestJson<{ txeId: string; status?: string }>(
-    config,
-    "/emails",
-    { method: "POST", teamApiKey, body: input },
-    options.fetcher,
-  );
+  input: SendEmailInput,
+  options: SendLitClientOptions = {},
+): Promise<SendEmailResponse> {
+  return team(teamApiKey, options, (s) => s.emails.send(input));
 }

@@ -23,6 +23,8 @@ import {
   rotateSendLitTeamKey,
   updateSendLitTeamQuota,
   SendLitApiError,
+  type SendLitCustomFields,
+  type SendLitUpdateContactInput,
   type SendLitConfig,
   type SendLitContact,
   sendLitConfig,
@@ -434,7 +436,7 @@ async function syncSendLitContactJob(
       schoolAccount.learnerRegisteredAt ?? schoolAccount.createdAt
     ).toISOString();
 
-    const mergedCustomFields: Record<string, unknown> = {
+    const mergedCustomFields: SendLitCustomFields = {
       ...(currentContact?.customFields ?? {}),
       [COURSELIT_PRODUCT_IDS_FIELD]: productIds,
       [COURSELIT_IS_COMMUNITY_MEMBER_FIELD]: isCommunityMember ? "true" : "false",
@@ -443,11 +445,7 @@ async function syncSendLitContactJob(
       [COURSELIT_SIGNED_UP_FIELD]: signedUp,
     };
 
-    const updateBody: {
-      name: string;
-      customFields: Record<string, unknown>;
-      subscribed?: boolean;
-    } = {
+    const updateBody: SendLitUpdateContactInput = {
       name: schoolAccount.displayName,
       customFields: mergedCustomFields,
     };
@@ -732,7 +730,7 @@ async function failJob(
     error instanceof SendLitApiError &&
     (error.status === 402 ||
       error.status === 403 ||
-      error.message.includes("plan_limit_exceeded"))
+      error.code === "plan_limit_exceeded")
   ) {
     message = "sendlit_quota_exceeded";
     actionRequired = true;

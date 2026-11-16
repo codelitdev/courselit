@@ -5,6 +5,7 @@ import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock, type Runtime } from "./runtime.js";
 import { createSchool } from "./schools.js";
 import { seedWorld, type SeededWorld } from "./seed.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 import {
   deleteSendLitTag,
   getSendLitTagReferences,
@@ -57,7 +58,7 @@ function mockSendLit(
 }
 
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status });
+  jsonResponse(body, status);
 
 describe("SendLit tag client", () => {
   it("uses the right paths, methods and encoding", async () => {
