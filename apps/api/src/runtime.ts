@@ -100,7 +100,7 @@ export async function createPgliteRuntime(options: {
   if (billingMode === "cloud") {
     configurePlanLimits(options.planLimits ?? readPlanLimits(process.env));
   }
-  const billing = composeBilling(db, clock, {
+  const billing = await composeBilling(db, clock, {
     mode: billingMode,
     webOrigin,
   });
@@ -222,7 +222,7 @@ export async function createPostgresRuntime(options: {
   const billingMode = process.env.BILLING_MODE === "oss" ? "oss" : ("cloud" as const);
   // Plan limits are the deployment's; on courselit.app a missing one fails here.
   if (billingMode === "cloud") configurePlanLimits(readPlanLimits(process.env));
-  const billing = composeBilling(db, clock, {
+  const billing = await composeBilling(db, clock, {
     mode: billingMode,
     webOrigin: options.webOrigin,
   });

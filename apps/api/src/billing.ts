@@ -6,7 +6,11 @@ import {
   createReturnUrlValidator,
 } from "@codelitdev/platform/billing";
 import { drizzleVerificationGrantStore } from "@codelitdev/platform/billing/drizzle";
-import { createLemonSqueezyBillingProvider } from "@codelitdev/billing/providers/lemonsqueezy";
+import {
+  type BillingProviderEnvConfig,
+  createBillingProvidersFromEnv,
+  readBillingProviderEnv,
+} from "@codelitdev/billing/providers/env";
 import { COURSELIT_OFFER_KEYS, REFERENCE_OFFERS } from "@codelitdev/billing/testing";
 import {
   type BillingEngine,
@@ -26,117 +30,53 @@ export type BillingBundle = {
   fake: FakeBillingProvider;
   /** Single-use, session-bound action grants stored in the `verification` table. */
   grants: ReturnType<typeof createBillingActionGrants>;
+  /** Providers whose webhooks are accepted: the checkout provider, then any still connected. */
+  providers: string[];
 };
 
-type OfferKey = (typeof COURSELIT_OFFER_KEYS)[number];
-
-export type LemonSqueezyConfig = {
-  apiKey: string;
-  storeId: string;
-  /** The current signing secret first, then an optional previous one during rotation. */
-  webhookSecrets: Array<{ version: string; secret: string }>;
-  revision: number;
-  offers: Array<{
-    key: OfferKey;
-    currency: string;
-    amountMinor: number;
-    /** The Lemon Squeezy variant id. */
-    providerProductId: string;
-    providerTrialDays: number;
-  }>;
-};
+/** CourseLit's paid offers. Their prices and provider product ids come from env. */
+const OFFERS = REFERENCE_OFFERS.filter((offer) =>
+  (COURSELIT_OFFER_KEYS as readonly string[]).includes(offer.key),
+).map(({ key, plan, interval }) => ({ key, plan, interval }));
 
 /**
- * Lemon Squeezy is opted into with BILLING_PROVIDER=lemonsqueezy; otherwise cloud
- * mode uses the fake. Prices, currency, revision and variant ids all come from env
- * and must be set, so a deploy can never sell at a price nobody configured. The
- * variants must have no trial: the cardless trial is CourseLit's, not the
- * provider's (see docs/wip/plan-limits.md, S17).
+ * The payment provider for CourseLit's own plans, picked by settings
+ * (`BILLING_PROVIDER=dodo` or `lemonsqueezy`; see `@codelitdev/billing/providers/env`).
+ * With none set, cloud mode uses the fake. Prices, currency, revision and product ids
+ * all come from env and must be set, so a deploy can never sell at a price nobody
+ * configured. Provider products must have no trial: the cardless trial is
+ * CourseLit's own (see docs/wip/plan-limits.md, S17).
  */
-export function readLemonSqueezyConfig(env: NodeJS.ProcessEnv): LemonSqueezyConfig | null {
-  const provider = env.BILLING_PROVIDER?.trim();
-  if (!provider || env.NODE_ENV === "test") return null;
-  if (provider !== "lemonsqueezy") throw new Error("BILLING_PROVIDER_invalid");
-  const need = (name: string): string => {
-    const value = env[name]?.trim();
-    if (!value) throw new Error(`${name}_required`);
-    return value;
-  };
-  const positiveInt = (name: string): number => {
-    const raw = need(name);
-    const value = Number(raw);
-    if (!/^[1-9][0-9]*$/.test(raw) || !Number.isSafeInteger(value)) {
-      throw new Error(`${name}_invalid`);
-    }
-    return value;
-  };
-  // Checked here, though only read by aesGcmSensitiveValuesFromEnv, so a missing key
-  // fails at startup rather than at the first checkout.
-  need("BILLING_DATA_ENCRYPTION_KEY");
-  const currency = need("BILLING_CURRENCY").toUpperCase();
-  if (!/^[A-Z]{3}$/.test(currency)) throw new Error("BILLING_CURRENCY_invalid");
-  const previous = env.LEMONSQUEEZY_WEBHOOK_SECRET_PREVIOUS?.trim();
-  const offers = COURSELIT_OFFER_KEYS.map((key) => {
-    const name = key.toUpperCase();
-    const providerProductId = need(`BILLING_${name}_PRODUCT_ID`);
-    if (!/^[0-9]+$/.test(providerProductId)) {
-      throw new Error(`BILLING_${name}_PRODUCT_ID_invalid`);
-    }
-    return {
-      key,
-      currency,
-      amountMinor: positiveInt(`BILLING_${name}_AMOUNT_MINOR`),
-      providerProductId,
-      providerTrialDays: 0,
-    };
-  });
-  if (new Set(offers.map((offer) => offer.providerProductId)).size !== offers.length) {
-    throw new Error("BILLING_PRODUCT_IDS_must_be_unique");
-  }
-  return {
-    apiKey: need("LEMONSQUEEZY_API_KEY"),
-    storeId: need("LEMONSQUEEZY_STORE_ID"),
-    webhookSecrets: [
-      { version: "current", secret: need("LEMONSQUEEZY_WEBHOOK_SECRET") },
-      ...(previous ? [{ version: "previous", secret: previous }] : []),
-    ],
-    revision: positiveInt("BILLING_CATALOG_REVISION"),
-    offers,
-  };
+export function readBillingConfig(env: NodeJS.ProcessEnv): BillingProviderEnvConfig | null {
+  if (env.NODE_ENV === "test") return null;
+  return readBillingProviderEnv(env, { offers: OFFERS });
 }
 
-export function composeBilling(
+export async function composeBilling(
   db: AppDb,
   clock: Clock,
-  options: { mode?: "cloud" | "oss"; webOrigin?: string } = {},
-): BillingBundle {
+  options: {
+    mode?: "cloud" | "oss";
+    webOrigin?: string;
+    /** Settings to read instead of `process.env`; tests use it. */
+    env?: NodeJS.ProcessEnv;
+  } = {},
+): Promise<BillingBundle> {
   const mode = options.mode ?? "cloud";
   const fake = new FakeBillingProvider({ clock });
-  const env: NodeJS.ProcessEnv = process.env;
-  const lsConfig = mode === "cloud" ? readLemonSqueezyConfig(env) : null;
+  const env: NodeJS.ProcessEnv = options.env ?? process.env;
+  const config = mode === "cloud" ? readBillingConfig(env) : null;
   // The fake provider takes no money, so a production deployment must never fall back to it.
-  if (mode === "cloud" && !lsConfig && env.NODE_ENV === "production") {
+  if (mode === "cloud" && !config && env.NODE_ENV === "production") {
     throw new Error("billing_provider_required_in_production");
   }
-  if (mode === "cloud" && !lsConfig) fake.seedDefaultCatalog();
-  // Revision numbers are unique across providers, so switching providers needs a new one.
-  const revision = lsConfig?.revision ?? 1;
-  const lsOffers = lsConfig
-    ? REFERENCE_OFFERS.map((offer) => ({
-        ...offer,
-        provider: "lemonsqueezy",
-        revision,
-        ...lsConfig.offers.find((entry) => entry.key === offer.key)!,
-      }))
-    : null;
-  const lemonsqueezy = lsConfig
-    ? createLemonSqueezyBillingProvider({
-        apiKey: lsConfig.apiKey,
-        storeId: lsConfig.storeId,
-        webhookSecrets: lsConfig.webhookSecrets,
-        clock,
-      })
-    : null;
+  if (mode === "cloud" && !config) fake.seedDefaultCatalog();
+  const providers =
+    mode !== "cloud"
+      ? []
+      : config
+        ? await createBillingProvidersFromEnv(config.providers, env, clock)
+        : [fake];
   const store = createDrizzleBillingStore(db as never, {
     schema: billingSchema,
     clock,
@@ -161,8 +101,8 @@ export function composeBilling(
   const billing = createBilling({
     database: store,
     // Without this the engine stores no checkout URL and cannot resume an open checkout.
-    ...(lsConfig ? { sensitiveValues: aesGcmSensitiveValuesFromEnv(process.env) } : {}),
-    providers: mode !== "cloud" ? [] : lemonsqueezy ? [lemonsqueezy] : [fake],
+    ...(config ? { sensitiveValues: aesGcmSensitiveValuesFromEnv(env) } : {}),
+    providers,
     clock,
     authorization: grants.authorization,
     hooks: {
@@ -184,13 +124,14 @@ export function composeBilling(
       ? { planLimits: { pro: planLimits().pro, business: planLimits().business } }
       : {}),
     mode,
-    checkoutProvider: mode !== "cloud" ? "" : lemonsqueezy ? "lemonsqueezy" : "fake",
-    requestedRevision: mode === "cloud" ? (lemonsqueezy ? revision : 1) : null,
+    checkoutProvider: mode !== "cloud" ? "" : (config?.checkoutProvider ?? "fake"),
+    // Revision numbers are unique across providers, so switching providers needs a new one.
+    requestedRevision: mode === "cloud" ? (config?.revision ?? 1) : null,
     requiredOfferKeys: mode === "cloud" ? [...COURSELIT_OFFER_KEYS] : [],
-    offers: mode !== "cloud" ? [] : (lsOffers ?? REFERENCE_OFFERS),
+    offers: mode !== "cloud" ? [] : (config?.offers ?? REFERENCE_OFFERS),
     returnUrlValidator: createReturnUrlValidator(origins),
   });
-  return { billing, fake, grants };
+  return { billing, fake, grants, providers: providers.map((provider) => provider.provider) };
 }
 
 /** Fake customer IDs live in process memory; copy persisted IDs back after restart. */

@@ -28,7 +28,7 @@ S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 - set the six `PLAN_*` variables (section 5); in cloud mode the API won't
   start without them. The QA example in `infra` still lacks them and has
   the old Pro price;
-- create the LemonSqueezy variants at the section 2 prices, with a new
+- create the Dodo products at the section 2 prices, with no trial, and a new
   `BILLING_CATALOG_REVISION`;
 - give CourseLit's SendLit organization key `teams:provision`, `teams:read`,
   `teams:manage`, `teams:keys` and `usage:read`. Since SendLit #202, a
@@ -42,7 +42,7 @@ S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 |---|---|
 | Modes | OSS (self-hosted) unlocks every feature with no limits. Cloud (courselit.app) has two paid plans and no free plan. |
 | Prices | Pro $29 a month or $290 a year. Business $79 a month or $790 a year. No fee on sales on either plan. (Decided 2026-11-15: Pro raised from $19 to stay under the vision's $30 with unlimited storage.) |
-| Payment provider | CourseLit's own plans are paid through LemonSqueezy (replacing Dodo), set up the same way as MediaLit. |
+| Payment provider | CourseLit's own plans are paid through Dodo. The provider is a setting (`BILLING_PROVIDER`, from `@codelitdev/billing/providers/env`), so changing it needs no code. (2026-11-17: back to Dodo from LemonSqueezy, which is winding down.) |
 | Trial | 14 days, no card, one per account. It gets every Business feature except removing branding, public code injection (the owner alone sees injected code) and priority support. No marketing email; 500 MB of storage. |
 | End of trial or subscription | 15 days read-only, then the school is hard-deleted. The deletion itself is a separate change. |
 | Limits | Marketing email per month and storage only, set per deployment by environment variables. On courselit.app: Pro 25,000 emails a month and unlimited storage; Business 100,000 emails and unlimited storage; trial no marketing email and 500 MB. No seat limit. |
@@ -1006,18 +1006,14 @@ The trial isn't switched on for anyone until these are done:
 
 The rest of steps 5–10 can then follow in any order.
 
-0. **Payment provider.** Replace Dodo in `apps/api/src/billing.ts` with the
-   package's `createLemonSqueezyBillingProvider`. Copy MediaLit's setup:
-   - `medialit/apps/api/src/billing/providers.ts`:
-     - `LEMONSQUEEZY_API_KEY`
-     - `LEMONSQUEEZY_STORE_ID`
-     - `LEMONSQUEEZY_WEBHOOK_SECRET` and `LEMONSQUEEZY_WEBHOOK_SECRET_PREVIOUS`
-   - `medialit/apps/api/src/billing/catalog.ts`: `BILLING_PROVIDER`, and the
-     product ID and amount variables.
+0. **Payment provider.** `apps/api/src/billing.ts` reads the provider and
+   catalog with `@codelitdev/billing/providers/env`: `BILLING_PROVIDER`
+   (`dodo` or `lemonsqueezy`), the product ID and amount variables, and that
+   provider's credentials. A provider whose credentials stay set keeps
+   serving its subscribers after a switch.
 
-   Set the new prices, and start a new `BILLING_CATALOG_REVISION`. In our
-   LemonSqueezy store, give the products no trial, and keep pausing turned
-   off.
+   Set the new prices, and start a new `BILLING_CATALOG_REVISION`. Give the
+   provider's products no trial.
 1. **Foundations:**
    - **`@codelitdev/billing`,** then release:
      - `planLimits`, `getLimit` and `limits`, tested for OSS mode, no plan,

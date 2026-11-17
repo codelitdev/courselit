@@ -37,11 +37,11 @@ describe("billing composition", () => {
     process.env.NODE_ENV = "production";
     delete process.env.BILLING_PROVIDER;
     try {
-      expect(() => composeBilling(runtime.db, clock, { mode: "cloud" })).toThrow(
+      await expect(composeBilling(runtime.db, clock, { mode: "cloud" })).rejects.toThrow(
         "billing_provider_required_in_production",
       );
       // OSS needs no provider.
-      expect(() => composeBilling(runtime.db, clock, { mode: "oss" })).not.toThrow();
+      await composeBilling(runtime.db, clock, { mode: "oss" });
     } finally {
       process.env.NODE_ENV = previous.nodeEnv;
       if (previous.provider === undefined) delete process.env.BILLING_PROVIDER;
