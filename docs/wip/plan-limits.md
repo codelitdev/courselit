@@ -26,13 +26,17 @@ S1–S31. The IDs are stable, so some numbers are skipped or merged; see
 
 **Before the trial is switched on in QA or production:**
 - set the six `PLAN_*` variables (section 5); in cloud mode the API won't
-  start without them. The QA example in `infra` still lacks them and has
-  the old Pro price;
+  start without them. QA has them (2026-11-17); the QA example in `infra`
+  still lacks them and has the old Pro price;
 - create the Dodo products at the section 2 prices, with no trial, and a new
   `BILLING_CATALOG_REVISION`;
 - give CourseLit's SendLit organization key `teams:provision`, `teams:read`,
   `teams:manage`, `teams:keys` and `usage:read`. Since SendLit #202, a
   bootstrap-registered key gets them when SendLit restarts;
+- raise the team limit of CourseLit's SendLit organization, since each school
+  gets its own team: `bun scripts/billing.ts set-override <org> --teams <n>`
+  in SendLit (done in QA on 2026-11-17, `--teams 1000`). Without it, new
+  schools stop getting a mailing team and the setup wizard's Email step fails;
 - create the platform SendLit organization and its four teams (section 6);
 - set up the `abuse@` mailbox.
 
