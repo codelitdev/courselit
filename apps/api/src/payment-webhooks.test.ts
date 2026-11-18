@@ -99,10 +99,75 @@ describe.serial("automatic payment webhooks", () => {
       error: null,
     });
 
-    // Saving again without new keys leaves the connected webhook alone.
+    // Saving again without new keys checks the webhook is still live and
+    // leaves it alone.
     calls = [];
+    respond = () =>
+      json({ id: "we_new", status: "enabled", url: `${WEBHOOK_URL_BASE}/v1/storefront/webhooks/stripe` });
     await save({ provider: "stripe", stripe: { publishableKey: "pk_test_1" } });
-    expect(calls).toEqual([]);
+    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual([
+      "GET https://api.stripe.com/v1/webhook_endpoints/we_new",
+    ]);
+    expect((await stored()).stripe?.webhookSecret).toBe("whsec_new");
+  });
+
+  it("registers the Stripe webhook again when it was deleted at Stripe", async () => {
+    respond = (call) =>
+      call.method === "GET" ? json({ data: [] }) : json({ id: "we_1", secret: "whsec_1" });
+    await save({ provider: "stripe", stripe: { secretKey: "sk_test_1" } });
+    // The creator resets the payment method; the keys and webhook are kept
+    // for earlier purchases.
+    await save({ provider: null });
+
+    calls = [];
+    respond = (call) => {
+      if (call.url.endsWith("/webhook_endpoints/we_1")) {
+        return json({ error: { message: "No such webhook endpoint" } }, 404);
+      }
+      if (call.method === "GET") return json({ data: [] });
+      return json({ id: "we_2", secret: "whsec_2" });
+    };
+    const result = await save({ provider: "stripe", stripe: { secretKey: "sk_test_1" } });
+
+    expect(calls.filter((call) => call.method === "POST")).toHaveLength(1);
+    const settings = await stored();
+    expect(settings.provider).toBe("stripe");
+    expect(settings.stripe?.webhookEndpointId).toBe("we_2");
+    expect(settings.stripe?.webhookSecret).toBe("whsec_2");
+    expect(result.ok && result.value.stripe.webhook.connected).toBe(true);
+  });
+
+  it("registers the Stripe webhook again when Stripe disabled it", async () => {
+    respond = (call) =>
+      call.method === "GET" ? json({ data: [] }) : json({ id: "we_1", secret: "whsec_1" });
+    await save({ provider: "stripe", stripe: { secretKey: "sk_test_1" } });
+
+    calls = [];
+    respond = (call) => {
+      if (call.url.endsWith("/webhook_endpoints/we_1") && call.method === "GET") {
+        return json({ id: "we_1", status: "disabled", url: `${WEBHOOK_URL_BASE}/v1/storefront/webhooks/stripe` });
+      }
+      if (call.method === "GET") return json({ data: [{ id: "we_1", metadata: {} }] });
+      if (call.method === "POST") return json({ id: "we_2", secret: "whsec_2" });
+      return json({ deleted: true });
+    };
+    await save({ stripe: {} });
+
+    expect((await stored()).stripe?.webhookEndpointId).toBe("we_2");
+    expect(calls.some((call) => call.method === "DELETE" && call.url.endsWith("/we_1"))).toBe(true);
+  });
+
+  it("keeps a webhook it can't check", async () => {
+    respond = (call) =>
+      call.method === "GET" ? json({ data: [] }) : json({ id: "we_1", secret: "whsec_1" });
+    await save({ provider: "stripe", stripe: { secretKey: "sk_test_1" } });
+
+    calls = [];
+    respond = () => json({ error: { message: "Server error" } }, 500);
+    await save({ stripe: {} });
+
+    expect(calls.filter((call) => call.method !== "GET")).toEqual([]);
+    expect((await stored()).stripe?.webhookEndpointId).toBe("we_1");
   });
 
   it("keeps the keys and reports why a registration failed, then retries", async () => {
