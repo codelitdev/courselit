@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CourseLitLoading } from "@/components/course-lit-loader";
+import { useSignedInVisitor } from "@/components/use-header-account";
 import {
   LearnerButton as Button,
   LearnerCardImage,
@@ -34,6 +35,7 @@ export default function CertificateVerificationPage() {
   const params = useParams<{ verificationId: string }>();
   const [certificate, setCertificate] = useState<Certificate | null>(null);
   const [state, setState] = useState<"loading" | "found" | "missing">("loading");
+  const signedIn = useSignedInVisitor();
 
   useEffect(() => {
     void fetch(`/api/v1/certificates/${encodeURIComponent(params.verificationId)}`, {
@@ -62,12 +64,14 @@ export default function CertificateVerificationPage() {
           </LearnerText2>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            Learner sign in
-          </Link>
+          {signedIn ? null : (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Learner sign in
+            </Link>
+          )}
           {state === "found" ? (
             <Button type="button" onClick={() => window.print()}>
               Print certificate
