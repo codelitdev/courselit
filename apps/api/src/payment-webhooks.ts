@@ -210,6 +210,63 @@ async function registerRazorpayWebhook(
   return { endpointId: webhook.id, secret, url };
 }
 
+/**
+ * Whether the school's registered webhook still exists and is live at the
+ * provider. It can be deleted or disabled on the provider's dashboard, which
+ * CourseLit isn't told about. Answers true when the provider can't be asked,
+ * so a flaky check never replaces a working webhook.
+ */
+export async function paymentWebhookIsLive(
+  provider: PaymentProviderName,
+  settings: StoredPaymentSettings,
+): Promise<boolean> {
+  try {
+    switch (provider) {
+      case "stripe": {
+        const { secretKey, webhookEndpointId, webhookUrl } = settings.stripe ?? {};
+        if (!secretKey || !webhookEndpointId) return false;
+        const response = await fetch(
+          `https://api.stripe.com/v1/webhook_endpoints/${encodeURIComponent(webhookEndpointId)}`,
+          { headers: { authorization: `Bearer ${secretKey}` } },
+        );
+        if (response.status === 404) return false;
+        if (!response.ok) return true;
+        const endpoint = (await response.json()) as { status?: string; url?: string };
+        return endpoint.status !== "disabled" && endpoint.url === webhookUrl;
+      }
+      case "lemonsqueezy": {
+        const { apiKey, webhookEndpointId, webhookUrl } = settings.lemonsqueezy ?? {};
+        if (!apiKey || !webhookEndpointId) return false;
+        const response = await fetch(
+          `https://api.lemonsqueezy.com/v1/webhooks/${encodeURIComponent(webhookEndpointId)}`,
+          { headers: { authorization: `Bearer ${apiKey}`, accept: "application/vnd.api+json" } },
+        );
+        if (response.status === 404) return false;
+        if (!response.ok) return true;
+        const webhook = (await response.json()) as { data?: { attributes?: { url?: string } } };
+        return webhook.data?.attributes?.url === webhookUrl;
+      }
+      case "razorpay": {
+        const { keyId, keySecret, webhookEndpointId, webhookUrl } = settings.razorpay ?? {};
+        if (!keyId || !keySecret || !webhookEndpointId) return false;
+        const response = await fetch("https://api.razorpay.com/v1/webhooks", {
+          headers: {
+            authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`,
+          },
+        });
+        if (!response.ok) return true;
+        const items =
+          ((await response.json()) as { items?: Array<{ id: string; url?: string; active?: boolean }> })
+            .items ?? [];
+        const webhook = items.find((item) => item.id === webhookEndpointId);
+        return Boolean(webhook && webhook.active !== false && webhook.url === webhookUrl);
+      }
+    }
+  } catch {
+    return true;
+  }
+}
+
 /** Register (or replace) the provider's webhook for a school. */
 export async function registerPaymentWebhook(
   provider: PaymentProviderName,
