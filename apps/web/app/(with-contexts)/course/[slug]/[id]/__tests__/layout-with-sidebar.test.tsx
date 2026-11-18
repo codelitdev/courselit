@@ -1000,6 +1000,70 @@ describe("Course viewer layout", () => {
         expect(screen.getByText("Preview")).toBeInTheDocument();
     });
 
+    it("makes the lesson icon and title part of the same sidebar link", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "First Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Video lesson",
+                            type: "video",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProfileContext.Provider
+                value={
+                    {
+                        profile: {
+                            userId: "user-1",
+                            purchases: [
+                                {
+                                    courseId: "course-1",
+                                    accessibleGroups: ["group-1"],
+                                },
+                            ],
+                        },
+                    } as any
+                }
+            >
+                <ProductPage product={course}>
+                    <div>Course body</div>
+                </ProductPage>
+            </ProfileContext.Provider>,
+        );
+
+        const link = screen
+            .getByTestId("lesson-icon-video")
+            .closest("a") as HTMLAnchorElement | null;
+        expect(link).not.toBeNull();
+        expect(link?.getAttribute("href")).toBe(
+            "/course/test-course/course-1/lesson-1",
+        );
+        expect(link).toHaveTextContent("Video lesson");
+        expect(link?.querySelector("button")).toBeNull();
+    });
+
     it("shows the discussions sidebar item only when discussions are enabled", () => {
         const course = {
             title: "Course",
