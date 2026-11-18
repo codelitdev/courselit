@@ -37,7 +37,7 @@ import {
     SidebarTrigger,
     useSidebar,
 } from "@components/ui/sidebar";
-import { Image } from "@courselit/components-library";
+import { Image, LessonIcon } from "@courselit/components-library";
 import Link from "next/link";
 import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
@@ -609,7 +609,11 @@ export function generateSideBarItems(
                     viewerSessionParams,
                 ),
                 isActive,
-                leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
+                leadingIcon: (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                        <LessonIcon type={lesson.type} />
+                    </span>
+                ),
                 icon: lessonStatusIcon,
             });
         }

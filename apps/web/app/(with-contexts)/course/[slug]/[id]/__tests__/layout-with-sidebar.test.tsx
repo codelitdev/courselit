@@ -96,6 +96,9 @@ jest.mock("@/components/public/product-discussions/panel", () => () => null);
 
 jest.mock("@courselit/components-library", () => ({
     Image: () => null,
+    LessonIcon: ({ type }: { type: string }) => (
+        <span data-testid={`lesson-icon-${type}`} />
+    ),
 }));
 
 jest.mock("@courselit/page-blocks", () => ({
@@ -789,6 +792,83 @@ describe("generateSideBarItems", () => {
             "Chapter 5 - Text 2",
             "Text 3",
         ]);
+    });
+
+    it("renders a lesson-type icon for each lesson in the sidebar", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            groups: [
+                {
+                    id: "group-1",
+                    name: "First Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Video lesson",
+                            type: "video",
+                            requiresEnrollment: false,
+                        },
+                        {
+                            lessonId: "lesson-2",
+                            title: "Text lesson",
+                            type: "text",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [
+                {
+                    courseId: "course-1",
+                    accessibleGroups: ["group-1"],
+                },
+            ],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+        const lessonItems = items.find(
+            (item) => item.title === "First Section",
+        )?.items;
+
+        render(
+            <>
+                {lessonItems?.map((item) => (
+                    <div key={item.title} data-testid={item.title}>
+                        {item.leadingIcon}
+                    </div>
+                ))}
+            </>,
+        );
+
+        expect(
+            screen
+                .getByTestId("Video lesson")
+                .querySelector('[data-testid="lesson-icon-video"]'),
+        ).not.toBeNull();
+        expect(
+            screen
+                .getByTestId("Text lesson")
+                .querySelector('[data-testid="lesson-icon-text"]'),
+        ).not.toBeNull();
     });
 
     it("shows dripped enrollment-gated lessons as unlocked in preview mode", () => {

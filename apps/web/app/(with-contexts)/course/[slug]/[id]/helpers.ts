@@ -66,6 +66,7 @@ export const getProduct = async (
                         lessons {
                             lessonId,
                             title,
+                            type,
                             requiresEnrollment,
                             courseId,
                             groupId,
