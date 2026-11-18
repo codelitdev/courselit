@@ -37,7 +37,7 @@ import {
     SidebarTrigger,
     useSidebar,
 } from "@components/ui/sidebar";
-import { Image } from "@courselit/components-library";
+import { Image, LessonIcon } from "@courselit/components-library";
 import Link from "next/link";
 import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
@@ -416,38 +416,40 @@ export function AppSidebar({
                                                                 }
                                                                 className="text-foreground"
                                                             >
-                                                                <span className="flex items-center gap-2 w-full">
+                                                                <Link
+                                                                    href={
+                                                                        item.href
+                                                                    }
+                                                                    className="flex items-center gap-2 w-full"
+                                                                >
                                                                     {
                                                                         item.leadingIcon
                                                                     }
-                                                                    <Link
-                                                                        href={
-                                                                            item.href
+                                                                    <TooltipProvider
+                                                                        delayDuration={
+                                                                            1000
                                                                         }
-                                                                        className="flex-1"
                                                                     >
-                                                                        <TooltipProvider
-                                                                            delayDuration={
-                                                                                1000
-                                                                            }
-                                                                        >
-                                                                            <Tooltip>
-                                                                                <TooltipTrigger>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger
+                                                                                asChild
+                                                                            >
+                                                                                <span className="flex-1 text-left">
                                                                                     {truncate(
                                                                                         item.title,
                                                                                         22,
                                                                                     )}
-                                                                                </TooltipTrigger>
-                                                                                <TooltipContent>
-                                                                                    {
-                                                                                        item.title
-                                                                                    }
-                                                                                </TooltipContent>
-                                                                            </Tooltip>
-                                                                        </TooltipProvider>
-                                                                    </Link>
+                                                                                </span>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent>
+                                                                                {
+                                                                                    item.title
+                                                                                }
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
                                                                     {item.icon}
-                                                                </span>
+                                                                </Link>
                                                             </SidebarMenuButton>
                                                         </SidebarMenuItem>
                                                     ),
@@ -609,7 +611,11 @@ export function generateSideBarItems(
                     viewerSessionParams,
                 ),
                 isActive,
-                leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
+                leadingIcon: (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                        <LessonIcon type={lesson.type} />
+                    </span>
+                ),
                 icon: lessonStatusIcon,
             });
         }
