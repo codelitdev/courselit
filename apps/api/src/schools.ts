@@ -29,6 +29,7 @@ import {
 import {
   PAYMENT_WEBHOOK_PROVIDERS,
   paymentWebhookUrl,
+  paymentWebhookIsLive,
   registerPaymentWebhook,
   WebhookRegistrationError,
 } from "./payment-webhooks.js";
@@ -590,7 +591,8 @@ const WEBHOOK_CREDENTIALS = {
 /**
  * Register the payment webhook on the school's own provider account when its
  * keys are saved. A save that names the provider again (even with no
- * changes) retries a registration that failed or points at an old URL. The
+ * changes) retries a registration that failed, points at an old URL, or was
+ * deleted or disabled at the provider. The
  * keys are saved either way; a failure is kept for the settings page.
  */
 async function connectPaymentWebhooks(
@@ -609,7 +611,9 @@ async function connectPaymentWebhooks(
     if (!group || !ready) continue;
     const connected =
       Boolean(before?.webhookSecret) && before?.webhookUrl === paymentWebhookUrl(provider);
-    if (connected && !credentialsChanged) continue;
+    // The webhook may have been deleted or disabled on the provider's
+    // dashboard since it was registered; a save puts it back.
+    if (connected && !credentialsChanged && (await paymentWebhookIsLive(provider, next))) continue;
     try {
       const webhook = await registerPaymentWebhook(provider, next, schoolPublicId);
       (next as Record<string, unknown>)[provider] = {
