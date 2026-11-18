@@ -7,6 +7,7 @@ import {
   canSubmitSubdomain,
   deriveSiteDomain,
   detectLocaleDefaults,
+  ERROR_COPY,
   emptyWizardData,
   formatMailingAddress,
   hasNewConnection,
@@ -17,6 +18,7 @@ import {
   parseDraft,
   previousStep,
   resolveResumeStep,
+  resumeRows,
   sanitizeSubdomainInput,
   serializeDraft,
   slugify,
@@ -163,6 +165,13 @@ describe("validation", () => {
       validateSchool({ school: "A", subdomain: "abc" }, "taken").subdomain,
     ).toBeDefined();
     expect(validateSchool({ school: "A", subdomain: "abc" }, "ok")).toEqual({});
+    expect(
+      validateSchool({ school: "paypal.com support", subdomain: "abc" }, "ok").school,
+    ).toBe(ERROR_COPY.schoolLink);
+    expect(validateSchool({ school: "x".repeat(81), subdomain: "abc" }, "ok").school).toBe(
+      ERROR_COPY.schoolLong,
+    );
+    expect(validateSchool({ school: "St. Mary's Guitar School", subdomain: "abc" }, "ok")).toEqual({});
   });
 
   it("validates each offer form", () => {
@@ -346,5 +355,21 @@ describe("site domain", () => {
     expect(
       deriveSiteDomain([{ subdomain: "a", storefrontHost: null }], "courselit.app"),
     ).toBe("courselit.app");
+  });
+});
+
+describe("resume summary", () => {
+  const env = { firstRun: false, hosted: true };
+  const plan = (trialEndsAt: string | null) =>
+    resumeRows("offer", env, emptyWizardData(), "Owner", trialEndsAt).find(
+      (row) => row.key === "plan",
+    )?.desc;
+
+  it("asks for a plan when the school has none", () => {
+    expect(plan(null)).toBe("Choose a CourseLit plan to go live");
+  });
+
+  it("names the end of a running trial instead", () => {
+    expect(plan("2026-11-28T12:00:00.000Z")).toStartWith("Free trial until");
   });
 });

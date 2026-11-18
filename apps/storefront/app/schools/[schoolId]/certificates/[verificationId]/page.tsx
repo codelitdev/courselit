@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CourseLitLoading } from "@/components/course-lit-loader";
+import { CourseLitBadgeStrip } from "@/components/courselit-badge";
 import { useSignedInVisitor } from "@/components/use-header-account";
 import {
   LearnerButton as Button,
@@ -147,6 +148,8 @@ export default function CertificateVerificationPage() {
           </>
         ) : null}
       </section>
+      {/* A certificate is a document of its own: no CourseLit badge on it. */}
+      <CourseLitBadgeStrip badge={false} />
     </main>
   );
 }

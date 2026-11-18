@@ -31,6 +31,31 @@ export async function activeSsoConnection(db: AppDb, schoolId: string) {
   return connection ?? null;
 }
 
+/**
+ * Whether "SSO required" may still be enforced, from the last plan billing
+ * confirmed (`schools.last_plan`) and any running trial. Enforcement stops only
+ * after a confirmed lapse: with no known plan, or while billing can't be read,
+ * it keeps enforcing, so an outage never lets an offboarded employee in with
+ * an email code (S10). `schoolPlan` refreshes `last_plan` on every billing
+ * change, at a trial's end and hourly.
+ */
+export async function ssoEnforcementApplies(
+  db: AppDb,
+  schoolId: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const [school] = await db
+    .select({ lastPlan: schema.schools.lastPlan })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  const plan = school?.lastPlan as { kind?: string; plan?: string; endsAt?: string } | null;
+  if (!plan?.kind || plan.kind === "unknown" || plan.kind === "oss") return true;
+  if (plan.kind === "paid") return plan.plan === "business";
+  if (plan.kind === "trial") return !plan.endsAt || new Date(plan.endsAt) > now;
+  return false;
+}
+
 /** Whether an email's domain is a verified domain of this connection. */
 export async function isVerifiedSsoDomainEmail(
   db: AppDb,
@@ -88,6 +113,7 @@ export async function sessionMethodAllowed(
     connection &&
     connection.enforcement === "required_for_domains" &&
     input.email &&
+    (await ssoEnforcementApplies(db, input.school.id)) &&
     (await isVerifiedSsoDomainEmail(db, connection.id, input.email))
   ) {
     return { allowed: false, reason: "sso_required" };

@@ -24,6 +24,18 @@
       "types": "./src/safe-redirect.ts",
       "import": "./src/safe-redirect.ts"
     },
+    "./school-name": {
+      "types": "./src/school-name.ts",
+      "import": "./src/school-name.ts"
+    },
+    "./school-subdomain": {
+      "types": "./src/school-subdomain.ts",
+      "import": "./src/school-subdomain.ts"
+    },
+    "./courselit-plans": {
+      "types": "./src/courselit-plans.ts",
+      "import": "./src/courselit-plans.ts"
+    },
     "./money": {
       "types": "./src/money.ts",
       "import": "./src/money.ts"

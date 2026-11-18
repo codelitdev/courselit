@@ -122,7 +122,12 @@ describe("CourseLit SendLit provisioning", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) throw new Error("school_creation_failed");
 
-    const provisioned: Array<{ name: string; sender?: { fromName?: string } }> = [];
+    const provisioned: Array<{
+      name: string;
+      sender?: { fromName?: string; replyTo?: string };
+      quota?: { monthlyLimit?: number | null };
+    }> = [];
+    const quotas: Array<{ teamId: string; monthlyLimit: number | null }> = [];
     const sendLitOperations: SendLitOperations = {
       provisionTeam: async (input) => {
         provisioned.push(input);
@@ -131,10 +136,19 @@ describe("CourseLit SendLit provisioning", () => {
           externalId: input.externalId,
           name: input.name,
           created: true,
+          deliverySource: { type: "organization" },
           apiKey: "sl_live_key_999",
         };
       },
-      rotateKey: async () => ({ keyId: "key_1", key: "sl_live_rotated_key" }),
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "key_1",
+        keyPrefix: "sl_live_rotat",
+        key: "sl_live_rotated_key",
+      }),
+      updateTeamQuota: async (teamId, quota) => {
+        quotas.push({ teamId, monthlyLimit: quota.monthlyLimit });
+      },
     };
 
     const processed = await processNextIntegrationJob(
@@ -142,11 +156,17 @@ describe("CourseLit SendLit provisioning", () => {
       clock,
       runtime.logger,
       sendLitOperations,
-      { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_key" },
+      { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_live_test" },
     );
     expect(processed).toBe(true);
     // Its email goes out under the school's name, not the shared account's.
     expect(provisioned[0]?.sender?.fromName).toBe("SendLit School");
+    // Replies to its marketing email reach the school's owner.
+    expect(provisioned[0]?.sender?.replyTo).toBe(world.owner.email);
+    // A new team never starts unlimited (S20): provisioned with the smallest
+    // quota SendLit accepts, then set to 0 before it is marked ready.
+    expect(provisioned[0]?.quota).toEqual({ monthlyLimit: 1 });
+    expect(quotas).toEqual([{ teamId: "sl_team_1", monthlyLimit: 0 }]);
 
     const [ready] = await runtime.db
       .select()
@@ -159,6 +179,93 @@ describe("CourseLit SendLit provisioning", () => {
       );
     expect(ready).toMatchObject({ status: "ready", remoteTeamId: "sl_team_1" });
     expect(ready!.encryptedTeamKey).not.toContain("sl_live_key_999");
+    // The plan sync that sets the real allowance is queued with the ready mark.
+    const syncJobs = await runtime.db
+      .select()
+      .from(schema.integrationOutboxJobs)
+      .where(
+        and(
+          eq(schema.integrationOutboxJobs.schoolId, ready!.schoolId),
+          eq(schema.integrationOutboxJobs.type, "sync_plan_features"),
+        ),
+      );
+    expect(syncJobs).toHaveLength(1);
+    await runtime.close();
+  }, 20000);
+
+  it("keeps a new team when a later step fails, and resumes with it instead of creating another", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    process.env.AUTH_SECRET ??= "integration-test-auth-secret";
+    const created = await createSchool(
+      runtime.db,
+      {
+        name: "Retry School",
+        subdomain: "retry-school",
+        locale: "en",
+        currency: "USD",
+        principalId: world.owner.id,
+        requestId: "request-sendlit-retry",
+      },
+      clock,
+    );
+    if (!created.ok) throw new Error("school_creation_failed");
+
+    let creates = 0;
+    let quotaFails = true;
+    const sendLitOperations: SendLitOperations = {
+      provisionTeam: async (input) => {
+        creates += 1;
+        return {
+          teamId: "sl_team_retry",
+          externalId: input.externalId,
+          name: input.name,
+          created: true,
+          deliverySource: { type: "organization" },
+          // SendLit hands over the key only here, when it creates the team.
+          apiKey: "sl_live_key_once",
+        };
+      },
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "key_1",
+        keyPrefix: "sl_live_rotat",
+        key: "sl_live_rotated_key",
+      }),
+      updateTeamQuota: async () => {
+        if (quotaFails) throw new Error("SendLit API error 403: organization_scope_required");
+      },
+    };
+    const config = { server: "http://127.0.0.1:4101", provisioningApiKey: "sl_org_live_test" };
+    const integration = async () =>
+      (
+        await runtime.db
+          .select()
+          .from(schema.schoolIntegrations)
+          .where(
+            and(
+              eq(schema.schoolIntegrations.externalId, created.value.id),
+              eq(schema.schoolIntegrations.provider, "sendlit"),
+            ),
+          )
+      )[0]!;
+
+    await processNextIntegrationJob(runtime.db, clock, runtime.logger, sendLitOperations, config);
+    // The quota step failed, but the team and its one-time key are kept.
+    const afterFailure = await integration();
+    expect(afterFailure.remoteTeamId).toBe("sl_team_retry");
+    expect(afterFailure.encryptedTeamKey).toBeTruthy();
+    expect(afterFailure.status).not.toBe("ready");
+
+    quotaFails = false;
+    await runtime.db
+      .update(schema.integrationOutboxJobs)
+      .set({ nextAttemptAt: clock.now() })
+      .where(eq(schema.integrationOutboxJobs.type, "provision_sendlit"));
+    await processNextIntegrationJob(runtime.db, clock, runtime.logger, sendLitOperations, config);
+    expect(creates).toBe(1);
+    expect(await integration()).toMatchObject({ status: "ready", remoteTeamId: "sl_team_retry" });
     await runtime.close();
   }, 20000);
 
@@ -258,9 +365,15 @@ describe("CourseLit SendLit provisioning", () => {
         externalId: created.value.id,
         name: "Test",
         created: true,
+        deliverySource: { type: "organization" },
         apiKey: "sl_live_key",
       }),
-      rotateKey: async () => ({ keyId: "kid_1", key: "sl_live_key" }),
+      rotateKey: async () => ({
+        name: "courselit",
+        keyId: "kid_1",
+        keyPrefix: "sl_live_key",
+        key: "sl_live_key",
+      }),
       listContacts: async () => ({ items: [], total: 0 }),
       createContact: async (_key, input) => {
         syncAttempts += 1;
@@ -275,6 +388,7 @@ describe("CourseLit SendLit provisioning", () => {
           subscribed: true,
           tags: [],
           customFields: {},
+          unsubscribeToken: "tok_1",
           createdAt: clock.now().toISOString(),
           updatedAt: clock.now().toISOString(),
         };
@@ -288,6 +402,7 @@ describe("CourseLit SendLit provisioning", () => {
           subscribed: input.subscribed ?? true,
           tags: input.tags ?? [],
           customFields: input.customFields ?? {},
+          unsubscribeToken: "tok_1",
           createdAt: clock.now().toISOString(),
           updatedAt: clock.now().toISOString(),
         };

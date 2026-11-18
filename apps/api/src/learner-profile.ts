@@ -6,6 +6,7 @@ import {
   SendLitApiError,
   type SendLitConfig,
   type SendLitContact,
+  type SendLitCustomFields,
   updateSendLitContact,
 } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
@@ -102,10 +103,10 @@ export async function readLearnerProfile(
 }
 
 function profileCustomFields(
-  existing: Record<string, unknown>,
+  existing: SendLitCustomFields,
   input: { bio: string; avatarMediaId: string | null; avatarUrl: string | null },
 ) {
-  const customFields = { ...existing };
+  const customFields: SendLitCustomFields = { ...existing };
   if (input.bio.trim()) customFields[LEARNER_BIO_FIELD] = input.bio.trim();
   else delete customFields[LEARNER_BIO_FIELD];
   if (input.avatarMediaId) {

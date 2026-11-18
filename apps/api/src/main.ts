@@ -5,6 +5,7 @@ import {
   TELEMETRY_PROPERTY_ALLOWLIST,
 } from "./permissions.js";
 import { createPostgresRuntime } from "./runtime.js";
+import { startTrial } from "./school-trials.js";
 import { hasSeededWorld, seedWorld } from "./seed.js";
 
 const port = Number(process.env.PORT ?? "4000");
@@ -73,6 +74,20 @@ if (process.env.SEED === "1") {
     logger.info("seed world already present; skipping seed");
   } else {
     const world = await seedWorld(runtime, runtime.clock);
+    if (process.env.BILLING_MODE !== "oss") {
+      // Hosted mode: School A runs the owner's one trial, so it stays usable
+      // for 14 days. School B has no plan and goes read-only, like any school
+      // without one.
+      await startTrial(
+        runtime.db,
+        {
+          userId: world.owner.id,
+          email: world.owner.email,
+          schoolId: world.schoolA.id,
+        },
+        runtime.clock,
+      );
+    }
     logger.info(
       {
         schoolA: world.schoolA.publicId,

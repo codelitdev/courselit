@@ -7,6 +7,7 @@ export * from "./community-subscriptions.js";
 export * from "./integrations.js";
 export * from "./learner-memberships.js";
 export * from "./migration.js";
+export * from "./plans.js";
 export * from "./notifications.js";
 export * from "./products.js";
 export * from "./rate-limit.js";

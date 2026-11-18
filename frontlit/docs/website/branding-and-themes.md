@@ -44,6 +44,20 @@ Branding changes are not drafts. They apply to your live website as soon as they
 
 </Callout>
 
+## Powered by CourseLit
+
+Pages carry a "Powered by CourseLit" badge. It appears under every public page, in the course viewer sidebar, in the learner dashboard sidebar and on the emails your learners get.
+
+To hide it, go to **Website** then **Settings** and open the **Branding** tab. Tick **Remove CourseLit branding**. The setting hides "Powered by CourseLit" on your site, course viewer, learner dashboard and the emails your learners get. It saves immediately.
+
+The checkbox is disabled during a free trial, with the note "Removing CourseLit branding comes with any paid plan." See [Billing and plan](/docs/settings/billing-and-plan).
+
+<Callout type="note">
+
+A **Report this site** link always appears at the bottom of every public page and on the certificate page, on every plan. You can't remove it. It lets visitors report abuse, see [Report abuse](/docs/policies/report-abuse) and the [Acceptable Use Policy](/docs/policies/acceptable-use-policy).
+
+</Callout>
+
 ## Choose a theme
 
 A theme sets the colours, fonts, spacing, corner radius and shadows of your whole site, in both light and dark mode. You choose it from inside the [page editor](/docs/website/page-editor).

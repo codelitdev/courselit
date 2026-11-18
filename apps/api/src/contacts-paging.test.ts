@@ -6,6 +6,7 @@ import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { createSchool } from "./schools.js";
 import { seedWorld } from "./seed.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 
 describe("contact list paging", () => {
   it("asks SendLit for the page by its number, so no contact is skipped", async () => {
@@ -49,7 +50,7 @@ describe("contact list paging", () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       requested.push(new URL(String(input)));
-      return new Response(JSON.stringify({ items: [], total: 120 }));
+      return jsonResponse({ items: [], total: 120 });
     }) as typeof fetch;
 
     try {

@@ -15,7 +15,7 @@ When you add a lesson to a course, you pick its **Type**. The type cannot be cha
 | File | Any file from your media library. |
 | Embed | A YouTube video or other embedded content. |
 | Quiz | Questions the learner answers. See [Quizzes](/docs/products/quizzes). |
-| SCORM | A SCORM package. See [SCORM lessons](/docs/products/scorm). |
+| SCORM | A SCORM package. Needs the Business plan on hosted CourseLit. See [SCORM lessons](/docs/products/scorm). |
 
 Every lesson needs a **Title**. A new lesson defaults to **Text**.
 

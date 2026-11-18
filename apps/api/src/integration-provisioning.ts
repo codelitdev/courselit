@@ -21,7 +21,10 @@ import {
   listSendLitContacts,
   provisionSendLitTeam,
   rotateSendLitTeamKey,
+  updateSendLitTeamQuota,
   SendLitApiError,
+  type SendLitCustomFields,
+  type SendLitUpdateContactInput,
   type SendLitConfig,
   type SendLitContact,
   sendLitConfig,
@@ -33,6 +36,8 @@ import type { TrackSendLitEventPayload } from "./membership-events.js";
 import type { SendSchoolEmailPayload } from "./school-emails.js";
 import { sendSystemMail } from "./system-mail.js";
 import { deleteShadowUserIfOrphaned } from "./shadow-users.js";
+import { enqueuePlanFeatureSync } from "./plan-features.js";
+import { loadSchoolSender } from "./sendlit-sender.js";
 import type { AppDb } from "./types.js";
 import {
   decryptIntegrationSecret,
@@ -57,6 +62,7 @@ export function effectiveTeamPermissions(
 export type SendLitOperations = {
   provisionTeam: typeof provisionSendLitTeam;
   rotateKey: typeof rotateSendLitTeamKey;
+  updateTeamQuota?: typeof updateSendLitTeamQuota;
   createContact?: typeof createSendLitContact;
   getContact?: typeof getSendLitContact;
   updateContact?: typeof updateSendLitContact;
@@ -70,6 +76,7 @@ export type SendLitOperations = {
 const defaultSendLitOperations: SendLitOperations = {
   provisionTeam: provisionSendLitTeam,
   rotateKey: rotateSendLitTeamKey,
+  updateTeamQuota: updateSendLitTeamQuota,
   createContact: createSendLitContact,
   getContact: getSendLitContact,
   updateContact: updateSendLitContact,
@@ -180,9 +187,16 @@ async function provisionOneSendLitSchool(
       {
         externalId: payload.externalId,
         name: payload.name,
-        // Learners see the school, not the shared sending account, as the sender.
-        sender: { fromName: payload.name },
+        // Learners see the school, not the shared sending account, as the
+        // sender, and replies reach the school's owner.
+        sender: await loadSchoolSender(db, {
+          schoolId: job.schoolId,
+          name: payload.name,
+        }),
         mailingAddress: payload.mailingAddress,
+        // SendLit only accepts a positive quota here; it is set to 0 below
+        // before the team is used, so a new team never starts unlimited (S20).
+        quota: { monthlyLimit: 1 },
       },
       { config },
     );
@@ -204,23 +218,36 @@ async function provisionOneSendLitSchool(
       );
     }
 
+    // Save the team before anything else can fail. SendLit returns the key
+    // only when it creates the team, so a later failure (the quota below)
+    // must not lose it: a retry resumes with this team instead of creating
+    // it again, which SendLit refuses once the request has changed.
     await updateIntegration(db, job.schoolId, "sendlit", {
       remoteTeamId: teamId,
       encryptedTeamKey: encryptIntegrationSecret(teamApiKey),
-      status: "ready",
-      lastSuccessfulSyncAt: clock.now(),
-      lastError: null,
-      updatedAt: clock.now(),
-    });
-  } else {
-    await updateIntegration(db, job.schoolId, "sendlit", {
-      remoteTeamId: teamId,
-      status: "ready",
-      lastSuccessfulSyncAt: clock.now(),
-      lastError: null,
       updatedAt: clock.now(),
     });
   }
+
+  // Fail closed: no marketing sends until the plan sync sets the school's
+  // real allowance. The sync is queued with the ready mark, below. Until this
+  // PATCH succeeds the integration is not ready, and the job retries.
+  if (!operations.updateTeamQuota) {
+    throw new Error("SendLit updateTeamQuota operation is required to provision");
+  }
+  await operations.updateTeamQuota(teamId, { monthlyLimit: 0 }, { config });
+
+  await db.transaction(async (tx) => {
+    await updateIntegration(tx as unknown as AppDb, job.schoolId, "sendlit", {
+      remoteTeamId: teamId,
+      encryptedTeamKey: encryptIntegrationSecret(teamApiKey!),
+      status: "ready",
+      lastSuccessfulSyncAt: clock.now(),
+      lastError: null,
+      updatedAt: clock.now(),
+    });
+    await enqueuePlanFeatureSync(tx as unknown as AppDb, job.schoolId, clock);
+  });
 }
 
 async function syncSendLitContactJob(
@@ -409,7 +436,7 @@ async function syncSendLitContactJob(
       schoolAccount.learnerRegisteredAt ?? schoolAccount.createdAt
     ).toISOString();
 
-    const mergedCustomFields: Record<string, unknown> = {
+    const mergedCustomFields: SendLitCustomFields = {
       ...(currentContact?.customFields ?? {}),
       [COURSELIT_PRODUCT_IDS_FIELD]: productIds,
       [COURSELIT_IS_COMMUNITY_MEMBER_FIELD]: isCommunityMember ? "true" : "false",
@@ -418,11 +445,7 @@ async function syncSendLitContactJob(
       [COURSELIT_SIGNED_UP_FIELD]: signedUp,
     };
 
-    const updateBody: {
-      name: string;
-      customFields: Record<string, unknown>;
-      subscribed?: boolean;
-    } = {
+    const updateBody: SendLitUpdateContactInput = {
       name: schoolAccount.displayName,
       customFields: mergedCustomFields,
     };
@@ -707,7 +730,7 @@ async function failJob(
     error instanceof SendLitApiError &&
     (error.status === 402 ||
       error.status === 403 ||
-      error.message.includes("plan_limit_exceeded"))
+      error.code === "plan_limit_exceeded")
   ) {
     message = "sendlit_quota_exceeded";
     actionRequired = true;
@@ -872,8 +895,17 @@ export async function processNextSystemEmailJob(
       subject: payload.subject,
       text: payload.text ?? "",
       ...(payload.html ? { html: payload.html } : {}),
+      stream: payload.stream ?? "transactional",
+      ...(payload.fromName ? { fromName: payload.fromName } : {}),
+      idempotencyKey: payload.idempotencyKey ?? job.id,
     });
     await finishJob(db, job, clock);
+    // Every platform send is traceable to its school, so a complaint about
+    // one school's mail can be found and acted on (S14).
+    logger.info(
+      { jobId: job.id, schoolId: job.schoolId, stream: payload.stream ?? "transactional" },
+      "platform email sent",
+    );
   } catch (error) {
     const actionRequired =
       error instanceof IntegrationActionRequiredError ||

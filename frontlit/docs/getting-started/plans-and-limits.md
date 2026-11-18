@@ -16,8 +16,8 @@ None of the plans charge a fee on your sales. Learners pay through your own paym
 | Courses, downloads and learners | Unlimited | Unlimited |
 | Team members | Unlimited | Unlimited |
 | Community, website, blog and custom domain | Included | Included |
-| Email marketing (broadcasts, sequences, drip emails) | 10,000 emails a month | 50,000 emails a month |
-| Storage | 20 GB | 200 GB |
+| Email marketing (broadcasts, sequences, drip emails) | 25,000 emails a month | 100,000 emails a month |
+| Storage | Unlimited | Unlimited |
 | Remove CourseLit branding | Yes | Yes |
 | Code injection | Yes | Yes |
 | REST API, API keys and MCP server | Yes | Yes |

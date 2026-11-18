@@ -5,12 +5,42 @@ import {
   type FetchLike,
 } from "./sendlit-client.js";
 
+/**
+ * The platform's sending streams (docs/wip/plan-limits.md, section 6). Each
+ * can have its own SendLit team, so sign-in codes never share a rate limit or
+ * a suppression list with receipts and notifications (S21).
+ */
+export type MailStream = "staff" | "sign_in" | "transactional" | "notifications";
+
+export const MAIL_STREAM_KEY_ENV: Record<MailStream, string> = {
+  staff: "SENDLIT_PLATFORM_STAFF_TEAM_API_KEY",
+  sign_in: "SENDLIT_PLATFORM_SIGN_IN_TEAM_API_KEY",
+  transactional: "SENDLIT_PLATFORM_TRANSACTIONAL_TEAM_API_KEY",
+  notifications: "SENDLIT_PLATFORM_NOTIFICATIONS_TEAM_API_KEY",
+};
+
+/** The stream's own team key, else the single platform team key. */
+export function platformTeamApiKey(
+  env: Record<string, string | undefined>,
+  stream: MailStream,
+): string | undefined {
+  return (
+    env[MAIL_STREAM_KEY_ENV[stream]]?.trim() || env.SENDLIT_PLATFORM_TEAM_API_KEY?.trim() || undefined
+  );
+}
+
 export type SystemMailMessage = {
   to: string;
   subject: string;
   text: string;
   html?: string;
   replyTo?: string;
+  /** The From name instead of the sender's own, at the sender's address. */
+  fromName?: string;
+  /** Which platform team sends it; staff mail when unset. */
+  stream?: MailStream;
+  /** Lets SendLit drop a retried duplicate. */
+  idempotencyKey?: string;
 };
 
 export type SystemMailDelivery = "sendlit" | "smtp" | "console";
@@ -83,16 +113,18 @@ export async function sendSystemMail(
   } = {},
 ): Promise<SystemMailDelivery> {
   const env = options.env ?? process.env;
-  const platformTeamApiKey = env.SENDLIT_PLATFORM_TEAM_API_KEY?.trim();
+  const teamApiKey = platformTeamApiKey(env, message.stream ?? "staff");
 
-  if (platformTeamApiKey) {
+  if (teamApiKey) {
     await sendSendLitTransactionalEmail(
-      platformTeamApiKey,
+      teamApiKey,
       {
         to: message.to,
         subject: message.subject,
         html: message.html ?? textAsHtml(message.text),
+        ...(message.fromName ? { fromName: message.fromName } : {}),
         ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+        ...(message.idempotencyKey ? { idempotencyKey: message.idempotencyKey } : {}),
       },
       { config: sendLitConfig(env), fetcher: options.fetcher },
     );
@@ -114,7 +146,7 @@ export async function sendSystemMail(
             ...(smtp.auth ? { auth: smtp.auth } : {}),
           });
       await transporter.sendMail({
-        ...(smtp.from ? { from: smtp.from } : {}),
+        ...(smtp.from ? { from: smtpFrom(smtp.from, message.fromName) } : {}),
         to: message.to,
         subject: message.subject,
         text: message.text,
@@ -135,6 +167,16 @@ export async function sendSystemMail(
 
   console.info("[CourseLit] System email", message); // eslint-disable-line no-console
   return "console";
+}
+
+/** `EMAIL_FROM` with its name replaced by `fromName`, keeping the address. */
+export function smtpFrom(
+  from: string,
+  fromName: string | undefined,
+): string | { name: string; address: string } {
+  if (!fromName) return from;
+  const address = /<([^<>]+)>\s*$/.exec(from)?.[1] ?? from.trim();
+  return { name: fromName, address };
 }
 
 export function sendTeamInvitationEmail(input: {

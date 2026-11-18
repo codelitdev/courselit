@@ -4,6 +4,7 @@ import {
   createPlatformError,
   uuidv7,
 } from "@codelitdev/platform";
+import { loadSchoolSender } from "./sendlit-sender.js";
 
 export type Result<T, E = PlatformError> =
   | { ok: true; value: T }
@@ -26,7 +27,6 @@ import {
   duplicateSendLitTemplate,
   getSendLitContact,
   getSendLitGeneralSettings,
-  getSendLitOverview,
   getSendLitSegment,
   getSendLitSequence,
   getSendLitSequenceStats,
@@ -44,7 +44,6 @@ import {
   sendLitConfig,
   sendSendLitSequenceEmailTest,
   startSendLitSequence,
-  updateSendLitContact,
   updateSendLitGeneralSettings,
   updateSendLitSegment,
   updateSendLitSequence,
@@ -54,7 +53,10 @@ import {
   type SendLitContact,
   type SendLitEmailTestResult,
   type SendLitGeneralSettings,
-  type SendLitOverview,
+  type SendLitCreateSequenceInput,
+  type SendLitCustomFields,
+  type SendLitUpdateSequenceEmailInput,
+  type SendLitUpdateSequenceInput,
   type SendLitSegment,
   type SendLitSegmentFilter,
   type SendLitSequence,
@@ -201,7 +203,7 @@ export async function ensureSendLitTeam(
       {
         externalId: school.publicId,
         name: school.name,
-        sender: { fromName: school.name },
+        sender: await loadSchoolSender(db, school),
       },
       { config },
     );
@@ -474,7 +476,6 @@ export async function listSubscribers(
     offset?: number;
     limit?: number;
     search?: string;
-    tag?: string;
     status?: string;
     filter?: string;
     cursor?: string;
@@ -492,7 +493,6 @@ export async function listSubscribers(
           offset: query.offset,
           rowsPerPage: query.limit,
           q: query.search,
-          tag: query.tag,
           filter: query.filter ?? query.status,
         },
         { config: cfg },
@@ -509,7 +509,7 @@ export async function createSubscriber(
     email: string;
     name?: string;
     tags?: string[];
-    customFields?: Record<string, unknown>;
+    customFields?: SendLitCustomFields;
   },
   config?: SendLitConfig,
 ): Promise<Result<SendLitContact, PlatformError>> {
@@ -534,30 +534,6 @@ export async function getSubscriber(
     schoolId,
     clock,
     (auth, cfg) => getSendLitContact(auth.teamApiKey, contactId, { config: cfg }),
-    config,
-  );
-}
-
-export async function updateSubscriber(
-  db: AppDb,
-  schoolId: string,
-  clock: Clock,
-  contactId: string,
-  input: {
-    email?: string;
-    name?: string;
-    subscribed?: boolean;
-    tags?: string[];
-    customFields?: Record<string, unknown>;
-  },
-  config?: SendLitConfig,
-): Promise<Result<SendLitContact, PlatformError>> {
-  return withSendLitAuth(
-    db,
-    schoolId,
-    clock,
-    (auth, cfg) =>
-      updateSendLitContact(auth.teamApiKey, contactId, input, { config: cfg }),
     config,
   );
 }
@@ -673,12 +649,12 @@ export async function listSequences(
   schoolId: string,
   clock: Clock,
   query: {
-    type?: "broadcast" | "sequence" | string;
+    type: "broadcast" | "sequence";
     status?: string;
     search?: string;
     cursor?: string;
     limit?: number;
-  } = {},
+  },
   config?: SendLitConfig,
 ): Promise<Result<{ items: SendLitSequence[]; total: number }, PlatformError>> {
   return withSendLitAuth(
@@ -689,10 +665,7 @@ export async function listSequences(
       const res = await listSendLitSequences(
         auth.teamApiKey,
         {
-          type:
-            query.type === "broadcast" || query.type === "sequence"
-              ? query.type
-              : undefined,
+          type: query.type,
           itemsPerPage: query.limit,
         },
         { config: cfg },
@@ -747,7 +720,7 @@ export async function createSequence(
     schoolId,
     clock,
     async (auth, cfg) => {
-      let created = await createSendLitSequence(auth.teamApiKey, normalizedInput, {
+      let created = await createSendLitSequence(auth.teamApiKey, normalizedInput as SendLitCreateSequenceInput, {
         config: cfg,
       });
       if (normalizedInput.title && created.title !== normalizedInput.title) {
@@ -832,7 +805,7 @@ export async function updateSequence(
         await updateSendLitSequence(
           auth.teamApiKey,
           sequenceId,
-          toSendLitTrigger(input),
+          toSendLitTrigger(input) as SendLitUpdateSequenceInput,
           {
             config: cfg,
           },
@@ -912,7 +885,7 @@ export async function updateSequenceEmail(
           if (problem) throw new EmailNotReadyError(problem, emailId, null);
         }
       }
-      return updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input, {
+      return updateSendLitSequenceEmail(auth.teamApiKey, sequenceId, emailId, input as SendLitUpdateSequenceEmailInput, {
         config: cfg,
       });
     },
@@ -964,9 +937,10 @@ export async function sendSequenceEmailTest(
  * is its one email, so that email must be ready; in a sequence only published
  * emails are sent, so drafts may still be placeholders.
  */
-export function assertSequenceEmailsReady(
-  sequence: Pick<SendLitSequence, "type" | "emails">,
-): void {
+export function assertSequenceEmailsReady(sequence: {
+  type: string;
+  emails?: { emailId?: string; subject: string; content: unknown; published: boolean }[];
+}): void {
   const emails = sequence.emails ?? [];
   if (sequence.type === "broadcast" && emails.length === 0) {
     throw new EmailNotReadyError("body_empty", null, null);
@@ -1155,6 +1129,26 @@ export async function listTemplates(
   );
 }
 
+/** SendLit's built-in blank template, used when a template is created
+ * without content. */
+const BLANK_SYSTEM_TEMPLATE_ID = "system:blank";
+
+async function blankTemplateContent(
+  teamApiKey: string,
+  options: { config: SendLitConfig },
+): Promise<SendLitTemplateContent> {
+  const { items } = await listSendLitSystemTemplates(teamApiKey, options);
+  const blank = items.find((item) => item.templateId === BLANK_SYSTEM_TEMPLATE_ID);
+  if (!blank) {
+    throw new SendLitApiError(
+      `SendLit has no ${BLANK_SYSTEM_TEMPLATE_ID} template to start from`,
+      undefined,
+      false,
+    );
+  }
+  return blank.content as SendLitTemplateContent;
+}
+
 export async function createTemplate(
   db: AppDb,
   schoolId: string,
@@ -1172,12 +1166,16 @@ export async function createTemplate(
     db,
     schoolId,
     clock,
-    (auth, cfg) =>
+    async (auth, cfg) =>
       createSendLitTemplate(
         auth.teamApiKey,
         {
           title: input.title ?? input.name ?? "Untitled Template",
-          content: input.content ?? { content: { html: "" } },
+          // Without content, start from SendLit's own blank starter, which
+          // is a complete, valid email (style, meta and footer).
+          content:
+            input.content ??
+            (await blankTemplateContent(auth.teamApiKey, { config: cfg })),
           purpose: input.purpose,
         },
         { config: cfg },
@@ -1226,8 +1224,7 @@ export async function updateTemplate(
         templateId,
         {
           title: input.title ?? input.name,
-          content: input.content,
-          purpose: input.purpose,
+          content: input.content as SendLitTemplateContent | undefined,
         },
         { config: cfg },
       ),
@@ -1268,21 +1265,3 @@ export async function deleteTemplate(
   );
 }
 
-// ---------------------------------------------------------------------------
-// Overview
-// ---------------------------------------------------------------------------
-
-export async function getOverview(
-  db: AppDb,
-  schoolId: string,
-  clock: Clock,
-  config?: SendLitConfig,
-): Promise<Result<SendLitOverview, PlatformError>> {
-  return withSendLitAuth(
-    db,
-    schoolId,
-    clock,
-    (auth, cfg) => getSendLitOverview(auth.teamApiKey, {}, { config: cfg }),
-    config,
-  );
-}

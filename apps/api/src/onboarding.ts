@@ -5,6 +5,7 @@ import * as schema from "./db/schema/index.js";
 import { getPaymentProvider } from "./payments.js";
 import { getMailingSettings } from "./sendlit-service.js";
 import type { AppDb } from "./types.js";
+import { isReservedSubdomain } from "@courselit/api-contract/school-subdomain";
 
 export const ONBOARDING_CHECKLIST_KEYS = [
   "pay",
@@ -36,7 +37,7 @@ export type SchoolOnboardingDto = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: OnboardingChecklistKey; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   updatedAt: string;
 };
 
@@ -249,7 +250,7 @@ export async function readSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -263,7 +264,7 @@ async function toDto(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -292,7 +293,7 @@ export async function updateSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
     patch: {
       status?: "in_progress" | "complete";
       step?: OnboardingStep;
@@ -346,7 +347,11 @@ async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>>
       .from(schema.schoolHosts)
       .where(inArray(schema.schoolHosts.hostname, candidates)),
   ]);
-  return new Set([...schools, ...hosts].map((row) => row.value));
+  // Reserved subdomains read as taken, so the address checker suggests others (S19).
+  return new Set([
+    ...[...schools, ...hosts].map((row) => row.value),
+    ...candidates.filter(isReservedSubdomain),
+  ]);
 }
 
 export async function checkSchoolSubdomain(

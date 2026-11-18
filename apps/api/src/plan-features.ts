@@ -1,47 +1,101 @@
 import type { BillingEngine } from "@codelitdev/billing/workflows";
 import { type Clock, uuidv7 } from "@codelitdev/platform";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import {
+  BUSINESS_FEATURES,
+  lastKnownPlan,
+  planIncludesFeature,
+  TRIAL,
+} from "./school-plan.js";
 import { endNonSsoSessionsForEnforcedDomains } from "./sign-in-policy.js";
 import { activationBlocker, SSO_FEATURE } from "./sso-config.js";
 import { notifySsoOwner, recordSsoEvent } from "./sso-events.js";
 import type { AppDb } from "./types.js";
 
-type Billing = Pick<BillingEngine, "hasFeature">;
+export type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 type SyncBilling = Pick<BillingEngine, "hasFeature" | "commercialState">;
 
+/** Whether a running CourseLit trial gives the school `feature`. */
+async function trialIncludes(
+  db: AppDb,
+  schoolId: string,
+  feature: string,
+  now: Date,
+): Promise<boolean> {
+  if (!TRIAL.features.includes(feature)) return false;
+  const [trial] = await db
+    .select({ id: schema.schoolTrials.id })
+    .from(schema.schoolTrials)
+    .where(
+      and(
+        eq(schema.schoolTrials.schoolId, schoolId),
+        isNull(schema.schoolTrials.endedAt),
+        gt(schema.schoolTrials.endsAt, now),
+      ),
+    )
+    .limit(1);
+  return Boolean(trial);
+}
+
+async function lastKnownIncludes(
+  db: AppDb,
+  schoolId: string,
+  feature: string,
+): Promise<boolean> {
+  const [school] = await db
+    .select({ lastPlan: schema.schools.lastPlan })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  return planIncludesFeature(
+    lastKnownPlan({ kind: "unknown" }, school?.lastPlan),
+    feature,
+  );
+}
+
 /**
- * `hasFeature` fails closed: a billing read error answers false. That is
- * right for letting someone in, but wrong for taking SSO away from a paying
- * school, so before the sync acts on a false answer it reads the commercial
- * state directly, which throws when billing can't be read. The job then
- * retries instead of suspending every connection on a transient error.
+ * Whether the plan includes a feature, for the plan sync. `hasFeature` fails
+ * closed (a read error answers false), which is wrong for taking SSO away
+ * from a paying school. So before acting on a no, this reads the commercial
+ * state directly, which throws when billing can't be read: the job retries
+ * instead of suspending connections on a transient error. A running
+ * CourseLit trial (school state, not billing) counts too (S11).
  */
 export async function planIncludesFeatureOrThrow(
   billing: SyncBilling,
   schoolId: string,
   feature: string,
+  db?: AppDb,
+  now: Date = new Date(),
 ): Promise<boolean> {
   if ((await billing.hasFeature(schoolId, feature)) === true) return true;
   await billing.commercialState(schoolId);
-  return (await billing.hasFeature(schoolId, feature)) === true;
+  if ((await billing.hasFeature(schoolId, feature)) === true) return true;
+  return db ? trialIncludes(db, schoolId, feature, now) : false;
 }
 
 /**
- * Whether a school's plan includes a feature. The rules (every feature in
- * `oss` mode, entitled statuses only) live in `@codelitdev/billing`. This
- * wrapper only fails closed: if billing can't answer, the answer is no.
+ * Whether a school's plan includes a feature: a paid plan (or `oss` mode)
+ * through `@codelitdev/billing`, or a running CourseLit trial. When billing
+ * can't be read, it answers from the last plan billing confirmed
+ * (`schools.last_plan`) instead of no, so a billing outage never locks
+ * learners out of SSO (S10, S23).
  */
 export async function schoolHasFeature(
   billing: Billing,
   schoolInternalId: string,
   feature: string,
+  db?: AppDb,
+  now: Date = new Date(),
 ): Promise<boolean> {
   try {
-    return (await billing.hasFeature(schoolInternalId, feature)) === true;
+    await billing.commercialState(schoolInternalId);
   } catch {
-    return false;
+    return db ? lastKnownIncludes(db, schoolInternalId, feature) : false;
   }
+  if ((await billing.hasFeature(schoolInternalId, feature)) === true) return true;
+  return db ? trialIncludes(db, schoolInternalId, feature, now) : false;
 }
 
 /**
@@ -90,7 +144,13 @@ export async function syncPlanFeatures(
   clock: Clock,
 ): Promise<{ suspended: number; restored: number; drafted: number }> {
   const result = { suspended: 0, restored: 0, drafted: 0 };
-  const available = await planIncludesFeatureOrThrow(billing, schoolId, SSO_FEATURE);
+  const available = await planIncludesFeatureOrThrow(
+    billing,
+    schoolId,
+    SSO_FEATURE,
+    db,
+    clock.now(),
+  );
   const connections = await db
     .select()
     .from(schema.schoolSsoConnections)
@@ -224,4 +284,18 @@ export async function schoolsWithSsoConnections(db: AppDb): Promise<string[]> {
     .from(schema.schoolSsoConnections)
     .where(inArray(schema.schoolSsoConnections.status, ["active", "suspended"]));
   return rows.map((row) => row.schoolId);
+}
+
+/** Every feature a school's plan includes, as `schoolHasFeature` decides each. */
+export async function schoolPlanFeatureList(
+  billing: Billing,
+  schoolInternalId: string,
+  db: AppDb,
+  now: Date,
+): Promise<string[]> {
+  const all = [...new Set<string>(BUSINESS_FEATURES)];
+  const included = await Promise.all(
+    all.map((feature) => schoolHasFeature(billing, schoolInternalId, feature, db, now)),
+  );
+  return all.filter((_, index) => included[index]);
 }

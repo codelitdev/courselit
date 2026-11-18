@@ -9,6 +9,7 @@ import { BreadcrumbProvider } from "@/components/layout/breadcrumb-context";
 import type { CurrentAccount } from "@/components/layout/nav-user";
 import type { School } from "@/components/layout/team-switcher";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { SchoolStateBanner } from "@/components/layout/school-state-banner";
 import { PermissionDeniedFeedback } from "@/components/permission-denied-feedback";
 import { CourseLitLoadingIcon } from "@/components/loading";
 import { Separator } from "@/components/ui/separator";
@@ -320,6 +321,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     aria-hidden={showLoadingOverlay || undefined}
                     className={`h-full overflow-auto p-6 ${showLoadingOverlay ? "invisible" : ""}`}
                   >
+                    <SchoolStateBanner
+                      school={schools.find((school) => school.selected)}
+                    />
                     {children}
                   </div>
                 ) : null}

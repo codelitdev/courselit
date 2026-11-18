@@ -154,6 +154,10 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Reads the school's payment settings: the payment provider, its saved keys (secrets are not returned) and whether its payment webhook is connected.",
   updateSchoolPaymentSettings:
     "Changes the school's payment provider or its keys. Saving a provider's keys also registers the payment webhook on that account. This changes how customers pay. Confirm with the user first.",
+  getSchoolPlanFeatures:
+    "Lists the features the school's CourseLit plan includes (for example scorm or audit_log), to explain why an action is refused.",
+  listSchoolAuditEvents:
+    "Lists the school's audit log, newest first: who changed what and when. Needs the Business plan. Billing events are not included.",
   getSchoolCodeInjection:
     "Reads the custom code added to the head and body of every public page.",
   updateSchoolCodeInjection:

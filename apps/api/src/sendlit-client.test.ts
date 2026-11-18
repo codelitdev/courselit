@@ -16,6 +16,7 @@ import {
   updateSendLitGeneralSettings,
   updateSendLitSequence,
 } from "./sendlit-client.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 
 describe("sendlit-client", () => {
   it("uses configured server and organization key in development", () => {
@@ -67,7 +68,7 @@ describe("sendlit-client", () => {
       expect(String(input)).toBe("http://127.0.0.1:4101/provisioning/teams");
       expect(init?.method).toBe("POST");
       const headers = init?.headers as Record<string, string>;
-      expect(headers.authorization).toBe("Bearer test-org-key");
+      expect(headers.authorization).toBe("Bearer sl_org_live_test");
       expect(headers["content-type"]).toBe("application/json");
 
       const body = JSON.parse(init?.body as string);
@@ -91,7 +92,7 @@ describe("sendlit-client", () => {
       {
         config: {
           server: "http://127.0.0.1:4101",
-          provisioningApiKey: "test-org-key",
+          provisioningApiKey: "sl_org_live_test",
         },
         fetcher,
       },
@@ -226,19 +227,18 @@ describe("sendlit-client", () => {
         );
       }
       if (url.includes("/templates") && init?.method === "GET") {
-        return new Response(
-          JSON.stringify({
-            items: [
-              {
-                templateId: "tpl_1",
-                title: "Default Template",
-                purpose: "marketing",
-                content: { content: [] },
-              },
-            ],
-          }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        );
+        // SendLit lists templates as a bare array.
+        return jsonResponse([
+          {
+            templateId: "tpl_1",
+            title: "Default Template",
+            purpose: "marketing",
+            content: { style: {}, meta: {}, content: [] },
+            requiredVariables: [],
+            createdAt: null,
+            updatedAt: null,
+          },
+        ]);
       }
       throw new Error(`Unhandled request: ${url}`);
     };
@@ -294,19 +294,19 @@ describe("sendlit-client", () => {
       const body = String(input).endsWith("/events")
         ? { eventId: "evt_1", contactId: "cnt_1", duplicate: false, contactCreated: false }
         : { sent: ["me@example.com"], lastTestSentAt: "2026-03-01T00:00:00.000Z" };
-      return new Response(JSON.stringify(body), { status: 200 });
+      return jsonResponse(body);
     };
     const config = { server: "http://sendlit.test", provisioningApiKey: null };
 
     const test = await sendSendLitSequenceEmailTest(
       "sl_team",
-      "seq 1",
+      "seq_1",
       "eml_1",
       { to: ["me@example.com"] },
       { config, fetcher },
     );
     expect(test.sent).toEqual(["me@example.com"]);
-    expect(calls[0]!.url).toBe("http://sendlit.test/sequences/seq%201/emails/eml_1/test");
+    expect(calls[0]!.url).toBe("http://sendlit.test/sequences/seq_1/emails/eml_1/test");
     expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({ to: ["me@example.com"] });
     expect((calls[0]!.init?.headers as Record<string, string>)["x-sendlit-apikey"]).toBe(
       "sl_team",

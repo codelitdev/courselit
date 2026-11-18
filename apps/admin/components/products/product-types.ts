@@ -107,6 +107,7 @@ export type School = {
   storefrontHost?: string | null;
   storefrontOrigin?: string | null;
   currency: string;
+  hideCourseLitBranding?: boolean;
   permissions?: readonly CourseLitPermission[] | readonly string[];
   selected?: boolean;
 };

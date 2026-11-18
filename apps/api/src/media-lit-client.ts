@@ -127,6 +127,15 @@ export class HttpMediaLitClient implements MediaLitClient {
     };
   }
 
+  async inspectUpload(input: { schoolId: string; uploadId: string }) {
+    // The upload id is MediaLit's media id; `get` also returns unsealed media.
+    return this.getAsset({ schoolId: input.schoolId, mediaLitId: input.uploadId });
+  }
+
+  async discardUpload(input: { schoolId: string; uploadId: string }) {
+    await this.deleteAsset({ schoolId: input.schoolId, mediaLitId: input.uploadId });
+  }
+
   async finalizeUpload(input: { schoolId: string; uploadId: string }) {
     void input.schoolId;
     const response = await this.request(

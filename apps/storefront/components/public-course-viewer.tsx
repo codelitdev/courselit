@@ -48,6 +48,7 @@ import { CourseLitLoading } from "@/components/course-lit-loader";
 import { DownloadProductAction } from "@/components/download-product-action";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
+import { lessonLockState } from "@/lib/lesson-lock";
 
 type Learner = {
   id: string;
@@ -400,12 +401,15 @@ function LessonPage({
   const searchParams = useSearchParams();
   const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const hasContent = hasLessonContent(lesson);
-  const locked = Boolean(
-    !previewToken &&
-      (!hasContent ||
-        (!product.enrolled && lesson.requiresEnrollment) ||
-        (!product.enrolled && lesson.type === "quiz")),
-  );
+  const lockState = lessonLockState({
+    preview: Boolean(previewToken),
+    enrolled: product.enrolled,
+    requiresEnrollment: lesson.requiresEnrollment,
+    isQuiz: lesson.type === "quiz",
+    hasContent,
+    availableAt: lesson.availableAt ?? null,
+  });
+  const locked = lockState !== "unlocked";
   const lessonIndex = product.lessons.findIndex((item) => item.id === lesson.id);
   const previousLesson = lessonIndex > 0 ? product.lessons[lessonIndex - 1] : null;
   const nextLesson =
@@ -423,12 +427,18 @@ function LessonPage({
           ) : null}
           {locked ? (
             <div className="flex flex-col items-start gap-4 py-12">
-              <LockKeyhole className="size-8 text-muted-foreground" />
-              <LearnerHeader2>Content Locked</LearnerHeader2>
+              {lockState === "empty" ? null : (
+                <LockKeyhole className="size-8 text-muted-foreground" />
+              )}
+              <LearnerHeader2>
+                {lockState === "empty" ? "Nothing here yet" : "Content Locked"}
+              </LearnerHeader2>
               <LearnerText2 className="text-muted-foreground">
-                {lesson.availableAt && !hasContent
+                {lockState === "dripped" && lesson.availableAt
                   ? `This lesson unlocks on ${new Date(lesson.availableAt).toLocaleString()}.`
-                  : "You are not enrolled in the course."}
+                  : lockState === "empty"
+                    ? "This lesson has no content yet. Check back later."
+                    : "You are not enrolled in the course."}
               </LearnerText2>
               {!product.enrolled && !previewToken ? (
                 <AccessActions

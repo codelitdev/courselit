@@ -49,6 +49,7 @@ import {
   StatusBadge,
   type StorefrontPlan,
 } from "./community-shared";
+import { inviteErrorMessage } from "@/lib/invite-errors";
 
 export type CommunityManageSection =
   | "details"
@@ -66,7 +67,7 @@ function communityApiErrorMessage(error: ApiError | null, fallback: string) {
   if (error?.details?.reason === "community_offline") {
     return "Make the community live before inviting people.";
   }
-  return error?.message ?? fallback;
+  return inviteErrorMessage(error, fallback);
 }
 
 /** "3", or "10+" when there are more pending items than one page. */

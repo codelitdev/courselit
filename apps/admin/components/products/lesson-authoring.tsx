@@ -39,6 +39,7 @@ import {
 import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import { truncateText } from "@/lib/truncate";
+import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
 import { MediaPicker } from "./media-picker";
 import type {
   Lesson,
@@ -81,34 +82,39 @@ function LessonTypeChips({
   value: selectedValue,
   onChange,
   disabled = false,
+  locked = [],
 }: {
   value: LessonType;
   onChange: (value: LessonType) => void;
   disabled?: boolean;
+  /** Types the school's plan doesn't include. */
+  locked?: readonly LessonType[];
 }) {
   return (
     <div role="radiogroup" aria-label="Lesson type" className="flex flex-wrap gap-1.5">
       {lessonTypes.map(({ value, label, icon: Icon }) => {
         const selected = value === selectedValue;
+        const isLocked = locked.includes(value) && !selected;
         return (
           <button
             key={value}
             type="button"
             role="radio"
             aria-checked={selected}
-            disabled={disabled && !selected}
+            disabled={(disabled && !selected) || isLocked}
+            title={isLocked ? PLAN_FEATURE_COPY[value] : undefined}
             onClick={() => onChange(value)}
             className={`inline-flex h-9 items-center gap-1.5 rounded-[var(--radius)] border px-3 text-[13.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
               selected
                 ? "border-primary bg-[var(--primary-soft)] font-semibold text-[var(--primary-ink)]"
                 : "bg-card font-medium hover:bg-muted"
-            } ${disabled ? "cursor-default disabled:opacity-50" : ""}`}
+            } ${disabled || isLocked ? "cursor-default disabled:opacity-50" : ""}`}
           >
             <Icon className="size-4" aria-hidden="true" />
             {label}
             {value === "scorm" ? (
               <span className="rounded border px-1 text-[10px] font-medium text-muted-foreground">
-                Alpha
+                {isLocked ? "Business" : "Alpha"}
               </span>
             ) : null}
           </button>
@@ -355,6 +361,7 @@ export function LessonAuthoring({
   const router = useRouter();
   const editing = Boolean(lessonId);
   const [school, setSchool] = useState<School | null>(null);
+  const scormIncluded = usePlanFeatures(school?.id).has("scorm");
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<LessonType>("text");
@@ -640,7 +647,13 @@ export function LessonAuthoring({
                           }
                         }}
                         disabled={editing}
+                        locked={scormIncluded ? [] : ["scorm"]}
                       />
+                      {!editing && !scormIncluded ? (
+                        <p className="text-xs text-muted-foreground">
+                          {PLAN_FEATURE_COPY.scorm}
+                        </p>
+                      ) : null}
                       {editing ? (
                         <p className="text-xs text-muted-foreground">
                           The type can&apos;t change after a lesson is created.
@@ -777,7 +790,12 @@ export function LessonAuthoring({
                   {type === "scorm" ? (
                     <div className="field">
                       <span>SCORM package</span>
-                      {editing && school && lessonId ? (
+                      {editing && school && lessonId && !scormIncluded ? (
+                        <p className="text-sm text-muted-foreground">
+                          This lesson keeps playing. Replacing its package needs the
+                          Business plan.
+                        </p>
+                      ) : editing && school && lessonId ? (
                         <ScormLessonUpload
                           school={school}
                           lessonId={lessonId}

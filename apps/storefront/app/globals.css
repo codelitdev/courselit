@@ -282,6 +282,14 @@ body {
   }
 }
 
+/* Unlayered, so it beats the layered `.flex` utility that page-builder's
+ * stylesheet emits after `print:hidden`. */
+@media print {
+  [data-courselit-strip] {
+    display: none;
+  }
+}
+
 @media print {
   .certificate-page {
     padding: 0;

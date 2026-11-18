@@ -60,6 +60,7 @@ import { ProductContent } from "./product-content";
 import { ProductOverview } from "./product-overview";
 import { ProductSettings } from "./product-settings";
 import type { Lesson, Product, School, Section, StorefrontPlan } from "./product-types";
+import { INVITE_LIMIT_COPY } from "@/lib/invite-errors";
 
 export type ProductWorkspaceView = "overview" | "content" | "manage";
 
@@ -76,6 +77,7 @@ type ApiError = {
 };
 
 const REASON_MESSAGES: Record<string, string> = {
+  ...INVITE_LIMIT_COPY,
   payment_plan_required: "Add a payment plan before going live.",
   section_not_empty: "This section has lessons. Delete them before proceeding.",
   download_last_section: "A digital download must keep at least one section.",

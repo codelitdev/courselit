@@ -8,7 +8,7 @@ CourseLit has two programmatic interfaces to a school: a **REST API** for your o
 
 ## What you can build
 
-Use the API to create and publish courses and downloads, manage sections, lessons and payment plans, grant learners access, read learner progress and sales figures, manage contacts and segments, work with the media library, and edit the school website. The [API reference](/docs/api) lists every operation with its parameters and example responses.
+Use the API to create and publish courses and downloads, manage sections, lessons and payment plans, grant learners access, read learner progress and sales figures, manage contacts and segments, work with the media library, and edit the school website. The [API reference](https://api.courselit.app/docs) lists every operation with its parameters and example responses.
 
 ## Base URL and versioning
 

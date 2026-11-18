@@ -19,6 +19,7 @@ import {
   uploadedToMediaRef,
   type WizardData,
 } from "./flow";
+import type { CourseLitPlanLimits } from "@courselit/api-contract/courselit-plans";
 
 export class ApiError extends Error {
   status: number;
@@ -80,6 +81,8 @@ export type BillingCatalog = {
     amountMinor: number;
     trialDays: number;
   }>;
+  /** What each plan allows here; `null` values are unlimited. */
+  limits?: Record<PlanId, CourseLitPlanLimits> | null;
 };
 
 /** OSS = no catalog and no checkout. Everything else is the hosted service. */
@@ -95,7 +98,12 @@ export type SchoolOnboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: {
+    required: boolean;
+    entitled: boolean;
+    paid: boolean;
+    trialEndsAt: string | null;
+  };
   updatedAt: string;
 };
 

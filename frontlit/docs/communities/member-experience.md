@@ -32,6 +32,18 @@ Members who can post in a space see a **Write something…** box. It opens a dia
 
 Spaces where **Who can post** is set to **Admin** show posts but no composer to members.
 
+## Uploading files
+
+Learners can upload files in your communities only if they are active members who can post. The rules are:
+
+- Images, video, audio and PDFs only.
+- Uploads are private.
+- At most 20 uploads an hour per learner.
+- An upload that no post uses is deleted after a day.
+- During a free trial, which has limited storage, learners together can use at most 25% of it, and none once the school is past 90%.
+
+When an upload is refused, the learner sees "This upload can't be added right now. Try a smaller file." Set the size limit for each learner in [Storage](/docs/settings/storage).
+
 ## Reacting and replying
 
 - Members react to posts, comments and replies with six emoji: thumbs up, heart, smile, party, sad and surprised. A reaction can be taken back by clicking it again.

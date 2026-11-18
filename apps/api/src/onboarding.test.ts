@@ -4,6 +4,8 @@ import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { type SeededWorld, seedWorld } from "./seed.js";
+import { checkSchoolSubdomain } from "./onboarding.js";
+import { createSchool } from "./schools.js";
 
 async function setup(billingMode?: "oss") {
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
@@ -23,7 +25,7 @@ type Onboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
 };
 
 const done = (state: Onboarding, key: string) =>
@@ -58,7 +60,9 @@ describe("school onboarding", () => {
       draft: {},
       checklistHidden: false,
       resumePromptHidden: false,
-      billing: { required: true, entitled: false },
+      // The account's first school starts a cardless trial: it can go live,
+      // but nothing has been paid.
+      billing: { required: true, entitled: true, paid: false, trialEndsAt: expect.any(String) },
     });
     expect(state.checklist.map((item) => item.key)).toEqual([
       "pay", "mail", "legal", "home", "domain", "ai", "learners", "welcome", "course", "team",
@@ -189,7 +193,7 @@ describe("school onboarding", () => {
         headers: owner(world),
       })
     ).body as Onboarding;
-    expect(state.billing).toEqual({ required: false, entitled: true });
+    expect(state.billing).toEqual({ required: false, entitled: true, paid: true, trialEndsAt: null });
     const checkout = await dispatch(runtime, {
       method: "POST",
       path: "/v1/school/billing/checkout",
@@ -354,5 +358,33 @@ describe("AI connections", () => {
     });
     expect(again.status).toBe(404);
     await runtime.close();
+  });
+});
+
+describe("reserved subdomains (S19)", () => {
+  it("read as taken, with suggestions, and can't be created even internally", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const checked = await checkSchoolSubdomain(runtime.db, "billing");
+      expect(checked).toMatchObject({ available: false, reason: "taken" });
+      expect(checked.suggestions.length).toBeGreaterThan(0);
+      const created = await createSchool(
+        runtime.db,
+        {
+          name: "Billing",
+          subdomain: "billing",
+          locale: "en",
+          currency: "USD",
+          principalId: world.owner.id,
+          requestId: "req_reserved",
+        },
+        clock,
+      );
+      expect(created.ok).toBe(false);
+    } finally {
+      await runtime.close();
+    }
   });
 });

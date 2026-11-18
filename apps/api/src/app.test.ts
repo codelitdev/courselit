@@ -565,6 +565,7 @@ describe.serial("reference API adapters", () => {
       schoolId: world.schoolA.publicId,
       subdomain: "school-a",
       name: "School A",
+      offline: false,
     };
     for (const host of [
       "LEARN.EXAMPLE.COM.",
@@ -592,6 +593,7 @@ describe.serial("reference API adapters", () => {
         schoolId: world.schoolB.publicId,
         subdomain: "school-b",
         name: "School B",
+        offline: false,
       },
     });
 

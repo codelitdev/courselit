@@ -16,6 +16,10 @@ export interface PublicSettings {
   canonicalHost?: string | null;
   /** A published product (public or hidden) or a live community exists. */
   hasPublishedOffers?: boolean;
+  /** The code is the owner's alone for now (a trial); fetched separately. */
+  ownerOnlyCodeInjection?: boolean;
+  /** Where the "Powered by CourseLit" badge links; null hides it. */
+  courseLitBadgeUrl?: string | null;
 }
 
 export interface PublicPage {

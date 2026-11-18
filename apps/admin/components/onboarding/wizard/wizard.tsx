@@ -22,13 +22,13 @@ import {
   adoptProduct,
   applyBranding,
   applyEmail,
+  assertAcceptedFile,
   type BillingCatalog,
   checkSubdomain,
   createSchool,
   fetchBillingCatalog,
   getOnboarding,
   isHostedCatalog,
-  assertAcceptedFile,
   newUploadingFile,
   patchOnboarding,
   publishOffer,
@@ -101,6 +101,8 @@ export type WizardProps = {
   checkoutReturn: boolean;
   /** `?resume=1`: offer the Resume dialog. */
   resume: boolean;
+  /** `?plan=1`: open on the plan step, e.g. to buy a plan during a trial. */
+  choosePlan?: boolean;
 };
 
 type SchoolInfo = {
@@ -131,7 +133,12 @@ function realAccountName(
   return name && name.toLowerCase() !== prefix ? name : "";
 }
 
-export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
+export function SetupWizard({
+  isNew,
+  checkoutReturn,
+  resume,
+  choosePlan,
+}: WizardProps) {
   const router = useRouter();
   const shell = useAdminShellContext();
   const account = shell?.account ?? null;
@@ -158,6 +165,7 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
   const [bootError, setBootError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<BillingCatalog | null>(null);
   const [hosted, setHosted] = useState(true);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [firstRun, setFirstRun] = useState(false);
   const [step, setStep] = useState<WizardStep>("about");
   const [data, setData] = useState<WizardData>(() => emptyWizardData(localeDefaults));
@@ -329,13 +337,16 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
         setData(restored);
         dataRef.current = restored;
         setFirstRun(false);
-        const entitled = onboarding.billing.entitled || !onboarding.billing.required;
+        // Back from checkout: only a paid plan confirms the payment. A running
+        // trial is entitled too, but it says nothing about this checkout.
+        const paid = onboarding.billing.paid || !onboarding.billing.required;
+        setTrialEndsAt(onboarding.billing.paid ? null : onboarding.billing.trialEndsAt);
         const target = resolveResumeStep(onboarding.step, {
           hosted: isHosted,
           hasOffer: restored.offer !== null,
         });
         if (checkoutReturn) {
-          if (entitled) {
+          if (paid) {
             setStep("plan");
             setPaidConfirmed(true);
             setGoingLive(true);
@@ -344,6 +355,9 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
             return;
           }
           setCancelled(true);
+          setStep("plan");
+        } else if (choosePlan) {
+          setPlanMode("form");
           setStep("plan");
         } else {
           setStep(target);
@@ -1409,35 +1423,36 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
           aria-label="Setup"
           className="flex min-h-0 flex-col border-r border-border"
         >
-          <div
-            ref={formRef}
-            className="mx-auto flex min-h-0 w-full max-w-[640px] flex-1 flex-col gap-6 overflow-auto px-12 pb-8 pt-12 max-[1180px]:px-9 max-[1180px]:pt-10 max-md:gap-5 max-md:px-4 max-md:pb-6 max-md:pt-6"
-          >
-            {failed ? (
-              <div
-                role="alert"
-                className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
-              >
-                <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
-                <div className="min-w-0 flex-1">
-                  <b className="font-semibold">We couldn&apos;t save this step.</b>{" "}
-                  Check your connection and try again. Nothing you entered is lost.
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const retry = failed.retry;
-                    setFailed(null);
-                    retry();
-                  }}
+          {/* The pane scrolls, so its scrollbar sits on the pane's edge; the
+              form stays a centred column inside it. */}
+          <div ref={formRef} className="flex min-h-0 flex-1 flex-col overflow-auto">
+            <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col gap-6 px-12 pb-8 pt-12 max-[1180px]:px-9 max-[1180px]:pt-10 max-md:gap-5 max-md:px-4 max-md:pb-6 max-md:pt-6">
+              {failed ? (
+                <div
+                  role="alert"
+                  className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
                 >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-            {form}
+                  <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
+                  <div className="min-w-0 flex-1">
+                    <b className="font-semibold">We couldn&apos;t save this step.</b>{" "}
+                    Check your connection and try again. Nothing you entered is lost.
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const retry = failed.retry;
+                      setFailed(null);
+                      retry();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
+              {form}
+  </div>
           </div>
           {showFooter ? (
             <footer className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border bg-card px-12 py-3.5 max-[1180px]:px-9 max-md:px-4 max-md:py-3">
@@ -1509,7 +1524,13 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
       <ResumeDialog
         open={showResume}
         schoolName={schoolName}
-        rows={resumeRows(resumeStep, { firstRun, hosted }, data, accountName)}
+        rows={resumeRows(
+          resumeStep,
+          { firstRun, hosted },
+          data,
+          accountName,
+          trialEndsAt,
+        )}
         onContinue={() => {
           markResumePrompted();
           setShowResume(false);

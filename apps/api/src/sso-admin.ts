@@ -48,7 +48,7 @@ const TEST_REQUEST_TTL_MS = 10 * 60 * 1000;
 const VERIFY_WINDOW_MS = 60 * 60 * 1000;
 const VERIFY_LIMIT = 30;
 
-type Billing = Pick<BillingEngine, "hasFeature">;
+type Billing = Pick<BillingEngine, "hasFeature" | "commercialState">;
 type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 export type SsoConnectionDto = z.infer<typeof ssoConnectionSchema>;
 export type SsoDomainDto = z.infer<typeof ssoDomainSchema>;
@@ -136,7 +136,13 @@ export async function toConnectionDto(
     testedCurrentConfiguration:
       connection.testedAt !== null &&
       connection.testedConfigDigest === connectionConfigDigest(connection),
-    planAvailable: await schoolHasFeature(ctx.billing, connection.schoolId, SSO_FEATURE),
+    planAvailable: await schoolHasFeature(
+      ctx.billing,
+      connection.schoolId,
+      SSO_FEATURE,
+      ctx.db,
+      ctx.clock.now(),
+    ),
     createdAt: connection.createdAt.toISOString(),
     updatedAt: connection.updatedAt.toISOString(),
   };
@@ -655,7 +661,7 @@ export async function activateSsoConnection(
     // The system restores a suspended connection when the plan is back.
     return conflict("connection_suspended");
   }
-  if (!(await schoolHasFeature(ctx.billing, ctx.schoolId, SSO_FEATURE))) {
+  if (!(await schoolHasFeature(ctx.billing, ctx.schoolId, SSO_FEATURE, ctx.db, ctx.clock.now()))) {
     return {
       ok: false,
       error: createPlatformError("forbidden", { safeDetails: { reason: "plan_required" } }),

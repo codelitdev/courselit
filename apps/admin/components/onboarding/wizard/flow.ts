@@ -4,6 +4,7 @@
  * unit tested in isolation.
  */
 import type { MediaRef } from "@courselit/api-contract";
+import { schoolNameSchema } from "@courselit/api-contract/school-name";
 
 export type WizardStep =
   | "about"
@@ -412,6 +413,9 @@ export type FieldErrors = Partial<
 export const ERROR_COPY = {
   name: "Add your name so learners know who's teaching.",
   school: "Give your school a name.",
+  schoolLink:
+    "School names can't include a web or email address. It appears in every email your learners get.",
+  schoolLong: "Keep your school's name to 80 characters or fewer.",
   courseTitle: "Give your course a title.",
   communityName: "Give your community a name.",
   question: "Add the question applicants answer.",
@@ -435,6 +439,14 @@ export function validateSchool(
 ): FieldErrors {
   const errors: FieldErrors = {};
   if (blank(data.school)) errors.school = ERROR_COPY.school;
+  else {
+    // The same rule the API applies (S14): the name goes into email subjects.
+    const checked = schoolNameSchema.safeParse(data.school);
+    if (!checked.success) {
+      errors.school =
+        data.school.trim().length > 80 ? ERROR_COPY.schoolLong : ERROR_COPY.schoolLink;
+    }
+  }
   if (!isValidSubdomain(data.subdomain)) errors.subdomain = ERROR_COPY.subdomain;
   else if (availability === "taken") errors.subdomain = ERROR_COPY.subdomainTaken;
   return errors;
@@ -906,6 +918,7 @@ export function resumeRows(
   env: Pick<FlowEnv, "firstRun" | "hosted">,
   data: WizardData,
   accountName: string,
+  trialEndsAt: string | null = null,
 ): Array<{ key: string; name: string; desc: string; done: boolean; next: boolean }> {
   const groups = stepperGroups(env).filter((group) => group.key !== "live");
   const current = stepperIndex(stepperGroups(env), step);
@@ -916,7 +929,9 @@ export function resumeRows(
     offer: offerTitle(data) || "Not chosen yet",
     site: "Logo, colour and tagline",
     email: "Mailing address",
-    plan: "Choose a CourseLit plan to go live",
+    plan: trialEndsAt
+      ? `Free trial until ${new Date(trialEndsAt).toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
+      : "Choose a CourseLit plan to go live",
     live: "",
   };
   return groups.map((group, index) => ({

@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/codelit/dialog";
+import { UsageMeters } from "@/components/settings/usage-meters";
 
 type SchoolPlan = {
   billingAvailable: boolean;
@@ -40,6 +41,7 @@ type SchoolPlan = {
   pendingPlanChange: boolean;
   canCancel: boolean;
   canResume: boolean;
+  courseLitTrial: boolean;
 };
 
 const PLAN_NAMES = { pro: "Pro", business: "Business" } as const;
@@ -222,10 +224,17 @@ export function PlanSettings({ schoolId }: { schoolId: string | null }) {
               {statusBadge(plan)}
             </CardTitle>
             <CardDescription>
-              {price ? `${price}. ` : ""}Billed through your CourseLit account.
+              {plan.courseLitTrial
+                ? "A free trial with every Business feature. Pick Pro or Business before it ends to keep your school running."
+                : `${price ? `${price}. ` : ""}Billed through your CourseLit account.`}
             </CardDescription>
           </div>
           <div className="flex shrink-0 gap-2">
+            {plan.courseLitTrial ? (
+              <Button asChild>
+                <Link href="/onboarding/setup?plan=1">Choose a plan</Link>
+              </Button>
+            ) : null}
             {plan.canResume ? (
               <Button disabled={working} onClick={() => void change("resume")}>
                 Resume plan
@@ -268,6 +277,9 @@ export function PlanSettings({ schoolId }: { schoolId: string | null }) {
           {plan.pendingPlanChange ? (
             <p className="text-muted-foreground">A plan change is being processed.</p>
           ) : null}
+          <div className="pt-3">
+            <UsageMeters schoolId={schoolId} trial={plan.courseLitTrial === true} />
+          </div>
         </CardContent>
       </Card>
 
