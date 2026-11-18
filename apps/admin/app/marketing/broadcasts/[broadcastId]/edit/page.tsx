@@ -146,7 +146,13 @@ export default function BroadcastDetailsPage({
   const scheduledAt = getFutureBroadcastDeliveryDate(broadcast);
   const scheduled = isBroadcastScheduled(broadcast);
   const email = broadcast?.emails?.[0];
-  const emailContent = getEmailContent(email?.content);
+  // Both stay the same object across renders, so typing elsewhere on the
+  // page doesn't re-render the email preview.
+  const emailContent = useMemo(() => getEmailContent(email?.content), [email?.content]);
+  const previewContext = useMemo(
+    () => marketingPreviewContext({ viewInBrowser: broadcast?.viewInBrowser }),
+    [broadcast?.viewInBrowser],
+  );
   const mailingAddressMissing = useMailingAddressMissing(school?.id);
   // Explains why Send and Schedule are off; the API enforces the same rule.
   const unreadyReason = email
@@ -731,9 +737,7 @@ export default function BroadcastDetailsPage({
                 {emailContent ? (
                   <EmailPreview
                     blocks={MARKETING_EMAIL_BLOCKS}
-                    renderContext={marketingPreviewContext({
-                      viewInBrowser: broadcast?.viewInBrowser,
-                    })}
+                    renderContext={previewContext}
                     content={emailContent}
                     minHeight="420px"
                     iframeTitle={`${title || "Broadcast"} email preview`}
