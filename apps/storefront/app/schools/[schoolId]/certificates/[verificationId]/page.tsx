@@ -144,7 +144,8 @@ export default function CertificateVerificationPage() {
           </>
         ) : null}
       </section>
-      <CourseLitBadgeStrip />
+      {/* A certificate is a document of its own: no CourseLit badge on it. */}
+      <CourseLitBadgeStrip badge={false} />
     </main>
   );
 }
