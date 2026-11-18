@@ -50,8 +50,10 @@ export function ReportSiteLink() {
 
 /** The strip CourseLit owns under every public page. It sits outside the
  * page's layout, so editing the page can't remove it. It always has "Report
- * this site", and the badge unless the school's plan lets it hide it. */
-export function CourseLitBadgeStrip() {
+ * this site", and the badge unless the school's plan lets it hide it or the
+ * page leaves it out (`badge={false}`, e.g. a certificate). Never printed:
+ * see the `[data-courselit-strip]` print rule in globals.css. */
+export function CourseLitBadgeStrip({ badge = true }: { badge?: boolean } = {}) {
   const url = useCourseLitBadgeUrl();
   return (
     // Not a page-builder Section: that adds the theme's full section padding,
@@ -60,7 +62,7 @@ export function CourseLitBadgeStrip() {
       className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-background py-3 text-foreground print:hidden"
       data-courselit-strip=""
     >
-      {url ? <CourseLitBadge /> : null}
+      {badge && url ? <CourseLitBadge /> : null}
       <ReportSiteLink />
     </div>
   );
