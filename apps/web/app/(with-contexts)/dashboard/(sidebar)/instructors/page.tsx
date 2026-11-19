@@ -8,7 +8,7 @@ import type { Instructor } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import DashboardContent from "@components/admin/dashboard-content";
 import AdminEmptyState from "@components/admin/empty-state";
-import InstructorAvatar from "@components/admin/instructors/instructor-avatar";
+import InstructorAvatar from "@components/instructors/instructor-avatar";
 import { Button } from "@components/ui/button";
 import {
     AlertDialog,

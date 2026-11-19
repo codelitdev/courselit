@@ -17,7 +17,7 @@ import {
     INSTRUCTORS_PICKER_NONE_SELECTED,
     INSTRUCTORS_PICKER_PLACEHOLDER,
 } from "@ui-config/strings";
-import InstructorAvatar from "./instructor-avatar";
+import InstructorAvatar from "@components/instructors/instructor-avatar";
 
 export type InstructorOption = Pick<
     Instructor,

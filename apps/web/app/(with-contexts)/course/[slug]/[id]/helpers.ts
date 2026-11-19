@@ -1,9 +1,10 @@
-import { Course, Group, Lesson } from "@courselit/common-models";
+import { Course, Group, Instructor, Lesson } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { responses } from "@/config/strings";
 
 export type CourseFrontend = CourseWithoutGroups & {
     groups: GroupWithLessons[];
+    instructors: Instructor[];
     firstLesson: string;
     isPreview: boolean;
     discussions: boolean;
@@ -51,11 +52,37 @@ export const getProduct = async (
                         courseId,
                         isPreview,
                         discussions,
+                        instructors {
+                            instructorId,
+                            name,
+                            bio,
+                            avatar {
+                                file,
+                                thumbnail
+                            },
+                            links {
+                                label,
+                                url
+                            }
+                        },
                         groups {
                             id,
                             name,
                             rank,
                             lessonsOrder,
+                            instructors {
+                                instructorId,
+                                name,
+                                bio,
+                                avatar {
+                                    file,
+                                    thumbnail
+                                },
+                                links {
+                                    label,
+                                    url
+                                }
+                            },
                             drip {
                                 status,
                                 type,
@@ -137,6 +164,7 @@ export function formatCourse(
             (post as Course & { isPreview?: boolean }).isPreview,
         ),
         discussions: Boolean(post.discussions),
+        instructors: post.instructors ?? [],
         groups: groupsWithLessons as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,

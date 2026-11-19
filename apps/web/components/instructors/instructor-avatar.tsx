@@ -17,7 +17,7 @@ export default function InstructorAvatar({
     instructor: Pick<Instructor, "name" | "avatar">;
     className?: string;
 }) {
-    const src = instructor.avatar?.thumbnail || instructor.avatar?.file;
+    const src = instructor.avatar?.file || instructor.avatar?.thumbnail;
     return (
         <Avatar className={className}>
             {src && <AvatarImage src={src} alt="" />}
