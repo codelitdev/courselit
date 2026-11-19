@@ -13,6 +13,7 @@ import paymentplans from "./paymentplans";
 import notifications from "./notifications";
 import themes from "./themes";
 import productDiscussions from "./product-discussions";
+import instructors from "./instructors";
 
 const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
@@ -31,6 +32,7 @@ const schema = new graphql.GraphQLSchema({
             ...notifications.queries,
             ...themes.queries,
             ...productDiscussions.queries,
+            ...instructors.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -49,6 +51,7 @@ const schema = new graphql.GraphQLSchema({
             ...notifications.mutations,
             ...themes.mutations,
             ...productDiscussions.mutations,
+            ...instructors.mutations,
         },
     }),
 });

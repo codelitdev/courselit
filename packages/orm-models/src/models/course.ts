@@ -9,7 +9,8 @@ import {
 import { MediaSchema } from "./media";
 import { EmailSchema } from "./email";
 
-export interface InternalCourse extends Omit<Course, "paymentPlans"> {
+export interface InternalCourse
+    extends Omit<Course, "paymentPlans" | "instructors"> {
     domain: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
     privacy: ProductAccessType;
@@ -21,6 +22,8 @@ export interface InternalCourse extends Omit<Course, "paymentPlans"> {
     customers: string[];
     certificate?: boolean;
     discussions: boolean;
+    // Ordered ids of the instructors (see the Instructor model).
+    instructors?: string[];
 }
 
 export const CourseSchema = new mongoose.Schema<InternalCourse>(
@@ -62,6 +65,7 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
                 rank: { type: Number, required: true },
                 collapsed: { type: Boolean, required: true, default: true },
                 lessonsOrder: { type: [String] },
+                instructors: { type: [String] },
                 drip: new mongoose.Schema<Group["drip"]>({
                     type: {
                         type: String,
@@ -83,6 +87,7 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
         leadMagnet: { type: Boolean, required: true, default: false },
         certificate: Boolean,
         discussions: { type: Boolean, required: true, default: false },
+        instructors: { type: [String] },
     },
     {
         timestamps: true,

@@ -22,6 +22,7 @@ export type { Community as PageTypeCommunity } from "./page-type";
 export * as UIConstants from "./ui-constants";
 export * as Constants from "./constants";
 export * from "./media";
+export type { Instructor, InstructorLink } from "./instructor";
 export type { Quiz } from "./quiz";
 export type { Question } from "./question";
 export type { TextEditorContent } from "./text-editor-content";
