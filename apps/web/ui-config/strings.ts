@@ -240,6 +240,27 @@ export const BTN_LOGIN_GET_CODE = "Get code";
 export const LOGIN_CODE_INTIMATION_MESSAGE =
     "Enter the code sent to your email";
 export const LOGIN_FORM_DISCLAIMER = "By submitting, you accept the ";
+export const LOGIN_FORM_TERMS_LINK = "Terms";
+export const LOGIN_EMAIL_PLACEHOLDER = "Enter your email";
+export const LOGIN_CODE_PLACEHOLDER = "Code";
+export const LOGIN_SIGN_IN_FAILED = "Can't sign you in at this time:";
+export const LOGIN_UNEXPECTED_ERROR =
+    "An unexpected error occurred. Please try again.";
+export const CHECKOUT_LOGIN_EMAIL_PLACEHOLDER = "Email address";
+export const CHECKOUT_LOGIN_OTP_PLACEHOLDER = "Enter OTP";
+export const CHECKOUT_LOGIN_EMAIL_INVALID = "Invalid email address";
+export const CHECKOUT_LOGIN_EMAIL_REQUIRED =
+    "Please enter a valid email address";
+export const CHECKOUT_LOGIN_OTP_TOO_SHORT = "OTP must be at least 6 characters";
+export const RECAPTCHA_UNAVAILABLE =
+    "reCAPTCHA service not available. Please try again later.";
+export const RECAPTCHA_VALIDATION_FAILED =
+    "reCAPTCHA validation failed. Please try again.";
+export const RECAPTCHA_VERIFICATION_FAILED =
+    "reCAPTCHA verification failed. Please try again.";
+export const RECAPTCHA_VERIFICATION_FAILED_PREFIX =
+    "reCAPTCHA verification failed.";
+export const RECAPTCHA_TRY_AGAIN = "Please try again.";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
 export const MEDIA_MANAGER_PAGE_HEADING = "Media";
