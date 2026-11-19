@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The whole platform · CourseLit README banner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,700;1,700&amp;family=Hanken+Grotesk:wght@400;600;700&amp;family=Spline+Sans+Mono:wght@500&amp;display=swap">
+  <link rel="stylesheet" href="banner.css">
+  <!-- Use a 1280 × 640 viewport at 2× after document.fonts.ready. Append ?theme=dark for dark mode. -->
+  <script>
+    document.documentElement.classList.toggle("dark", new URLSearchParams(location.search).get("theme") === "dark");
+  </script>
+  <style>
+.hero {
+      position: absolute;
+      top: 112px;
+      left: 94px;
+      width: 530px;
+    }
+
+    .hero .brand { margin-bottom: 27px; }
+    .hero h1 { font-size: 78px; }
+    .hero .summary { margin-top: 24px; font-size: 25px; }
+    .hero .mcp { margin-top: 26px; }
+
+    .stack {
+      position: absolute;
+      inset: 62px 79px 66px 643px;
+    }
+
+    .stack .card { position: absolute; padding: 21px 23px; }
+    .stack h2 { margin-top: 9px; }
+    .stack .detail { margin-top: 7px; font-size: 20px; }
+
+    .course {
+      top: 15px;
+      left: 9px;
+      width: 342px;
+      height: 165px;
+      background: var(--paper);
+      transform: rotate(-5deg);
+    }
+
+    .broadcast { top: 99px; right: -3px; width: 278px; min-height: 0; transform: rotate(5deg); }
+
+    .stack .community {
+      top: 190px;
+      left: 38px;
+      width: 470px;
+      padding: 22px 24px 20px;
+    }
+
+    .community header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .space { color: var(--muted); font: 500 16px/1.2 var(--mono); }
+    .community h2 { margin: 13px 0 12px; }
+
+    .post {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 20px;
+    }
+
+    .replies {
+      margin: 8px 0 12px 15px;
+      padding: 7px 0 7px 19px;
+      border-left: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .replies .post + .post { margin-top: 8px; }
+    .replies .avatar { width: 28px; height: 28px; font-size: 13px; }
+    .community .reaction { color: var(--muted); font-size: 17px; }
+
+    .stack .plan {
+      top: 462px;
+      right: 2px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      width: max-content;
+      padding: 13px 17px;
+      background: var(--accent-wash);
+      transform: rotate(-3deg);
+    }
+
+    .plan .icon { color: var(--accent); }
+    .plan strong { display: block; font-size: 21px; }
+    .plan p { font-size: 18px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="banner">
+    <section class="hero">
+      <p class="brand"><img src="../logo.svg" alt="">CourseLit</p>
+      <h1><span>Turn what you</span><span>know into</span><em>an online school</em></h1>
+      <p class="summary muted">Sell courses and downloads, run a paid<br>community, and reach members by email.</p>
+      <p class="mcp"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 6-6 6 6 6m8-12 6 6-6 6M14.5 4l-5 16"/></svg> AI agents via MCP</p>
+    </section>
+
+    <aside class="stack" aria-label="Example CourseLit school">
+      <article class="card course">
+        <p class="label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5C9 3.7 5.3 3.3 2 4.5v14c3.3-1.2 7-.8 10 1 3-1.8 6.7-2.2 10-1v-14c-3.3-1.2-7-.8-10 1Zm0 0v14"/></svg>Course</p>
+        <h2>Handbuilt Ceramics</h2>
+        <p class="detail muted">Slabs, coils and glazing</p>
+      </article>
+      <article class="card broadcast">
+        <p class="label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>Email broadcast</p>
+        <h2>From the Kiln</h2>
+      </article>
+      <article class="card community">
+        <header>
+          <p class="label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13a2 2 0 0 1-2 2H9l-5.5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h15a2 2 0 0 1 2 2zM6 9.5h10"/></svg>Community</p>
+          <p class="space">#workbench</p>
+        </header>
+        <h2>Share your first piece</h2>
+        <p class="post"><span class="avatar">RD</span>Here’s my first coil pot!</p>
+        <div class="replies">
+          <p class="post"><span class="avatar">TA</span>How did you finish the rim?</p>
+          <p class="post"><span class="avatar">RD</span>With a damp sponge.</p>
+        </div>
+        <p class="reaction"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S3 15 3 8.9a4.5 4.5 0 0 1 9-1 4.5 4.5 0 0 1 9 1C21 15 12 20 12 20Z"/></svg> 3 reactions</p>
+      </article>
+      <article class="card plan">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h3"/></svg>
+        <div>
+          <strong>Studio membership</strong>
+          <p>Community + course access</p>
+        </div>
+      </article>
+    </aside>
+  </main>
+</body>
+</html>
