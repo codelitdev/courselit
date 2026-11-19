@@ -153,6 +153,12 @@ product, and the admin sign-in page showed developer notes.
     sender name, which replaces "CourseLit Shared". Checked on the local stack
     2026-11-11. On the next QA deploy, QA's existing teams still need their sender name set once,
     because CourseLit's SendLit key can't update teams (`teams:manage`).
+  - 2026-11-15: new teams also get the owner's email as Reply-To. SendLit's
+    bootstrap key now gets `teams:manage`, `teams:keys` and `usage:read`
+    (SendLit branch `fix/bootstrap-provisioning-key-scopes`), and the
+    self-hosting docs list the scopes. QA's key already had them (checked
+    2026-11-15), so QA's teams' sender name and reply-to can be set; a QA
+    database reset re-provisions them anyway.
 - [x] **11. The public header shows "Join" when the learner is already signed
   in.** _(QA)_
   - Fixed 2026-11-12, checked locally. Public pages are cached, so the server
@@ -314,7 +320,18 @@ product, and the admin sign-in page showed developer notes.
   and per-school toggles for login methods. Google login is now platform-wide,
   set by env vars. _(Parity)_
   - Confirmed 2026-11-13: by design. Google login stays platform-wide.
-- [ ] **33. SAML SSO login.** _(Parity)_
+- [x] **33. SAML SSO login.** _(Parity)_
+  - Fixed 2026-11-14 (#879), checked locally against Keycloak 26.4. Each
+    school can let learners sign in through its own SAML identity provider:
+    login providers settings, connection setup with a test sign-in, email
+    domains verified by DNS, and an option to require SSO for those domains.
+    It never signs anyone in to the admin. Plan in
+    `docs/wip/rewrite-sso-implementation.md`.
+  - On courselit.app it comes with the Business plan, so it stays off there
+    until Business can be bought. Self-hosted schools always have it.
+  - Still open: OIDC connections (Phase 6), an admin button to unlink a
+    learner's SSO identity, and a CODEOWNERS entry for
+    `apps/api/src/sso-protocol/`.
 - [x] **34. Editing a comment.** It exists in the API only. _(Parity)_
   - Fixed 2026-11-13, checked locally. A comment's author gets Edit in its
     actions menu, which opens it in the editor with Save and Cancel.
@@ -358,6 +375,8 @@ product, and the admin sign-in page showed developer notes.
   - member search on the Members tab.
 - [ ] **45. Community moderation tools:**
   - bulk approve and reject;
+  - hold new posts for a moderator's approval before members see them
+    (asked on Discord, 2026-03-06);
   - mute or ban a member;
   - content rules and keyword filters;
   - moderator permissions for each space.
@@ -400,12 +419,27 @@ product, and the admin sign-in page showed developer notes.
   and affiliates.
 - [ ] **59. AI drafting of courses and copy.**
 - [ ] **60. Podcasts.**
+- [ ] **60a. Marketing mail from the school's own address,** through its own
+  email provider, on Business only (not in the trial). Asked on Discord,
+  2026-03-15. Deferred on 2026-11-15.
+  - SendLit first: switch `teamEspEnabled` off for new teams (organization
+    default), add an API to change it after a team is created, and move the
+    provider form and the domain-check dialog into `@sendlit/email-blocks`.
+  - Then CourseLit: a Business-only settings screen using the school's team
+    key, a plan sync for `teamEspEnabled`, and no 100,000 quota on mail sent
+    through the school's own provider. Sending from the school's domain through
+    SendLit's shared service isn't possible, so this is the only way.
 
 ## 7. Maintenance
 
 - [ ] **61. minimatch (moderate) and deepmerge (low).** Both come in only through
   the `shadcn` CLI, a dev tool. They clear when shadcn updates its dependencies.
   _(Audit)_
+  - Rechecked 2026-11-14 with `bun audit`: both are still there. deepmerge
+    now also comes in at runtime through `@sendlit/email-editor` (via
+    `@react-email/render` and `html-to-text`). New: moderate advisories in
+    `hono` and `@hono/node-server`, also only through the `shadcn` CLI (via
+    `@modelcontextprotocol/sdk`).
 - [ ] **62. Correct the parity ledger.**
   `docs/platform-rewrite-parity-ledger.md` (COM-002) says the admin has pin and
   unpin controls. It doesn't; see item 28.
