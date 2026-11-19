@@ -4,6 +4,10 @@ import type { Instructor } from "@courselit/common-models";
 import InstructorsBlock from "../instructors-block";
 import InstructorStack from "../instructor-stack";
 import LessonInstructors from "../lesson-instructors";
+import {
+    INSTRUCTORS_VIEWER_HEADING,
+    LESSON_INSTRUCTOR_PREFIX,
+} from "@ui-config/strings";
 
 jest.mock("@courselit/page-primitives", () => ({
     Header2: ({ children }: any) => <h2>{children}</h2>,
@@ -47,7 +51,7 @@ describe("InstructorsBlock", () => {
         );
 
         expect(
-            screen.getByRole("heading", { name: "Instructors" }),
+            screen.getByRole("heading", { name: INSTRUCTORS_VIEWER_HEADING }),
         ).toBeInTheDocument();
         expect(screen.getByText("Ann Ada")).toBeInTheDocument();
         expect(screen.getByText("Teaches the basics")).toBeInTheDocument();
@@ -107,7 +111,7 @@ describe("InstructorStack", () => {
 
         expect(
             screen.getByLabelText(
-                "Instructors: Ann Ada, Bob Hopper, Cy Turing",
+                `${INSTRUCTORS_VIEWER_HEADING}: Ann Ada, Bob Hopper, Cy Turing`,
             ),
         ).toBeInTheDocument();
     });
@@ -131,7 +135,7 @@ describe("LessonInstructors", () => {
         );
 
         expect(
-            screen.getByText("with Ann Ada, Bob Hopper"),
+            screen.getByText(`${LESSON_INSTRUCTOR_PREFIX} Ann Ada, Bob Hopper`),
         ).toBeInTheDocument();
     });
 });

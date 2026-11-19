@@ -136,6 +136,7 @@ import { Constants, Profile } from "@courselit/common-models";
 import ProductPage, { generateSideBarItems } from "../layout-with-sidebar";
 import { CourseFrontend } from "../helpers";
 import constants from "@/config/constants";
+import { INSTRUCTORS_VIEWER_HEADING } from "@ui-config/strings";
 import { render, screen } from "@testing-library/react";
 import { ProfileContext } from "@components/contexts";
 
@@ -991,11 +992,15 @@ describe("Section instructors in the sidebar", () => {
 
         expect(
             screen.getByLabelText(
-                "Instructors: Ann Ada, Bob Hopper, Cy Turing",
+                `${INSTRUCTORS_VIEWER_HEADING}: Ann Ada, Bob Hopper, Cy Turing`,
             ),
         ).toBeInTheDocument();
         expect(screen.getByText("+1")).toBeInTheDocument();
-        expect(screen.getAllByLabelText(/^Instructors:/)).toHaveLength(1);
+        expect(
+            screen.getAllByLabelText(`${INSTRUCTORS_VIEWER_HEADING}:`, {
+                exact: false,
+            }),
+        ).toHaveLength(1);
     });
 });
 

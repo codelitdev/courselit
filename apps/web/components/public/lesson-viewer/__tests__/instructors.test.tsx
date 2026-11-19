@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { LessonViewer } from "../index";
+import { LESSON_INSTRUCTOR_PREFIX } from "@ui-config/strings";
 
 const mockExec = jest.fn();
 
@@ -93,7 +94,9 @@ describe("LessonViewer instructors", () => {
         });
         renderViewer();
 
-        expect(await screen.findByText("with Bob Hopper")).toBeInTheDocument();
+        expect(
+            await screen.findByText(`${LESSON_INSTRUCTOR_PREFIX} Bob Hopper`),
+        ).toBeInTheDocument();
         expect(screen.queryByText(/Ann Ada/)).toBeNull();
     });
 
@@ -105,7 +108,9 @@ describe("LessonViewer instructors", () => {
         });
         renderViewer();
 
-        expect(await screen.findByText("with Ann Ada")).toBeInTheDocument();
+        expect(
+            await screen.findByText(`${LESSON_INSTRUCTOR_PREFIX} Ann Ada`),
+        ).toBeInTheDocument();
     });
 
     it("shows nothing when no instructor is assigned", async () => {
@@ -117,6 +122,8 @@ describe("LessonViewer instructors", () => {
         renderViewer();
 
         await screen.findByRole("heading", { name: "My lesson" });
-        expect(screen.queryByText(/^with /)).toBeNull();
+        expect(
+            screen.queryByText(new RegExp(`^${LESSON_INSTRUCTOR_PREFIX} `)),
+        ).toBeNull();
     });
 });

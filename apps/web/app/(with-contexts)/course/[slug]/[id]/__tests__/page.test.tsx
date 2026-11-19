@@ -8,6 +8,7 @@ import {
     ThemeContext,
 } from "@components/contexts";
 import { getProduct } from "../helpers";
+import { INSTRUCTORS_VIEWER_HEADING } from "@ui-config/strings";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 jest.mock("@components/contexts", () => {
@@ -224,7 +225,9 @@ describe("Course introduction page", () => {
             renderPage();
 
             expect(
-                await screen.findByRole("heading", { name: "Instructors" }),
+                await screen.findByRole("heading", {
+                    name: INSTRUCTORS_VIEWER_HEADING,
+                }),
             ).toBeInTheDocument();
             expect(screen.getAllByText("Ann Ada")).toHaveLength(1);
             expect(screen.getByText("Bob Hopper")).toBeInTheDocument();
@@ -247,7 +250,9 @@ describe("Course introduction page", () => {
 
             await screen.findByRole("heading", { name: "Course intro" });
             expect(
-                screen.queryByRole("heading", { name: "Instructors" }),
+                screen.queryByRole("heading", {
+                    name: INSTRUCTORS_VIEWER_HEADING,
+                }),
             ).toBeNull();
         });
     });
