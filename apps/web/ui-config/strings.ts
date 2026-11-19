@@ -901,3 +901,46 @@ export const LESSON_CONTENT_LABEL = "Content";
 export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
 export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";
 export const LOGIN_FORM_PERSONAL_INFORMATION_LABEL = "Personal Information";
+
+// Instructors
+export const SIDEBAR_MENU_INSTRUCTORS = "Instructors";
+export const INSTRUCTORS_PAGE_HEADING = "Instructors";
+export const INSTRUCTORS_PAGE_DESCRIPTION =
+    "The people who teach. Assign them to a product, or to a single section of it.";
+export const BTN_NEW_INSTRUCTOR = "New instructor";
+export const INSTRUCTORS_EMPTY_TITLE = "No instructors yet";
+export const INSTRUCTORS_EMPTY_DESCRIPTION =
+    "Add the people who teach so your students know who is behind each product.";
+export const INSTRUCTOR_DIALOG_CREATE_TITLE = "New instructor";
+export const INSTRUCTOR_DIALOG_EDIT_TITLE = "Edit instructor";
+export const INSTRUCTOR_NAME_LABEL = "Name";
+export const INSTRUCTOR_NAME_REQUIRED = "Name is required";
+export const INSTRUCTOR_BIO_LABEL = "Bio";
+export const INSTRUCTOR_BIO_PLACEHOLDER = "A few lines about this person";
+export const INSTRUCTOR_PHOTO_LABEL = "Photo";
+export const INSTRUCTOR_LINKS_LABEL = "Links";
+export const INSTRUCTOR_LINK_LABEL_PLACEHOLDER = "Label (e.g. Instagram)";
+export const INSTRUCTOR_LINK_URL_PLACEHOLDER = "https://";
+export const INSTRUCTOR_LINK_URL_INVALID =
+    "Enter a full link starting with http:// or https://";
+export const INSTRUCTOR_LINK_LABEL_REQUIRED = "Add a label";
+export const BTN_ADD_LINK = "Add link";
+export const INSTRUCTOR_SAVED_MESSAGE = "Instructor saved";
+export const INSTRUCTOR_DELETED_MESSAGE = "Instructor deleted";
+export const INSTRUCTOR_DELETE_TITLE = "Delete instructor";
+export const INSTRUCTOR_DELETE_DESCRIPTION =
+    "This removes the instructor from every product and section they are assigned to.";
+export const COURSE_INSTRUCTORS_TITLE = "Instructors";
+export const COURSE_INSTRUCTORS_DESCRIPTION =
+    "Shown on the product page and below each lesson title.";
+export const SECTION_INSTRUCTORS_LABEL = "Instructors";
+export const SECTION_INSTRUCTORS_DESCRIPTION =
+    "Optional. Replaces the product's instructors for this section.";
+export const INSTRUCTORS_PICKER_PLACEHOLDER = "Add an instructor";
+export const INSTRUCTORS_PICKER_NONE_CREATED =
+    "You have not created any instructors yet.";
+export const INSTRUCTORS_PICKER_MANAGE_LINK = "Create instructors";
+export const INSTRUCTORS_PICKER_NONE_SELECTED = "No instructors assigned";
+export const INSTRUCTORS_SAVED_MESSAGE = "Instructors updated";
+export const INSTRUCTORS_VIEWER_HEADING = "Instructors";
+export const LESSON_INSTRUCTOR_PREFIX = "with";

@@ -6,8 +6,8 @@ import { AddressContext } from "@components/contexts";
 import { InternalCourse } from "@courselit/orm-models";
 
 export type ProductWithAdminProps = Partial<
-    Omit<InternalCourse, "paymentPlans"> &
-        Pick<Course, "paymentPlans"> & {
+    Omit<InternalCourse, "paymentPlans" | "instructors"> &
+        Pick<Course, "paymentPlans" | "instructors"> & {
             lessons: (Pick<
                 Lesson,
                 "title" | "groupId" | "lessonId" | "type" | "published"
@@ -50,6 +50,9 @@ export default function useProduct(id?: string | null): {
                         name,
                         rank,
                         lessonsOrder,
+                        instructors {
+                            instructorId
+                        },
                         drip {
                             type,
                             status,
@@ -71,6 +74,9 @@ export default function useProduct(id?: string | null): {
                     },
                     courseId,
                     discussions,
+                    instructors {
+                        instructorId
+                    },
                     cost,
                     costType,
                     featuredImage {

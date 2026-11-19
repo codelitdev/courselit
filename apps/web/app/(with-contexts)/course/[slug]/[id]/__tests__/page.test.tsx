@@ -8,6 +8,7 @@ import {
     ThemeContext,
 } from "@components/contexts";
 import { getProduct } from "../helpers";
+import { INSTRUCTORS_VIEWER_HEADING } from "@ui-config/strings";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 jest.mock("@components/contexts", () => {
@@ -96,6 +97,9 @@ jest.mock(
 jest.mock("@courselit/page-primitives", () => ({
     Button: ({ children }: any) => <button>{children}</button>,
     Header1: ({ children }: any) => <h1>{children}</h1>,
+    Header2: ({ children }: any) => <h2>{children}</h2>,
+    Header3: ({ children }: any) => <h3>{children}</h3>,
+    Text2: ({ children }: any) => <p>{children}</p>,
 }));
 
 jest.mock("@courselit/icons", () => ({
@@ -192,5 +196,64 @@ describe("Course introduction page", () => {
         expect(
             screen.queryByRole("link", { name: "Buy now" }),
         ).not.toBeInTheDocument();
+    });
+
+    describe("instructors", () => {
+        const ann = {
+            instructorId: "ann",
+            name: "Ann Ada",
+            bio: "Teaches the basics",
+            links: [],
+        };
+        const bob = { instructorId: "bob", name: "Bob Hopper", links: [] };
+
+        it("lists the course and section instructors once each", async () => {
+            (getProduct as jest.Mock).mockResolvedValue({
+                title: "Course intro",
+                description: JSON.stringify({ type: "doc", content: [] }),
+                courseId: "course-1",
+                slug: "course-slug",
+                cost: 0,
+                isPreview: false,
+                firstLesson: "lesson-1",
+                instructors: [ann],
+                groups: [
+                    { id: "g1", instructors: [bob, ann] },
+                    { id: "g2", instructors: [] },
+                ],
+            });
+            renderPage();
+
+            expect(
+                await screen.findByRole("heading", {
+                    name: INSTRUCTORS_VIEWER_HEADING,
+                }),
+            ).toBeInTheDocument();
+            expect(screen.getAllByText("Ann Ada")).toHaveLength(1);
+            expect(screen.getByText("Bob Hopper")).toBeInTheDocument();
+            expect(screen.getByText("Teaches the basics")).toBeInTheDocument();
+        });
+
+        it("renders no instructors block when nobody is assigned", async () => {
+            (getProduct as jest.Mock).mockResolvedValue({
+                title: "Course intro",
+                description: JSON.stringify({ type: "doc", content: [] }),
+                courseId: "course-1",
+                slug: "course-slug",
+                cost: 0,
+                isPreview: false,
+                firstLesson: "lesson-1",
+                instructors: [],
+                groups: [{ id: "g1", instructors: [] }],
+            });
+            renderPage();
+
+            await screen.findByRole("heading", { name: "Course intro" });
+            expect(
+                screen.queryByRole("heading", {
+                    name: INSTRUCTORS_VIEWER_HEADING,
+                }),
+            ).toBeNull();
+        });
     });
 });

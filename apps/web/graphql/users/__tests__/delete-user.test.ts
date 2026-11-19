@@ -18,6 +18,7 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
+import InstructorModel from "@models/Instructor";
 import EmailReplyTokenModel from "@models/EmailReplyToken";
 import InboundEmailReceiptModel from "@models/InboundEmailReceipt";
 import CommunityReportModel from "@models/CommunityReport";
@@ -148,6 +149,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             MailRequestStatusModel.deleteMany({ domain: testDomain._id }),
             LessonEvaluationModel.deleteMany({ domain: testDomain._id }),
             DownloadLinkModel.deleteMany({ domain: testDomain._id }),
+            InstructorModel.deleteMany({ domain: testDomain._id }),
             EmailReplyTokenModel.deleteMany({ domain: testDomain._id }),
             InboundEmailReceiptModel.deleteMany({ domain: testDomain._id }),
             CommunityReportModel.deleteMany({ domain: testDomain._id }),
@@ -668,6 +670,25 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 userId: targetUser.userId,
             });
             expect(links).toHaveLength(0);
+        });
+
+        it("should unlink the user from instructor profiles but keep them", async () => {
+            await InstructorModel.create({
+                domain: testDomain._id,
+                instructorId: "du-instructor-1",
+                name: "Guest Teacher",
+                userId: targetUser.userId,
+                links: [],
+            });
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const instructor = await InstructorModel.findOne({
+                domain: testDomain._id,
+                instructorId: "du-instructor-1",
+            }).lean();
+            expect(instructor?.name).toBe("Guest Teacher");
+            expect(instructor?.userId).toBeUndefined();
         });
 
         it("should delete email reply tokens", async () => {

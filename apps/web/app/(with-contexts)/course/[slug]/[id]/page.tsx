@@ -33,6 +33,8 @@ import {
 } from "@/lib/course-viewer-session-params";
 import { useSearchParams } from "next/navigation";
 import type { Profile } from "@courselit/common-models";
+import InstructorsBlock from "@components/instructors/instructors-block";
+import { getPageInstructors } from "@components/instructors/helpers";
 
 export default function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
@@ -150,6 +152,10 @@ export default function ProductPage(props: {
                     </WidgetErrorBoundary>
                 </div>
             </div>
+            <InstructorsBlock
+                instructors={getPageInstructors(product)}
+                theme={theme.theme}
+            />
             {(enrolled || isPreview) && product.firstLesson && (
                 <div className="self-end">
                     <Link

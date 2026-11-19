@@ -14,7 +14,7 @@ import {
     SIDEBAR_TEXT_COURSE_ABOUT,
     SIDEBAR_TEXT_COURSE_DISCUSSIONS,
 } from "@ui-config/strings";
-import { Profile, Constants } from "@courselit/common-models";
+import { Profile, Constants, Instructor } from "@courselit/common-models";
 import {
     ProfileContext,
     SiteInfoContext,
@@ -63,6 +63,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import InstructorStack from "@components/instructors/instructor-stack";
 import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
@@ -360,13 +361,23 @@ export function AppSidebar({
                                                                     item.title,
                                                                     item.badge
                                                                         ? 15
-                                                                        : 26,
+                                                                        : item
+                                                                                .instructors
+                                                                                ?.length
+                                                                          ? 19
+                                                                          : 26,
                                                                 )}
                                                             </TooltipTrigger>
                                                             <TooltipContent>
                                                                 {item.title}
                                                             </TooltipContent>
                                                         </Tooltip>
+                                                        <InstructorStack
+                                                            instructors={
+                                                                item.instructors ??
+                                                                []
+                                                            }
+                                                        />
                                                     </span>
                                                 </TooltipProvider>
                                                 {item.badge?.text && (
@@ -500,6 +511,7 @@ interface SidebarItem {
     title: string;
     href: string;
     icon?: ReactNode;
+    instructors?: Instructor[];
     badge?: {
         text: string;
         description: string;
@@ -563,6 +575,7 @@ export function generateSideBarItems(
             title: group.name,
             href: "#",
             isActive: false,
+            instructors: group.instructors,
             badge: getDripLabel({
                 course,
                 group,

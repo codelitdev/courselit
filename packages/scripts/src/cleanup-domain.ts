@@ -32,6 +32,7 @@ import {
     DownloadLinkSchema,
     ApiKeySchema,
     UserThemeSchema,
+    InstructorSchema,
     deleteProductDiscussionData,
 } from "@courselit/orm-models";
 import type {
@@ -41,6 +42,7 @@ import type {
     InternalPage,
     InternalCommunity,
     InternalUser,
+    InternalInstructor,
 } from "@courselit/orm-models";
 import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
@@ -86,6 +88,7 @@ const CertificateTemplateModel = mongoose.model(
     CertificateTemplateSchema,
 );
 const CertificateModel = mongoose.model("Certificate", CertificateSchema);
+const InstructorModel = mongoose.model("Instructor", InstructorSchema);
 const MembershipModel = mongoose.model("Membership", MembershipSchema);
 const PaymentPlanModel = mongoose.model("PaymentPlan", PaymentPlanSchema);
 const ActivityModel = mongoose.model("Activity", ActivitySchema);
@@ -146,6 +149,15 @@ async function cleanupDomain(name: string) {
     await EmailEventModel.deleteMany({ domain: domain._id });
     await EmailDeliveryModel.deleteMany({ domain: domain._id });
     await DownloadLinkModel.deleteMany({ domain: domain._id });
+    const instructors = await InstructorModel.find<InternalInstructor>({
+        domain: domain._id,
+    });
+    for (const instructor of instructors) {
+        if (instructor.avatar?.mediaId) {
+            await deleteMedia(instructor.avatar.mediaId);
+        }
+    }
+    await InstructorModel.deleteMany({ domain: domain._id });
     await ApiKeyModel.deleteMany({ domain: domain._id });
 
     const products = (await CourseModel.find({

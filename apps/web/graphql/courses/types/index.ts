@@ -9,6 +9,7 @@ import {
     GraphQLFloat,
     GraphQLList,
     GraphQLInputObjectType,
+    GraphQLFieldConfig,
 } from "graphql";
 import constants from "../../../config/constants";
 import lessonTypes from "../../lessons/types";
@@ -25,6 +26,8 @@ const { course, download, blog, costPaid, costEmail, costFree } = constants;
 import sequenceTypes from "../../mails/types";
 import { getPlans } from "@/graphql/paymentplans/logic";
 import GQLContext from "@/models/GQLContext";
+import instructorTypes from "../../instructors/types";
+import { getInstructorsByIds } from "../../instructors/logic";
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
@@ -105,6 +108,12 @@ const dripType = new GraphQLObjectType({
     },
 });
 
+const instructorsField: GraphQLFieldConfig<any, any> = {
+    type: new GraphQLList(new GraphQLNonNull(instructorTypes.instructorType)),
+    resolve: (entity, _, ctx: GQLContext) =>
+        getInstructorsByIds(entity.instructors, ctx),
+};
+
 const courseGroupType = new GraphQLObjectType({
     name: "GroupType",
     fields: {
@@ -114,6 +123,7 @@ const courseGroupType = new GraphQLObjectType({
         collapsed: { type: new GraphQLNonNull(GraphQLBoolean) },
         lessonsOrder: { type: new GraphQLList(GraphQLString) },
         drip: { type: dripType },
+        instructors: instructorsField,
     },
 });
 
@@ -178,6 +188,7 @@ const courseType = new GraphQLObjectType({
         sales: { type: GraphQLFloat },
         customers: { type: GraphQLInt },
         certificate: { type: GraphQLBoolean },
+        instructors: instructorsField,
     },
 });
 
@@ -205,6 +216,9 @@ const courseUpdateInput = new GraphQLInputObjectType({
         leadMagnet: { type: GraphQLBoolean },
         certificate: { type: GraphQLBoolean },
         discussions: { type: GraphQLBoolean },
+        instructors: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+        },
     },
 });
 

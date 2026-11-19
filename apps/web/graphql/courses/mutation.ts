@@ -107,10 +107,13 @@ export default {
             drip: {
                 type: types.dripInputType,
             },
+            instructors: {
+                type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+            },
         },
         resolve: async (
             _: unknown,
-            { id, courseId, name, rank, collapsed, drip },
+            { id, courseId, name, rank, collapsed, drip, instructors },
             context,
         ) =>
             updateGroup({
@@ -120,6 +123,7 @@ export default {
                 rank,
                 collapsed,
                 drip,
+                instructors,
                 ctx: context,
             }),
     },

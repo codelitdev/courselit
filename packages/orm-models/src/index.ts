@@ -2,6 +2,7 @@ export * from "./models/user";
 export * from "./models/user/progress";
 export * from "./models/membership";
 export * from "./models/media";
+export * from "./models/instructor";
 export * from "./models/sequence";
 export * from "./models/sequence/sequence-report";
 export * from "./models/user-segment";

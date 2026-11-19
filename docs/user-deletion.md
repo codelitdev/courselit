@@ -146,7 +146,8 @@ cleanupPersonalData(userToDelete, ctx)
 |   |-- Community post subscriptions
 |   |-- Product discussion likes
 |   |-- Product discussion subscriptions
-|   `-- Product discussion reports
+|   |-- Product discussion reports
+|   `-- Instructor profiles (the link to the user is removed; the profile stays)
 |-- Clean community content
 |   |-- Delete posts & comments (deleteCommunityPosts by user; includes reactions on owned posts / by userId)
 |   `-- Delete remaining community reactions for userId (CommunityReactionModel)

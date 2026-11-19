@@ -4,6 +4,7 @@ import { ProductPriceType, CourseType, ProductAccessType } from "./constants";
 import Lesson from "./lesson";
 import User from "./user";
 import { PaymentPlan } from "./payment-plan";
+import type { Instructor } from "./instructor";
 
 export type ProductPriceType =
     (typeof ProductPriceType)[keyof typeof ProductPriceType];
@@ -35,4 +36,5 @@ export interface Course {
     lessons?: Lesson[];
     user: User;
     paymentPlans?: PaymentPlan[];
+    instructors?: Instructor[];
 }

@@ -26,6 +26,7 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
+import InstructorModel from "@models/Instructor";
 import EmailReplyTokenModel from "@models/EmailReplyToken";
 import InboundEmailReceiptModel from "@models/InboundEmailReceipt";
 import CommunityReportModel from "@models/CommunityReport";
@@ -337,6 +338,15 @@ export async function cleanupPersonalData(
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
+        // The instructor profile is public content, only the link to the
+        // deleted account goes away.
+        InstructorModel.updateMany(
+            {
+                domain: ctx.subdomain._id,
+                userId: userToDelete.userId,
+            },
+            { $unset: { userId: "" } },
+        ),
     ]);
 
     // Delete all posts and comments created by the user

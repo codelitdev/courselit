@@ -59,6 +59,7 @@ import {
     canManageCourseInContext,
     getCourseManagementAccess,
 } from "./permissions";
+import { validateInstructorIds } from "../instructors/logic";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -234,6 +235,13 @@ export const updateCourse = async (
         if (conflictingCourse) {
             throw new Error(responses.page_id_already_exists);
         }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(courseData, "instructors")) {
+        courseData.instructors = await validateInstructorIds(
+            courseData.instructors,
+            ctx,
+        );
     }
 
     const mediaIdsMarkedForDeletion: string[] = [];
@@ -837,6 +845,7 @@ export const updateGroup = async ({
     rank,
     collapsed,
     drip,
+    instructors,
     ctx,
 }: {
     id: string;
@@ -844,6 +853,7 @@ export const updateGroup = async ({
     name?: string;
     rank?: number;
     collapsed?: boolean;
+    instructors?: string[] | null;
     drip?: {
         type?: string;
         status?: boolean;
@@ -878,6 +888,13 @@ export const updateGroup = async ({
 
     if (typeof collapsed === "boolean") {
         $set["groups.$.collapsed"] = collapsed;
+    }
+
+    if (instructors !== undefined) {
+        $set["groups.$.instructors"] = await validateInstructorIds(
+            instructors,
+            ctx,
+        );
     }
 
     if (drip) {
