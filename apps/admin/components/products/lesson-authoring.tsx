@@ -491,6 +491,8 @@ export function LessonAuthoring({
         router.replace(
           `${productRoot}/content/section/${encodeURIComponent(sectionChoice)}/lesson?id=${encodeURIComponent(saved.id)}`,
         );
+        // The editor stays mounted for the new lesson, so end the save here.
+        setSaving(false);
       } else {
         router.replace(`${productRoot}/content`);
       }
@@ -501,9 +503,9 @@ export function LessonAuthoring({
   }
 
   async function saveMedia(nextMediaId: string | null) {
+    if (!editing || !school || !lessonId || saving) return;
     const previousMediaId = mediaId;
     setMediaId(nextMediaId);
-    if (!editing || !school || !lessonId || saving) return;
     setSaving(true);
     setError(null);
     try {
