@@ -416,7 +416,7 @@ export function LessonAuthoring({
           const defaultType: LessonType = detail.kind === "download" ? "file" : "text";
           setType(defaultType);
           setContent(emptyContent(defaultType));
-          setStatus(detail.newLessonStatus ?? "draft");
+          setStatus("draft");
         }
         setSchool(selected);
         setProduct(detail);

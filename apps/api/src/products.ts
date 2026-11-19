@@ -53,7 +53,6 @@ export type ProductDto = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
-  newLessonStatus: "draft" | "published";
   includedWithCommunity: boolean;
   discussionSpaceId: string | null;
   publishedAt: string | null;
@@ -119,7 +118,6 @@ async function toDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    newLessonStatus: row.newLessonStatus,
     includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: row.discussionSpaceId
       ? ((
@@ -454,7 +452,6 @@ export async function createProduct(
     leadMagnet: input.leadMagnet ?? false,
     certificate: input.certificate ?? false,
     discussions: false,
-    newLessonStatus: "draft" as const,
     includedWithCommunity: false,
     discussionSpaceId: null,
     publishedAt: null,
@@ -578,7 +575,6 @@ export async function updateProduct(
     leadMagnet?: boolean;
     certificate?: boolean;
     discussions?: boolean;
-    newLessonStatus?: "draft" | "published";
     includedWithCommunity?: boolean;
   },
   clock: Clock,
@@ -763,7 +759,6 @@ export async function updateProduct(
       leadMagnet,
       certificate,
       discussions: input.discussions ?? row.discussions,
-      newLessonStatus: input.newLessonStatus ?? row.newLessonStatus,
       includedWithCommunity: input.includedWithCommunity ?? row.includedWithCommunity,
       ...(input.featuredImage !== undefined ? { featuredImage } : {}),
       // Kept when going back to draft: it records that the product was live once.

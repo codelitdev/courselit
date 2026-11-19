@@ -46,7 +46,7 @@ Under **Media**, select **Select or upload media** and choose a file from your m
 
 </Steps>
 
-Each file has a **Live** or **Draft** switch, just like a lesson. Learners only get live files. **New files start as** at the bottom of the tab sets the default for new files. See [Sections and lessons](/docs/products/sections-and-lessons) for how the list works.
+Each file has a **Live** or **Draft** switch, just like a lesson. Learners only get live files. New files start as drafts. See [Sections and lessons](/docs/products/sections-and-lessons) for how the list works.
 
 ## Set how people get it
 

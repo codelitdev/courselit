@@ -369,22 +369,6 @@ export function ProductContent({
     );
   }
 
-  async function setNewLessonStatus(status: Lesson["status"]) {
-    if (busy || product.newLessonStatus === status) return;
-    setBusy(true);
-    try {
-      await request(`/api/v1/products/${encodeURIComponent(productId)}`, {
-        method: "PATCH",
-        body: JSON.stringify({ newLessonStatus: status }),
-      });
-      await refresh();
-    } catch (caught) {
-      toast.error(errorText(caught, "Unable to save the default."));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   // ---------------------------------------------------------------------------
   // Sections
 
@@ -1118,46 +1102,6 @@ export function ProductContent({
           onClick={() => void addSection()}
         />
       ) : null}
-
-      <WorkspaceCard>
-        <CardHead
-          className="pb-5"
-          title={`New ${noun}s start as`}
-          description={
-            product.newLessonStatus === "published"
-              ? `Live: new ${noun}s are visible as soon as you save them.`
-              : `Draft: new ${noun}s stay hidden until you make them live.`
-          }
-          action={
-            <div
-              role="group"
-              aria-label={`New ${noun}s start as`}
-              className="inline-flex rounded-[var(--radius)] bg-muted p-[3px]"
-            >
-              {(["draft", "published"] as const).map((status) => {
-                const on = (product.newLessonStatus ?? "draft") === status;
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={busy}
-                    onClick={() => void setNewLessonStatus(status)}
-                    className={cn(
-                      "h-[30px] rounded-[calc(var(--radius)-3px)] px-3 text-[13px] font-semibold transition-colors",
-                      on
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {status === "draft" ? "Draft" : "Live"}
-                  </button>
-                );
-              })}
-            </div>
-          }
-        />
-      </WorkspaceCard>
 
       <Dialog
         open={Boolean(sectionToDelete)}

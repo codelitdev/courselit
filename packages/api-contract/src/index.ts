@@ -82,7 +82,6 @@ export const productSchema = z.object({
   certificate: z.boolean(),
   discussions: z.boolean(),
   /** Status a new lesson gets when it is created without one. */
-  newLessonStatus: z.enum(["draft", "published"]),
   includedWithCommunity: z.boolean(),
   discussionSpaceId: z.string().nullable(),
   /**
@@ -188,7 +187,6 @@ export const updateProductBodySchema = z.object({
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
-  newLessonStatus: z.enum(["draft", "published"]).optional(),
   includedWithCommunity: z.boolean().optional(),
 });
 

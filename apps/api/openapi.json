@@ -23145,13 +23145,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "newLessonStatus": {
-                            "type": "string",
-                            "enum": [
-                              "draft",
-                              "published"
-                            ]
-                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -23262,7 +23255,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
@@ -25104,13 +25096,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "newLessonStatus": {
-                            "type": "string",
-                            "enum": [
-                              "draft",
-                              "published"
-                            ]
-                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -25153,7 +25138,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
@@ -25508,13 +25492,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "newLessonStatus": {
-                      "type": "string",
-                      "enum": [
-                        "draft",
-                        "published"
-                      ]
-                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -25546,7 +25523,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -25892,13 +25868,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "newLessonStatus": {
-                            "type": "string",
-                            "enum": [
-                              "draft",
-                              "published"
-                            ]
-                          },
                           "includedWithCommunity": {
                             "type": "boolean"
                           },
@@ -25938,7 +25907,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "newLessonStatus",
                           "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
@@ -38249,13 +38217,6 @@
                   "discussions": {
                     "type": "boolean"
                   },
-                  "newLessonStatus": {
-                    "type": "string",
-                    "enum": [
-                      "draft",
-                      "published"
-                    ]
-                  },
                   "includedWithCommunity": {
                     "type": "boolean"
                   }
@@ -38369,13 +38330,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "newLessonStatus": {
-                      "type": "string",
-                      "enum": [
-                        "draft",
-                        "published"
-                      ]
-                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -38407,7 +38361,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -39040,13 +38993,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "newLessonStatus": {
-                      "type": "string",
-                      "enum": [
-                        "draft",
-                        "published"
-                      ]
-                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -39218,7 +39164,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -44878,13 +44823,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "newLessonStatus": {
-                      "type": "string",
-                      "enum": [
-                        "draft",
-                        "published"
-                      ]
-                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -45056,7 +44994,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
@@ -48407,13 +48344,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "newLessonStatus": {
-                      "type": "string",
-                      "enum": [
-                        "draft",
-                        "published"
-                      ]
-                    },
                     "includedWithCommunity": {
                       "type": "boolean"
                     },
@@ -48585,7 +48515,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "newLessonStatus",
                     "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",

@@ -6622,13 +6622,6 @@
           "notNull": true,
           "default": false
         },
-        "new_lesson_status": {
-          "name": "new_lesson_status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
         "included_with_community": {
           "name": "included_with_community",
           "type": "boolean",
