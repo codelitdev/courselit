@@ -430,6 +430,7 @@ CREATE TABLE "community_posts" (
 	"category" text DEFAULT 'General' NOT NULL,
 	"space_id" uuid,
 	"gif_urls" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"video_urls" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"pinned" boolean DEFAULT false NOT NULL,
 	"edited_at" timestamp with time zone,
 	"deleted_at" timestamp with time zone,

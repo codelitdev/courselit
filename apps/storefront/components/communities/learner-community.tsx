@@ -82,6 +82,12 @@ import {
 } from "./learner-gif-picker";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
+import {
+  LearnerPostVideos,
+  LearnerYoutubePicker,
+  MAX_POST_VIDEOS,
+  withVideo,
+} from "./learner-youtube-picker";
 import { editedNote } from "@/lib/community-edited";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
@@ -664,8 +670,10 @@ export function LearnerCommunity({
   >({});
   const [postMedia, setPostMedia] = useState<LearnerCommunityMedia[]>([]);
   const [postGifs, setPostGifs] = useState<string[]>([]);
+  const [postVideos, setPostVideos] = useState<string[]>([]);
   const [postEditMedia, setPostEditMedia] = useState<MediaAttachment[]>([]);
   const [postEditGifs, setPostEditGifs] = useState<string[]>([]);
+  const [postEditVideos, setPostEditVideos] = useState<string[]>([]);
   const [commentMedia, setCommentMedia] = useState<
     Record<string, LearnerCommunityMedia[]>
   >({});
@@ -1054,6 +1062,7 @@ export function LearnerCommunity({
             ...draft,
             mediaIds: postMediaRef.current.map((media) => media.id),
             gifUrls: postGifs,
+            videoUrls: postVideos,
           }),
         },
       );
@@ -1061,6 +1070,7 @@ export function LearnerCommunity({
       setPostDraft(postDraftRef.current);
       updatePostMedia([]);
       setPostGifs([]);
+      setPostVideos([]);
       setPostDialogOpen(false);
       toast.success("Post published.");
       await load();
@@ -1462,6 +1472,7 @@ export function LearnerCommunity({
     postEditMediaIdsRef.current = post.media.map((media) => media.id);
     setPostEditMedia(post.media.map(communityMediaToAttachment));
     setPostEditGifs(post.gifUrls);
+    setPostEditVideos(post.videoUrls);
     setPostEditDraft(draft);
     setEditingPostId(post.id);
   }
@@ -1478,6 +1489,7 @@ export function LearnerCommunity({
             ...draft,
             mediaIds: postEditMediaIdsRef.current,
             gifUrls: postEditGifs,
+            videoUrls: postEditVideos,
           }),
         },
       );
@@ -1493,6 +1505,7 @@ export function LearnerCommunity({
       setEditingPostId(null);
       setPostEditMedia([]);
       setPostEditGifs([]);
+      setPostEditVideos([]);
       postEditMediaIdsRef.current = [];
     } catch (caught) {
       setError(
@@ -1727,6 +1740,15 @@ export function LearnerCommunity({
                       current.filter((item) => item !== url),
                     )
                   }
+                  videoUrls={postVideos}
+                  onVideoAdd={(url) =>
+                    setPostVideos((current) => withVideo(current, url))
+                  }
+                  onVideoRemove={(url) =>
+                    setPostVideos((current) =>
+                      current.filter((item) => item !== url),
+                    )
+                  }
                   canSubmit={Boolean(
                     postDraft.title.trim() &&
                       communityDescriptionHasContent(postDraft.content),
@@ -1925,6 +1947,14 @@ export function LearnerCommunity({
                               )
                             }
                           />
+                          <LearnerPostVideos
+                            urls={postEditVideos}
+                            onRemove={(url) =>
+                              setPostEditVideos((current) =>
+                                current.filter((item) => item !== url),
+                              )
+                            }
+                          />
                           <MediaUploadDialog<LearnerCommunityMedia>
                             {...mediaAdapters}
                             title="Attach media"
@@ -1935,9 +1965,16 @@ export function LearnerCommunity({
                             onSelect={selectPostEditMedia}
                           >
                             <Button type="button" variant="outline" size="sm">
-                              <Paperclip className="size-4" /> Attach media
+                              <Paperclip className="size-4" /> Upload a file
                             </Button>
                           </MediaUploadDialog>
+                          <LearnerYoutubePicker
+                            label="Add YouTube video"
+                            disabled={postEditVideos.length >= MAX_POST_VIDEOS}
+                            onAdd={(url) =>
+                              setPostEditVideos((current) => withVideo(current, url))
+                            }
+                          />
                           <LearnerGifPicker
                             variant="outline"
                             label="Add GIF"
@@ -1971,6 +2008,7 @@ export function LearnerCommunity({
                             items={post.media.map(communityMediaToAttachment)}
                           />
                           <LearnerPostGifs urls={post.gifUrls} />
+                          <LearnerPostVideos urls={post.videoUrls} />
                         </>
                       )}
                       <div className="flex flex-wrap items-center gap-2 border-t pt-4">

@@ -24,6 +24,10 @@
       "types": "./src/safe-redirect.ts",
       "import": "./src/safe-redirect.ts"
     },
+    "./youtube": {
+      "types": "./src/youtube.ts",
+      "import": "./src/youtube.ts"
+    },
     "./school-name": {
       "types": "./src/school-name.ts",
       "import": "./src/school-name.ts"

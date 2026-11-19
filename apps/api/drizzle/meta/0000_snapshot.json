@@ -3792,6 +3792,13 @@
           "notNull": true,
           "default": "'[]'::jsonb"
         },
+        "video_urls": {
+          "name": "video_urls",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
         "pinned": {
           "name": "pinned",
           "type": "boolean",

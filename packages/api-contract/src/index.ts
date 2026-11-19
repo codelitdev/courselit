@@ -10,10 +10,12 @@ export * from "./learner-avatar.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";
+export * from "./youtube.js";
 export * from "./school-name.js";
 export * from "./school-subdomain.js";
 import { schoolNameSchema } from "./school-name.js";
 import { isReservedSubdomain } from "./school-subdomain.js";
+import { youtubeVideoId } from "./youtube.js";
 
 const c = initContract();
 
@@ -1376,6 +1378,15 @@ export const communityGifUrlSchema = z
   .refine(isAllowedGifUrl, { message: "Only GIPHY GIF links are allowed." });
 const communityGifUrlsSchema = z.array(communityGifUrlSchema).max(10).optional();
 
+/** A YouTube video link added to a post. Stored as its embed link, never as media. */
+export const communityVideoUrlSchema = z
+  .string()
+  .max(2_000)
+  .refine((value) => youtubeVideoId(value) !== null, {
+    message: "Only YouTube video links are allowed.",
+  });
+const communityVideoUrlsSchema = z.array(communityVideoUrlSchema).max(10).optional();
+
 export const learnerGifSearchQuerySchema = z.object({
   q: z.string().max(200).optional(),
 });
@@ -1410,6 +1421,8 @@ export const communityPostSchema = z.object({
   category: z.string(),
   media: z.array(communityMediaSchema),
   gifUrls: z.array(z.string().url()),
+  /** YouTube embed links. */
+  videoUrls: z.array(z.string().url()),
   reactions: z.array(communityReactionSchema),
   commentsCount: z.number().int().nonnegative(),
   subscribed: z.boolean(),
@@ -1496,6 +1509,8 @@ export const communityReportContentSchema = z.object({
   content: z.string(),
   media: z.array(communityMediaSchema),
   gifUrls: z.array(z.string().url()),
+  /** YouTube embed links; always empty for a comment. */
+  videoUrls: z.array(z.string().url()),
   authorId: z.string().nullable(),
   authorKind: z.enum(["learner", "admin"]).nullable(),
   author: communityActorSchema.nullable(),
@@ -1568,6 +1583,7 @@ export const createSpacePostBodySchema = z.object({
   content: z.string().trim().min(1).max(20_000),
   mediaIds: z.array(z.string().min(1)).max(10).optional(),
   gifUrls: communityGifUrlsSchema,
+  videoUrls: communityVideoUrlsSchema,
 });
 
 export const communityMembershipListQuerySchema = communityListQuerySchema.extend({
@@ -1586,6 +1602,7 @@ export const createCommunityPostBodySchema = z.object({
   category: z.string().trim().min(1).max(100).default("General"),
   mediaIds: communityMediaIdsSchema,
   gifUrls: communityGifUrlsSchema,
+  videoUrls: communityVideoUrlsSchema,
 });
 
 export const updateCommunityPostBodySchema = createCommunityPostBodySchema

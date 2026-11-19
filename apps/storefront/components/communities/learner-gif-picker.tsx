@@ -14,10 +14,10 @@ import {
   LearnerInput,
   LearnerPopover,
   LearnerPopoverContent,
-  LearnerPopoverTrigger,
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { requestJson } from "@/lib/request-json";
+import { ComposerTooltip, PopoverTriggerSlot } from "./learner-youtube-picker";
 
 type Gif = z.infer<typeof gifSchema>;
 type GifSearchResponse = z.infer<typeof learnerGifSearchResponseSchema>;
@@ -179,23 +179,23 @@ export function LearnerGifPicker({
 
   return (
     <LearnerPopover open={open} onOpenChange={setOpen} modal>
-      <LearnerPopoverTrigger asChild>
+      <ComposerTooltip
+        label={disabled ? `A post can contain up to ${MAX_POST_GIFS} GIFs.` : "Add a GIF"}
+        trigger={PopoverTriggerSlot}
+      >
         <Button
           type="button"
           variant={variant}
           size={label ? "sm" : "icon"}
           disabled={disabled}
           aria-label="Add GIF"
-          title={
-            disabled ? `A post can contain up to ${MAX_POST_GIFS} GIFs.` : undefined
-          }
         >
           <span className="text-xs font-semibold" aria-hidden="true">
             GIF
           </span>
           {label ? <span>{label}</span> : null}
         </Button>
-      </LearnerPopoverTrigger>
+      </ComposerTooltip>
       <LearnerPopoverContent className="w-80" align="start">
         {open ? (
           <GifResults

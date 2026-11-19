@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/codelit/textarea";
 import { cn } from "@/lib/utils";
 import {
   CommunityGifPreview,
+  CommunityVideoPreview,
   CommunityMediaPreview,
   communityPagePath,
   CommunityPostContent,
@@ -232,6 +233,7 @@ export function CommunityReports({
                       </div>
                       <CommunityMediaPreview items={report.content.media} />
                       <CommunityGifPreview urls={report.content.gifUrls} />
+                      <CommunityVideoPreview urls={report.content.videoUrls} />
                     </div>
                   ) : (
                     <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">

@@ -12,6 +12,7 @@ import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   communityGifUrls,
   type CommunityLearnerViewer,
+  communityVideoUrls,
   createReport,
   type LearnerSpaceFeedPostDto,
   listReports,
@@ -789,6 +790,7 @@ export async function createLearnerSpacePost(
     content: string;
     mediaIds?: readonly string[];
     gifUrls?: readonly string[];
+    videoUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<{ id: string; spaceId: string; title: string; content: string }>> {
@@ -835,6 +837,7 @@ export async function createLearnerSpacePost(
     content: input.content,
     category: space.name,
     gifUrls: communityGifUrls(input.gifUrls ?? []),
+    videoUrls: communityVideoUrls(input.videoUrls ?? []),
     pinned: false,
     editedAt: null,
     deletedAt: null,

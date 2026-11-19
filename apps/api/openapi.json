@@ -5117,6 +5117,13 @@
                               "format": "uri"
                             }
                           },
+                          "videoUrls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
                           "reactions": {
                             "type": "array",
                             "items": {
@@ -5176,6 +5183,7 @@
                           "category",
                           "media",
                           "gifUrls",
+                          "videoUrls",
                           "reactions",
                           "commentsCount",
                           "subscribed",
@@ -5489,6 +5497,14 @@
                       "format": "uri"
                     },
                     "maxItems": 10
+                  },
+                  "videoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "maxItems": 10
                   }
                 },
                 "required": [
@@ -5628,6 +5644,13 @@
                         "format": "uri"
                       }
                     },
+                    "videoUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
                     "reactions": {
                       "type": "array",
                       "items": {
@@ -5687,6 +5710,7 @@
                     "category",
                     "media",
                     "gifUrls",
+                    "videoUrls",
                     "reactions",
                     "commentsCount",
                     "subscribed",
@@ -5992,6 +6016,14 @@
                     },
                     "maxItems": 10
                   },
+                  "videoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "maxItems": 10
+                  },
                   "pinned": {
                     "type": "boolean"
                   }
@@ -6129,6 +6161,13 @@
                         "format": "uri"
                       }
                     },
+                    "videoUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
                     "reactions": {
                       "type": "array",
                       "items": {
@@ -6188,6 +6227,7 @@
                     "category",
                     "media",
                     "gifUrls",
+                    "videoUrls",
                     "reactions",
                     "commentsCount",
                     "subscribed",
@@ -8978,6 +9018,13 @@
                             "format": "uri"
                           }
                         },
+                        "videoUrls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
                         "authorId": {
                           "type": "string",
                           "nullable": true
@@ -9031,6 +9078,7 @@
                         "content",
                         "media",
                         "gifUrls",
+                        "videoUrls",
                         "authorId",
                         "authorKind",
                         "author"
@@ -9559,6 +9607,13 @@
                                   "format": "uri"
                                 }
                               },
+                              "videoUrls": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
                               "authorId": {
                                 "type": "string",
                                 "nullable": true
@@ -9612,6 +9667,7 @@
                               "content",
                               "media",
                               "gifUrls",
+                              "videoUrls",
                               "authorId",
                               "authorKind",
                               "author"
@@ -10097,6 +10153,13 @@
                                   "format": "uri"
                                 }
                               },
+                              "videoUrls": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
                               "authorId": {
                                 "type": "string",
                                 "nullable": true
@@ -10150,6 +10213,7 @@
                               "content",
                               "media",
                               "gifUrls",
+                              "videoUrls",
                               "authorId",
                               "authorKind",
                               "author"
@@ -10610,6 +10674,13 @@
                             "format": "uri"
                           }
                         },
+                        "videoUrls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
                         "authorId": {
                           "type": "string",
                           "nullable": true
@@ -10663,6 +10734,7 @@
                         "content",
                         "media",
                         "gifUrls",
+                        "videoUrls",
                         "authorId",
                         "authorKind",
                         "author"
@@ -14245,6 +14317,14 @@
                       "format": "uri"
                     },
                     "maxItems": 10
+                  },
+                  "videoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "maxItems": 10
                   }
                 },
                 "required": [
@@ -14667,6 +14747,13 @@
                         "format": "uri"
                       }
                     },
+                    "videoUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
                     "reactions": {
                       "type": "array",
                       "items": {
@@ -14828,6 +14915,7 @@
                     "category",
                     "media",
                     "gifUrls",
+                    "videoUrls",
                     "reactions",
                     "commentsCount",
                     "subscribed",
@@ -15192,6 +15280,13 @@
                               "format": "uri"
                             }
                           },
+                          "videoUrls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
                           "reactions": {
                             "type": "array",
                             "items": {
@@ -15353,6 +15448,7 @@
                           "category",
                           "media",
                           "gifUrls",
+                          "videoUrls",
                           "reactions",
                           "commentsCount",
                           "subscribed",
@@ -16120,6 +16216,13 @@
                               "format": "uri"
                             }
                           },
+                          "videoUrls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
                           "reactions": {
                             "type": "array",
                             "items": {
@@ -16179,6 +16282,7 @@
                           "category",
                           "media",
                           "gifUrls",
+                          "videoUrls",
                           "reactions",
                           "commentsCount",
                           "subscribed",
@@ -16485,6 +16589,14 @@
                       "format": "uri"
                     },
                     "maxItems": 10
+                  },
+                  "videoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "maxItems": 10
                   }
                 },
                 "required": [
@@ -16624,6 +16736,13 @@
                         "format": "uri"
                       }
                     },
+                    "videoUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
                     "reactions": {
                       "type": "array",
                       "items": {
@@ -16683,6 +16802,7 @@
                     "category",
                     "media",
                     "gifUrls",
+                    "videoUrls",
                     "reactions",
                     "commentsCount",
                     "subscribed",
@@ -17069,6 +17189,13 @@
                         "format": "uri"
                       }
                     },
+                    "videoUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
                     "reactions": {
                       "type": "array",
                       "items": {
@@ -17128,6 +17255,7 @@
                     "category",
                     "media",
                     "gifUrls",
+                    "videoUrls",
                     "reactions",
                     "commentsCount",
                     "subscribed",
@@ -21337,6 +21465,13 @@
                             "format": "uri"
                           }
                         },
+                        "videoUrls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
                         "authorId": {
                           "type": "string",
                           "nullable": true
@@ -21390,6 +21525,7 @@
                         "content",
                         "media",
                         "gifUrls",
+                        "videoUrls",
                         "authorId",
                         "authorKind",
                         "author"

@@ -18,14 +18,25 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
 type Media = { before: readonly string[]; after: readonly string[] | undefined };
 
 export function postWasEdited(
-  before: { title: string; content: string; gifUrls: readonly string[] },
-  after: { title: string; content: string; gifUrls: readonly string[] },
+  before: {
+    title: string;
+    content: string;
+    gifUrls: readonly string[];
+    videoUrls: readonly string[];
+  },
+  after: {
+    title: string;
+    content: string;
+    gifUrls: readonly string[];
+    videoUrls: readonly string[];
+  },
   media: Media,
 ): boolean {
   return (
     before.title !== after.title ||
     before.content !== after.content ||
     !sameList(before.gifUrls, after.gifUrls) ||
+    !sameList(before.videoUrls, after.videoUrls) ||
     (media.after !== undefined && !sameIds(media.before, media.after))
   );
 }

@@ -23,7 +23,7 @@ Each report shows:
 
 - The type of content: **Post**, **Comment** or **Reply**, and how long ago it was reported.
 - The reason the member gave, after **Reported for**.
-- The author and the reported content, including its images, videos, attachments and GIFs.
+- The author and the reported content, including its images, videos, attachments, YouTube videos and GIFs.
 
 If the content has been deleted since, the report says that it is no longer available.
 
