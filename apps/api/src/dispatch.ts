@@ -1301,6 +1301,7 @@ export async function dispatch(
             deps.db,
             learnerAuth.value.school.id,
             learnerAuth.value.learner.id,
+            learnerAuth.value.authenticationMethod,
           ))
         ) {
           return errorResponse(createPlatformError("forbidden"));

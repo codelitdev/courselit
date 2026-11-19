@@ -8,6 +8,8 @@ import { and, asc, count, eq, gt, gte, notExists, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { deleteUnreferencedMedia, type MediaLitClient } from "./media.js";
 import { type PlanLimitDeps, schoolLimit } from "./plan-limit.js";
+import type { SignInMethod } from "./sign-in-policy.js";
+import { accessibleSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
 
 /**
@@ -302,13 +304,15 @@ export async function storageUsed(
 
 
 /**
- * Whether a learner may upload community media: only with an active
- * community membership that lets them post (S24).
+ * Whether a learner may upload community media: only when they can post
+ * somewhere (S24), through an active community membership that lets them
+ * post or a discussion space they can reach, such as a course's.
  */
 export async function learnerMayUploadCommunityMedia(
   db: AppDb,
   schoolId: string,
   schoolAccountId: string,
+  authenticationMethod: SignInMethod,
 ): Promise<boolean> {
   const [row] = await db
     .select({ id: schema.learnerMemberships.id })
@@ -323,7 +327,9 @@ export async function learnerMayUploadCommunityMedia(
       ),
     )
     .limit(1);
-  return row !== undefined;
+  if (row) return true;
+  const spaces = await accessibleSpaceIds(db, schoolId, schoolAccountId, authenticationMethod);
+  return spaces.size > 0;
 }
 
 /** The storage rules a media upload goes through, bound to a request's deps. */

@@ -236,6 +236,44 @@ describe("learner uploads (S2, S24)", () => {
     }
   });
 
+  it("are allowed for a course learner who can post in the course's discussion", async () => {
+    const t = await setup();
+    try {
+      const course = await dispatch(t.runtime, {
+        method: "POST",
+        path: "/v1/products",
+        headers: ownerA(t),
+        body: { kind: "course", title: "Discussed course" },
+      });
+      expect(course.status).toBe(201);
+      const productId = (course.body as { id: string }).id;
+      const discussions = await dispatch(t.runtime, {
+        method: "PATCH",
+        path: `/v1/products/${productId}`,
+        headers: ownerA(t),
+        body: { discussions: true },
+      });
+      expect(discussions.status).toBe(200);
+
+      const learner = await learnerWithCommunity(t, "course-l@example.com", false);
+      expect((await learnerAuthorize(t, learner.headers, MB)).status).toBe(403);
+      await t.runtime.db.insert(schema.learnerMemberships).values({
+        id: uuidv7(t.clock),
+        publicId: "mbr_course_learner",
+        schoolId: t.world.schoolA.id,
+        schoolAccountId: learner.accountId,
+        entityType: "product",
+        entityId: productId,
+        status: "active",
+        createdAt: t.clock.now(),
+        updatedAt: t.clock.now(),
+      });
+      expect((await learnerAuthorize(t, learner.headers, MB)).status).toBe(201);
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
   it("are private, limited to safe types, and held to the learner's budget", async () => {
     const t = await setup();
     try {
