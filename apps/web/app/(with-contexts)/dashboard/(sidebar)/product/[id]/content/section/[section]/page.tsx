@@ -29,6 +29,8 @@ import {
     EDIT_SECTION_HEADER,
     LABEL_DRIP_EMAIL_SUBJECT,
     MANAGE_COURSES_PAGE_HEADING,
+    SECTION_INSTRUCTORS_DESCRIPTION,
+    SECTION_INSTRUCTORS_LABEL,
     TOAST_DESCRIPTION_CHANGES_SAVED,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
@@ -44,6 +46,8 @@ import EmailViewer from "@components/admin/mails/email-viewer";
 import { defaultEmail } from "@courselit/email-editor";
 import type { Email as EmailContent } from "@courselit/email-editor";
 import constants from "@/config/constants";
+import useInstructors from "@/hooks/use-instructors";
+import InstructorPicker from "@/components/admin/instructors/instructor-picker";
 
 const { permissions } = UIConstants;
 
@@ -57,6 +61,8 @@ export default function SectionPage(props: {
     // const afterSectionId = searchParams.get("after");
 
     const [sectionName, setSectionName] = useState("");
+    const [sectionInstructors, setSectionInstructors] = useState<string[]>([]);
+    const { instructors } = useInstructors();
     const [enableDrip, setEnableDrip] = useState(false);
     const [dripType, setDripType] = useState<DripType>();
     const [notifyUsers, setNotifyUsers] = useState(false);
@@ -95,6 +101,11 @@ export default function SectionPage(props: {
                         : Constants.dripType[1]
                     : undefined;
                 setSectionName(group.name);
+                setSectionInstructors(
+                    (group.instructors ?? []).map(
+                        (instructor) => instructor.instructorId,
+                    ),
+                );
                 setEnableDrip(
                     typeof group.drip?.status === "boolean"
                         ? group.drip?.status
@@ -199,12 +210,13 @@ export default function SectionPage(props: {
 
     const updateGroup = async () => {
         const query = ` 
-        mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
+        mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput, $instructors: [String!]) {
             course: updateGroup(
                 id: $id,
                 courseId: $courseId,
                 name: $name,
-                drip: $drip 
+                drip: $drip,
+                instructors: $instructors
             ) {
                 courseId,
                 groups {
@@ -212,6 +224,9 @@ export default function SectionPage(props: {
                     name,
                     rank,
                     collapsed,
+                    instructors {
+                        instructorId
+                    },
                     drip {
                         type,
                         status,
@@ -242,6 +257,7 @@ export default function SectionPage(props: {
                     id: sectionId,
                     courseId: product?.courseId,
                     name: sectionName,
+                    instructors: sectionInstructors,
                     drip: dripType
                         ? {
                               status: enableDrip,
@@ -327,6 +343,27 @@ export default function SectionPage(props: {
                     </div>
 
                     <Separator />
+
+                    {product?.type?.toLowerCase() ===
+                        UIConstants.COURSE_TYPE_COURSE && (
+                        <>
+                            <div className="space-y-4">
+                                <div className="space-y-0.5">
+                                    <Label>{SECTION_INSTRUCTORS_LABEL}</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        {SECTION_INSTRUCTORS_DESCRIPTION}
+                                    </p>
+                                </div>
+                                <InstructorPicker
+                                    instructors={instructors}
+                                    value={sectionInstructors}
+                                    onChange={setSectionInstructors}
+                                    disabled={loading}
+                                />
+                            </div>
+                            <Separator />
+                        </>
+                    )}
 
                     {product?.type?.toLowerCase() ===
                         UIConstants.COURSE_TYPE_COURSE && (

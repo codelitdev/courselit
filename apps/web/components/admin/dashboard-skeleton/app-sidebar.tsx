@@ -2,6 +2,7 @@
 
 import {
     Box,
+    GraduationCap,
     Globe,
     LibraryBig,
     LifeBuoy,
@@ -37,6 +38,7 @@ import {
     MY_CONTENT_HEADER,
     SEQUENCES,
     SIDEBAR_MENU_BLOGS,
+    SIDEBAR_MENU_INSTRUCTORS,
     SIDEBAR_MENU_MAILS,
     SIDEBAR_MENU_PAGES,
     SIDEBAR_MENU_SETTINGS,
@@ -166,6 +168,20 @@ function getSidebarItems({
             isActive:
                 path === "/dashboard/products" ||
                 path?.startsWith("/dashboard/product"),
+            items: [],
+        });
+    }
+    if (
+        checkPermission(profile.permissions!, [
+            permissions.manageAnyCourse,
+            permissions.manageSite,
+        ])
+    ) {
+        navMainItems.push({
+            title: SIDEBAR_MENU_INSTRUCTORS,
+            url: "/dashboard/instructors",
+            icon: GraduationCap,
+            isActive: path?.startsWith("/dashboard/instructors"),
             items: [],
         });
     }

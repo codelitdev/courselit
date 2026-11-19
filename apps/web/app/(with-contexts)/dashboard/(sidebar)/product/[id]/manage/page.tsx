@@ -19,6 +19,7 @@ import ProductPublishing from "./components/product-publishing";
 import Certificates from "./components/certificates";
 import ProductDeletion from "./components/product-deletion";
 import ProductDiscussions from "./components/product-discussions";
+import ProductInstructors from "./components/product-instructors";
 
 const { permissions } = UIConstants;
 
@@ -106,6 +107,7 @@ export default function SettingsPage() {
                     }}
                     loading={loading}
                 />
+                <ProductInstructors product={product} />
                 <ProductDiscussions product={product} />
                 <DownloadOptions
                     product={product}
