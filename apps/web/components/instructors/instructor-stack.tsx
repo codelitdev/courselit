@@ -1,4 +1,5 @@
 import type { Instructor } from "@courselit/common-models";
+import { INSTRUCTORS_VIEWER_HEADING } from "@ui-config/strings";
 import InstructorAvatar from "./instructor-avatar";
 import { joinInstructorNames } from "./helpers";
 
@@ -20,7 +21,7 @@ export default function InstructorStack({
     return (
         <span
             className="flex shrink-0 items-center -space-x-2"
-            aria-label={`Instructors: ${names}`}
+            aria-label={`${INSTRUCTORS_VIEWER_HEADING}: ${names}`}
             title={names}
         >
             {visible.map((instructor) => (
