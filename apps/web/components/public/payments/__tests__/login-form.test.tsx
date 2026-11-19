@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Constants } from "@courselit/common-models";
+import { Constants, type SiteInfo } from "@courselit/common-models";
 import { LOGIN_PROVIDER_AUTH_TYPE } from "@/lib/login-providers";
 import {
+    CHECKOUT_LOGIN_EMAIL_PLACEHOLDER,
+    LOGIN_FORM_TERMS_LINK,
     LOGIN_PROVIDER_SSO_BUTTON,
     LOGIN_PROVIDER_SSO_LABEL,
 } from "@/ui-config/strings";
@@ -133,7 +135,9 @@ import {
     ThemeContext,
 } from "@components/contexts";
 
-function renderLoginForm() {
+function renderLoginForm(
+    logins: SiteInfo["logins"] = [Constants.LoginProvider.SSO],
+) {
     return render(
         <AddressContext.Provider
             value={{
@@ -176,7 +180,7 @@ function renderLoginForm() {
                             lemonsqueezyOneTimeVariantId: "",
                             lemonsqueezySubscriptionMonthlyVariantId: "",
                             lemonsqueezySubscriptionYearlyVariantId: "",
-                            logins: [Constants.LoginProvider.SSO],
+                            logins,
                         }}
                     >
                         <ThemeContext.Provider
@@ -230,5 +234,16 @@ describe("Checkout LoginForm", () => {
                 callbackURL: "/checkout?type=course&id=course-123",
             });
         });
+    });
+
+    it("takes the email step texts from ui-config/strings", () => {
+        renderLoginForm([Constants.LoginProvider.EMAIL]);
+
+        expect(
+            screen.getByPlaceholderText(CHECKOUT_LOGIN_EMAIL_PLACEHOLDER),
+        ).toBeTruthy();
+        expect(
+            screen.getByRole("link", { name: LOGIN_FORM_TERMS_LINK }),
+        ).toBeTruthy();
     });
 });
