@@ -12,7 +12,7 @@ import {
   QUIZ_LIMIT_CODE,
   readLessonQuiz,
   stripLessonAnswers,
-} from "./index.js";
+} from "./index.ts";
 
 function counterIds() {
   let n = 0;

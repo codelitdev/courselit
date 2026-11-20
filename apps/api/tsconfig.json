@@ -7,6 +7,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "rootDir": ".",
     "types": ["node", "bun"]
   },

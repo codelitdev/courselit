@@ -8,7 +8,7 @@ import {
   pdf,
   video,
 } from "@frontlit/text-editor/blocks";
-import { quizBlock } from "./quiz-block.js";
+import { quizBlock } from "./quiz-block.ts";
 
 /** Unsplash is the only external image host (L6); its images never enter the media library. */
 export const LESSON_IMAGE_HOSTS = ["images.unsplash.com"];

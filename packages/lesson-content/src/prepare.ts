@@ -10,8 +10,8 @@ import {
   serializeMarkdown,
   validateContent,
 } from "@frontlit/text-editor/blocks";
-import { fillQuizIds, quizNodePaths, visitNodes } from "./document.js";
-import { lessonProfile } from "./profile.js";
+import { fillQuizIds, quizNodePaths, visitNodes } from "./document.ts";
+import { lessonProfile } from "./profile.ts";
 
 export type { Diagnostic };
 

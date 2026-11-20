@@ -6,11 +6,13 @@ COPY package.json bun.lock ./
 COPY patches ./patches
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
-RUN bun install --filter @courselit/api --filter @courselit/api-contract --frozen-lockfile
+COPY packages/lesson-content/package.json ./packages/lesson-content/package.json
+RUN bun install --filter @courselit/api --filter @courselit/api-contract --filter @courselit/lesson-content --frozen-lockfile
 
 FROM deps AS builder
 COPY apps/api ./apps/api
 COPY packages/api-contract ./packages/api-contract
+COPY packages/lesson-content ./packages/lesson-content
 RUN bun --bun run --filter @courselit/api build
 
 FROM base AS prod-deps
@@ -18,7 +20,8 @@ COPY package.json bun.lock ./
 COPY patches ./patches
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
-RUN bun install --production --filter @courselit/api --filter @courselit/api-contract --frozen-lockfile
+COPY packages/lesson-content/package.json ./packages/lesson-content/package.json
+RUN bun install --production --filter @courselit/api --filter @courselit/api-contract --filter @courselit/lesson-content --frozen-lockfile
 
 FROM base AS runner
 ENV NODE_ENV=production
@@ -33,10 +36,13 @@ COPY --from=prod-deps /app/apps/api/package.json ./apps/api/package.json
 COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=prod-deps /app/packages/api-contract/package.json ./packages/api-contract/package.json
 COPY --from=prod-deps /app/packages/api-contract/node_modules ./packages/api-contract/node_modules
+COPY --from=prod-deps /app/packages/lesson-content/package.json ./packages/lesson-content/package.json
+COPY --from=prod-deps /app/packages/lesson-content/node_modules ./packages/lesson-content/node_modules
 COPY --from=builder --chown=courselit:courselit /app/apps/api/src ./apps/api/src
 COPY --from=builder --chown=courselit:courselit /app/apps/api/drizzle ./apps/api/drizzle
 COPY --from=builder --chown=courselit:courselit /app/apps/api/scripts/migrate.mjs ./apps/api/scripts/migrate.mjs
 COPY --from=builder --chown=courselit:courselit /app/packages/api-contract/src ./packages/api-contract/src
+COPY --from=builder --chown=courselit:courselit /app/packages/lesson-content/src ./packages/lesson-content/src
 
 # Verify production workspace links and migration imports in the final image.
 RUN cd apps/api && bun -e 'try { await import("./scripts/migrate.mjs"); } catch (error) { if (error.message !== "DATABASE_URL_REQUIRED") throw error; }'
