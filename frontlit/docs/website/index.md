@@ -14,6 +14,21 @@ The **Website** menu has three entries:
 
 Everything you change on a page or blog post is saved as a draft first. Visitors only see your changes after you publish them.
 
+## How quickly changes appear
+
+Your public website can take up to about a minute to show a change. This applies to anything you publish or edit, including:
+
+- Pages, blog posts and the shared header and footer.
+- Products and communities going live or offline.
+- Your site title, logo and other branding.
+- Links that appear on their own, such as **Products** and **Blog** in the header.
+
+**Why:** your site keeps a copy of each public page and serves that copy to visitors, then refreshes it in the background about once a minute. Visitors get pages instantly, even when many arrive at once, and search engines rank fast sites higher. The trade-off is a short delay before a change reaches everyone.
+
+If a change doesn't show yet, wait a minute and reload the page. It can take one more reload, because the visit that finds the copy out of date still shows the old version while the new one is prepared.
+
+The admin dashboard, the [page editor](/docs/website/page-editor) preview and the learner dashboard always show your latest changes straight away.
+
 ## Who can edit the website
 
 Access to the Website menu depends on the permissions your role has. See [Permissions](/docs/settings/permissions) for the full list.

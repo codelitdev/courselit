@@ -45,7 +45,7 @@ Every change you make is saved to your draft straight away. You don't need to cl
 
 ## Publish your changes
 
-When the page looks right, click **Publish changes**. The message **Page published.** appears and visitors see the new version. The button stays disabled when there is nothing new to publish.
+When the page looks right, click **Publish changes**. The message **Page published.** appears and visitors see the new version within about a minute. See [How quickly changes appear](/docs/website#how-quickly-changes-appear). The button stays disabled when there is nothing new to publish.
 
 To undo your unpublished edits, click **Discard changes**. The page goes back to the version visitors currently see, and the message **Unpublished changes discarded.** appears.
 

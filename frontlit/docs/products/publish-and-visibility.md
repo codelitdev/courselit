@@ -64,6 +64,12 @@ Open the **Settings** tab and use **Who can find it**. The choice saves as soon 
 
 New products start as **Only people with the link**. A product only appears on your site while it is live, whichever option you pick.
 
+<Callout type="info" title="Allow about a minute">
+
+After you make a product live, take it offline or change who can find it, your public site can take up to about a minute to catch up. That includes the products page and the **Products** link in your site header, which appears once you have a listed product. Your site serves a saved copy of each page so it loads instantly for visitors, and refreshes that copy about once a minute. See [How quickly changes appear](/docs/website#how-quickly-changes-appear).
+
+</Callout>
+
 The product's link has the form `your-school.courselit.app/p/your-product`. You can change the end of it under **Link** in **Details**, but that breaks links you have already shared.
 
 ## Take a product offline
