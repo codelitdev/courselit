@@ -304,13 +304,14 @@ describe("prepareLessonWrite", () => {
     );
   });
 
-  it("refuses content for SCORM and file lessons", () => {
+  it("keeps SCORM package details as JSON and refuses other content", () => {
     expect(
-      reason(prepareLessonWrite({ ...base, type: "scorm", write: { content: doc() } })),
-    ).toBe("lesson_content_not_allowed");
-    expect(
-      reason(prepareLessonWrite({ ...base, type: "file", write: { markdown: "x" } })),
-    ).toBe("lesson_content_not_allowed");
+      prepareLessonWrite({
+        ...base,
+        type: "scorm",
+        write: { content: { launchUrl: "a.html" } },
+      }),
+    ).toEqual({ ok: true, content: { launchUrl: "a.html" } });
     expect(
       prepareLessonWrite({
         ...base,
@@ -319,6 +320,15 @@ describe("prepareLessonWrite", () => {
         write: {},
       }),
     ).toEqual({ ok: true, content: { packageInfo: {} } });
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "scorm", write: { markdown: "x" } })),
+    ).toBe("lesson_content_not_allowed");
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "file", write: { content: doc() } })),
+    ).toBe("lesson_content_not_allowed");
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "file", write: { markdown: "x" } })),
+    ).toBe("lesson_content_not_allowed");
   });
 
   it("refuses publishing an incomplete page, sent or stored", () => {

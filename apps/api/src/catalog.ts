@@ -266,8 +266,8 @@ type PageWrite = {
 /**
  * Checks a lesson write's content (section 4.3). Pages take `content` or
  * `markdown` and are validated against the lesson profile and the stored
- * version (`previous`, for availability). SCORM and file lessons hold no
- * authored content. A page that is or becomes published must be complete,
+ * version (`previous`, for availability). SCORM lessons take their package
+ * details as JSON `content`; file lessons hold no content. A page that is or becomes published must be complete,
  * and a page with a quiz can't be a free preview: grading needs a learner.
  */
 export function prepareLessonWrite(input: {
@@ -282,7 +282,15 @@ export function prepareLessonWrite(input: {
   | { ok: true; content: Record<string, unknown> }
   | { ok: false; error: PlatformError } {
   const sent = input.write.content !== undefined || input.write.markdown !== undefined;
-  if (input.type !== "page") {
+  if (input.type === "scorm") {
+    // A SCORM lesson's content is its processed package's details (launch
+    // URL, title), written as JSON after `processScormPackage`.
+    if (input.write.markdown !== undefined) {
+      return lessonValidationError("lesson_content_not_allowed");
+    }
+    return { ok: true, content: input.write.content ?? input.stored ?? {} };
+  }
+  if (input.type === "file") {
     if (sent) return lessonValidationError("lesson_content_not_allowed");
     return { ok: true, content: input.stored ?? {} };
   }
