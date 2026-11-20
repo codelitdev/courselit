@@ -32,9 +32,9 @@ import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
 import {
   accessibleSpaceIds,
+  learnerPostingRule,
   moderatesSpace,
   spaceOwnership,
-  staffSpaceIds,
 } from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
@@ -712,26 +712,12 @@ export async function listLearnerSpaces(
   const courseBySpace = new Map(
     courseRows.flatMap((row) => (row.spaceId ? [[row.spaceId, row.productId]] : [])),
   );
-  const memberships = await db
-    .select()
-    .from(schema.learnerMemberships)
-    .where(
-      and(
-        eq(schema.learnerMemberships.schoolId, viewer.schoolId),
-        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
-        eq(schema.learnerMemberships.status, "active"),
-      ),
-    );
-  const communityMembership = memberships.find(
-    (membership) => membership.entityType === "community",
+  const mayPost = await learnerPostingRule(
+    db,
+    viewer.schoolId,
+    viewer.learnerId,
+    viewer.authenticationMethod,
   );
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
-  const onlyComment =
-    communityMembership?.role === "comment" &&
-    memberships.every(
-      (membership) =>
-        membership.entityType === "community" || membership.isIncludedInPlan,
-    );
   return {
     ok: true,
     value: {
@@ -740,10 +726,7 @@ export async function listLearnerSpaces(
           row,
           unlocks.get(row.id) ?? [],
           followed.has(row.id),
-          staff.has(row.id) ||
-            (row.whoCanPost === "admin"
-              ? communityMembership?.role === "moderate"
-              : !onlyComment),
+          mayPost(row),
         ),
         productId: courseBySpace.get(row.id) ?? null,
       })),
@@ -820,29 +803,13 @@ export async function createLearnerSpacePost(
   if (!space) return notFound();
   const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(space.id)) return notFound();
-  const memberships = await db
-    .select()
-    .from(schema.learnerMemberships)
-    .where(
-      and(
-        eq(schema.learnerMemberships.schoolId, viewer.schoolId),
-        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
-        eq(schema.learnerMemberships.status, "active"),
-      ),
-    );
-  const communityMembership = memberships.find((row) => row.entityType === "community");
-  const onlyComment =
-    communityMembership?.role === "comment" &&
-    memberships.every((row) => row.entityType === "community" || row.isIncludedInPlan);
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
-  // Team members may post wherever their role reaches them.
-  if (!staff.has(space.id)) {
-    if (space.whoCanPost === "admin") {
-      if (communityMembership?.role !== "moderate") return forbidden();
-    } else if (onlyComment) {
-      return forbidden();
-    }
-  }
+  const mayPost = await learnerPostingRule(
+    db,
+    viewer.schoolId,
+    viewer.learnerId,
+    viewer.authenticationMethod,
+  );
+  if (!mayPost(space)) return forbidden();
   const title = input.title.trim();
   if (!title) return validation("invalid_title");
   const community = await schoolCommunity(db, viewer.schoolId);

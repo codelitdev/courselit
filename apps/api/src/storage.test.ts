@@ -274,6 +274,41 @@ describe("learner uploads (S2, S24)", () => {
     }
   });
 
+  it("are refused to a comment-only member who can see spaces but not post in them", async () => {
+    const t = await setup();
+    try {
+      const [community] = await t.runtime.db
+        .update(schema.communities)
+        .set({ enabled: true })
+        .where(eq(schema.communities.schoolId, t.world.schoolA.id))
+        .returning();
+      const learner = await learnerWithCommunity(t, "commenter-l@example.com", false);
+      await t.runtime.db.insert(schema.learnerMemberships).values({
+        id: uuidv7(t.clock),
+        publicId: "mbr_commenter",
+        schoolId: t.world.schoolA.id,
+        schoolAccountId: learner.accountId,
+        entityType: "community",
+        entityId: community!.publicId,
+        status: "active",
+        role: "comment",
+        createdAt: t.clock.now(),
+        updatedAt: t.clock.now(),
+      });
+      const spaces = await dispatch(t.runtime, {
+        method: "GET",
+        path: "/v1/learner/spaces",
+        headers: learner.headers,
+      });
+      const items = (spaces.body as { items: Array<{ canPost?: boolean }> }).items;
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.every((item) => item.canPost === false)).toBe(true);
+      expect((await learnerAuthorize(t, learner.headers, MB)).status).toBe(403);
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
   it("are private, limited to safe types, and held to the learner's budget", async () => {
     const t = await setup();
     try {

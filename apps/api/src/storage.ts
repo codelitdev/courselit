@@ -9,7 +9,7 @@ import * as schema from "./db/schema/index.js";
 import { deleteUnreferencedMedia, type MediaLitClient } from "./media.js";
 import { type PlanLimitDeps, schoolLimit } from "./plan-limit.js";
 import type { SignInMethod } from "./sign-in-policy.js";
-import { accessibleSpaceIds } from "./space-access.js";
+import { postableSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
 
 /**
@@ -306,7 +306,7 @@ export async function storageUsed(
 /**
  * Whether a learner may upload community media: only when they can post
  * somewhere (S24), through an active community membership that lets them
- * post or a discussion space they can reach, such as a course's.
+ * post or a space they may start a post in, such as a course's discussion.
  */
 export async function learnerMayUploadCommunityMedia(
   db: AppDb,
@@ -328,7 +328,7 @@ export async function learnerMayUploadCommunityMedia(
     )
     .limit(1);
   if (row) return true;
-  const spaces = await accessibleSpaceIds(db, schoolId, schoolAccountId, authenticationMethod);
+  const spaces = await postableSpaceIds(db, schoolId, schoolAccountId, authenticationMethod);
   return spaces.size > 0;
 }
 

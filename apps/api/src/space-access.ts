@@ -153,6 +153,62 @@ export async function accessibleSpaceIds(
   return learner;
 }
 
+/**
+ * The rule for where a school account may start a post, given the spaces it
+ * can access. Team members may post wherever their role reaches them. Anyone
+ * else needs a moderator community membership in an admin-only space, and
+ * may not post at all when their only access is a comment-only community
+ * membership (plus memberships that membership's plan includes).
+ */
+export async function learnerPostingRule(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+  authenticationMethod: SignInMethod,
+): Promise<(space: { id: string; whoCanPost: "members" | "admin" }) => boolean> {
+  const [memberships, staff] = await Promise.all([
+    db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolId, schoolId),
+          eq(schema.learnerMemberships.schoolAccountId, schoolAccountId),
+          eq(schema.learnerMemberships.status, "active"),
+        ),
+      ),
+    staffSpaceIds(db, schoolId, schoolAccountId, authenticationMethod),
+  ]);
+  const communityMembership = memberships.find((row) => row.entityType === "community");
+  const onlyComment =
+    communityMembership?.role === "comment" &&
+    memberships.every((row) => row.entityType === "community" || row.isIncludedInPlan);
+  return (space) =>
+    staff.has(space.id) ||
+    (space.whoCanPost === "admin" ? communityMembership?.role === "moderate" : !onlyComment);
+}
+
+/** The accessible spaces a school account may start a post in. */
+export async function postableSpaceIds(
+  db: AppDb,
+  schoolId: string,
+  schoolAccountId: string,
+  authenticationMethod: SignInMethod,
+): Promise<Set<string>> {
+  const accessible = await accessibleSpaceIds(db, schoolId, schoolAccountId, authenticationMethod);
+  if (accessible.size === 0) return accessible;
+  const [rows, mayPost] = await Promise.all([
+    db
+      .select({ id: schema.spaces.id, whoCanPost: schema.spaces.whoCanPost })
+      .from(schema.spaces)
+      .where(
+        and(eq(schema.spaces.schoolId, schoolId), inArray(schema.spaces.id, [...accessible])),
+      ),
+    learnerPostingRule(db, schoolId, schoolAccountId, authenticationMethod),
+  ]);
+  return new Set(rows.filter(mayPost).map((row) => row.id));
+}
+
 async function learnerSpaceIds(
   db: AppDb,
   schoolId: string,
