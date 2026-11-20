@@ -17,7 +17,7 @@
     "@courselit/page-blocks": "workspace:*",
     "@frontlit/media-uploader": "0.1.0-alpha.1",
     "@frontlit/page-builder": "0.1.0-alpha.6",
-    "@frontlit/text-editor": "0.1.0-alpha.3",
+    "@frontlit/text-editor": "0.1.0-alpha.7",
     "@sendlit/email-blocks": "0.7.0",
     "@sendlit/email-editor": "0.3.1",
     "class-variance-authority": "^0.7.1",
