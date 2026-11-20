@@ -137,8 +137,9 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   reorderSections:
     "Sets the order of a product's sections. Pass every sectionId in the order wanted.",
   createLesson:
-    "Adds a lesson to a product, of any type: text, video, audio, PDF, file, embed, quiz or SCORM. For several text lessons at once, prefer apply_course_outline.",
-  updateLesson: "Changes a lesson's title, content, type settings or published state.",
+    "Adds a lesson to a product, of any type: text, video, audio, PDF, file, embed, quiz or SCORM. Quiz content is { passingGrade (0-100 or null for no pass mark), questions: [{ text, options: [{ text, correct }] }] }; IDs are filled in and returned. For several text lessons at once, prefer apply_course_outline.",
+  updateLesson:
+    "Changes a lesson's title, content, type settings or published state. When sending content, also send expectedContentVersion, the lesson's contentVersion you last read; if someone changed the content since, the call fails with a conflict, so read the lesson again and reapply the change. Keep the quiz, question and option IDs you read when editing a quiz.",
   deleteLesson: "Deletes a lesson. Confirm with the user first.",
   reorderLessons:
     "Sets the order of lessons within a product's sections. Pass the lessonIds in the order wanted.",

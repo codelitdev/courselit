@@ -70,6 +70,8 @@ export type Lesson = {
   downloadable: boolean;
   requiresEnrollment: boolean;
   content: LessonContent | null;
+  /** Admin reads only; sent back as `expectedContentVersion` with content. */
+  contentVersion: number;
   dripDelaySeconds: number | null;
   dripAt: string | null;
   availableAt: string | null;

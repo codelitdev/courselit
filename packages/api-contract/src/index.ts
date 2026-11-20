@@ -13,6 +13,12 @@ export * from "./safe-redirect.js";
 export * from "./youtube.js";
 export * from "./school-name.js";
 export * from "./school-subdomain.js";
+import {
+  containsQuizAnswers,
+  evaluateQuizBodySchema,
+  learnerQuizSchema,
+  quizEvaluationSchema,
+} from "./quiz.js";
 import { schoolNameSchema } from "./school-name.js";
 import { isReservedSubdomain } from "./school-subdomain.js";
 import { youtubeVideoId } from "./youtube.js";
@@ -1165,11 +1171,32 @@ export const lessonSchema = z.object({
   downloadable: z.boolean(),
   requiresEnrollment: z.boolean(),
   content: z.record(z.string(), z.unknown()).nullable(),
+  /** Increases with every content change; send it back as `expectedContentVersion`. */
+  contentVersion: z.number().int().positive(),
   dripDelaySeconds: z.number().int().nonnegative().nullable(),
   dripAt: z.string().nullable(),
   availableAt: z.string().nullable(),
   publishedAt: z.string().nullable(),
 });
+
+/**
+ * Lesson content as learners, the public and previews receive it. A quiz
+ * comes stripped of its answers (`learnerQuizSchema` has no `correct`), and
+ * no other content may carry a `correct` key either, so a missed strip fails
+ * response validation instead of leaking answers (L1).
+ */
+export const learnerLessonContentSchema = z.union([
+  learnerQuizSchema,
+  z
+    .record(z.string(), z.unknown())
+    .refine((content) => !containsQuizAnswers(content), {
+      message: "learner lesson content must not contain answers",
+    }),
+]);
+
+export const learnerLessonSchema = lessonSchema
+  .omit({ content: true, contentVersion: true })
+  .extend({ content: learnerLessonContentSchema.nullable() });
 
 export const sectionSchema = z.object({
   id: z.string(),
@@ -1185,6 +1212,13 @@ export const productDetailSchema = productSchema.extend({
   enrolled: z.boolean(),
   sections: z.array(sectionSchema),
   lessons: z.array(lessonSchema),
+});
+
+/** The product as learners, the public and previews read it. */
+export const learnerProductDetailSchema = productSchema.extend({
+  enrolled: z.boolean(),
+  sections: z.array(sectionSchema),
+  lessons: z.array(learnerLessonSchema),
 });
 
 export const learnerLessonMediaSchema = z.object({
@@ -1221,15 +1255,7 @@ export const scormPackageInfoSchema = z.object({
 export const processScormPackageBodySchema = z.object({
   mediaId: z.string().min(1),
 });
-export const evaluateQuizBodySchema = z.object({
-  answers: z.array(z.array(z.number().int().nonnegative()).max(1000)).min(1).max(100),
-});
-export const quizEvaluationSchema = z.object({
-  pass: z.boolean(),
-  score: z.number(),
-  requiresPassingGrade: z.boolean(),
-  passingGrade: z.number(),
-});
+export { evaluateQuizBodySchema, quizEvaluationSchema };
 
 export const communityActorSchema = z.object({
   id: z.string(),
@@ -1694,6 +1720,8 @@ export const createLessonBodySchema = z.object({
 export const updateLessonBodySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   content: z.record(z.string(), z.unknown()).optional(),
+  /** The lesson's `contentVersion` the change is based on. Required with `content`. */
+  expectedContentVersion: z.number().int().positive().optional(),
   mediaId: z.string().min(1).nullable().optional(),
   downloadable: z.boolean().optional(),
   requiresEnrollment: z.boolean().optional(),
@@ -3841,7 +3869,7 @@ export const contract = c.router({
     path: "/v1/public/:schoolId/products/:productId",
     pathParams: publicSchoolPathParams.extend({ productId: z.string() }),
     responses: {
-      200: productDetailSchema,
+      200: learnerProductDetailSchema,
       404: platformErrorSchema,
     },
     summary:
@@ -3980,7 +4008,7 @@ export const contract = c.router({
     pathParams: z.object({ productId: z.string() }),
     headers: z.object({ "x-preview-token": z.string().min(1) }),
     responses: {
-      200: productDetailSchema,
+      200: learnerProductDetailSchema,
       401: platformErrorSchema,
       404: platformErrorSchema,
     },
@@ -4004,6 +4032,40 @@ export const contract = c.router({
     path: "/v1/preview/products/:productId/lessons/:lessonId/media",
     pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
     headers: z.object({ "x-preview-token": z.string().min(1) }),
+    responses: {
+      200: learnerLessonMediaSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getPublicLessonMediaItem: {
+    method: "GET",
+    path: "/v1/public/:schoolId/products/:productId/lessons/:lessonId/media/:mediaId",
+    pathParams: publicSchoolPathParams.extend({
+      productId: z.string(),
+      lessonId: z.string(),
+      mediaId: z.string(),
+    }),
+    summary:
+      "Read one media item a lesson uses, under the lesson's own access rules",
+    responses: {
+      200: learnerLessonMediaSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getPreviewLessonMediaItem: {
+    method: "GET",
+    path: "/v1/preview/products/:productId/lessons/:lessonId/media/:mediaId",
+    pathParams: z.object({
+      productId: z.string(),
+      lessonId: z.string(),
+      mediaId: z.string(),
+    }),
+    headers: z.object({ "x-preview-token": z.string().min(1) }),
+    summary: "Read one media item a lesson uses, with a product preview grant",
     responses: {
       200: learnerLessonMediaSchema,
       401: platformErrorSchema,
@@ -4062,6 +4124,8 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      409: platformErrorSchema,
+      429: platformErrorSchema,
     },
   },
   createLesson: {
@@ -4139,6 +4203,7 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      409: platformErrorSchema,
     },
   },
   deleteLesson: {

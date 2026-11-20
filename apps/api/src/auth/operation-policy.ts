@@ -239,6 +239,7 @@ export const OPERATION_POLICIES = {
   setDefaultPlan: schoolOp(["products:write"]),
   readPreviewProduct: schoolOp(["products:read"]),
   getPreviewLessonMedia: schoolOp(["products:read"]),
+  getPreviewLessonMediaItem: schoolOp(["products:read"]),
   createPreviewGrant: schoolOp(["products:write"]),
 
   // Contacts admin
@@ -373,6 +374,7 @@ export const OPERATION_POLICIES = {
   getCaptchaConfig: publicOp(),
   getPublicProduct: publicOp(),
   getPublicLessonMedia: publicOp(),
+  getPublicLessonMediaItem: publicOp(),
   getPublicLoginMethods: publicOp(),
   signUpForLeadMagnet: publicOp(),
   createCheckoutSession: publicOp(),

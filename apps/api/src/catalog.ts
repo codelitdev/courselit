@@ -7,7 +7,13 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, eq, inArray, or } from "drizzle-orm";
+import {
+  type LearnerQuiz,
+  normalizeQuiz,
+  readStoredQuiz,
+  stripQuizAnswers,
+} from "@courselit/api-contract/quiz";
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   mediaIdsForRichTextContent,
@@ -30,10 +36,19 @@ export type LessonDto = {
   downloadable: boolean;
   requiresEnrollment: boolean;
   content: Record<string, unknown> | null;
+  contentVersion: number;
   dripDelaySeconds: number | null;
   dripAt: string | null;
   availableAt: string | null;
   publishedAt: string | null;
+};
+
+/**
+ * A lesson as learners, the public and previews read it. Quiz content is the
+ * stripped `LearnerQuiz`, which has no `correct` field (L1).
+ */
+export type LearnerLessonDto = Omit<LessonDto, "content" | "contentVersion"> & {
+  content: LearnerQuiz | Record<string, unknown> | null;
 };
 
 export type SectionDto = {
@@ -52,11 +67,19 @@ export type ProductDetailDto = ProductDto & {
   lessons: LessonDto[];
 };
 
-export type ProductViewer =
-  | { kind: "admin" }
+export type LearnerProductDetailDto = ProductDto & {
+  enrolled: boolean;
+  sections: SectionDto[];
+  lessons: LearnerLessonDto[];
+};
+
+/** Everyone who reads a product without authoring it. */
+export type LearnerFacingViewer =
   | { kind: "preview" }
   | { kind: "learner"; schoolAccountId?: string; learnerId?: string }
   | { kind: "public" };
+
+export type ProductViewer = { kind: "admin" } | LearnerFacingViewer;
 
 async function productToDto(
   db: AppDb,
@@ -100,12 +123,7 @@ function lessonToDto(
   sectionPublicId: string | null = null,
   availableAt: Date | null = null,
   mediaId: string | null = null,
-  stripQuizAnswers = false,
 ): LessonDto {
-  const content =
-    includeContent && stripQuizAnswers && row.type === "quiz"
-      ? learnerQuizContent(row.content)
-      : row.content;
   return {
     id: row.publicId,
     title: row.title,
@@ -116,7 +134,8 @@ function lessonToDto(
     status: row.status,
     downloadable: row.downloadable,
     requiresEnrollment: row.requiresEnrollment,
-    content: includeContent ? content : null,
+    content: includeContent ? row.content : null,
+    contentVersion: row.contentVersion,
     dripDelaySeconds: row.dripDelaySeconds,
     dripAt: row.dripAt ? serializeDate(row.dripAt) : null,
     availableAt: availableAt ? serializeDate(availableAt) : null,
@@ -124,44 +143,33 @@ function lessonToDto(
   };
 }
 
-function learnerQuizContent(content: Record<string, unknown>): Record<string, unknown> {
-  if (!Array.isArray(content.questions)) return content;
-  return {
-    ...content,
-    questions: content.questions.flatMap((question) => {
-      if (!question || typeof question !== "object" || Array.isArray(question)) {
-        return [];
-      }
-      const value = question as Record<string, unknown>;
-      const options = Array.isArray(value.options)
-        ? value.options.flatMap((option) => {
-            if (!option || typeof option !== "object" || Array.isArray(option)) {
-              return [];
-            }
-            const optionValue = option as Record<string, unknown>;
-            return typeof optionValue.text === "string"
-              ? [{ text: optionValue.text }]
-              : [];
-          })
-        : [];
-      const correctCount = Array.isArray(value.options)
-        ? value.options.filter(
-            (option) =>
-              option &&
-              typeof option === "object" &&
-              !Array.isArray(option) &&
-              (option as Record<string, unknown>).correctAnswer === true,
-          ).length
-        : 0;
-      return [
-        {
-          text: typeof value.text === "string" ? value.text : "",
-          type: correctCount > 1 ? "multiple" : "single",
-          options,
-        },
-      ];
-    }),
-  };
+/**
+ * Lesson content for anyone who doesn't author it: a quiz loses its answers,
+ * and unusable quiz content is withheld rather than sent as stored.
+ */
+export function learnerLessonContent(
+  row: Pick<typeof schema.lessons.$inferSelect, "type" | "content">,
+): LearnerLessonDto["content"] {
+  if (row.type !== "quiz") return row.content;
+  const quiz = readStoredQuiz(row.content);
+  return quiz ? stripQuizAnswers(quiz) : null;
+}
+
+function learnerLessonToDto(
+  row: typeof schema.lessons.$inferSelect,
+  includeContent: boolean,
+  sectionPublicId: string | null,
+  availableAt: Date | null,
+  mediaId: string | null,
+): LearnerLessonDto {
+  const { content: _content, contentVersion: _version, ...lesson } = lessonToDto(
+    row,
+    false,
+    sectionPublicId,
+    availableAt,
+    mediaId,
+  );
+  return { ...lesson, content: includeContent ? learnerLessonContent(row) : null };
 }
 
 export function lessonUnlockAt(
@@ -263,63 +271,86 @@ function lessonMediaValidation(
 }
 
 /**
- * Keep the server-side lesson checks aligned with the production lesson
- * validator. The admin editor performs the same checks for immediate
- * feedback, but REST and MCP callers must not be able to persist an invalid
- * quiz or an empty embed.
+ * Server-side lesson checks, matching the admin editor's. REST and MCP callers
+ * must not be able to store an invalid quiz or an empty embed. Quiz content is
+ * returned in its canonical shape with every ID filled in, so the caller
+ * stores (and returns) that instead of what it was sent.
  */
-function validateLessonContent(input: {
+export function prepareLessonContent(input: {
   type?: typeof schema.lessons.$inferInsert.type;
   content: Record<string, unknown>;
   requiresEnrollment?: boolean;
-}): { ok: true } | { ok: false; error: PlatformError } {
+}):
+  | { ok: true; content: Record<string, unknown> }
+  | { ok: false; error: PlatformError } {
   if (input.type === "embed") {
     if (typeof input.content.value !== "string" || !input.content.value.trim()) {
       return lessonContentError("embed_content_required");
     }
   }
-  if (input.type !== "quiz") return { ok: true };
+  if (input.type !== "quiz") return { ok: true, content: input.content };
   if (input.requiresEnrollment === false) {
     return lessonContentError("quiz_cannot_be_previewed");
   }
-  const questions = input.content.questions;
-  if (!Array.isArray(questions) || questions.length === 0) {
-    return lessonContentError("quiz_questions_required");
+  const quiz = normalizeQuiz(input.content);
+  if (!quiz.ok) {
+    return {
+      ok: false,
+      error: createPlatformError("validation_failed", {
+        safeDetails: { reason: quiz.reason, path: quiz.path },
+      }),
+    };
   }
-  for (const questionValue of questions) {
-    if (!questionValue || typeof questionValue !== "object") {
-      return lessonContentError("quiz_question_text_required");
+  return { ok: true, content: quiz.value };
+}
+
+/** JSON equality that ignores key order (jsonb doesn't keep it). */
+export function sameJson(left: unknown, right: unknown): boolean {
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, canonical((value as Record<string, unknown>)[key])]),
+      );
     }
-    const question = questionValue as Record<string, unknown>;
-    if (typeof question.text !== "string" || !question.text.trim()) {
-      return lessonContentError("quiz_question_text_required");
-    }
-    if (!Array.isArray(question.options) || question.options.length < 2) {
-      return lessonContentError("quiz_options_required");
-    }
-    if (
-      question.options.some(
-        (option) => {
-          if (!option || typeof option !== "object") return true;
-          const optionText = (option as Record<string, unknown>).text;
-          return typeof optionText !== "string" || !optionText.trim();
-        },
-      )
-    ) {
-      return lessonContentError("quiz_option_text_required");
-    }
-    if (
-      !question.options.some(
-        (option) =>
-          option &&
-          typeof option === "object" &&
-          (option as Record<string, unknown>).correctAnswer === true,
-      )
-    ) {
-      return lessonContentError("quiz_correct_answer_required");
-    }
+    return value;
+  };
+  return JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
+}
+
+type Failure = { ok: false; error: PlatformError };
+
+function contentVersionConflict(currentVersion: number | null): Failure {
+  return {
+    ok: false,
+    error: createPlatformError("conflict", {
+      safeDetails: {
+        reason: "content_version_mismatch",
+        ...(currentVersion === null ? {} : { contentVersion: currentVersion }),
+      },
+    }),
+  };
+}
+
+/** Thrown inside a transaction to roll back its writes and return `result`. */
+class RollbackWith extends Error {
+  constructor(readonly result: Failure) {
+    super("transaction rolled back");
   }
-  return { ok: true };
+}
+
+async function transactionResult<T>(
+  db: AppDb,
+  run: (tx: AppDb) => Promise<T>,
+): Promise<T | Failure> {
+  try {
+    return await db.transaction((tx) => run(tx as unknown as AppDb));
+  } catch (caught) {
+    if (caught instanceof RollbackWith) return caught.result;
+    throw caught;
+  }
 }
 
 function normalizeSectionDrip(
@@ -427,10 +458,27 @@ export async function getProduct(
   db: AppDb,
   school: { schoolId: string; publicId: string },
   productPublicId: string,
+  viewer: { kind: "admin" },
+  now?: Date,
+): Promise<{ ok: true; value: ProductDetailDto } | { ok: false; error: PlatformError }>;
+export async function getProduct(
+  db: AppDb,
+  school: { schoolId: string; publicId: string },
+  productPublicId: string,
+  viewer: LearnerFacingViewer,
+  now?: Date,
+): Promise<
+  { ok: true; value: LearnerProductDetailDto } | { ok: false; error: PlatformError }
+>;
+export async function getProduct(
+  db: AppDb,
+  school: { schoolId: string; publicId: string },
+  productPublicId: string,
   viewer: ProductViewer,
   now = new Date(),
 ): Promise<
-  { ok: true; value: ProductDetailDto } | { ok: false; error: PlatformError }
+  | { ok: true; value: ProductDetailDto | LearnerProductDetailDto }
+  | { ok: false; error: PlatformError }
 > {
   const existing = await db
     .select()
@@ -524,48 +572,76 @@ export async function getProduct(
   const featuredImage = await productFeaturedImageFor(db, product);
   const sectionUnlocks = sectionUnlockTimes(sectionRows, membershipStartedAt);
   const productDto = await productToDto(db, product, school.publicId, featuredImage);
+  const lessons = visible.map((row) => {
+    const section = row.sectionId
+      ? sectionRows.find((candidate) => candidate.id === row.sectionId)
+      : undefined;
+    const sectionDripAt = row.sectionId
+      ? (sectionUnlocks.get(row.sectionId) ?? null)
+      : null;
+    const availableAt = latestDate(
+      membershipStartedAt && row.status === "published"
+        ? lessonUnlockAt(row, membershipStartedAt)
+        : row.dripAt,
+      sectionDripAt,
+    );
+    const sectionAvailable =
+      !section?.dripEnabled ||
+      (enrolled && Boolean(sectionDripAt) && sectionDripAt! <= now);
+    const lessonAvailable =
+      !row.requiresEnrollment ||
+      (enrolled && (!availableAt || availableAt <= now));
+    /*
+     * Section drips are an access boundary in their own right. A public
+     * lesson must not bypass a scheduled section simply because the
+     * lesson itself does not require enrollment.
+     */
+    const contentAvailable =
+      hasAuthoringAccess ||
+      (row.status === "published" && sectionAvailable && lessonAvailable);
+    return {
+      row,
+      contentAvailable,
+      sectionPublicId: row.sectionId
+        ? (sectionPublicIds.get(row.sectionId) ?? null)
+        : null,
+      availableAt,
+      mediaId: contentAvailable ? (mediaByLessonInternalId.get(row.id) ?? null) : null,
+    };
+  });
+  const base = { ...productDto, enrolled, sections: visibleSections.map(sectionToDto) };
+  if (viewer.kind === "admin") {
+    return {
+      ok: true,
+      value: {
+        ...base,
+        lessons: lessons.map((lesson) =>
+          lessonToDto(
+            lesson.row,
+            lesson.contentAvailable,
+            lesson.sectionPublicId,
+            lesson.availableAt,
+            lesson.mediaId,
+          ),
+        ),
+      },
+    };
+  }
+  // Previews read like learners: authoring access shows drafts and locked
+  // lessons, never the answers (L1).
   return {
     ok: true,
     value: {
-      ...productDto,
-      enrolled,
-      sections: visibleSections.map(sectionToDto),
-      lessons: visible.map((row) => {
-        const section = row.sectionId
-          ? sectionRows.find((candidate) => candidate.id === row.sectionId)
-          : undefined;
-        const sectionDripAt = row.sectionId
-          ? (sectionUnlocks.get(row.sectionId) ?? null)
-          : null;
-        const availableAt = latestDate(
-          membershipStartedAt && row.status === "published"
-            ? lessonUnlockAt(row, membershipStartedAt)
-            : row.dripAt,
-          sectionDripAt,
-        );
-        const sectionAvailable =
-          !section?.dripEnabled ||
-          (enrolled && Boolean(sectionDripAt) && sectionDripAt! <= now);
-        const lessonAvailable =
-          !row.requiresEnrollment ||
-          (enrolled && (!availableAt || availableAt <= now));
-        /*
-         * Section drips are an access boundary in their own right. A public
-         * lesson must not bypass a scheduled section simply because the
-         * lesson itself does not require enrollment.
-         */
-        const contentAvailable =
-          hasAuthoringAccess ||
-          (row.status === "published" && sectionAvailable && lessonAvailable);
-        return lessonToDto(
-          row,
-          contentAvailable,
-          row.sectionId ? (sectionPublicIds.get(row.sectionId) ?? null) : null,
-          availableAt,
-          contentAvailable ? (mediaByLessonInternalId.get(row.id) ?? null) : null,
-          viewer.kind === "learner",
-        );
-      }),
+      ...base,
+      lessons: lessons.map((lesson) =>
+        learnerLessonToDto(
+          lesson.row,
+          lesson.contentAvailable,
+          lesson.sectionPublicId,
+          lesson.availableAt,
+          lesson.mediaId,
+        ),
+      ),
     },
   };
 }
@@ -591,9 +667,10 @@ export async function createLesson(
   if (!ctx.permissions.has("products:write") || !ctx.tenantId) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  const contentCheck = validateLessonContent(input);
+  const contentCheck = prepareLessonContent(input);
   if (!contentCheck.ok) return contentCheck;
-  return db.transaction(async (tx) => {
+  const content = contentCheck.content;
+  return transactionResult(db, async (tx) => {
     const products = await tx
       .select()
       .from(schema.products)
@@ -647,7 +724,8 @@ export async function createLesson(
       sectionId,
       title: input.title,
       type: input.type ?? "text",
-      content: input.content,
+      content,
+      contentVersion: 1,
       downloadable: input.downloadable ?? false,
       requiresEnrollment: input.requiresEnrollment ?? true,
       status,
@@ -700,7 +778,7 @@ export async function createLesson(
       const contentMediaIds = await mediaIdsForRichTextContent(
         tx as AppDb,
         ctx.tenantId!,
-        input.content,
+        content,
       );
       const references = await reconcileMediaReferencesInTransaction(
         tx as AppDb,
@@ -711,7 +789,7 @@ export async function createLesson(
         row.publicId,
         clock,
       );
-      if (!references.ok) return references;
+      if (!references.ok) throw new RollbackWith(references);
     }
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -737,6 +815,7 @@ export async function updateLesson(
   input: {
     title?: string;
     content?: Record<string, unknown>;
+    expectedContentVersion?: number;
     mediaId?: string | null;
     downloadable?: boolean;
     requiresEnrollment?: boolean;
@@ -750,7 +829,7 @@ export async function updateLesson(
   if (!ctx.permissions.has("products:write") || !ctx.tenantId) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  return db.transaction(async (tx) => {
+  return transactionResult(db, async (tx) => {
     const existing = await tx
       .select()
       .from(schema.lessons)
@@ -765,15 +844,35 @@ export async function updateLesson(
     if (!row) {
       return { ok: false as const, error: createPlatformError("not_found") };
     }
-    const contentCheck = validateLessonContent({
-      type: row.type,
-      content: input.content ?? row.content,
-      requiresEnrollment:
-        input.requiresEnrollment === undefined
-          ? row.requiresEnrollment
-          : input.requiresEnrollment,
-    });
-    if (!contentCheck.ok) return contentCheck;
+    const requiresEnrollment =
+      input.requiresEnrollment === undefined
+        ? row.requiresEnrollment
+        : input.requiresEnrollment;
+    if (row.type === "quiz" && requiresEnrollment === false) {
+      return lessonContentError("quiz_cannot_be_previewed");
+    }
+    let content = row.content;
+    if (input.content !== undefined) {
+      // A content write names the version it is based on, so an agent and a
+      // person editing the same lesson can't silently overwrite each other.
+      if (input.expectedContentVersion === undefined) {
+        return lessonContentError("expected_content_version_required");
+      }
+      const contentCheck = prepareLessonContent({
+        type: row.type,
+        content: input.content,
+        requiresEnrollment,
+      });
+      if (!contentCheck.ok) return contentCheck;
+      content = contentCheck.content;
+    }
+    if (
+      input.expectedContentVersion !== undefined &&
+      input.expectedContentVersion !== row.contentVersion
+    ) {
+      return contentVersionConflict(row.contentVersion);
+    }
+    const contentChanged = input.content !== undefined && !sameJson(content, row.content);
     let sectionId = row.sectionId;
     let sectionPublicId: string | null = null;
     if (input.sectionId !== undefined) {
@@ -814,13 +913,11 @@ export async function updateLesson(
     const status = input.status ?? row.status;
     const next = {
       title: input.title ?? row.title,
-      content: input.content ?? row.content,
+      content,
+      contentVersion: contentChanged ? row.contentVersion + 1 : row.contentVersion,
       downloadable:
         input.downloadable === undefined ? row.downloadable : input.downloadable,
-      requiresEnrollment:
-        input.requiresEnrollment === undefined
-          ? row.requiresEnrollment
-          : input.requiresEnrollment,
+      requiresEnrollment,
       status,
       publishedAt: status === "published" ? (row.publishedAt ?? now) : null,
       sectionId,
@@ -902,7 +999,7 @@ export async function updateLesson(
       const contentMediaIds = await mediaIdsForRichTextContent(
         tx as AppDb,
         ctx.tenantId!,
-        input.content,
+        content,
       );
       const references = await reconcileMediaReferencesInTransaction(
         tx as AppDb,
@@ -913,9 +1010,29 @@ export async function updateLesson(
         row.publicId,
         clock,
       );
-      if (!references.ok) return references;
+      if (!references.ok) throw new RollbackWith(references);
     }
-    await tx.update(schema.lessons).set(next).where(eq(schema.lessons.id, row.id));
+    // The version check and the write are one statement (L2): a concurrent
+    // content write between our read and this update matches no row.
+    const updated = await tx
+      .update(schema.lessons)
+      .set({
+        ...next,
+        contentVersion: contentChanged
+          ? sql`${schema.lessons.contentVersion} + 1`
+          : schema.lessons.contentVersion,
+      })
+      .where(
+        and(
+          eq(schema.lessons.id, row.id),
+          eq(schema.lessons.contentVersion, row.contentVersion),
+        ),
+      )
+      .returning({ contentVersion: schema.lessons.contentVersion });
+    if (!updated[0]) {
+      throw new RollbackWith(contentVersionConflict(null));
+    }
+    next.contentVersion = updated[0].contentVersion;
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: ctx.tenantId,

@@ -495,6 +495,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
     readPreviewProduct: forward,
     getPublicLessonMedia: forward,
     getPreviewLessonMedia: forward,
+    getPublicLessonMediaItem: forward,
+    getPreviewLessonMediaItem: forward,
     getLearnerScormRuntime: forward,
     updateLearnerScormRuntime: forward,
     processScormPackage: forward,

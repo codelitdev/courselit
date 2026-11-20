@@ -73,6 +73,17 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "public.lessonMediaItem.get",
+    rest: { operationId: "getPublicLessonMediaItem" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Learner binary delivery is an access-filtered browser/media transport and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "learner.communityMedia.uploadAuthorization",
     rest: { operationId: "authorizeLearnerCommunityMediaUpload" },
     parity: "exempt",
@@ -229,6 +240,17 @@ const mcpParityOverrides = [
   {
     capability: "preview.lessonMedia.get",
     rest: { operationId: "getPreviewLessonMedia" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Preview binary delivery is an access-filtered browser/media transport and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "preview.lessonMediaItem.get",
+    rest: { operationId: "getPreviewLessonMediaItem" },
     parity: "exempt",
     exemption: {
       reason:

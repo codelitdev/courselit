@@ -22,6 +22,7 @@ import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { productSubscriptionsForMemberships } from "./product-subscriptions.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import { type MediaRef, type ProductSubscription } from "@courselit/api-contract";
+import { readStoredQuiz } from "@courselit/api-contract/quiz";
 import {
   queueSendLitContactSync,
   setContactMarketingSubscription,
@@ -197,6 +198,12 @@ export async function getLearnerLessonMedia(
     schoolId: string;
     productPublicId: string;
     lessonPublicId: string;
+    /**
+     * One media item the lesson uses (its own media or one in its content).
+     * Without it, the lesson's own media. Either way the lesson's access rules
+     * apply, and media the lesson doesn't reference is not found (L5).
+     */
+    mediaPublicId?: string;
     viewer: LessonMediaViewer;
   },
   now: Date,
@@ -285,8 +292,17 @@ export async function getLearnerLessonMedia(
     .where(
       and(
         eq(schema.mediaReferences.schoolId, input.schoolId),
-        eq(schema.mediaReferences.resourceType, "lesson_media"),
+        input.mediaPublicId === undefined
+          ? eq(schema.mediaReferences.resourceType, "lesson_media")
+          : and(
+              inArray(schema.mediaReferences.resourceType, [
+                "lesson_media",
+                "lesson_content",
+              ]),
+              eq(schema.media.publicId, input.mediaPublicId),
+            ),
         eq(schema.mediaReferences.resourceInternalId, row.lesson.id),
+        eq(schema.media.schoolId, input.schoolId),
         eq(schema.media.status, "active"),
       ),
     )
@@ -1383,6 +1399,50 @@ export async function grantLearnerMembership(
   return result;
 }
 
+/**
+ * A quiz lesson completes only after a passed attempt at the quiz it holds
+ * now: a replaced quiz (new ID) starts with no attempts. A completion that is
+ * already recorded stays, whatever happens to the quiz afterwards.
+ */
+async function quizBlocksCompletion(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    membershipId: string;
+    lesson: typeof schema.lessons.$inferSelect;
+  },
+): Promise<boolean> {
+  const completed = await db
+    .select({ id: schema.lessonProgress.id })
+    .from(schema.lessonProgress)
+    .where(
+      and(
+        eq(schema.lessonProgress.schoolId, input.schoolId),
+        eq(schema.lessonProgress.membershipId, input.membershipId),
+        eq(schema.lessonProgress.lessonId, input.lesson.id),
+        isNotNull(schema.lessonProgress.completedAt),
+      ),
+    )
+    .limit(1);
+  if (completed[0]) return false;
+  const quiz = readStoredQuiz(input.lesson.content);
+  if (!quiz) return true;
+  const passed = await db
+    .select({ id: schema.lessonEvaluations.id })
+    .from(schema.lessonEvaluations)
+    .where(
+      and(
+        eq(schema.lessonEvaluations.schoolId, input.schoolId),
+        eq(schema.lessonEvaluations.membershipId, input.membershipId),
+        eq(schema.lessonEvaluations.lessonId, input.lesson.id),
+        eq(schema.lessonEvaluations.quizId, quiz.id),
+        eq(schema.lessonEvaluations.pass, true),
+      ),
+    )
+    .limit(1);
+  return !passed[0];
+}
+
 export async function completeLesson(
   db: AppDb,
   input: {
@@ -1449,19 +1509,12 @@ export async function completeLesson(
     };
   }
   if (row.lesson.type === "quiz") {
-    const passedEvaluations = await db
-      .select({ id: schema.lessonEvaluations.id })
-      .from(schema.lessonEvaluations)
-      .where(
-        and(
-          eq(schema.lessonEvaluations.schoolId, input.schoolId),
-          eq(schema.lessonEvaluations.membershipId, membership.id),
-          eq(schema.lessonEvaluations.lessonId, row.lesson.id),
-          eq(schema.lessonEvaluations.pass, true),
-        ),
-      )
-      .limit(1);
-    if (!passedEvaluations[0]) {
+    const blocked = await quizBlocksCompletion(db, {
+      schoolId: input.schoolId,
+      membershipId: membership.id,
+      lesson: row.lesson,
+    });
+    if (blocked) {
       return {
         ok: false,
         error: createPlatformError("validation_failed", {

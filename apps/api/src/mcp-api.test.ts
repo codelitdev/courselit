@@ -14,6 +14,7 @@ const REACHABLE_BUT_EXEMPT = new Set([
   // Authenticated by a short-lived preview token, not the caller's credential.
   "readPreviewProduct",
   "getPreviewLessonMedia",
+  "getPreviewLessonMediaItem",
   // Binary upload transport: an MCP client cannot send the file bytes.
   "authorizeMediaUpload",
   "finalizeMediaUpload",

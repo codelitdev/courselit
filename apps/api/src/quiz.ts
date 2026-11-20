@@ -5,17 +5,19 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import { type QuizAnswers, readStoredQuiz, scoreQuiz } from "@courselit/api-contract/quiz";
 import { and, asc, eq } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
+import { assertRateLimit } from "./rate-limit.js";
 import type { AppDb } from "./types.js";
 
 export type QuizEvaluationDto = {
+  quizId: string;
   pass: boolean;
   score: number;
-  requiresPassingGrade: boolean;
-  passingGrade: number;
+  passingGrade: number | null;
 };
 
 export type QuizEvaluationInput = {
@@ -26,48 +28,19 @@ export type QuizEvaluationInput = {
   lessonPublicId: string;
 };
 
-type QuizOption = { correctAnswer: boolean };
-type QuizQuestion = { options: QuizOption[] };
-type QuizContent = {
-  questions: QuizQuestion[];
-  requiresPassingGrade: boolean;
-  passingGrade: number;
-};
+/**
+ * Attempts are unlimited, but every score says something about the answers,
+ * so a membership gets a bounded number of attempts per window (L10).
+ */
+export const QUIZ_EVALUATION_RATE_LIMIT = {
+  windowMs: 10 * 60 * 1000,
+  limit: 30,
+} as const;
 
 function invalid(reason: string): { ok: false; error: PlatformError } {
   return {
     ok: false,
     error: createPlatformError("validation_failed", { safeDetails: { reason } }),
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-function readQuizContent(value: unknown): QuizContent | null {
-  if (!isRecord(value) || !Array.isArray(value.questions) || value.questions.length === 0) {
-    return null;
-  }
-  const questions: QuizQuestion[] = [];
-  for (const questionValue of value.questions) {
-    if (!isRecord(questionValue) || !Array.isArray(questionValue.options)) return null;
-    const options: QuizOption[] = [];
-    for (const optionValue of questionValue.options) {
-      if (!isRecord(optionValue)) return null;
-      options.push({ correctAnswer: optionValue.correctAnswer === true });
-    }
-    if (options.length === 0) return null;
-    questions.push({ options });
-  }
-  const passingGrade =
-    typeof value.passingGrade === "number" && Number.isFinite(value.passingGrade)
-      ? value.passingGrade
-      : 0;
-  return {
-    questions,
-    requiresPassingGrade: value.requiresPassingGrade === true,
-    passingGrade,
   };
 }
 
@@ -164,63 +137,54 @@ async function loadQuizLessonAccess(
 export async function evaluateQuizLesson(
   db: AppDb,
   input: QuizEvaluationInput,
-  answers: number[][],
+  attempt: { quizId: string; answers: QuizAnswers },
   clock: Clock,
 ): Promise<
   { ok: true; value: QuizEvaluationDto } | { ok: false; error: PlatformError }
 > {
-  if (
-    !Array.isArray(answers) ||
-    answers.length === 0 ||
-    answers.length > 100 ||
-    answers.some(
-      (questionAnswers) =>
-        !Array.isArray(questionAnswers) ||
-        questionAnswers.length > 1000 ||
-        questionAnswers.some(
-          (answer) => !Number.isInteger(answer) || answer < 0,
-        ),
-    )
-  ) {
-    return invalid("answers_missing_or_invalid");
-  }
-
   const access = await loadQuizLessonAccess(db, input, clock.now());
   if (!access.ok) return access;
-  const content = readQuizContent(access.value.lesson.content);
-  if (!content || content.questions.some((question) => !question.options.some((option) => option.correctAnswer))) {
-    return invalid("quiz_content_invalid");
-  }
+  const accountId = input.schoolAccountId ?? input.learnerId!;
+  const limited = await assertRateLimit(
+    db,
+    {
+      schoolId: input.schoolId,
+      userId: accountId,
+      scope: "learner_quiz",
+      action: "evaluate",
+      subjectId: access.value.membership.id,
+      ...QUIZ_EVALUATION_RATE_LIMIT,
+    },
+    clock,
+  );
+  if (!limited.ok) return limited;
 
-  // Keep this scoring rule identical to CourseLit's production evaluator:
-  // each correct option selected earns one point; selecting an incorrect
-  // option does not subtract a point.
-  let actualScore = 0;
-  let userScore = 0;
-  for (const [questionIndex, question] of content.questions.entries()) {
-    const selected = answers[questionIndex] ?? [];
-    for (const [optionIndex, option] of question.options.entries()) {
-      if (!option.correctAnswer) continue;
-      actualScore += 1;
-      if (selected.includes(optionIndex)) userScore += 1;
-    }
+  const quiz = readStoredQuiz(access.value.lesson.content);
+  if (!quiz) return invalid("quiz_content_invalid");
+  // Answers belong to one version of the quiz. A learner still showing a
+  // replaced quiz must reload it instead of being graded against another.
+  if (quiz.id !== attempt.quizId) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", { safeDetails: { reason: "quiz_changed" } }),
+    };
   }
-  if (actualScore === 0) return invalid("quiz_content_invalid");
-  const score = (userScore / actualScore) * 100;
-  const pass = !content.requiresPassingGrade || score >= content.passingGrade;
+  const scored = scoreQuiz(quiz, attempt.answers);
+  if (!scored.ok) return invalid(scored.reason);
+  const { score, pass } = scored.value;
+
   const now = clock.now();
   const evaluationId = uuidv7(clock);
-  const accountId = input.schoolAccountId ?? input.learnerId!;
   await db.insert(schema.lessonEvaluations).values({
     id: evaluationId,
     schoolId: input.schoolId,
     membershipId: access.value.membership.id,
     schoolAccountId: accountId,
     lessonId: access.value.lesson.id,
+    quizId: quiz.id,
     pass,
     score,
-    requiresPassingGrade: content.requiresPassingGrade,
-    passingGrade: content.passingGrade,
+    passingGrade: quiz.passingGrade,
     createdAt: now,
   });
   const activityMetadata = {
@@ -247,11 +211,6 @@ export async function evaluateQuizLesson(
   }
   return {
     ok: true,
-    value: {
-      pass,
-      score,
-      requiresPassingGrade: content.requiresPassingGrade,
-      passingGrade: content.passingGrade,
-    },
+    value: { quizId: quiz.id, pass, score, passingGrade: quiz.passingGrade },
   };
 }
