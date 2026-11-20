@@ -1,6 +1,7 @@
 import {
   createQuizId,
   normalizeQuiz,
+  QUIZ_LIMITS,
   type QuizValidationReason,
 } from "@courselit/api-contract/quiz";
 
@@ -127,37 +128,143 @@ export function quizContentError(content: Record<string, unknown>): string | und
   return result.ok ? undefined : QUIZ_MESSAGES[result.reason];
 }
 
-export const LESSON_CONFLICT_MESSAGE =
-  "Someone else changed this lesson's content since you opened it. Reload the page to see their version, then make your changes again. Your edits here were not saved.";
+/**
+ * Every change the quiz editor makes (questions, options, correct answers,
+ * the optional pass mark), as in main's quiz builder: the first question
+ * stays, and a new question starts with one empty option. Limits follow
+ * the API (100 questions, 20 options per question).
+ */
+export type QuizEditorAction =
+  | { type: "addQuestion" }
+  | { type: "removeQuestion"; question: number }
+  | { type: "setQuestionText"; question: number; text: string }
+  | { type: "addOption"; question: number }
+  | { type: "removeOption"; question: number; option: number }
+  | { type: "setOptionText"; question: number; option: number; text: string }
+  | { type: "setOptionCorrect"; question: number; option: number; correct: boolean }
+  | { type: "setGraded"; graded: boolean }
+  | { type: "setPassingGrade"; value: number };
 
-type LessonSaveErrorBody = {
-  code?: string;
-  message?: string;
-  details?: {
-    reason?: string;
-    message?: string;
-    line?: number | null;
-    blockReason?: string;
+function mapQuestion(
+  state: QuizEditorState,
+  index: number,
+  map: (question: QuizEditorQuestion) => QuizEditorQuestion,
+): QuizEditorState {
+  if (!state.questions[index]) return state;
+  return {
+    ...state,
+    questions: state.questions.map((question, current) =>
+      current === index ? map(question) : question,
+    ),
   };
-} | null;
+}
 
-/** The message to show for a failed lesson save. */
-export function lessonSaveErrorMessage(
-  status: number,
-  body: LessonSaveErrorBody,
-): string {
-  const details = body?.details;
-  if (status === 409 && details?.reason === "content_version_mismatch") {
-    return LESSON_CONFLICT_MESSAGE;
+function mapOption(
+  state: QuizEditorState,
+  questionIndex: number,
+  optionIndex: number,
+  map: (option: QuizEditorOption) => QuizEditorOption,
+): QuizEditorState {
+  return mapQuestion(state, questionIndex, (question) =>
+    question.options[optionIndex]
+      ? {
+          ...question,
+          options: question.options.map((option, current) =>
+            current === optionIndex ? map(option) : option,
+          ),
+        }
+      : question,
+  );
+}
+
+export function clampPassingGrade(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+export function quizEditorReducer(
+  state: QuizEditorState,
+  action: QuizEditorAction,
+): QuizEditorState {
+  switch (action.type) {
+    case "addQuestion":
+      if (state.questions.length >= QUIZ_LIMITS.questions) return state;
+      return {
+        ...state,
+        questions: [...state.questions, emptyQuizQuestion(state.questions.length + 1)],
+      };
+    case "removeQuestion":
+      if (action.question <= 0 || !state.questions[action.question]) return state;
+      return {
+        ...state,
+        questions: state.questions.filter((_, index) => index !== action.question),
+      };
+    case "setQuestionText":
+      return mapQuestion(state, action.question, (question) => ({
+        ...question,
+        text: action.text,
+      }));
+    case "addOption":
+      return mapQuestion(state, action.question, (question) =>
+        question.options.length >= QUIZ_LIMITS.optionsPerQuestion
+          ? question
+          : { ...question, options: [...question.options, emptyQuizOption()] },
+      );
+    case "removeOption": {
+      const options = state.questions[action.question]?.options;
+      if (!options || options.length <= 1 || !options[action.option]) return state;
+      return mapQuestion(state, action.question, (question) => ({
+        ...question,
+        options: question.options.filter((_, index) => index !== action.option),
+      }));
+    }
+    case "setOptionText":
+      return mapOption(state, action.question, action.option, (option) => ({
+        ...option,
+        text: action.text,
+      }));
+    case "setOptionCorrect":
+      return mapOption(state, action.question, action.option, (option) => ({
+        ...option,
+        correct: action.correct,
+      }));
+    case "setGraded":
+      return { ...state, graded: action.graded };
+    case "setPassingGrade":
+      return { ...state, passingGrade: clampPassingGrade(action.value) };
   }
-  // The page didn't validate: say what and where (first problem only).
-  if (details?.reason === "lesson_content_invalid" && details.message) {
-    return typeof details.line === "number"
-      ? `Line ${details.line}: ${details.message}`
-      : details.message;
-  }
-  if (details?.reason === "plan_required" && details.blockReason === "trial") {
-    return "Embeds can't be added during the trial. Choose a plan to add them.";
-  }
-  return body?.message ?? "Unable to save the lesson.";
+}
+
+/** Block attributes in the shape `quizContentFromEditor` writes, without filling anything in. */
+function quizAttrsShape(attrs: Record<string, unknown> | null) {
+  const value = attrs ?? {};
+  const list = (items: unknown) => (Array.isArray(items) ? items.filter(isRecord) : []);
+  return {
+    id: value.id ?? null,
+    passingGrade: value.passingGrade ?? null,
+    questions: list(value.questions).map((question) => ({
+      id: question.id ?? null,
+      text: question.text ?? "",
+      options: list(question.options).map((option) => ({
+        id: option.id ?? null,
+        text: option.text ?? "",
+        correct: option.correct === true,
+      })),
+    })),
+  };
+}
+
+/**
+ * Whether the block's attributes already hold what the editor would write.
+ * False when they changed elsewhere (undo, another tab's reload) or still
+ * lack IDs, which the editor then writes back so saves keep stable IDs.
+ */
+export function sameQuizContent(
+  state: QuizEditorState,
+  attrs: Record<string, unknown> | null,
+): boolean {
+  return (
+    JSON.stringify(quizContentFromEditor(state)) ===
+    JSON.stringify(quizAttrsShape(attrs))
+  );
 }

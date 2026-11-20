@@ -1,9 +1,10 @@
 "use client";
 
-import { FileText, Package, Trash2 } from "lucide-react";
+import { emptyLessonDocument } from "@courselit/lesson-content";
+import { FileText, Package, RotateCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
@@ -26,10 +27,26 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
-import { Textarea } from "@/components/ui/codelit/textarea";
-import { lessonSaveErrorMessage } from "@/lib/lesson-quiz";
+import {
+  type AutosaveSendResult,
+  type AutosaveState,
+  autosaveLabel,
+  createLessonAutosave,
+  type LessonAutosave,
+} from "@/lib/lesson-autosave";
+import {
+  COURSE_LESSON_TYPES,
+  diagnosticLocation,
+  LESSON_CONFLICT_MESSAGE,
+  type LessonDiagnostic,
+  type LessonSaveErrorBody,
+  lessonSaveFailure,
+  lessonSaveFailureMessage,
+  unavailableBlockReasons,
+} from "@/lib/lesson-page";
 import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
 import { truncateText } from "@/lib/truncate";
+import { LessonPageEditor } from "./lesson-page-editor";
 import { MediaPicker } from "./media-picker";
 import type {
   Lesson,
@@ -43,14 +60,19 @@ import { ScormLessonUpload } from "./scorm-lesson-upload";
 
 type ProductDetail = Product & { sections: Section[]; lessons: Lesson[] };
 
-const lessonTypes: Array<{
-  value: LessonType;
-  label: string;
-  icon: typeof FileText;
-}> = [
-  { value: "page", label: "Page", icon: FileText },
-  { value: "scorm", label: "SCORM", icon: Package },
-];
+const lessonTypeLabels: Record<
+  (typeof COURSE_LESSON_TYPES)[number],
+  { label: string; icon: typeof FileText }
+> = {
+  page: { label: "Page", icon: FileText },
+  scorm: { label: "SCORM", icon: Package },
+};
+
+// `file` belongs to download products and is never offered here.
+const lessonTypes = COURSE_LESSON_TYPES.map((value) => ({
+  value,
+  ...lessonTypeLabels[value],
+}));
 
 function LessonTypeChips({
   value: selectedValue,
@@ -137,6 +159,67 @@ function validateLesson(title: string): { title?: string; content?: string } {
   return errors;
 }
 
+async function readErrorBody(response: Response): Promise<LessonSaveErrorBody> {
+  try {
+    return (await response.json()) as LessonSaveErrorBody;
+  } catch {
+    return null;
+  }
+}
+
+function LessonDiagnostics({
+  title,
+  diagnostics,
+}: {
+  title: string;
+  diagnostics: LessonDiagnostic[];
+}) {
+  if (!diagnostics.length) return null;
+  return (
+    <div
+      role="alert"
+      className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm"
+    >
+      <p className="font-semibold text-destructive">{title}</p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-5">
+        {diagnostics.map((item, index) => {
+          const location = diagnosticLocation(item);
+          return (
+            // biome-ignore lint/suspicious/noArrayIndexKey: diagnostics have no ID
+            <li key={index}>
+              {location ? <span className="font-medium">{location}: </span> : null}
+              {item.message}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** One autosave: the whole page as JSON, with the version it is based on. */
+async function sendPageContent(
+  schoolId: string,
+  lessonId: string,
+  content: unknown,
+  expectedContentVersion: number,
+): Promise<AutosaveSendResult> {
+  const response = await fetch(`/api/v1/lessons/${encodeURIComponent(lessonId)}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "content-type": "application/json", "x-school-id": schoolId },
+    body: JSON.stringify({ content, expectedContentVersion }),
+  });
+  if (!response.ok) {
+    return {
+      ok: false,
+      failure: lessonSaveFailure(response.status, await readErrorBody(response)),
+    };
+  }
+  const saved = (await response.json()) as { contentVersion: number };
+  return { ok: true, contentVersion: saved.contentVersion };
+}
+
 async function responseError(response: Response, fallback: string) {
   try {
     const body = (await response.json()) as { message?: string };
@@ -164,12 +247,23 @@ export function LessonAuthoring({
   const [type, setType] = useState<LessonType>("page");
   const [content, setContent] = useState<LessonContent>({});
   /*
-   * Temporary page editor (docs/wip/lesson-pages.md, step 4 replaces it with
-   * the block editor): the page as Markdown, which the API validates and
-   * returns with quiz IDs filled in.
+   * The page as loaded; the editor owns it from then on. Edits autosave as
+   * JSON (`content`) with the version they're based on; a new lesson keeps
+   * them here until it is created.
    */
-  const [markdown, setMarkdown] = useState("");
-  const [savedMarkdown, setSavedMarkdown] = useState("");
+  const [pageContent, setPageContent] = useState<LessonContent | null>(null);
+  const draftContent = useRef<LessonContent | null>(null);
+  const autosave = useRef<LessonAutosave | null>(null);
+  const flushEditor = useRef<() => void>(() => {});
+  const [autosaveState, setAutosaveState] = useState<AutosaveState>({
+    status: "saved",
+  });
+  const [unavailableReasons, setUnavailableReasons] = useState<Record<string, string>>(
+    {},
+  );
+  /** Why the last save or publish was refused, shown next to the editor. */
+  const [refusal, setRefusal] = useState<LessonDiagnostic[]>([]);
+  const refusalShown = useRef(false);
   // The version the editor's content is based on, sent back on save so a
   // concurrent change (another person or an agent) isn't overwritten.
   const [contentVersion, setContentVersion] = useState<number | null>(null);
@@ -186,6 +280,19 @@ export function LessonAuthoring({
     content?: string;
   }>({});
   const productRoot = `/products/${encodeURIComponent(productId)}`;
+  const onFlushChangeReady = useCallback((flush: () => void) => {
+    flushEditor.current = flush;
+  }, []);
+
+  // Warn before leaving while page edits are unsaved.
+  const unsaved =
+    autosaveState.status !== "saved" && autosaveState.status !== "conflict";
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
 
   useEffect(() => {
     let active = true;
@@ -208,6 +315,20 @@ export function LessonAuthoring({
         if (!detail.sections.some((section) => section.id === sectionId)) {
           throw new Error("This section no longer exists.");
         }
+        if (detail.kind !== "download") {
+          // Blocks the school may not add now (Embed on a trial); the API
+          // enforces it either way, so a failed read only loses the hint.
+          void fetch("/api/v1/lesson-content-format", {
+            credentials: "include",
+            cache: "no-store",
+            headers: { "x-school-id": selected.id },
+          })
+            .then((response) => (response.ok ? response.json() : null))
+            .then((format) => {
+              if (active) setUnavailableReasons(unavailableBlockReasons(format));
+            })
+            .catch(() => {});
+        }
         if (lessonId) {
           // Lists carry no content; the single-lesson read has both forms.
           const lessonResponse = await fetch(
@@ -224,14 +345,39 @@ export function LessonAuthoring({
           setTitle(lesson.title);
           setType(lesson.type);
           setContent(lesson.content ?? {});
-          setMarkdown(lesson.markdown ?? "");
-          setSavedMarkdown(lesson.markdown ?? "");
+          if (lesson.type === "page") {
+            const loaded = lesson.content ?? emptyLessonDocument();
+            setPageContent(loaded);
+            autosave.current = createLessonAutosave({
+              contentVersion: lesson.contentVersion,
+              savedContent: loaded,
+              send: (nextContent, expectedContentVersion) =>
+                sendPageContent(
+                  selected.id,
+                  lessonId,
+                  nextContent,
+                  expectedContentVersion,
+                ),
+              onState: (state) => {
+                if (!active) return;
+                setAutosaveState(state);
+                // A clean save may have fixed what a publish was refused for;
+                // the next publish checks again.
+                if (state.status === "saved" && refusalShown.current) {
+                  refusalShown.current = false;
+                  setRefusal([]);
+                  setError(null);
+                }
+              },
+            });
+          }
           setContentVersion(lesson.contentVersion);
           setMediaId(lesson.mediaId);
           setRequiresEnrollment(lesson.requiresEnrollment);
           setStatus(lesson.status);
         } else {
           setType(detail.kind === "download" ? "file" : "page");
+          setPageContent(emptyLessonDocument());
           setStatus("draft");
         }
         setSchool(selected);
@@ -264,7 +410,20 @@ export function LessonAuthoring({
     if (!school) return;
     setSaving(true);
     setError(null);
+    setRefusal([]);
     try {
+      // Send the page's last edits first; the form never writes content
+      // over a newer version.
+      if (editing && type === "page" && autosave.current) {
+        flushEditor.current();
+        const state = await autosave.current.flush();
+        if (state.status === "conflict") throw new Error(LESSON_CONFLICT_MESSAGE);
+        if (state.status === "invalid") {
+          throw new Error("The page has problems to fix before it can be saved.");
+        }
+        if (state.status === "error") throw new Error(state.message);
+      }
+      if (!editing && type === "page") flushEditor.current();
       const response = await fetch(
         editing
           ? `/api/v1/lessons/${encodeURIComponent(lessonId!)}`
@@ -276,13 +435,8 @@ export function LessonAuthoring({
           body: JSON.stringify({
             title: title.trim(),
             ...(editing ? {} : { type }),
-            ...(type === "page" && (!editing || markdown !== savedMarkdown)
-              ? {
-                  markdown,
-                  ...(editing && contentVersion !== null
-                    ? { expectedContentVersion: contentVersion }
-                    : {}),
-                }
+            ...(type === "page" && !editing && draftContent.current
+              ? { content: draftContent.current }
               : {}),
             ...(type === "page" ? {} : { mediaId }),
             requiresEnrollment,
@@ -292,13 +446,20 @@ export function LessonAuthoring({
         },
       );
       if (!response.ok) {
-        let body: Parameters<typeof lessonSaveErrorMessage>[1] = null;
-        try {
-          body = (await response.json()) as typeof body;
-        } catch {
-          // Keep the generic message when the API has no JSON error body.
+        const failure = lessonSaveFailure(
+          response.status,
+          await readErrorBody(response),
+        );
+        if (failure.kind === "invalid" && type === "page") {
+          setRefusal(failure.diagnostics);
+          refusalShown.current = true;
+          throw new Error(
+            nextStatus === "published"
+              ? "The lesson can't be made live yet. Fix the problems listed under the page."
+              : "The lesson couldn't be saved. Fix the problems listed under the page.",
+          );
         }
-        throw new Error(lessonSaveErrorMessage(response.status, body));
+        throw new Error(lessonSaveFailureMessage(failure));
       }
       const saved = (await response.json()) as { id?: string };
       const usesSeparateMediaSection = type === "file" || type === "scorm";
@@ -519,29 +680,88 @@ export function LessonAuthoring({
                     </div>
                   </div>
 
-                  {type === "page" ? (
+                  {type === "page" && school && pageContent ? (
                     <div className="field">
-                      <Label htmlFor="lesson-markdown">Content (Markdown)</Label>
-                      <Textarea
-                        id="lesson-markdown"
-                        value={markdown}
-                        rows={18}
-                        className="font-mono text-sm"
-                        onChange={(event) => {
-                          setMarkdown(event.target.value);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
+                      <div className="flex items-center justify-between gap-3">
+                        <span>Page</span>
+                        {editing ? (
+                          <span
+                            aria-live="polite"
+                            className={`text-xs ${
+                              autosaveState.status === "saved" ||
+                              autosaveState.status === "saving" ||
+                              autosaveState.status === "pending"
+                                ? "text-muted-foreground"
+                                : "text-destructive"
+                            }`}
+                          >
+                            {autosaveLabel(autosaveState)}
+                          </span>
+                        ) : null}
+                      </div>
+                      {autosaveState.status === "conflict" ? (
+                        <div
+                          role="alert"
+                          className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm"
+                        >
+                          <p className="min-w-0 flex-[1_1_240px]">
+                            {LESSON_CONFLICT_MESSAGE}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.location.reload()}
+                          >
+                            <RotateCw className="size-4" /> Reload
+                          </Button>
+                        </div>
+                      ) : null}
+                      <LessonPageEditor
+                        school={school}
+                        initialContent={pageContent}
+                        unavailableReasons={unavailableReasons}
+                        editable={autosaveState.status !== "conflict"}
+                        onFlushChangeReady={onFlushChangeReady}
+                        onChange={(next) => {
+                          if (autosave.current) autosave.current.change(next);
+                          else draftContent.current = next;
                         }}
-                        placeholder={
-                          '## Heading\n\nWrite the lesson here.\n\n<Video url="https://www.youtube.com/watch?v=…" />'
+                      />
+                      {autosaveState.status === "invalid" ? (
+                        <LessonDiagnostics
+                          title="These changes weren't saved:"
+                          diagnostics={autosaveState.diagnostics}
+                        />
+                      ) : null}
+                      {autosaveState.status === "error" ? (
+                        <div
+                          role="alert"
+                          className="flex flex-wrap items-center gap-3 text-sm text-destructive"
+                        >
+                          <span>Not saved: {autosaveState.message}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => autosave.current?.retry()}
+                          >
+                            Try again
+                          </Button>
+                        </div>
+                      ) : null}
+                      <LessonDiagnostics
+                        title={
+                          lessonLive
+                            ? "Fix these before the lesson can stay live:"
+                            : "Fix these before the lesson can be made live:"
                         }
+                        diagnostics={refusal}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Blocks are tags such as {'<Video media="…" />'},{" "}
-                        {'<Callout type="tip">…</Callout>'} and one {"<Quiz>"}. The
-                        block editor replaces this field soon.
+                        Type / to add a block: video, audio, PDF, file, image, callout,
+                        embed or one quiz. Drag the handle beside a block to move it.
+                        {editing ? " Changes to the page save automatically." : ""}
                       </p>
                     </div>
                   ) : null}
