@@ -87,6 +87,8 @@ type ThemedLabelProps = WithoutTheme<ComponentProps<typeof Label>> & {
 };
 type ThemedCardImageProps = WithoutTheme<ComponentProps<typeof PageCardImage>> & {
   theme?: ThemeStyle;
+  /** Fills a card edge to edge; the card's own rounded, clipped edge shapes it. */
+  flush?: boolean;
 };
 type ThemedSurfaceProps = ComponentProps<"div"> & {
   theme?: ThemeStyle;
@@ -360,6 +362,7 @@ export function LearnerCardHeader(
 export function LearnerCardImage({
   className,
   theme: providedTheme,
+  flush = false,
   ...props
 }: ThemedCardImageProps) {
   const contextTheme = useSchoolThemeStyle();
@@ -368,7 +371,7 @@ export function LearnerCardImage({
     <PageCardImage
       {...props}
       theme={theme}
-      className={cn(className, theme.interactives?.card?.border?.radius)}
+      className={cn(className, !flush && theme.interactives?.card?.border?.radius)}
     />
   );
 }

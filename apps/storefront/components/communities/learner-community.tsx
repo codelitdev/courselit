@@ -333,9 +333,10 @@ function MediaAttachments({
           <PageCard className="relative overflow-hidden">
             {item.type === "image" && item.url ? (
               <LearnerCardImage
-                src={item.thumbnailUrl ?? item.url}
+                src={item.url}
                 alt={item.title}
-                className="aspect-video w-full object-cover"
+                flush
+                className="block h-auto max-h-[28rem] w-full bg-muted object-contain"
               />
             ) : item.type === "video" && item.url ? (
               <a
@@ -348,6 +349,7 @@ function MediaAttachments({
                   <LearnerCardImage
                     src={item.thumbnailUrl}
                     alt={item.title}
+                    flush
                     className="size-full object-cover"
                   />
                 ) : (
@@ -2055,7 +2057,7 @@ export function LearnerCommunity({
                                       .toUpperCase()}
                                   </LearnerAvatarFallback>
                                 </LearnerAvatar>
-                                <div className="min-w-0 flex-1">
+                                <div className="grid min-w-0 flex-1 gap-2">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                                       <LearnerText2
@@ -2120,6 +2122,7 @@ export function LearnerCommunity({
                                                 JSON.stringify(document);
                                             }}
                                             placeholder="Add a comment…"
+                                            showToolbar={false}
                                             className="rounded-md border bg-background"
                                             editorClassName="min-h-[80px]"
                                           />
