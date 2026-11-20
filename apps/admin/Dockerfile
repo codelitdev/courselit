@@ -1,4 +1,8 @@
-FROM oven/bun:1.4.4-alpine AS base
+# Install and build run on the build machine's own platform ($BUILDPLATFORM):
+# the output is JavaScript, the same for every target, and emulating arm64 on
+# an x86 builder (or the reverse) is several times slower. Only the runtime
+# stage below is the target platform, with sharp's native binaries for it.
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -19,6 +23,19 @@ COPY packages/components-library ./packages/components-library
 COPY packages/page-blocks ./packages/page-blocks
 RUN bun --bun run --filter @courselit/admin build
 
+# sharp (Next.js image optimization) is the one native module traced into the
+# standalone output. Fetch its binaries for the target platform, at the
+# version the lockfile resolved, without running anything for that platform.
+# The runner is Alpine, so fetch the musl builds (on a glibc build machine bun
+# would fetch only glibc ones).
+ARG TARGETARCH
+RUN version=$(sed -n 's/^ *"sharp": \["sharp@\([0-9.]*\)".*/\1/p' bun.lock | head -n 1) \
+    && test -n "$version" \
+    && mkdir -p /target-sharp && cd /target-sharp \
+    && printf '{"dependencies":{"sharp":"%s"}}' "$version" > package.json \
+    && bun install --production --os=linux --libc=musl \
+        --cpu=$([ "$TARGETARCH" = amd64 ] && echo x64 || echo "$TARGETARCH")
+
 FROM oven/bun:1.4.4-alpine AS runner
 WORKDIR /app
 # The commit the image is built from, shown on the hidden /about page.
@@ -35,6 +52,17 @@ RUN addgroup -S -g 1001 bunjs \
 COPY --from=builder --chown=bunuser:bunjs /app/apps/admin/.next/standalone ./
 COPY --from=builder --chown=bunuser:bunjs /app/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder --chown=bunuser:bunjs /app/apps/admin/public ./apps/admin/public
+# Put the target platform's sharp binaries (@img/sharp-*, which include
+# libvips) beside each traced copy of sharp. Packages already there (the
+# build platform's, or JavaScript ones such as @img/colour) are left as is.
+COPY --from=builder /target-sharp/node_modules/@img /tmp/target-img
+RUN for dir in $(find node_modules -type d -path '*/node_modules/sharp'); do \
+        mkdir -p "$dir/../@img"; \
+        for pkg in /tmp/target-img/sharp-*; do \
+            [ -e "$dir/../@img/${pkg##*/}" ] || cp -R "$pkg" "$dir/../@img/"; \
+        done; \
+    done \
+    && rm -rf /tmp/target-img
 
 USER bunuser
 EXPOSE 3000
