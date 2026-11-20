@@ -5,7 +5,7 @@ import { publicApiPath, useSchoolId } from "@/components/school-context";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLearnerSessionState } from "@/components/auth/learner-session";
 import { CourseSpaceDiscussion } from "@/components/course-space-discussion";
 import { CourseLitLoading } from "@/components/course-lit-loader";
@@ -19,6 +19,7 @@ import {
   LessonContent,
   LessonMediaContent,
 } from "@/components/lesson-viewer";
+import { requestLessonCompletion } from "@/lib/lesson-completion";
 import { learnerHeaders } from "@/lib/school";
 import {
   LearnerButton as Button,
@@ -53,6 +54,10 @@ export default function LearnerLessonPage() {
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
   const [certificateId, setCertificateId] = useState<string | null>(null);
+  // Bumped to load the lesson again, e.g. when its quiz changed.
+  const [reloads, setReloads] = useState(0);
+  const reloadLesson = useCallback(() => setReloads((count) => count + 1), []);
+  const clearActionError = useCallback(() => setActionError(null), []);
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -64,7 +69,8 @@ export default function LearnerLessonPage() {
   useEffect(() => {
     if (!previewChecked) return;
     let active = true;
-    setLoading(true);
+    // A reload keeps the lesson on screen; only the first load shows the loader.
+    if (reloads === 0) setLoading(true);
     setError(null);
     const url = previewToken
       ? `/api/v1/preview/products/${encodeURIComponent(productId)}`
@@ -121,7 +127,7 @@ export default function LearnerLessonPage() {
     return () => {
       active = false;
     };
-  }, [lessonId, previewChecked, previewToken, productId, schoolId]);
+  }, [lessonId, previewChecked, previewToken, productId, reloads, schoolId]);
 
   const lesson = useMemo(
     () => product?.lessons.find((item) => item.id === lessonId) ?? null,
@@ -136,32 +142,14 @@ export default function LearnerLessonPage() {
 
   async function completeLesson() {
     setActionError(null);
-    const response = await fetch(
-      `/api/v1/learner/lessons/${encodeURIComponent(lessonId)}/complete`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
-        body: JSON.stringify({}),
-      },
-    );
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as {
-        details?: { reason?: string };
-      } | null;
-      setActionError(
-        body?.details?.reason === "need_to_pass"
-          ? "Pass the quiz before marking this lesson complete."
-          : body?.details?.reason === "scorm_content_incomplete"
-            ? "Complete the SCORM activity before marking this lesson complete."
-            : "Unable to complete the lesson.",
-      );
+    const result = await requestLessonCompletion({ lessonId, headers: learnerHeaders });
+    if (!result.ok) {
+      setActionError(result.message);
       return;
     }
-    const body = (await response.json()) as { certificateId?: string | null };
     setCompleted(true);
     setCompletedLessonIds((current) => new Set(current).add(lessonId));
-    setCertificateId(body.certificateId ?? null);
+    setCertificateId(result.certificateId);
   }
 
   if (loading) {
@@ -233,7 +221,9 @@ export default function LearnerLessonPage() {
                 content={lesson.content}
                 lessonId={lesson.id}
                 productId={productId}
-                quizAvailable={!previewToken}
+                previewToken={previewToken}
+                onQuizChanged={reloadLesson}
+                onQuizPassed={clearActionError}
               />
           ) : (
             <LearnerText2 className="text-muted-foreground">Enroll to view this lesson.</LearnerText2>
