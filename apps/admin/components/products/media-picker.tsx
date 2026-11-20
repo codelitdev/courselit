@@ -15,12 +15,6 @@ import type { LessonType, School } from "./product-types";
 
 function acceptedTypesForLesson(lessonType: LessonType): string[] | undefined {
   switch (lessonType) {
-    case "video":
-      return ["video/*"];
-    case "audio":
-      return ["audio/*"];
-    case "pdf":
-      return ["application/pdf", ".pdf"];
     case "scorm":
       return [
         ".zip",

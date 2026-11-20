@@ -49,6 +49,7 @@ import { DownloadProductAction } from "@/components/download-product-action";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { lessonLockState } from "@/lib/lesson-lock";
+import { lessonPageHasQuiz } from "@/lib/lesson-page";
 
 type Learner = {
   id: string;
@@ -121,8 +122,7 @@ function CommunityAccessNote({ product }: { product: Product }) {
   if (!note) return null;
   return (
     <LearnerText2 className="text-muted-foreground">
-      {note}{" "}
-      <LearnerLink href="/join">Join the community</LearnerLink>
+      {note} <LearnerLink href="/join">Join the community</LearnerLink>
     </LearnerText2>
   );
 }
@@ -312,7 +312,9 @@ function CourseOverview({
           />
         </div>
       ) : null}
-      {!product.enrolled && !previewToken ? <CommunityAccessNote product={product} /> : null}
+      {!product.enrolled && !previewToken ? (
+        <CommunityAccessNote product={product} />
+      ) : null}
 
       {product.featuredImage ? (
         <div className="flex justify-center">
@@ -405,7 +407,7 @@ function LessonPage({
     preview: Boolean(previewToken),
     enrolled: product.enrolled,
     requiresEnrollment: lesson.requiresEnrollment,
-    isQuiz: lesson.type === "quiz",
+    isQuiz: lessonPageHasQuiz(lesson.content),
     hasContent,
     availableAt: lesson.availableAt ?? null,
   });
@@ -455,18 +457,12 @@ function LessonPage({
               previewToken={previewToken}
             />
           ) : lesson.content ? (
-            previewToken && lesson.type === "quiz" ? (
-              <LearnerText2 className="text-muted-foreground">
-                Quiz content is available after enrollment.
-              </LearnerText2>
-            ) : (
-              <LessonContent
-                content={lesson.content}
-                lessonId={lesson.id}
-                productId={product.id}
-                type={lesson.type}
-              />
-            )
+            <LessonContent
+              content={lesson.content}
+              lessonId={lesson.id}
+              productId={product.id}
+              quizAvailable={!previewToken}
+            />
           ) : (
             <LearnerText2 className="text-muted-foreground">
               Enroll to view this lesson.
@@ -608,11 +604,14 @@ export function PublicCourseViewer({
           previewToken ? { "x-preview-token": previewToken } : undefined,
         ),
       }),
-      fetch(publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`), {
-        credentials: "include",
-        cache: "no-store",
-        headers: learnerHeaders(),
-      }),
+      fetch(
+        publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`),
+        {
+          credentials: "include",
+          cache: "no-store",
+          headers: learnerHeaders(),
+        },
+      ),
     ])
       .then(async ([productResponse, plansResponse]) => {
         if (!active) return;

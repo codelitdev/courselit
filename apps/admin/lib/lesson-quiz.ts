@@ -5,7 +5,11 @@ import {
 } from "@courselit/api-contract/quiz";
 
 export type QuizEditorOption = { id: string; text: string; correct: boolean };
-export type QuizEditorQuestion = { id: string; text: string; options: QuizEditorOption[] };
+export type QuizEditorQuestion = {
+  id: string;
+  text: string;
+  options: QuizEditorOption[];
+};
 /**
  * What the quiz editor works on. The pass mark is kept while grading is off
  * so turning it back on restores it; only `quizContentFromEditor` decides
@@ -41,7 +45,9 @@ export function emptyQuizOption(): QuizEditorOption {
 }
 
 /** Saved quiz content (or none) as editor state; IDs are kept as they are. */
-export function quizEditorState(value: Record<string, unknown> | null): QuizEditorState {
+export function quizEditorState(
+  value: Record<string, unknown> | null,
+): QuizEditorState {
   const content = value ?? {};
   const questions = Array.isArray(content.questions)
     ? content.questions.flatMap((question): QuizEditorQuestion[] => {
@@ -124,13 +130,34 @@ export function quizContentError(content: Record<string, unknown>): string | und
 export const LESSON_CONFLICT_MESSAGE =
   "Someone else changed this lesson's content since you opened it. Reload the page to see their version, then make your changes again. Your edits here were not saved.";
 
+type LessonSaveErrorBody = {
+  code?: string;
+  message?: string;
+  details?: {
+    reason?: string;
+    message?: string;
+    line?: number | null;
+    blockReason?: string;
+  };
+} | null;
+
 /** The message to show for a failed lesson save. */
 export function lessonSaveErrorMessage(
   status: number,
-  body: { code?: string; message?: string; details?: { reason?: string } } | null,
+  body: LessonSaveErrorBody,
 ): string {
-  if (status === 409 && body?.details?.reason === "content_version_mismatch") {
+  const details = body?.details;
+  if (status === 409 && details?.reason === "content_version_mismatch") {
     return LESSON_CONFLICT_MESSAGE;
+  }
+  // The page didn't validate: say what and where (first problem only).
+  if (details?.reason === "lesson_content_invalid" && details.message) {
+    return typeof details.line === "number"
+      ? `Line ${details.line}: ${details.message}`
+      : details.message;
+  }
+  if (details?.reason === "plan_required" && details.blockReason === "trial") {
+    return "Embeds can't be added during the trial. Choose a plan to add them.";
   }
   return body?.message ?? "Unable to save the lesson.";
 }

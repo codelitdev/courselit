@@ -1,22 +1,22 @@
 "use client";
 
-import { publicApiPath, useSchoolId } from "@/components/school-context";
+import { lessonProfile } from "@courselit/lesson-content";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import { useEffect, useState } from "react";
-import { EmbedViewer } from "@/components/embed-viewer";
-import { QuizViewer } from "@/components/quiz-viewer";
-import { ScormViewer } from "@/components/scorm-viewer";
 import { CourseLitLoading } from "@/components/course-lit-loader";
+import { QuizViewer } from "@/components/quiz-viewer";
+import { publicApiPath, useSchoolId } from "@/components/school-context";
+import { ScormViewer } from "@/components/scorm-viewer";
 import { LearnerText2 } from "@/components/themed-page-builder";
+import { splitLessonPage } from "@/lib/lesson-page";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 export type LearnerLesson = {
   id: string;
   title: string;
-  type: "text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm";
+  type: "page" | "scorm" | "file";
   status: string;
-  downloadable: boolean;
   requiresEnrollment: boolean;
   sectionId: string | null;
   mediaId: string | null;
@@ -24,40 +24,50 @@ export type LearnerLesson = {
   availableAt: string | null;
 };
 
+/**
+ * A lesson page, temporarily: the document through FrontLit's renderer with
+ * the lesson profile, then the quiz below it. Media blocks render nothing
+ * yet (no `resolveMedia`). Step 4 of docs/wip/lesson-pages.md replaces this
+ * with a page-builder renderer that resolves media through
+ * `…/lessons/:lessonId/media/:mediaId` and places the quiz in the page.
+ */
 export function LessonContent({
   content,
   productId,
   lessonId,
-  type,
+  quizAvailable = true,
 }: {
   content: Record<string, unknown>;
   productId: string;
   lessonId: string;
-  type?: LearnerLesson["type"];
+  /** False in previews: grading needs an enrolled learner. */
+  quizAvailable?: boolean;
 }) {
   const theme = useSchoolThemeStyle();
-  if (type === "embed" && typeof content.value === "string") {
-    return <EmbedViewer value={content.value} />;
-  }
-  if (Array.isArray(content.questions)) {
-    return <QuizViewer content={content} lessonId={lessonId} productId={productId} />;
-  }
-  if (content.type === "doc" && Array.isArray(content.content)) {
+  const { document, quiz } = splitLessonPage(content);
+  if (!document) {
     return (
+      <LearnerText2 className="text-muted-foreground">
+        This lesson type is not available in this viewer yet.
+      </LearnerText2>
+    );
+  }
+  return (
+    <>
       <TextRenderer
-        json={content as unknown as TextEditorContent}
+        json={document as unknown as TextEditorContent}
+        profile={lessonProfile}
         theme={theme}
         className="lesson-rich-text"
       />
-    );
-  }
-  if (typeof content.value === "string") {
-    return <LearnerText2 className="lesson-body">{content.value}</LearnerText2>;
-  }
-  return (
-    <LearnerText2 className="text-muted-foreground">
-      This lesson type is not available in this viewer yet.
-    </LearnerText2>
+      {quiz && quizAvailable ? (
+        <QuizViewer content={quiz} lessonId={lessonId} productId={productId} />
+      ) : quiz ? (
+        <LearnerText2 className="text-muted-foreground">
+          Quiz content is available after enrollment.
+        </LearnerText2>
+      ) : null}
+    </>
   );
 }
 
@@ -136,42 +146,6 @@ export function LessonMediaContent({
         This media is unavailable.
       </LearnerText2>
     );
-  if (lesson.type === "video") {
-    return (
-      // MediaLit currently supplies no caption-track asset in this contract.
-      // biome-ignore lint/a11y/useMediaCaption: caption tracks are not available for this media reference yet
-      <video
-        className="w-full rounded-lg"
-        controls
-        controlsList="nodownload"
-        onContextMenu={(event) => event.preventDefault()}
-        poster={media.thumbnailUrl ?? undefined}
-        src={media.url}
-      />
-    );
-  }
-  if (lesson.type === "audio") {
-    return (
-      // MediaLit currently supplies no caption-track asset in this contract.
-      // biome-ignore lint/a11y/useMediaCaption: caption tracks are not available for this media reference yet
-      <audio
-        className="w-full"
-        controls
-        controlsList="nodownload"
-        onContextMenu={(event) => event.preventDefault()}
-        src={media.url}
-      />
-    );
-  }
-  if (lesson.type === "pdf") {
-    return (
-      <iframe
-        className="h-[500px] w-full rounded-lg border"
-        title={media.fileName}
-        src={`${media.url}#view=fit`}
-      />
-    );
-  }
   if (lesson.type === "scorm") {
     if (previewToken) {
       return (
@@ -191,7 +165,7 @@ export function LessonMediaContent({
   return (
     <a
       href={media.url}
-      download={lesson.downloadable ? media.fileName : undefined}
+      download={media.fileName}
       target="_blank"
       rel="noreferrer"
       className="font-medium text-primary hover:underline"

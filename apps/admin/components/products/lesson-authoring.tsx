@@ -1,20 +1,9 @@
 "use client";
 
-import { type Editor, extractTextFromTextEditorContent } from "@frontlit/text-editor";
-import {
-  File,
-  FileImage,
-  FileText,
-  Headphones,
-  HelpCircle,
-  Package,
-  Trash2,
-  Tv,
-  Video,
-} from "lucide-react";
+import { FileText, Package, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ComponentProps, type FormEvent, useEffect, useId, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
@@ -38,13 +27,9 @@ import {
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
-import { truncateText } from "@/lib/truncate";
-import {
-  emptyQuizContent,
-  lessonSaveErrorMessage,
-  quizContentError,
-} from "@/lib/lesson-quiz";
+import { lessonSaveErrorMessage } from "@/lib/lesson-quiz";
 import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
+import { truncateText } from "@/lib/truncate";
 import { MediaPicker } from "./media-picker";
 import type {
   Lesson,
@@ -54,32 +39,16 @@ import type {
   School,
   Section,
 } from "./product-types";
-import { QuizEditor } from "./quiz-editor";
-import { RichTextEditor } from "./rich-text-editor";
 import { ScormLessonUpload } from "./scorm-lesson-upload";
 
 type ProductDetail = Product & { sections: Section[]; lessons: Lesson[] };
-
-function editorContent(
-  value: LessonContent | null,
-): ComponentProps<typeof Editor>["initialContent"] {
-  if (value?.type === "doc") return value;
-  if (typeof value?.value === "string") return value.value;
-  return null;
-}
 
 const lessonTypes: Array<{
   value: LessonType;
   label: string;
   icon: typeof FileText;
 }> = [
-  { value: "text", label: "Text", icon: FileText },
-  { value: "video", label: "Video", icon: Video },
-  { value: "audio", label: "Audio", icon: Headphones },
-  { value: "pdf", label: "PDF", icon: FileImage },
-  { value: "file", label: "File", icon: File },
-  { value: "embed", label: "Embed", icon: Tv },
-  { value: "quiz", label: "Quiz", icon: HelpCircle },
+  { value: "page", label: "Page", icon: FileText },
   { value: "scorm", label: "SCORM", icon: Package },
 ];
 
@@ -107,7 +76,7 @@ function LessonTypeChips({
             role="radio"
             aria-checked={selected}
             disabled={(disabled && !selected) || isLocked}
-            title={isLocked ? PLAN_FEATURE_COPY[value] : undefined}
+            title={isLocked && value === "scorm" ? PLAN_FEATURE_COPY.scorm : undefined}
             onClick={() => onChange(value)}
             className={`inline-flex h-9 items-center gap-1.5 rounded-[var(--radius)] border px-3 text-[13.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
               selected
@@ -162,149 +131,10 @@ function ToggleRow({
   );
 }
 
-function emptyContent(type: LessonType): LessonContent {
-  if (type === "text") return { type: "doc", content: [] };
-  if (type === "quiz") return emptyQuizContent();
-  return { value: "" };
-}
-
-function validateLesson(
-  title: string,
-  type: LessonType,
-  content: LessonContent,
-): { title?: string; content?: string } {
+function validateLesson(title: string): { title?: string; content?: string } {
   const errors: { title?: string; content?: string } = {};
   if (!title.trim()) errors.title = "Please enter a lesson title.";
-
-  if (type === "text") {
-    if (
-      content.type !== "doc" ||
-      extractTextFromTextEditorContent(content).trim().length === 0
-    ) {
-      errors.content = "Please enter the lesson content.";
-    }
-  } else if (type === "embed") {
-    if (typeof content.value !== "string" || content.value.trim().length === 0) {
-      errors.content = "Please enter a YouTube video ID.";
-    }
-  } else if (type === "quiz") {
-    const message = quizContentError(content);
-    if (message) errors.content = message;
-  }
   return errors;
-}
-
-function youtubeVideoId(value: string): string | null {
-  const normalized = /^[a-z][a-z\d+\-.]*:\/\//i.test(value)
-    ? value
-    : `https://${value}`;
-  try {
-    const url = new URL(normalized);
-    const hostname = url.hostname.toLowerCase();
-    if (hostname === "youtu.be")
-      return url.pathname.split("/").filter(Boolean)[0] ?? null;
-    if (
-      [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "youtube-nocookie.com",
-        "www.youtube-nocookie.com",
-      ].includes(hostname)
-    ) {
-      if (url.pathname === "/watch") return url.searchParams.get("v");
-      const parts = url.pathname.split("/").filter(Boolean);
-      if (["embed", "v", "shorts", "live"].includes(parts[0] ?? ""))
-        return parts[1] ?? null;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-function EmbedPreview({ value }: { value: string }) {
-  const iframeId = useId();
-  const [height, setHeight] = useState(100);
-  const trimmed = value.trim();
-
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (
-        event.data?.type !== "embed-resize" ||
-        event.data.id !== iframeId ||
-        typeof event.data.height !== "number" ||
-        !Number.isFinite(event.data.height)
-      ) {
-        return;
-      }
-      setHeight(Math.max(100, Math.ceil(event.data.height)));
-    }
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [iframeId]);
-
-  if (!trimmed) return null;
-  const videoId = youtubeVideoId(trimmed);
-  if (videoId) {
-    return (
-      <div className="aspect-video overflow-hidden rounded-md border">
-        <iframe
-          className="size-full"
-          src={`https://www.youtube.com/embed/${encodeURIComponent(videoId)}`}
-          title="YouTube video preview"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    );
-  }
-  const srcDoc = `<!doctype html>
-<html>
-  <head>
-    <style>
-      html, body { margin: 0; padding: 0; overflow: hidden; }
-      #content-wrapper { overflow: hidden; height: auto; }
-    </style>
-  </head>
-  <body>
-    <div id="content-wrapper">${trimmed}</div>
-    <script>
-      const iframeId = ${JSON.stringify(iframeId)};
-      const wrapper = document.getElementById("content-wrapper");
-      function sendHeight() {
-        const height = wrapper ? wrapper.scrollHeight : document.body.scrollHeight;
-        window.parent.postMessage({ type: "embed-resize", id: iframeId, height }, "*");
-      }
-      const resizeObserver = new ResizeObserver(sendHeight);
-      resizeObserver.observe(wrapper || document.body);
-      const mutationObserver = new MutationObserver(sendHeight);
-      mutationObserver.observe(wrapper || document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true
-      });
-      window.addEventListener("load", sendHeight);
-      window.addEventListener("resize", sendHeight);
-      const interval = setInterval(sendHeight, 500);
-      setTimeout(() => clearInterval(interval), 10000);
-      sendHeight();
-    </script>
-  </body>
-</html>`;
-  return (
-    <iframe
-      className="w-full border-0"
-      height={height}
-      title="Embedded content preview"
-      /* No allow-same-origin: a srcDoc frame inherits this page's origin, so
-          with scripts allowed the embed could reach the parent page and call
-          the API with the viewer's cookies. */
-      sandbox="allow-scripts allow-popups allow-forms"
-      srcDoc={srcDoc}
-    />
-  );
 }
 
 async function responseError(response: Response, fallback: string) {
@@ -331,13 +161,19 @@ export function LessonAuthoring({
   const scormIncluded = usePlanFeatures(school?.id).has("scorm");
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<LessonType>("text");
-  const [content, setContent] = useState<LessonContent>({ type: "doc", content: [] });
+  const [type, setType] = useState<LessonType>("page");
+  const [content, setContent] = useState<LessonContent>({});
+  /*
+   * Temporary page editor (docs/wip/lesson-pages.md, step 4 replaces it with
+   * the block editor): the page as Markdown, which the API validates and
+   * returns with quiz IDs filled in.
+   */
+  const [markdown, setMarkdown] = useState("");
+  const [savedMarkdown, setSavedMarkdown] = useState("");
   // The version the editor's content is based on, sent back on save so a
   // concurrent change (another person or an agent) isn't overwritten.
   const [contentVersion, setContentVersion] = useState<number | null>(null);
   const [mediaId, setMediaId] = useState<string | null>(null);
-  const [downloadable, setDownloadable] = useState(false);
   const [requiresEnrollment, setRequiresEnrollment] = useState(true);
   const [status, setStatus] = useState<Lesson["status"]>("draft");
   const [sectionChoice, setSectionChoice] = useState(sectionId);
@@ -373,20 +209,29 @@ export function LessonAuthoring({
           throw new Error("This section no longer exists.");
         }
         if (lessonId) {
-          const lesson = detail.lessons.find((item) => item.id === lessonId);
-          if (!lesson) throw new Error("This lesson no longer exists.");
+          // Lists carry no content; the single-lesson read has both forms.
+          const lessonResponse = await fetch(
+            `/api/v1/lessons/${encodeURIComponent(lessonId)}`,
+            {
+              credentials: "include",
+              cache: "no-store",
+              headers: { "x-school-id": selected.id },
+            },
+          );
+          if (!lessonResponse.ok) throw new Error("This lesson no longer exists.");
+          const lesson = (await lessonResponse.json()) as Lesson;
+          if (!active) return;
           setTitle(lesson.title);
           setType(lesson.type);
-          setContent(lesson.content ?? { type: "doc", content: [] });
+          setContent(lesson.content ?? {});
+          setMarkdown(lesson.markdown ?? "");
+          setSavedMarkdown(lesson.markdown ?? "");
           setContentVersion(lesson.contentVersion);
           setMediaId(lesson.mediaId);
-          setDownloadable(lesson.downloadable);
           setRequiresEnrollment(lesson.requiresEnrollment);
           setStatus(lesson.status);
         } else {
-          const defaultType: LessonType = detail.kind === "download" ? "file" : "text";
-          setType(defaultType);
-          setContent(emptyContent(defaultType));
+          setType(detail.kind === "download" ? "file" : "page");
           setStatus("draft");
         }
         setSchool(selected);
@@ -410,7 +255,7 @@ export function LessonAuthoring({
   ) {
     event.preventDefault();
     if (saving) return;
-    const nextFieldErrors = validateLesson(title, type, content);
+    const nextFieldErrors = validateLesson(title);
     setFieldErrors(nextFieldErrors);
     if (Object.keys(nextFieldErrors).length > 0) {
       setError(null);
@@ -431,12 +276,15 @@ export function LessonAuthoring({
           body: JSON.stringify({
             title: title.trim(),
             ...(editing ? {} : { type }),
-            content,
-            ...(editing && contentVersion !== null
-              ? { expectedContentVersion: contentVersion }
+            ...(type === "page" && (!editing || markdown !== savedMarkdown)
+              ? {
+                  markdown,
+                  ...(editing && contentVersion !== null
+                    ? { expectedContentVersion: contentVersion }
+                    : {}),
+                }
               : {}),
-            mediaId,
-            downloadable,
+            ...(type === "page" ? {} : { mediaId }),
             requiresEnrollment,
             sectionId: sectionChoice,
             status: nextStatus,
@@ -453,13 +301,7 @@ export function LessonAuthoring({
         throw new Error(lessonSaveErrorMessage(response.status, body));
       }
       const saved = (await response.json()) as { id?: string };
-      const usesSeparateMediaSection = [
-        "video",
-        "audio",
-        "pdf",
-        "file",
-        "scorm",
-      ].includes(type);
+      const usesSeparateMediaSection = type === "file" || type === "scorm";
       if (!editing && usesSeparateMediaSection && saved.id) {
         router.replace(
           `${productRoot}/content/section/${encodeURIComponent(sectionChoice)}/lesson?id=${encodeURIComponent(saved.id)}`,
@@ -615,8 +457,7 @@ export function LessonAuthoring({
                         onChange={(nextType) => {
                           if (!editing) {
                             setType(nextType);
-                            setContent(emptyContent(nextType));
-                            if (nextType === "quiz") setRequiresEnrollment(true);
+                            setContent({});
                             setError(null);
                             setFieldErrors({});
                           }
@@ -678,72 +519,37 @@ export function LessonAuthoring({
                     </div>
                   </div>
 
-                  {type === "text" && school ? (
+                  {type === "page" ? (
                     <div className="field">
-                      <span>Content</span>
-                      <RichTextEditor
-                        school={school}
-                        purpose="lesson_content"
-                        key={type}
-                        initialContent={editorContent(content)}
-                        onChange={(document) => {
-                          setContent(document as LessonContent);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
-                        }}
-                        placeholder="Write something…"
-                        className="rounded-md border bg-card"
-                        contentClassName="max-w-none"
-                        editorClassName="min-h-[260px]"
-                      />
-                    </div>
-                  ) : null}
-                  {type === "embed" ? (
-                    <div className="field">
-                      <Label htmlFor="lesson-embed">Embed code</Label>
+                      <Label htmlFor="lesson-markdown">Content (Markdown)</Label>
                       <Textarea
-                        id="lesson-embed"
-                        value={typeof content.value === "string" ? content.value : ""}
+                        id="lesson-markdown"
+                        value={markdown}
+                        rows={18}
+                        className="font-mono text-sm"
                         onChange={(event) => {
-                          setContent({ value: event.target.value });
+                          setMarkdown(event.target.value);
                           setFieldErrors((current) => ({
                             ...current,
                             content: undefined,
                           }));
                         }}
-                        placeholder="e.g. a YouTube URL or iframe code"
+                        placeholder={
+                          '## Heading\n\nWrite the lesson here.\n\n<Video url="https://www.youtube.com/watch?v=…" />'
+                        }
                       />
-                      <EmbedPreview
-                        value={typeof content.value === "string" ? content.value : ""}
-                      />
-                    </div>
-                  ) : null}
-                  {type === "quiz" ? (
-                    <div className="field">
-                      <span>Content</span>
-                      <QuizEditor
-                        key={type}
-                        value={content}
-                        onChange={(next) => {
-                          setContent(next);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
-                        }}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        Blocks are tags such as {'<Video media="…" />'},{" "}
+                        {'<Callout type="tip">…</Callout>'} and one {"<Quiz>"}. The
+                        block editor replaces this field soon.
+                      </p>
                     </div>
                   ) : null}
                   {fieldErrors.content ? (
                     <p className="text-sm text-destructive">{fieldErrors.content}</p>
                   ) : null}
 
-                  {type === "video" ||
-                  type === "audio" ||
-                  type === "pdf" ||
-                  type === "file" ? (
+                  {type === "file" ? (
                     <div className="field">
                       <span>Media</span>
                       {editing && school ? (
@@ -790,7 +596,7 @@ export function LessonAuthoring({
                     </div>
                   ) : null}
 
-                  {!isDownload && type !== "quiz" ? (
+                  {!isDownload && type === "page" ? (
                     <ToggleRow
                       id="lesson-preview"
                       label="Free preview"

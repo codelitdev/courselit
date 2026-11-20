@@ -229,16 +229,12 @@ export default function LearnerLessonPage() {
               productId={productId}
             />
           ) : lesson.content && Object.keys(lesson.content).length > 0 ? (
-            previewToken && lesson.type === "quiz" ? (
-              <LearnerText2 className="text-muted-foreground">Quiz content is available after enrollment.</LearnerText2>
-            ) : (
-              <LessonContent
+            <LessonContent
                 content={lesson.content}
                 lessonId={lesson.id}
                 productId={productId}
-                type={lesson.type}
+                quizAvailable={!previewToken}
               />
-            )
           ) : (
             <LearnerText2 className="text-muted-foreground">Enroll to view this lesson.</LearnerText2>
           )}

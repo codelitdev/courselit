@@ -12,15 +12,8 @@ export type SalesPage = {
   pageId: string | null;
 };
 
-export type LessonType =
-  | "text"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "file"
-  | "embed"
-  | "quiz"
-  | "scorm";
+/** Course lessons are pages or SCORM; download products hold files. */
+export type LessonType = "page" | "scorm" | "file";
 
 export type LessonContent = Record<string, unknown>;
 
@@ -67,10 +60,12 @@ export type Lesson = {
   sectionId: string | null;
   position: number;
   status: ProductStatus;
-  downloadable: boolean;
   requiresEnrollment: boolean;
-  content: LessonContent | null;
-  /** Admin reads only; sent back as `expectedContentVersion` with content. */
+  /** Single-lesson reads and writes only; lists carry neither content form. */
+  content?: LessonContent | null;
+  /** The page as Markdown (single-lesson reads only); null for SCORM and files. */
+  markdown?: string | null;
+  /** Sent back as `expectedContentVersion` with content. */
   contentVersion: number;
   dripDelaySeconds: number | null;
   dripAt: string | null;
