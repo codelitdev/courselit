@@ -658,10 +658,12 @@ export async function deleteSpace(
   });
 }
 
+export type LearnerSpaceDto = SpaceDto & { productId: string | null };
+
 export async function listLearnerSpaces(
   db: AppDb,
   viewer: CommunityLearnerViewer,
-): Promise<Result<{ items: SpaceDto[] }>> {
+): Promise<Result<{ items: LearnerSpaceDto[] }>> {
   const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (accessible.size === 0) return { ok: true, value: { items: [] } };
   const rows = await db
@@ -691,6 +693,25 @@ export async function listLearnerSpaces(
       ),
     );
   const followed = new Set(follows.map((row) => row.spaceId));
+  // Course discussions are listed apart from the community's spaces.
+  const courseRows = await db
+    .select({
+      spaceId: schema.products.discussionSpaceId,
+      productId: schema.products.publicId,
+    })
+    .from(schema.products)
+    .where(
+      and(
+        eq(schema.products.schoolId, viewer.schoolId),
+        inArray(
+          schema.products.discussionSpaceId,
+          rows.map((row) => row.id),
+        ),
+      ),
+    );
+  const courseBySpace = new Map(
+    courseRows.flatMap((row) => (row.spaceId ? [[row.spaceId, row.productId]] : [])),
+  );
   const memberships = await db
     .select()
     .from(schema.learnerMemberships)
@@ -714,8 +735,8 @@ export async function listLearnerSpaces(
   return {
     ok: true,
     value: {
-      items: rows.map((row) =>
-        toDto(
+      items: rows.map((row) => ({
+        ...toDto(
           row,
           unlocks.get(row.id) ?? [],
           followed.has(row.id),
@@ -724,7 +745,8 @@ export async function listLearnerSpaces(
               ? communityMembership?.role === "moderate"
               : !onlyComment),
         ),
-      ),
+        productId: courseBySpace.get(row.id) ?? null,
+      })),
     },
   };
 }

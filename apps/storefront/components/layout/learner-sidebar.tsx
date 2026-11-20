@@ -50,6 +50,8 @@ const NAV: NavItem[] = [
 type LearnerSpace = {
   id: string;
   name: string;
+  /** The course this space is the discussion of; null for a community space. */
+  productId: string | null;
 };
 
 function displayNameFor(user: { email: string; name?: string | null }) {
@@ -105,11 +107,14 @@ export function LearnerSidebar({
     };
   }, [user]);
 
-  const spaceNav: NavItem[] = spaces.map((space) => ({
+  const toNav = (space: LearnerSpace): NavItem => ({
     href: `/dashboard/s/${encodeURIComponent(space.id)}`,
     label: space.name,
     icon: MessagesSquare,
-  }));
+  });
+  // Course discussions get their own group, apart from the community's spaces.
+  const spaceNav = spaces.filter((space) => !space.productId).map(toNav);
+  const courseDiscussionNav = spaces.filter((space) => space.productId).map(toNav);
 
   return (
     <Sidebar collapsible="icon">
@@ -149,6 +154,9 @@ export function LearnerSidebar({
       <SidebarContent>
         <NavMain items={NAV} />
         {spaceNav.length > 0 ? <NavMain label="Spaces" items={spaceNav} /> : null}
+        {courseDiscussionNav.length > 0 ? (
+          <NavMain label="Course discussions" items={courseDiscussionNav} />
+        ) : null}
       </SidebarContent>
 
       <SidebarFooter>

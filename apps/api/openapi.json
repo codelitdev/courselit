@@ -13876,6 +13876,10 @@
                           },
                           "updatedAt": {
                             "type": "string"
+                          },
+                          "productId": {
+                            "type": "string",
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -13890,7 +13894,8 @@
                           "position",
                           "unlocks",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "productId"
                         ]
                       }
                     }

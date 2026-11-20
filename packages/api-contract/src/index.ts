@@ -1562,6 +1562,11 @@ export const spaceSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+/** A space as a learner sees it, with the course it is the discussion of. */
+export const learnerSpaceSchema = spaceSchema.extend({
+  /** The course whose discussion this space is, or null for a community space. */
+  productId: z.string().nullable(),
+});
 export const createSpaceBodySchema = z.object({
   name: z.string().trim().min(1).max(100),
   description: z.string().max(8000).optional(),
@@ -2778,7 +2783,7 @@ export const contract = c.router({
     method: "GET",
     path: "/v1/learner/spaces",
     responses: {
-      200: z.object({ items: z.array(spaceSchema) }),
+      200: z.object({ items: z.array(learnerSpaceSchema) }),
       401: platformErrorSchema,
     },
   },

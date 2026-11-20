@@ -644,6 +644,19 @@ describe.serial("school spaces and included products", () => {
       .set({ enabled: true })
       .where(eq(schema.communities.id, community!.id));
     expect((await learnerSpaceIds()).sort()).toEqual([course.id, general.id].sort());
+    // Each space says which course it is the discussion of, if any.
+    const owners = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/spaces",
+      headers: learnerHeaders,
+    });
+    expect(
+      Object.fromEntries(
+        (owners.body as { items: Array<{ id: string; productId: string | null }> }).items.map(
+          (item) => [item.id, item.productId],
+        ),
+      ),
+    ).toEqual({ [course.id]: productId, [general.id]: null });
 
     // The course's space is not the Spaces screen's to read, edit or delete.
     for (const request of [
