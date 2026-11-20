@@ -979,6 +979,48 @@ describe.serial("school spaces and included products", () => {
     );
     expect((await editComment(headers, "Not yours")).status).toBe(403);
 
+    // A deleted comment stays as a placeholder only while live replies hang under it.
+    const comment = (text: string, parentCommentId?: string) =>
+      dispatch(runtime, {
+        method: "POST",
+        path: `/v1/learner/community-posts/${spamId}/comments`,
+        headers: buyerHeaders,
+        body: { content: commentContent(text), parentCommentId },
+      }).then((response) => (response.body as { id: string }).id);
+    const deleteComment = (id: string) =>
+      dispatch(runtime, {
+        method: "DELETE",
+        path: `/v1/learner/community-comments/${id}`,
+        headers: buyerHeaders,
+      });
+    // The test clock gives every comment the same timestamp, so compare as a set.
+    const thread = async () => {
+      const listed = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/learner/community-posts/${spamId}/comments`,
+        headers: buyerHeaders,
+      });
+      expect(listed.status).toBe(200);
+      const items = (listed.body as { items: { id: string; deletedAt: string | null }[] })
+        .items;
+      return Object.fromEntries(
+        items.map((item) => [item.id, item.deletedAt === null ? "live" : "deleted"]),
+      );
+    };
+    const leaf = await comment("Nobody answers this");
+    const reply = await comment("An answer", commentId);
+    const nested = await comment("A follow-up", reply);
+    expect((await deleteComment(leaf)).status).toBe(200);
+    expect((await deleteComment(commentId)).status).toBe(200);
+    expect((await deleteComment(reply)).status).toBe(200);
+    expect(await thread()).toEqual({
+      [commentId]: "deleted",
+      [reply]: "deleted",
+      [nested]: "live",
+    });
+    expect((await deleteComment(nested)).status).toBe(200);
+    expect(await thread()).toEqual({});
+
     const removed = await dispatch(runtime, {
       method: "DELETE",
       path: `/v1/learner/community-posts/${spamId}`,

@@ -3873,6 +3873,37 @@ export async function deletePost(
   return { ok: true, value: { id: publicId } };
 }
 
+/**
+ * A deleted comment stays visible, as a "Deleted" placeholder, only while a live reply
+ * sits somewhere beneath it; with none left it disappears from the thread.
+ */
+async function visibleCommentIds(db: AppDb, schoolId: string, postId: string) {
+  const rows = await db
+    .select({
+      id: schema.communityComments.id,
+      parentCommentId: schema.communityComments.parentCommentId,
+      deletedAt: schema.communityComments.deletedAt,
+    })
+    .from(schema.communityComments)
+    .where(
+      and(
+        eq(schema.communityComments.schoolId, schoolId),
+        eq(schema.communityComments.postId, postId),
+      ),
+    );
+  const parentOf = new Map(rows.map((row) => [row.id, row.parentCommentId]));
+  const visible = new Set<string>();
+  for (const row of rows) {
+    if (row.deletedAt) continue;
+    let id: string | null | undefined = row.id;
+    while (id && !visible.has(id)) {
+      visible.add(id);
+      id = parentOf.get(id);
+    }
+  }
+  return visible;
+}
+
 export async function listComments(
   db: AppDb,
   viewer: CommunityViewer,
@@ -3916,7 +3947,8 @@ export async function listComments(
     .where(and(...conditions))
     .orderBy(asc(schema.communityComments.createdAt), asc(schema.communityComments.id))
     .limit(options.limit + 1);
-  const page = rows.slice(0, options.limit);
+  const visible = await visibleCommentIds(db, school.schoolId, post.id);
+  const page = rows.slice(0, options.limit).filter((row) => visible.has(row.id));
   const ids = await resolveLearnerMapForComments(db, page);
   const actors = await communityActorMap(
     db,
