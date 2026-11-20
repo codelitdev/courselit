@@ -438,7 +438,6 @@ describe.serial("quiz answers never reach learners (L1)", () => {
       leadMagnet: false,
       certificate: false,
       discussions: false,
-      newLessonStatus: "draft",
       includedWithCommunity: false,
       discussionSpaceId: null,
       publishedAt: null,
