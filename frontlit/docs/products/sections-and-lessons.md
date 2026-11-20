@@ -58,7 +58,7 @@ The tab header shows "3 of 5 lessons live" so you can see progress at a glance. 
 
 ### Choose the default for new lessons
 
-At the bottom of the tab, **New lessons start as** sets the status of lessons you create from now on: **Draft** (hidden until you make them live) or **Live** (visible as soon as you save). The default is **Draft**. In the lesson editor, you can still choose between saving a draft and saving live.
+New lessons start as **Draft**, hidden from learners until you make them live. In the lesson editor, you can choose between saving a draft and saving live.
 
 ## Delete a lesson
 

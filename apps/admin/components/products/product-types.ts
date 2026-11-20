@@ -34,8 +34,6 @@ export type Product = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
-  /** Status a new lesson starts with. */
-  newLessonStatus?: ProductStatus;
   kind: ProductKind;
   status: ProductStatus;
   slug: string;

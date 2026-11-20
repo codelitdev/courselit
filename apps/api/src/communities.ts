@@ -7,7 +7,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { isAllowedGifUrl, type MediaRef } from "@courselit/api-contract";
+import { isAllowedGifUrl, type MediaRef, youtubeEmbedUrl } from "@courselit/api-contract";
 import {
   and,
   asc,
@@ -161,6 +161,7 @@ export type CommunityPostDto = {
   category: string;
   media: CommunityMediaDto[];
   gifUrls: string[];
+  videoUrls: string[];
   reactions: CommunityReactionDto[];
   commentsCount: number;
   subscribed: boolean;
@@ -249,6 +250,7 @@ export type CommunityReportContentDto = {
   content: string;
   media: CommunityMediaDto[];
   gifUrls: string[];
+  videoUrls: string[];
   authorId: string | null;
   authorKind: "learner" | "admin" | null;
   author: CommunityActorDto | null;
@@ -703,6 +705,22 @@ export function communityGifUrls(value: unknown): string[] {
   ].slice(0, 10);
 }
 
+/**
+ * Reads YouTube video links as their embed links, dropping anything that is
+ * not a YouTube video link.
+ */
+export function communityVideoUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value.flatMap((item) => {
+        const embed = typeof item === "string" ? youtubeEmbedUrl(item) : null;
+        return embed ? [embed] : [];
+      }),
+    ),
+  ].slice(0, 10);
+}
+
 function postToDto(
   row: typeof schema.communityPosts.$inferSelect,
   learnerPublicId?: string | null,
@@ -724,6 +742,7 @@ function postToDto(
     category: row.category,
     media,
     gifUrls: communityGifUrls(row.gifUrls),
+    videoUrls: communityVideoUrls(row.videoUrls),
     reactions,
     commentsCount,
     subscribed,
@@ -876,6 +895,7 @@ async function reportContentMap(
       content: row.content,
       media: media.get(row.id) ?? [],
       gifUrls: "gifUrls" in row ? communityGifUrls(row.gifUrls) : [],
+      videoUrls: "videoUrls" in row ? communityVideoUrls(row.videoUrls) : [],
       authorId: row.schoolAccountId
         ? (authorIds.get(row.schoolAccountId) ?? null)
         : null,
@@ -3463,6 +3483,7 @@ export async function createPost(
     category: string;
     mediaIds?: readonly string[];
     gifUrls?: readonly string[];
+    videoUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<CommunityPostDto>> {
@@ -3500,6 +3521,7 @@ export async function createPost(
     content: input.content,
     category,
     gifUrls: communityGifUrls(input.gifUrls ?? []),
+    videoUrls: communityVideoUrls(input.videoUrls ?? []),
     pinned: false,
     spaceId: null,
     editedAt: null,
@@ -3639,6 +3661,7 @@ export async function updatePost(
     pinned?: boolean;
     mediaIds?: readonly string[];
     gifUrls?: readonly string[];
+    videoUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<CommunityPostDto>> {
@@ -3660,7 +3683,8 @@ export async function updatePost(
     input.content !== undefined ||
     input.category !== undefined ||
     input.mediaIds !== undefined ||
-    input.gifUrls !== undefined;
+    input.gifUrls !== undefined ||
+    input.videoUrls !== undefined;
   const changesPin = input.pinned !== undefined && input.pinned !== existing.pinned;
   if (
     (changesContent || !changesPin) &&
@@ -3691,6 +3715,10 @@ export async function updatePost(
       input.gifUrls === undefined
         ? communityGifUrls(existing.gifUrls)
         : communityGifUrls(input.gifUrls),
+    videoUrls:
+      input.videoUrls === undefined
+        ? communityVideoUrls(existing.videoUrls)
+        : communityVideoUrls(input.videoUrls),
     // Pinning isn't an edit, so the post keeps its date.
     updatedAt: changesContent ? now : existing.updatedAt,
   };
@@ -3731,6 +3759,7 @@ export async function updatePost(
       title: existing.title,
       content: existing.content,
       gifUrls: communityGifUrls(existing.gifUrls),
+      videoUrls: communityVideoUrls(existing.videoUrls),
     },
     next,
     { before: mediaBefore, after: input.mediaIds },
@@ -3844,6 +3873,37 @@ export async function deletePost(
   return { ok: true, value: { id: publicId } };
 }
 
+/**
+ * A deleted comment stays visible, as a "Deleted" placeholder, only while a live reply
+ * sits somewhere beneath it; with none left it disappears from the thread.
+ */
+async function visibleCommentIds(db: AppDb, schoolId: string, postId: string) {
+  const rows = await db
+    .select({
+      id: schema.communityComments.id,
+      parentCommentId: schema.communityComments.parentCommentId,
+      deletedAt: schema.communityComments.deletedAt,
+    })
+    .from(schema.communityComments)
+    .where(
+      and(
+        eq(schema.communityComments.schoolId, schoolId),
+        eq(schema.communityComments.postId, postId),
+      ),
+    );
+  const parentOf = new Map(rows.map((row) => [row.id, row.parentCommentId]));
+  const visible = new Set<string>();
+  for (const row of rows) {
+    if (row.deletedAt) continue;
+    let id: string | null | undefined = row.id;
+    while (id && !visible.has(id)) {
+      visible.add(id);
+      id = parentOf.get(id);
+    }
+  }
+  return visible;
+}
+
 export async function listComments(
   db: AppDb,
   viewer: CommunityViewer,
@@ -3887,7 +3947,8 @@ export async function listComments(
     .where(and(...conditions))
     .orderBy(asc(schema.communityComments.createdAt), asc(schema.communityComments.id))
     .limit(options.limit + 1);
-  const page = rows.slice(0, options.limit);
+  const visible = await visibleCommentIds(db, school.schoolId, post.id);
+  const page = rows.slice(0, options.limit).filter((row) => visible.has(row.id));
   const ids = await resolveLearnerMapForComments(db, page);
   const actors = await communityActorMap(
     db,

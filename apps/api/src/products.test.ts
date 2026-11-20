@@ -131,7 +131,7 @@ describe.serial("product listing", () => {
     expect(course.status).toBe(400);
   });
 
-  it("gives new lessons the product's default status", async () => {
+  it("creates lessons as drafts unless a status is given", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
@@ -147,7 +147,6 @@ describe.serial("product listing", () => {
     });
     expect(created.status).toBe(201);
     const productId = (created.body as { id: string }).id;
-    expect(created.body).toMatchObject({ newLessonStatus: "draft", publishedAt: null });
 
     const draftLesson = await dispatch(runtime, {
       method: "POST",
@@ -156,37 +155,19 @@ describe.serial("product listing", () => {
       body: { title: "Starts as a draft" },
     });
     expect(draftLesson.status).toBe(201);
-    expect(draftLesson.body).toMatchObject({ status: "draft" });
-
-    const updated = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/products/${productId}`,
-      headers,
-      body: { newLessonStatus: "published" },
-    });
-    expect(updated.status).toBe(200);
-    expect(updated.body).toMatchObject({ newLessonStatus: "published" });
+    expect(draftLesson.body).toMatchObject({ status: "draft", publishedAt: null });
 
     const liveLesson = await dispatch(runtime, {
       method: "POST",
       path: `/v1/products/${productId}/lessons`,
       headers,
-      body: { title: "Starts live" },
+      body: { title: "Starts live", status: "published" },
     });
     expect(liveLesson.status).toBe(201);
     expect(liveLesson.body).toMatchObject({ status: "published" });
     expect(
       (liveLesson.body as { publishedAt: string | null }).publishedAt,
     ).toBeTruthy();
-
-    // An explicit status still wins over the default.
-    const explicitDraft = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/products/${productId}/lessons`,
-      headers,
-      body: { title: "Explicit draft", status: "draft" },
-    });
-    expect(explicitDraft.body).toMatchObject({ status: "draft" });
 
     await runtime.close();
   });

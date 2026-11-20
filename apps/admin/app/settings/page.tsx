@@ -515,7 +515,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 ) : null}
               </div>
               <div className="flex items-end gap-2">
-                <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <Label htmlFor="settings-payment-method">Payment Method</Label>
                   <Select
                     value={paymentMethod || "none"}

@@ -16,6 +16,8 @@ Turning discussions on creates a discussion space named after your course. If yo
 
 Learners who have joined the course see a **Discussions** button in the header of the course viewer, on any lesson page. Selecting it opens a **Discussion space** panel beside the lesson with the course's posts. Learners can create posts, comment, reply and react, the same way they do in your community. See [Communities](/docs/communities).
 
+The space is also listed in the learner's dashboard sidebar, under **Course discussions**. That group is kept apart from your community's **Spaces**, so learners can tell which discussions belong to a course.
+
 The button is hidden while discussions are off. The discussion space itself is kept, so turning discussions back on reuses it.
 
 When you [preview the course](/docs/products/preview-a-course), the panel does not show posts. You see "Discussion space content is available to enrolled learners."

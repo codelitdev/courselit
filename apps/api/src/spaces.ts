@@ -12,6 +12,7 @@ import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   communityGifUrls,
   type CommunityLearnerViewer,
+  communityVideoUrls,
   createReport,
   type LearnerSpaceFeedPostDto,
   listReports,
@@ -31,9 +32,9 @@ import { schoolSiteUrl } from "./membership-events.js";
 import type { CourseLitPermission } from "./permissions.js";
 import {
   accessibleSpaceIds,
+  learnerPostingRule,
   moderatesSpace,
   spaceOwnership,
-  staffSpaceIds,
 } from "./space-access.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
@@ -657,10 +658,12 @@ export async function deleteSpace(
   });
 }
 
+export type LearnerSpaceDto = SpaceDto & { productId: string | null };
+
 export async function listLearnerSpaces(
   db: AppDb,
   viewer: CommunityLearnerViewer,
-): Promise<Result<{ items: SpaceDto[] }>> {
+): Promise<Result<{ items: LearnerSpaceDto[] }>> {
   const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (accessible.size === 0) return { ok: true, value: { items: [] } };
   const rows = await db
@@ -690,40 +693,43 @@ export async function listLearnerSpaces(
       ),
     );
   const followed = new Set(follows.map((row) => row.spaceId));
-  const memberships = await db
-    .select()
-    .from(schema.learnerMemberships)
+  // Course discussions are listed apart from the community's spaces.
+  const courseRows = await db
+    .select({
+      spaceId: schema.products.discussionSpaceId,
+      productId: schema.products.publicId,
+    })
+    .from(schema.products)
     .where(
       and(
-        eq(schema.learnerMemberships.schoolId, viewer.schoolId),
-        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
-        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.products.schoolId, viewer.schoolId),
+        inArray(
+          schema.products.discussionSpaceId,
+          rows.map((row) => row.id),
+        ),
       ),
     );
-  const communityMembership = memberships.find(
-    (membership) => membership.entityType === "community",
+  const courseBySpace = new Map(
+    courseRows.flatMap((row) => (row.spaceId ? [[row.spaceId, row.productId]] : [])),
   );
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
-  const onlyComment =
-    communityMembership?.role === "comment" &&
-    memberships.every(
-      (membership) =>
-        membership.entityType === "community" || membership.isIncludedInPlan,
-    );
+  const mayPost = await learnerPostingRule(
+    db,
+    viewer.schoolId,
+    viewer.learnerId,
+    viewer.authenticationMethod,
+  );
   return {
     ok: true,
     value: {
-      items: rows.map((row) =>
-        toDto(
+      items: rows.map((row) => ({
+        ...toDto(
           row,
           unlocks.get(row.id) ?? [],
           followed.has(row.id),
-          staff.has(row.id) ||
-            (row.whoCanPost === "admin"
-              ? communityMembership?.role === "moderate"
-              : !onlyComment),
+          mayPost(row),
         ),
-      ),
+        productId: courseBySpace.get(row.id) ?? null,
+      })),
     },
   };
 }
@@ -789,6 +795,7 @@ export async function createLearnerSpacePost(
     content: string;
     mediaIds?: readonly string[];
     gifUrls?: readonly string[];
+    videoUrls?: readonly string[];
   },
   clock: Clock,
 ): Promise<Result<{ id: string; spaceId: string; title: string; content: string }>> {
@@ -796,29 +803,13 @@ export async function createLearnerSpacePost(
   if (!space) return notFound();
   const accessible = await accessibleSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
   if (!accessible.has(space.id)) return notFound();
-  const memberships = await db
-    .select()
-    .from(schema.learnerMemberships)
-    .where(
-      and(
-        eq(schema.learnerMemberships.schoolId, viewer.schoolId),
-        eq(schema.learnerMemberships.schoolAccountId, viewer.learnerId),
-        eq(schema.learnerMemberships.status, "active"),
-      ),
-    );
-  const communityMembership = memberships.find((row) => row.entityType === "community");
-  const onlyComment =
-    communityMembership?.role === "comment" &&
-    memberships.every((row) => row.entityType === "community" || row.isIncludedInPlan);
-  const staff = await staffSpaceIds(db, viewer.schoolId, viewer.learnerId, viewer.authenticationMethod);
-  // Team members may post wherever their role reaches them.
-  if (!staff.has(space.id)) {
-    if (space.whoCanPost === "admin") {
-      if (communityMembership?.role !== "moderate") return forbidden();
-    } else if (onlyComment) {
-      return forbidden();
-    }
-  }
+  const mayPost = await learnerPostingRule(
+    db,
+    viewer.schoolId,
+    viewer.learnerId,
+    viewer.authenticationMethod,
+  );
+  if (!mayPost(space)) return forbidden();
   const title = input.title.trim();
   if (!title) return validation("invalid_title");
   const community = await schoolCommunity(db, viewer.schoolId);
@@ -835,6 +826,7 @@ export async function createLearnerSpacePost(
     content: input.content,
     category: space.name,
     gifUrls: communityGifUrls(input.gifUrls ?? []),
+    videoUrls: communityVideoUrls(input.videoUrls ?? []),
     pinned: false,
     editedAt: null,
     deletedAt: null,

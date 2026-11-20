@@ -86,7 +86,6 @@ async function productToDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    newLessonStatus: row.newLessonStatus,
     includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: discussionSpace?.publicId ?? null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
@@ -639,7 +638,7 @@ export async function createLesson(
       .where(eq(schema.lessons.productId, product.id));
     const position = existing.reduce((max, row) => Math.max(max, row.position), 0) + 1;
     const now = clock.now();
-    const status = input.status ?? product.newLessonStatus;
+    const status = input.status ?? "draft";
     const row = {
       id: uuidv7(clock),
       publicId: createPublicId("lsn", clock),

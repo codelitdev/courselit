@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { commentWasEdited, postWasEdited } from "./community-edits.js";
 
-const post = { title: "Hello", content: "Body", gifUrls: ["a.gif"] };
+const post = {
+  title: "Hello",
+  content: "Body",
+  gifUrls: ["a.gif"],
+  videoUrls: ["https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"],
+};
 
 describe("postWasEdited", () => {
   it("is false when nothing readers see changed", () => {
@@ -13,11 +18,12 @@ describe("postWasEdited", () => {
     ).toBe(false);
   });
 
-  it("is true when the title, content, GIFs or media change", () => {
+  it("is true when the title, content, GIFs, videos or media change", () => {
     const none = { before: [], after: undefined };
     expect(postWasEdited(post, { ...post, title: "Hi" }, none)).toBe(true);
     expect(postWasEdited(post, { ...post, content: "New" }, none)).toBe(true);
     expect(postWasEdited(post, { ...post, gifUrls: [] }, none)).toBe(true);
+    expect(postWasEdited(post, { ...post, videoUrls: [] }, none)).toBe(true);
     expect(postWasEdited(post, { ...post }, { before: ["m1"], after: [] })).toBe(true);
   });
 });

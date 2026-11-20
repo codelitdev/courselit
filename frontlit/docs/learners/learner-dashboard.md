@@ -15,6 +15,7 @@ The sidebar has these entries:
 | Home | The feed of posts from every community space the learner can access, with your welcome banner on top. |
 | Products | **Your products**: every course and download the learner has access to. |
 | Spaces | One entry for each community space the learner can open. This group appears only when the learner has access to at least one space. |
+| Course discussions | One entry for each course the learner has joined whose [discussions](/docs/products/discussions) are on, named after the course. This group appears only when there is at least one. |
 
 At the bottom of the sidebar, the learner's name opens a menu with:
 

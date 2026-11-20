@@ -142,7 +142,7 @@ Copy the section `id`.
 
 ### Add lessons
 
-Create a text lesson in the section. A lesson created without a `status` takes the product's `newLessonStatus`, which is `draft` for a new product. Send `"status": "published"` to make the lesson live right away.
+Create a text lesson in the section. A lesson created without a `status` is a `draft`. Send `"status": "published"` to make the lesson live right away.
 
 ```bash
 curl -X POST "$COURSELIT_API_URL/v1/products/$PRODUCT_ID/lessons" \

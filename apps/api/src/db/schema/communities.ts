@@ -69,6 +69,8 @@ export const communityPosts = pgTable(
     spaceId: uuid("space_id"),
     /** External GIF links picked from GIF search; never media-library items. */
     gifUrls: jsonb("gif_urls").$type<string[]>().notNull().default([]),
+    /** YouTube embed links pasted into the post; never media-library items. */
+    videoUrls: jsonb("video_urls").$type<string[]>().notNull().default([]),
     pinned: boolean("pinned").notNull().default(false),
     /** Set when the author changes the post, for its "Edited" label. */
     editedAt: timestamp("edited_at", { withTimezone: true }),

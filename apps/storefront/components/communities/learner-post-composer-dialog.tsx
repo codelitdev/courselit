@@ -5,7 +5,7 @@ import {
   type MediaUploaderAdapters,
   type SelectedMedia,
 } from "@frontlit/media-uploader";
-import { Image as ImageIcon, Paperclip, Video, X } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import {
   LearnerButton as Button,
@@ -23,10 +23,18 @@ import {
   LearnerSelectItem,
   LearnerSelectTrigger,
   LearnerSelectValue,
+  LearnerTooltip,
+  LearnerTooltipContent,
+  LearnerTooltipTrigger,
 } from "@/components/themed-page-builder";
 import type { LearnerCommunityMedia } from "@/lib/community-media-uploader";
 import { LearnerGifPicker, LearnerPostGifs, MAX_POST_GIFS } from "./learner-gif-picker";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
+import {
+  LearnerPostVideos,
+  LearnerYoutubePicker,
+  MAX_POST_VIDEOS,
+} from "./learner-youtube-picker";
 
 type Destination = { id: string; name: string };
 
@@ -52,6 +60,10 @@ export type LearnerPostComposerDialogProps = {
   gifUrls?: string[];
   onGifSelect?: (url: string) => void;
   onGifRemove?: (url: string) => void;
+  /** YouTube embed links. The YouTube button shows only when `onVideoAdd` is set. */
+  videoUrls?: string[];
+  onVideoAdd?: (embedUrl: string) => void;
+  onVideoRemove?: (embedUrl: string) => void;
   canSubmit: boolean;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -89,6 +101,9 @@ export function LearnerPostComposerDialog({
   gifUrls = [],
   onGifSelect,
   onGifRemove,
+  videoUrls = [],
+  onVideoAdd,
+  onVideoRemove,
   canSubmit,
   submitting,
   onSubmit,
@@ -152,52 +167,34 @@ export function LearnerPostComposerDialog({
           ) : null}
 
           <LearnerPostGifs urls={gifUrls} onRemove={onGifRemove} />
+          <LearnerPostVideos urls={videoUrls} onRemove={onVideoRemove} />
 
           <div className="flex flex-wrap items-center gap-2 pt-4">
-            <MediaUploadDialog<LearnerCommunityMedia>
-              {...mediaAdapters}
-              title="Attach files"
-              description="Add an image, video, or PDF to your post."
-              acceptedTypes={["image/*", "video/*", "application/pdf"]}
-              allowUnsplash={false}
-              maxUploadBytes={100_000_000}
-              onSelect={onMediaSelected}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Attach files"
+            {/* The dialog's own trigger wraps the button, so the tooltip root sits outside it. */}
+            <LearnerTooltip>
+              <MediaUploadDialog<LearnerCommunityMedia>
+                {...mediaAdapters}
+                title="Upload a file"
+                description="Add an image, video, or PDF from your device or your media."
+                acceptedTypes={["image/*", "video/*", "application/pdf"]}
+                allowUnsplash={false}
+                maxUploadBytes={100_000_000}
+                onSelect={onMediaSelected}
               >
-                <Paperclip className="size-5" aria-hidden="true" />
-              </Button>
-            </MediaUploadDialog>
-            <MediaUploadDialog<LearnerCommunityMedia>
-              {...mediaAdapters}
-              title="Add video"
-              description="Add a video to your post."
-              acceptedTypes={["video/*"]}
-              allowUnsplash={false}
-              maxUploadBytes={100_000_000}
-              onSelect={onMediaSelected}
-            >
-              <Button type="button" variant="ghost" size="icon" aria-label="Add video">
-                <Video className="size-5" aria-hidden="true" />
-              </Button>
-            </MediaUploadDialog>
-            <MediaUploadDialog<LearnerCommunityMedia>
-              {...mediaAdapters}
-              title="Add image"
-              description="Add an image to your post."
-              acceptedTypes={["image/*"]}
-              allowUnsplash={false}
-              maxUploadBytes={100_000_000}
-              onSelect={onMediaSelected}
-            >
-              <Button type="button" variant="ghost" size="icon" aria-label="Add image">
-                <ImageIcon className="size-5" aria-hidden="true" />
-              </Button>
-            </MediaUploadDialog>
+                <LearnerTooltipTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" aria-label="Upload a file">
+                    <Paperclip className="size-5" aria-hidden="true" />
+                  </Button>
+                </LearnerTooltipTrigger>
+              </MediaUploadDialog>
+              <LearnerTooltipContent>Upload an image, video or PDF</LearnerTooltipContent>
+            </LearnerTooltip>
+            {onVideoAdd ? (
+              <LearnerYoutubePicker
+                onAdd={onVideoAdd}
+                disabled={videoUrls.length >= MAX_POST_VIDEOS}
+              />
+            ) : null}
             {onGifSelect ? (
               <LearnerGifPicker
                 onSelect={onGifSelect}
