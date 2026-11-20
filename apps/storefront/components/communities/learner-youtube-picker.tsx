@@ -173,7 +173,6 @@ export function LearnerPostVideos({
             allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             referrerPolicy="strict-origin-when-cross-origin"
             loading="lazy"
-            allowFullScreen
           />
           {onRemove ? (
             <Button

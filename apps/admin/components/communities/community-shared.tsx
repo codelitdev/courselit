@@ -258,7 +258,6 @@ export function CommunityVideoPreview({ urls }: { urls: readonly string[] | unde
             allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             referrerPolicy="strict-origin-when-cross-origin"
             loading="lazy"
-            allowFullScreen
           />
         </li>
       ))}
