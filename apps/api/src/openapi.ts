@@ -142,6 +142,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
     isPathOrChild(path, "/v1/products") ||
     isPathOrChild(path, "/v1/sections") ||
     isPathOrChild(path, "/v1/lessons") ||
+    isPathOrChild(path, "/v1/lesson-content-format") ||
     isPathOrChild(path, "/v1/plans") ||
     isPathOrChild(path, "/v1/preview")
   ) {

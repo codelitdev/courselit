@@ -116,6 +116,7 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
+import { lessonContentFormat } from "@courselit/lesson-content";
 import { and, eq, isNull } from "drizzle-orm";
 import { getSchoolOverview } from "./activities.js";
 import {
@@ -137,6 +138,7 @@ import {
 import { hasRecentAuthentication } from "./auth/recent-authentication.js";
 import {
   createLesson,
+  getLesson,
   createSection,
   deleteLesson,
   deleteSection,
@@ -446,6 +448,7 @@ import type { DispatchResponse, IncomingRequest } from "./types.js";
 import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
 import { listAuditEvents } from "./audit-log.js";
+import { lessonBlockAvailability } from "./lesson-pages.js";
 import { lessonType, scormPlanError } from "./scorm-plan.js";
 import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
 import { schoolUsage } from "./usage.js";
@@ -5477,6 +5480,10 @@ export async function dispatch(
         decodeURIComponent(createLessonMatch[1]!),
         {
           ...parsed.data,
+          unavailable:
+            parsed.data.content !== undefined || parsed.data.markdown !== undefined
+              ? await lessonBlockAvailability(scormDeps(deps), context.tenantId!)
+              : undefined,
           dripAt:
             parsed.data.dripAt === undefined
               ? undefined
@@ -5511,7 +5518,24 @@ export async function dispatch(
         ? { status: 200, body: { success: true, packageInfo: result.value } }
         : errorResponse(result.error);
     }
+    if (request.method === "GET" && path === "/v1/lesson-content-format") {
+      if (!context.permissions.has("products:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      return {
+        status: 200,
+        body: lessonContentFormat(
+          await lessonBlockAvailability(scormDeps(deps), context.tenantId!),
+        ),
+      };
+    }
     const lessonMatch = /^\/v1\/lessons\/([^/]+)$/.exec(path);
+    if (request.method === "GET" && lessonMatch) {
+      const result = await getLesson(deps.db, context, decodeURIComponent(lessonMatch[1]!));
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (request.method === "DELETE" && lessonMatch) {
       const result = await deleteLesson(
         deps.db,
@@ -5527,7 +5551,11 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      if (parsed.data.mediaId !== undefined || parsed.data.content !== undefined) {
+      if (
+        parsed.data.mediaId !== undefined ||
+        parsed.data.content !== undefined ||
+        parsed.data.markdown !== undefined
+      ) {
         const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
           kind: "update",
           lessonType: await lessonType(
@@ -5536,7 +5564,7 @@ export async function dispatch(
             decodeURIComponent(lessonMatch[1]!),
           ),
           mediaId: parsed.data.mediaId,
-          content: parsed.data.content,
+          content: parsed.data.content ?? parsed.data.markdown,
         });
         if (scormRefused) return errorResponse(scormRefused);
       }
@@ -5546,6 +5574,10 @@ export async function dispatch(
         decodeURIComponent(lessonMatch[1]!),
         {
           ...parsed.data,
+          unavailable:
+            parsed.data.content !== undefined || parsed.data.markdown !== undefined
+              ? await lessonBlockAvailability(scormDeps(deps), context.tenantId!)
+              : undefined,
           dripAt:
             parsed.data.dripAt === undefined
               ? undefined

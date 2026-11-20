@@ -14,6 +14,7 @@
     "@codelitdev/design-system": "0.5.0",
     "@codelitdev/observability": "0.5.0",
     "@courselit/api-contract": "workspace:*",
+    "@courselit/lesson-content": "workspace:*",
     "@courselit/page-blocks": "workspace:*",
     "@frontlit/media-uploader": "0.1.0-alpha.1",
     "@frontlit/page-builder": "0.1.0-alpha.6",

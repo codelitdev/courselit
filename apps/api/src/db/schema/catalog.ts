@@ -136,14 +136,10 @@ export const lessons = pgTable(
       onDelete: "set null",
     }),
     title: text("title").notNull(),
-    type: text("type")
-      .$type<"text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm">()
-      .notNull()
-      .default("text"),
+    type: text("type").$type<"page" | "scorm" | "file">().notNull().default("page"),
     content: jsonb("content").$type<Record<string, unknown>>().notNull().default({}),
     /** Increases with every content change; updates must name the one they are based on. */
     contentVersion: integer("content_version").notNull().default(1),
-    downloadable: boolean("downloadable").notNull().default(false),
     requiresEnrollment: boolean("requires_enrollment").notNull().default(true),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
     position: integer("position").notNull().default(1),

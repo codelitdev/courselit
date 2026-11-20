@@ -184,7 +184,7 @@ describe.serial("product analytics", () => {
       productId: product.id,
       sectionId,
       title: "First lesson",
-      type: "text",
+      type: "page",
       content: { type: "doc", content: [] },
       requiresEnrollment: true,
       status: "published",
@@ -316,8 +316,11 @@ describe.serial("product analytics", () => {
       completions: { count: 1, growth: 100 },
     });
     expect(
-      (response.body as { sales: { points: Array<{ date: string; amountMinor: number }> } })
-        .sales.points.find((point) => point.date === "2026-03-04"),
+      (
+        response.body as {
+          sales: { points: Array<{ date: string; amountMinor: number }> };
+        }
+      ).sales.points.find((point) => point.date === "2026-03-04"),
     ).toEqual({ date: "2026-03-04", amountMinor: 1000 });
 
     await runtime.close();

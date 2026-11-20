@@ -175,7 +175,17 @@ describe.serial("legacy product migration", () => {
       ["legacy-lesson-1", 1],
       ["legacy-lesson-2", 2],
     ]);
+    expect(importedLessons.map((lesson) => lesson.type)).toEqual(["page", "page"]);
     expect(importedLessons[0]!.content).toEqual(lessons[0]!.content);
+    // A downloadable video becomes a Video block plus a File block.
+    expect(importedLessons[1]!.content).toMatchObject({
+      type: "doc",
+      content: [
+        { type: "video", attrs: { media: null } },
+        { type: "file", attrs: { media: null } },
+      ],
+    });
+    expect(applied.warnings).toEqual([]);
 
     const second = await importLegacyProducts(runtime.db, {
       clock,

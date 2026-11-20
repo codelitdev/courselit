@@ -1,7 +1,7 @@
-import { createPlatformError } from "@codelitdev/platform";
-import { parseDocsMarkdown } from "@frontlit/text-editor/docs";
+import { emptyLessonDocument, prepareLessonContent } from "@courselit/lesson-content";
 import { z } from "zod";
 import { createLesson, createSection, getProduct } from "../catalog.js";
+import { lessonBlockAvailability, lessonContentError } from "../lesson-pages.js";
 import type { McpToolModule } from "./context.js";
 
 const outlineInputSchema = z.object({
@@ -19,7 +19,7 @@ const outlineInputSchema = z.object({
                 .max(200_000)
                 .optional()
                 .describe(
-                  "Lesson body in Markdown (headings, emphasis, lists, links, code blocks, tables). Raw HTML is not allowed.",
+                  "Lesson page in Markdown: headings (## to ####), emphasis, lists, links, code blocks, tables, and the block tags get_lesson_content_format lists (<Video>, <Callout>, <Quiz>, …). Raw HTML is not allowed.",
                 ),
               status: z.enum(["draft", "published"]).optional(),
             }),
@@ -36,48 +36,40 @@ type OutlineInput = z.infer<typeof outlineInputSchema>;
 
 const titleKey = (title: string) => title.trim().toLowerCase();
 
-/** Markdown to the lesson editor's document, or the line it failed on. */
-function lessonDocument(
-  markdown: string | undefined,
-): { ok: true; content: Record<string, unknown> } | { ok: false; line: number | null } {
-  if (!markdown?.trim()) return { ok: true, content: { type: "doc", content: [] } };
-  try {
-    const parsed = parseDocsMarkdown(markdown, { frontmatter: false });
-    return { ok: true, content: parsed.content as Record<string, unknown> };
-  } catch (error) {
-    const diagnostics = (error as { diagnostics?: Array<{ line?: number }> })
-      .diagnostics;
-    return { ok: false, line: diagnostics?.[0]?.line ?? null };
-  }
-}
-
 export const courseTools: McpToolModule = (deps) => [
   {
     name: "apply_course_outline",
     description:
-      "Adds sections and text lessons to a course or download in one call, in the order given. A section or lesson whose title already exists (same section, case-insensitive) is kept as it is and not duplicated, so the call is safe to retry or to extend an outline. Lesson bodies are Markdown. New lessons are drafts unless status is published; the product's own status is unchanged. For video, audio, PDF, file, embed, quiz or SCORM lessons, use create_lesson.",
+      "Adds sections and page lessons to a course in one call, in the order given. A section or lesson whose title already exists (same section, case-insensitive) is kept as it is and not duplicated, so the call is safe to retry or to extend an outline. Each lesson page is Markdown and may hold any lesson block (video, audio, PDF, file, embed, callout, one quiz); call get_lesson_content_format for the tags. New lessons are drafts unless status is published; the product's own status is unchanged. For SCORM lessons, or files in a download product, use create_lesson.",
     risk: "write",
     inputSchema: outlineInputSchema,
     async handler({ context, args }) {
       const input = args as OutlineInput;
-      // Validate every lesson body before writing anything.
-      const documents = new Map<string, Record<string, unknown>>();
+      // Validate every lesson page before writing anything.
+      const unavailable = await lessonBlockAvailability(
+        { db: deps.db, billing: deps.billing.billing, now: deps.clock.now() },
+        context.tenantId!,
+      );
       for (const [sectionIndex, section] of input.sections.entries()) {
         for (const [lessonIndex, lesson] of section.lessons.entries()) {
-          const document = lessonDocument(lesson.markdown);
-          if (!document.ok) {
+          if (!lesson.markdown?.trim()) continue;
+          const prepared = prepareLessonContent(
+            { markdown: lesson.markdown },
+            { previous: emptyLessonDocument(), unavailable },
+          );
+          if (!prepared.ok) {
+            const error = lessonContentError(prepared.diagnostics);
             return {
-              error: createPlatformError("validation_failed", {
+              error: {
+                ...error,
                 safeDetails: {
-                  reason: "unsupported_markdown",
+                  ...error.safeDetails,
                   section: sectionIndex,
                   lesson: lessonIndex,
-                  line: document.line,
                 },
-              }),
+              },
             };
           }
-          documents.set(`${sectionIndex}:${lessonIndex}`, document.content);
         }
       }
 
@@ -103,7 +95,7 @@ export const courseTools: McpToolModule = (deps) => [
       const sections = [];
       let createdSections = 0;
       let createdLessons = 0;
-      for (const [sectionIndex, sectionInput] of input.sections.entries()) {
+      for (const sectionInput of input.sections) {
         let section = existingSections.get(titleKey(sectionInput.title));
         const sectionCreated = !section;
         if (!section) {
@@ -122,7 +114,7 @@ export const courseTools: McpToolModule = (deps) => [
         const titles = existingLessons.get(section.id) ?? new Map<string, string>();
         existingLessons.set(section.id, titles);
         const lessons = [];
-        for (const [lessonIndex, lessonInput] of sectionInput.lessons.entries()) {
+        for (const lessonInput of sectionInput.lessons) {
           const existingId = titles.get(titleKey(lessonInput.title));
           if (existingId) {
             lessons.push({ id: existingId, title: lessonInput.title, created: false });
@@ -134,10 +126,13 @@ export const courseTools: McpToolModule = (deps) => [
             input.productId,
             {
               title: lessonInput.title,
-              type: "text",
-              content: documents.get(`${sectionIndex}:${lessonIndex}`)!,
+              type: "page",
+              ...(lessonInput.markdown?.trim()
+                ? { markdown: lessonInput.markdown }
+                : {}),
               sectionId: section.id,
               status: lessonInput.status,
+              unavailable,
             },
             deps.clock,
           );

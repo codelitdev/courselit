@@ -8,6 +8,7 @@ import { normalizeQuiz } from "@courselit/api-contract/quiz";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
+import { importMainLesson, type LessonImportWarning, type MainLessonType } from "./lesson-pages.js";
 
 const SOURCE_SYSTEM = "courselit-mongo";
 const COURSE_COLLECTION = "courses";
@@ -95,6 +96,13 @@ export function quizFromMainContent(content: JsonRecord) {
   });
 }
 
+/** Something the import changed in a lesson it still imported (section 8). */
+export type ProductImportWarning = {
+  sourceId: string;
+  lessonId: string;
+  code: LessonImportWarning;
+};
+
 export type ProductImportResult = {
   runId: string;
   sourceSystem: string;
@@ -103,6 +111,7 @@ export type ProductImportResult = {
   counts: ProductImportCounts;
   rejectionByCode: Record<string, number>;
   rejections: ProductImportRejection[];
+  warnings: ProductImportWarning[];
 };
 
 export type LegacyProductExport = {
@@ -128,9 +137,9 @@ type NormalizedGroup = {
 type NormalizedLesson = {
   sourceId: string;
   title: string;
-  type: "text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm";
+  type: "page" | "scorm" | "file";
   content: Record<string, unknown>;
-  downloadable: boolean;
+  warnings: LessonImportWarning[];
   requiresEnrollment: boolean;
   status: "draft" | "published";
   groupId: string;
@@ -438,23 +447,36 @@ function normalizeProduct(
         error: rejection(sourceId, "invalid_lesson_content", { lessonId }),
       };
     }
-    let content = sourceContent;
+    let quiz: Extract<ReturnType<typeof quizFromMainContent>, { ok: true }>["value"] | undefined;
     if (type === "quiz") {
-      const quiz = quizFromMainContent(sourceContent);
-      if (!quiz.ok) {
+      const result = quizFromMainContent(sourceContent);
+      if (!result.ok) {
         return {
           ok: false,
           error: rejection(sourceId, "invalid_quiz_content", {
             lessonId,
-            reason: quiz.reason,
-            path: quiz.path,
+            reason: result.reason,
+            path: result.path,
           }),
         };
       }
-      content = quiz.value;
+      quiz = result.value;
     }
     if (lesson.media) {
       return { ok: false, error: rejection(sourceId, "media_requires_medialit", { lessonId }) };
+    }
+    const imported = importMainLesson({
+      type: type as MainLessonType,
+      content: sourceContent,
+      downloadable: booleanOrDefault(lesson.downloadable, false),
+      productKind: sourceType,
+      quiz,
+    });
+    if (!imported) {
+      return {
+        ok: false,
+        error: rejection(sourceId, "invalid_lesson_content", { lessonId }),
+      };
     }
     const groupId = stringValue(lesson.groupId);
     if (!groupId || (groups.length > 0 && !groupIds.has(groupId))) {
@@ -463,9 +485,9 @@ function normalizeProduct(
     normalizedLessons.push({
       sourceId: lessonId,
       title: stringValue(lesson.title) ?? "",
-      type: type as NormalizedLesson["type"],
-      content,
-      downloadable: booleanOrDefault(lesson.downloadable, false),
+      type: imported.type,
+      content: imported.content,
+      warnings: imported.warnings,
       requiresEnrollment: booleanOrDefault(lesson.requiresEnrollment, true),
       status: booleanOrDefault(lesson.published, false) ? "published" : "draft",
       groupId,
@@ -610,6 +632,7 @@ export async function importLegacyProducts(
   };
   const rejectionByCode: Record<string, number> = {};
   const rejections: ProductImportRejection[] = [];
+  const warnings: ProductImportWarning[] = [];
   const lessonsByCourse = lessonRecordsForCourse(input.lessons ?? []);
   const sourceIds = new Set<string>();
 
@@ -738,6 +761,11 @@ export async function importLegacyProducts(
         continue;
       }
       counts.ready += 1;
+      for (const lesson of product.lessons) {
+        for (const code of lesson.warnings) {
+          warnings.push({ sourceId: product.sourceId, lessonId: lesson.sourceId, code });
+        }
+      }
       if (mode === "dry_run") continue;
 
       await db.transaction(async (tx) => {
@@ -810,7 +838,6 @@ export async function importLegacyProducts(
             title: lesson.title,
             type: lesson.type,
             content: lesson.content,
-            downloadable: lesson.downloadable,
             requiresEnrollment: lesson.requiresEnrollment,
             status: lesson.status,
             position: lesson.position,
@@ -901,5 +928,6 @@ export async function importLegacyProducts(
     counts,
     rejectionByCode,
     rejections,
+    warnings,
   };
 }

@@ -41,7 +41,7 @@ const reason = (body: unknown) =>
 describe("scormChangeNeedsPlan", () => {
   it("covers new SCORM lessons and their packages, not other edits", () => {
     expect(scormChangeNeedsPlan({ kind: "create", type: "scorm" })).toBe(true);
-    expect(scormChangeNeedsPlan({ kind: "create", type: "text" })).toBe(false);
+    expect(scormChangeNeedsPlan({ kind: "create", type: "page" })).toBe(false);
     expect(scormChangeNeedsPlan({ kind: "process_package" })).toBe(true);
     expect(
       scormChangeNeedsPlan({ kind: "update", lessonType: "scorm", mediaId: "m" }),
@@ -51,7 +51,7 @@ describe("scormChangeNeedsPlan", () => {
     ).toBe(true);
     expect(scormChangeNeedsPlan({ kind: "update", lessonType: "scorm" })).toBe(false);
     expect(
-      scormChangeNeedsPlan({ kind: "update", lessonType: "video", mediaId: "m" }),
+      scormChangeNeedsPlan({ kind: "update", lessonType: "page", mediaId: "m" }),
     ).toBe(false);
   });
 });
@@ -70,7 +70,7 @@ describe("SCORM on the plan", () => {
       const refused = await create("scorm");
       expect(refused.status).toBe(403);
       expect(reason(refused.body)).toBe("plan_required");
-      expect((await create("text")).status).toBe(201);
+      expect((await create("page")).status).toBe(201);
 
       await t.startTrial();
       const made = await create("scorm");
