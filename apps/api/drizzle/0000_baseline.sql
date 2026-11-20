@@ -239,9 +239,9 @@ CREATE TABLE "lesson_evaluations" (
 	"membership_id" uuid NOT NULL,
 	"school_account_id" uuid NOT NULL,
 	"lesson_id" uuid NOT NULL,
+	"quiz_id" text NOT NULL,
 	"pass" boolean NOT NULL,
 	"score" real,
-	"requires_passing_grade" boolean NOT NULL,
 	"passing_grade" real,
 	"created_at" timestamp with time zone NOT NULL
 );
@@ -265,6 +265,7 @@ CREATE TABLE "lessons" (
 	"title" text NOT NULL,
 	"type" text DEFAULT 'text' NOT NULL,
 	"content" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"content_version" integer DEFAULT 1 NOT NULL,
 	"downloadable" boolean DEFAULT false NOT NULL,
 	"requires_enrollment" boolean DEFAULT true NOT NULL,
 	"status" text DEFAULT 'draft' NOT NULL,

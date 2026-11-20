@@ -5,104 +5,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { Checkbox } from "@/components/ui/codelit/checkbox";
 import { Input } from "@/components/ui/codelit/input";
+import {
+  emptyQuizOption,
+  emptyQuizQuestion,
+  type QuizEditorOption,
+  type QuizEditorQuestion,
+  type QuizEditorState,
+  quizContentFromEditor,
+  quizEditorState,
+} from "@/lib/lesson-quiz";
 
-type QuizOptionValue = { text: string; correctAnswer?: boolean };
-type QuizQuestionValue = {
-  text: string;
-  options: QuizOptionValue[];
-  type?: "single" | "multiple";
-};
-type QuizOption = QuizOptionValue & { id: string };
-type QuizQuestion = Omit<QuizQuestionValue, "options"> & {
-  options: QuizOption[];
-  id: string;
-};
-export type QuizContent = {
-  questions: QuizQuestionValue[];
-  requiresPassingGrade: boolean;
-  passingGrade: number;
-};
-type QuizState = Omit<QuizContent, "questions"> & { questions: QuizQuestion[] };
-
-const newId = (prefix: string) =>
-  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? `${prefix}-${crypto.randomUUID()}`
-    : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const emptyQuestion = (number: number): QuizQuestion => ({
-  id: newId(`question-${number}`),
-  text: `Question #${number}`,
-  options: [{ id: newId("option"), text: "", correctAnswer: false }],
-});
-
-function withoutUiIds(quiz: QuizState): QuizContent {
-  return {
-    ...quiz,
-    questions: quiz.questions.map(({ id: _questionId, ...question }) => ({
-      ...question,
-      options: question.options.map(({ id: _optionId, ...option }) => option),
-    })),
-  };
-}
-
-function normalizeQuiz(value: Record<string, unknown>): QuizState {
-  const questions = Array.isArray(value.questions)
-    ? value.questions.flatMap((question, questionIndex) => {
-        if (!question || typeof question !== "object") return [];
-        const record = question as Record<string, unknown>;
-        const questionId =
-          typeof record.id === "string" ? record.id : `question-${questionIndex}`;
-        const options = Array.isArray(record.options)
-          ? record.options.flatMap((option, optionIndex) => {
-              if (!option || typeof option !== "object") return [];
-              const item = option as Record<string, unknown>;
-              return [
-                {
-                  id:
-                    typeof item.id === "string"
-                      ? item.id
-                      : `${questionId}-option-${optionIndex}`,
-                  text: typeof item.text === "string" ? item.text : "",
-                  correctAnswer: item.correctAnswer === true,
-                },
-              ];
-            })
-          : [];
-        return [
-          {
-            id: questionId,
-            text: typeof record.text === "string" ? record.text : "",
-            options:
-              options.length > 0
-                ? options
-                : [{ id: `${questionId}-option-0`, text: "" }],
-            ...(record.type === "multiple" ? { type: "multiple" as const } : {}),
-          },
-        ];
-      })
-    : [];
-  return {
-    questions: questions.length > 0 ? questions : [emptyQuestion(1)],
-    requiresPassingGrade: value.requiresPassingGrade === true,
-    passingGrade:
-      typeof value.passingGrade === "number" && Number.isFinite(value.passingGrade)
-        ? Math.min(100, Math.max(0, value.passingGrade))
-        : 70,
-  };
-}
+type QuizOption = QuizEditorOption;
+type QuizQuestion = QuizEditorQuestion;
 
 export function QuizEditor({
   value,
   onChange,
 }: {
   value: Record<string, unknown>;
-  onChange: (value: QuizContent) => void;
+  onChange: (value: Record<string, unknown>) => void;
 }) {
-  const [quiz, setQuiz] = useState(() => normalizeQuiz(value));
+  const [quiz, setQuiz] = useState(() => quizEditorState(value));
 
-  function update(next: QuizState) {
+  function update(next: QuizEditorState) {
     setQuiz(next);
-    onChange(withoutUiIds(next));
+    onChange(quizContentFromEditor(next));
   }
 
   function updateQuestion(index: number, next: QuizQuestion) {
@@ -148,10 +75,7 @@ export function QuizEditor({
           onAddOption={() =>
             updateQuestion(questionIndex, {
               ...question,
-              options: [
-                ...question.options,
-                { id: newId("option"), text: "", correctAnswer: false },
-              ],
+              options: [...question.options, emptyQuizOption()],
             })
           }
           onRemoveOption={(optionIndex) =>
@@ -169,7 +93,7 @@ export function QuizEditor({
           onClick={() =>
             update({
               ...quiz,
-              questions: [...quiz.questions, emptyQuestion(quiz.questions.length + 1)],
+              questions: [...quiz.questions, emptyQuizQuestion(quiz.questions.length + 1)],
             })
           }
         >
@@ -180,10 +104,8 @@ export function QuizEditor({
         <div className="flex items-center gap-3 text-sm font-medium">
           <Checkbox
             id="quiz-requires-passing-grade"
-            checked={quiz.requiresPassingGrade}
-            onCheckedChange={(checked) =>
-              update({ ...quiz, requiresPassingGrade: checked === true })
-            }
+            checked={quiz.graded}
+            onCheckedChange={(checked) => update({ ...quiz, graded: checked === true })}
           />
           <label htmlFor="quiz-requires-passing-grade">Graded Quiz</label>
         </div>
@@ -195,7 +117,7 @@ export function QuizEditor({
             min={0}
             max={100}
             value={quiz.passingGrade}
-            disabled={!quiz.requiresPassingGrade}
+            disabled={!quiz.graded}
             onChange={(event) =>
               update({
                 ...quiz,
@@ -270,11 +192,11 @@ function QuestionEditor({
           {question.options.map((option, optionIndex) => (
             <div className="flex items-center gap-2" key={option.id}>
               <Checkbox
-                checked={option.correctAnswer === true}
+                checked={option.correct}
                 onCheckedChange={(checked) =>
                   onOptionChange(optionIndex, {
                     ...option,
-                    correctAnswer: checked === true,
+                    correct: checked === true,
                   })
                 }
                 aria-label={`Mark option ${optionIndex + 1} correct`}

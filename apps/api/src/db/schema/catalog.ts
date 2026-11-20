@@ -141,6 +141,8 @@ export const lessons = pgTable(
       .notNull()
       .default("text"),
     content: jsonb("content").$type<Record<string, unknown>>().notNull().default({}),
+    /** Increases with every content change; updates must name the one they are based on. */
+    contentVersion: integer("content_version").notNull().default(1),
     downloadable: boolean("downloadable").notNull().default(false),
     requiresEnrollment: boolean("requires_enrollment").notNull().default(true),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
@@ -248,9 +250,11 @@ export const lessonEvaluations = pgTable(
     lessonId: uuid("lesson_id")
       .notNull()
       .references(() => lessons.id, { onDelete: "cascade" }),
+    /** The quiz the attempt answered; a new quiz ID starts with no attempts. */
+    quizId: text("quiz_id").notNull(),
     pass: boolean("pass").notNull(),
     score: real("score"),
-    requiresPassingGrade: boolean("requires_passing_grade").notNull(),
+    /** The pass mark at the time of the attempt; null when there was none. */
     passingGrade: real("passing_grade"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },

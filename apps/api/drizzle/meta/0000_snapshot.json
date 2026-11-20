@@ -1896,6 +1896,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "quiz_id": {
+          "name": "quiz_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "pass": {
           "name": "pass",
           "type": "boolean",
@@ -1907,12 +1913,6 @@
           "type": "real",
           "primaryKey": false,
           "notNull": false
-        },
-        "requires_passing_grade": {
-          "name": "requires_passing_grade",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
         },
         "passing_grade": {
           "name": "passing_grade",
@@ -2175,6 +2175,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'::jsonb"
+        },
+        "content_version": {
+          "name": "content_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
         },
         "downloadable": {
           "name": "downloadable",

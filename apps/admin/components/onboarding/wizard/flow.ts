@@ -323,6 +323,8 @@ export type OfferRefs = {
   sectionId?: string;
   lessonId?: string;
   lessonType?: LessonKind;
+  /** The lesson's content version, sent back when the wizard updates it. */
+  lessonContentVersion?: number;
   /** Client file id -> created file lesson id (download products). */
   fileLessons?: Record<string, string>;
   planId?: string;

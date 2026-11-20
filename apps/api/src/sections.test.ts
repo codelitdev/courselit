@@ -392,13 +392,16 @@ describe.serial("product sections", () => {
           questions: [
             {
               text: "Which answer is correct?",
-              options: [{ text: "Only option", correctAnswer: true }],
+              options: [{ text: "Only option", correct: true }],
             },
           ],
         },
       },
     });
-    expect(invalidQuiz.status).toBe(400);
+    expect(invalidQuiz).toMatchObject({
+      status: 400,
+      body: { details: { reason: "quiz_options_required" } },
+    });
 
     const previewQuiz = await dispatch(runtime, {
       method: "POST",
@@ -413,15 +416,18 @@ describe.serial("product sections", () => {
             {
               text: "Which answer is correct?",
               options: [
-                { text: "Correct", correctAnswer: true },
-                { text: "Incorrect", correctAnswer: false },
+                { text: "Correct", correct: true },
+                { text: "Incorrect", correct: false },
               ],
             },
           ],
         },
       },
     });
-    expect(previewQuiz.status).toBe(400);
+    expect(previewQuiz).toMatchObject({
+      status: 400,
+      body: { details: { reason: "quiz_cannot_be_previewed" } },
+    });
 
     await runtime.close();
   });

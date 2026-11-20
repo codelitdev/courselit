@@ -39,6 +39,10 @@
     "./money": {
       "types": "./src/money.ts",
       "import": "./src/money.ts"
+    },
+    "./quiz": {
+      "types": "./src/quiz.ts",
+      "import": "./src/quiz.ts"
     }
   },
   "scripts": {

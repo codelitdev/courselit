@@ -4,7 +4,7 @@ import * as schema from "../db/schema/index.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "../runtime.js";
 import { seedWorld } from "../seed.js";
 import { importLegacyDomains } from "./domains.js";
-import { importLegacyProducts } from "./products.js";
+import { importLegacyProducts, quizFromMainContent } from "./products.js";
 
 describe.serial("legacy product migration", () => {
   it("dry-runs and applies source-typed courses with sections, rich lessons, drip, and idempotency", async () => {
@@ -248,5 +248,67 @@ describe.serial("legacy product migration", () => {
         .where(and(eq(schema.migrationRejections.runId, result.runId), eq(schema.migrationRejections.code, "missing_lesson"))),
     ).toHaveLength(1);
     await runtime.close();
+  });
+});
+
+describe("main quiz content import", () => {
+  const mainQuiz = (overrides: Record<string, unknown> = {}) => ({
+    questions: [
+      {
+        text: "Which tier anchors the price?",
+        type: "multiple",
+        options: [
+          { text: "The top tier", correctAnswer: true },
+          { text: "The middle tier" },
+          { text: "Both", correctAnswer: true },
+        ],
+      },
+    ],
+    requiresPassingGrade: true,
+    passingGrade: 60,
+    ...overrides,
+  });
+
+  it("maps to the quiz shape with generated IDs and the pass mark", () => {
+    const result = quizFromMainContent(mainQuiz());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value).toMatchObject({
+      passingGrade: 60,
+      questions: [
+        {
+          text: "Which tier anchors the price?",
+          options: [
+            { text: "The top tier", correct: true },
+            { text: "The middle tier", correct: false },
+            { text: "Both", correct: true },
+          ],
+        },
+      ],
+    });
+    const ids = [
+      result.value.id,
+      ...result.value.questions.flatMap((question) => [
+        question.id,
+        ...question.options.map((option) => option.id),
+      ]),
+    ];
+    expect(new Set(ids).size).toBe(5);
+    for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]{1,64}$/);
+    expect(JSON.stringify(result.value)).not.toContain("correctAnswer");
+    expect(result.value.questions[0]).not.toHaveProperty("type");
+  });
+
+  it("imports an ungraded quiz without a pass mark", () => {
+    const result = quizFromMainContent(mainQuiz({ requiresPassingGrade: false }));
+    expect(result).toMatchObject({ ok: true, value: { passingGrade: null } });
+  });
+
+  it("reports a quiz the rewrite can't hold", () => {
+    expect(
+      quizFromMainContent(
+        mainQuiz({ questions: [{ text: "No answer", options: [{ text: "A" }, { text: "B" }] }] }),
+      ),
+    ).toMatchObject({ ok: false, reason: "quiz_correct_answer_required" });
   });
 });

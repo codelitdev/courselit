@@ -4,6 +4,7 @@ import {
   type Clock,
   uuidv7,
 } from "@codelitdev/platform";
+import { normalizeQuiz } from "@courselit/api-contract/quiz";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
@@ -55,10 +56,44 @@ export type ProductImportRejection = {
     | "invalid_lesson"
     | "invalid_lesson_type"
     | "invalid_lesson_content"
+    | "invalid_quiz_content"
     | "lesson_group_missing"
     | "media_requires_medialit";
   details: Record<string, string | number | boolean | null>;
 };
+
+/**
+ * Main stores a quiz as `{ questions: [{ text, options: [{ text,
+ * correctAnswer }] }], requiresPassingGrade, passingGrade }`. The rewrite's
+ * quiz has IDs and a nullable pass mark, so main's ungraded quizzes (whose
+ * attempts always passed) import with no pass mark. IDs are generated.
+ */
+export function quizFromMainContent(content: JsonRecord) {
+  const questions = Array.isArray(content.questions)
+    ? content.questions.map((question) => {
+        const record = asRecord(question);
+        if (!record) return question;
+        return {
+          text: record.text,
+          options: Array.isArray(record.options)
+            ? record.options.map((option) => {
+                const optionRecord = asRecord(option);
+                return optionRecord
+                  ? { text: optionRecord.text, correct: optionRecord.correctAnswer === true }
+                  : option;
+              })
+            : record.options,
+        };
+      })
+    : content.questions;
+  return normalizeQuiz({
+    questions,
+    passingGrade:
+      content.requiresPassingGrade === true && typeof content.passingGrade === "number"
+        ? content.passingGrade
+        : null,
+  });
+}
 
 export type ProductImportResult = {
   runId: string;
@@ -395,13 +430,28 @@ function normalizeProduct(
         error: rejection(sourceId, "invalid_lesson_type", { lessonId, value: type ?? null }),
       };
     }
-    const content =
+    const sourceContent =
       lesson.content === undefined || lesson.content === null ? {} : asRecord(lesson.content);
-    if (!content) {
+    if (!sourceContent) {
       return {
         ok: false,
         error: rejection(sourceId, "invalid_lesson_content", { lessonId }),
       };
+    }
+    let content = sourceContent;
+    if (type === "quiz") {
+      const quiz = quizFromMainContent(sourceContent);
+      if (!quiz.ok) {
+        return {
+          ok: false,
+          error: rejection(sourceId, "invalid_quiz_content", {
+            lessonId,
+            reason: quiz.reason,
+            path: quiz.path,
+          }),
+        };
+      }
+      content = quiz.value;
     }
     if (lesson.media) {
       return { ok: false, error: rejection(sourceId, "media_requires_medialit", { lessonId }) };

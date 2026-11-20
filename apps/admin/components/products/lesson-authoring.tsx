@@ -39,6 +39,11 @@ import {
 import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import { truncateText } from "@/lib/truncate";
+import {
+  emptyQuizContent,
+  lessonSaveErrorMessage,
+  quizContentError,
+} from "@/lib/lesson-quiz";
 import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
 import { MediaPicker } from "./media-picker";
 import type {
@@ -159,15 +164,7 @@ function ToggleRow({
 
 function emptyContent(type: LessonType): LessonContent {
   if (type === "text") return { type: "doc", content: [] };
-  if (type === "quiz") {
-    return {
-      questions: [
-        { text: "Question #1", options: [{ text: "", correctAnswer: false }] },
-      ],
-      requiresPassingGrade: false,
-      passingGrade: 70,
-    };
-  }
+  if (type === "quiz") return emptyQuizContent();
   return { value: "" };
 }
 
@@ -191,38 +188,8 @@ function validateLesson(
       errors.content = "Please enter a YouTube video ID.";
     }
   } else if (type === "quiz") {
-    const questions = Array.isArray(content.questions) ? content.questions : [];
-    if (questions.length === 0) {
-      errors.content = "Please add at least one question to the quiz.";
-    } else {
-      for (const questionValue of questions) {
-        if (!questionValue || typeof questionValue !== "object") {
-          errors.content = "All questions must have text.";
-          break;
-        }
-        const question = questionValue as Record<string, unknown>;
-        if (typeof question.text !== "string" || !question.text.trim()) {
-          errors.content = "All questions must have text.";
-          break;
-        }
-        const options = Array.isArray(question.options) ? question.options : [];
-        if (options.length < 2) {
-          errors.content = "Each question must have at least two options.";
-          break;
-        }
-        if (
-          !options.some(
-            (option) =>
-              option &&
-              typeof option === "object" &&
-              (option as Record<string, unknown>).correctAnswer === true,
-          )
-        ) {
-          errors.content = "Each question must have at least one correct answer.";
-          break;
-        }
-      }
-    }
+    const message = quizContentError(content);
+    if (message) errors.content = message;
   }
   return errors;
 }
@@ -366,6 +333,9 @@ export function LessonAuthoring({
   const [title, setTitle] = useState("");
   const [type, setType] = useState<LessonType>("text");
   const [content, setContent] = useState<LessonContent>({ type: "doc", content: [] });
+  // The version the editor's content is based on, sent back on save so a
+  // concurrent change (another person or an agent) isn't overwritten.
+  const [contentVersion, setContentVersion] = useState<number | null>(null);
   const [mediaId, setMediaId] = useState<string | null>(null);
   const [downloadable, setDownloadable] = useState(false);
   const [requiresEnrollment, setRequiresEnrollment] = useState(true);
@@ -408,6 +378,7 @@ export function LessonAuthoring({
           setTitle(lesson.title);
           setType(lesson.type);
           setContent(lesson.content ?? { type: "doc", content: [] });
+          setContentVersion(lesson.contentVersion);
           setMediaId(lesson.mediaId);
           setDownloadable(lesson.downloadable);
           setRequiresEnrollment(lesson.requiresEnrollment);
@@ -461,6 +432,9 @@ export function LessonAuthoring({
             title: title.trim(),
             ...(editing ? {} : { type }),
             content,
+            ...(editing && contentVersion !== null
+              ? { expectedContentVersion: contentVersion }
+              : {}),
             mediaId,
             downloadable,
             requiresEnrollment,
@@ -470,14 +444,13 @@ export function LessonAuthoring({
         },
       );
       if (!response.ok) {
-        let message = "Unable to save the lesson.";
+        let body: Parameters<typeof lessonSaveErrorMessage>[1] = null;
         try {
-          const body = (await response.json()) as { message?: string };
-          if (body.message) message = body.message;
+          body = (await response.json()) as typeof body;
         } catch {
           // Keep the generic message when the API has no JSON error body.
         }
-        throw new Error(message);
+        throw new Error(lessonSaveErrorMessage(response.status, body));
       }
       const saved = (await response.json()) as { id?: string };
       const usesSeparateMediaSection = [
@@ -800,9 +773,11 @@ export function LessonAuthoring({
                           school={school}
                           lessonId={lessonId}
                           content={content}
-                          onUploadComplete={(nextContent, nextMediaId) => {
+                          contentVersion={contentVersion}
+                          onUploadComplete={(nextContent, nextMediaId, nextVersion) => {
                             setContent(nextContent);
                             setMediaId(nextMediaId);
+                            setContentVersion(nextVersion);
                           }}
                         />
                       ) : (

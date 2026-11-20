@@ -425,6 +425,7 @@ async function saveCourseLesson(
     }).catch(() => undefined);
     refs.lessonId = undefined;
     refs.lessonType = undefined;
+    refs.lessonContentVersion = undefined;
     emit({ ...refs });
   }
   if (!wantsLesson && !lessonTitle.trim()) return;
@@ -445,19 +446,25 @@ async function saveCourseLesson(
     status: wantsLesson ? ("published" as const) : ("draft" as const),
   };
   if (refs.lessonId) {
-    await request(`/api/v1/lessons/${encodeURIComponent(refs.lessonId)}`, {
-      method: "PATCH",
-      schoolId,
-      body,
-    });
+    const updated = await request<{ contentVersion: number }>(
+      `/api/v1/lessons/${encodeURIComponent(refs.lessonId)}`,
+      {
+        method: "PATCH",
+        schoolId,
+        body: { ...body, expectedContentVersion: refs.lessonContentVersion ?? 1 },
+      },
+    );
+    refs.lessonContentVersion = updated.contentVersion;
+    emit({ ...refs });
     return;
   }
-  const lesson = await request<{ id: string }>(
+  const lesson = await request<{ id: string; contentVersion: number }>(
     `/api/v1/products/${encodeURIComponent(productId)}/lessons`,
     { method: "POST", schoolId, body: { ...body, type: lessonKind as LessonKind } },
   );
   refs.lessonId = lesson.id;
   refs.lessonType = lessonKind;
+  refs.lessonContentVersion = lesson.contentVersion;
   emit({ ...refs });
 }
 

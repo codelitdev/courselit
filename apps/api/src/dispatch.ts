@@ -694,7 +694,9 @@ export async function dispatch(
     }
 
     const previewLessonMediaMatch =
-      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(path);
+      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/media(?:\/([^/]+))?$/.exec(
+        path,
+      );
     if (request.method === "GET" && previewLessonMediaMatch) {
       const rawToken =
         request.headers["x-preview-token"] ?? request.headers["X-Preview-Token"];
@@ -718,6 +720,10 @@ export async function dispatch(
           schoolId: school.id,
           productPublicId: previewProduct.value.id,
           lessonPublicId: decodeURIComponent(previewLessonMediaMatch[2]!),
+          mediaPublicId:
+            previewLessonMediaMatch[3] === undefined
+              ? undefined
+              : decodeURIComponent(previewLessonMediaMatch[3]),
           viewer: { kind: "preview" },
         },
         deps.clock.now(),
@@ -961,7 +967,11 @@ export async function dispatch(
             (items) => ({ items }),
           );
         }
-        if ((routeMatch = /^\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(route))) {
+        if (
+          (routeMatch = /^\/products\/([^/]+)\/lessons\/([^/]+)\/media(?:\/([^/]+))?$/.exec(
+            route,
+          ))
+        ) {
           const result = await getLearnerLessonMedia(
             deps.db,
             deps.mediaLit,
@@ -969,6 +979,7 @@ export async function dispatch(
               schoolId: school.id,
               productPublicId: segment(1),
               lessonPublicId: segment(2),
+              mediaPublicId: routeMatch[3] === undefined ? undefined : segment(3),
               viewer: learner
                 ? {
                     kind: "learner",
@@ -1696,7 +1707,7 @@ export async function dispatch(
             productPublicId: decodeURIComponent(learnerQuizEvaluationMatch[1]!),
             lessonPublicId: decodeURIComponent(learnerQuizEvaluationMatch[2]!),
           },
-          parsed.data.answers,
+          parsed.data,
           deps.clock,
         );
         return result.ok
