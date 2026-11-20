@@ -207,12 +207,19 @@ export type QuizScore =
   | { ok: false; reason: "answers_missing_or_invalid" | "quiz_content_invalid" };
 
 /**
- * Scores an attempt the way CourseLit always has: one point for each correct
- * option chosen, no penalty for a wrong one. Answers naming a question or an
- * option the quiz doesn't have are refused.
+ * Scores an attempt: one point for each correct option chosen, as CourseLit
+ * always has, with two rules so that choosing every option can't pass a quiz:
+ *
+ * - a question with one correct option accepts at most one chosen option;
+ *   more refuses the attempt (the storefront shows radio buttons there);
+ * - in a question with several correct options, each wrong option chosen
+ *   cancels one correct one, and the question never goes below zero.
+ *
+ * Answers naming a question or an option the quiz doesn't have are refused.
  */
 export function scoreQuiz(quiz: Quiz, answers: QuizAnswers): QuizScore {
   const questions = new Map(quiz.questions.map((question) => [question.id, question]));
+  const chosenByQuestion = new Map<string, Set<string>>();
   for (const [questionId, optionIds] of Object.entries(answers)) {
     const question = questions.get(questionId);
     if (!question || !Array.isArray(optionIds)) {
@@ -222,17 +229,27 @@ export function scoreQuiz(quiz: Quiz, answers: QuizAnswers): QuizScore {
     if (optionIds.some((optionId) => !known.has(optionId))) {
       return { ok: false, reason: "answers_missing_or_invalid" };
     }
+    const chosen = new Set(optionIds);
+    const correctCount = question.options.filter((option) => option.correct).length;
+    if (correctCount === 1 && chosen.size > 1) {
+      return { ok: false, reason: "answers_missing_or_invalid" };
+    }
+    chosenByQuestion.set(questionId, chosen);
   }
 
   let possible = 0;
   let earned = 0;
   for (const question of quiz.questions) {
-    const chosen = new Set(answers[question.id] ?? []);
+    const chosen = chosenByQuestion.get(question.id) ?? new Set<string>();
+    let right = 0;
+    let wrong = 0;
     for (const option of question.options) {
-      if (!option.correct) continue;
-      possible += 1;
-      if (chosen.has(option.id)) earned += 1;
+      if (option.correct) possible += 1;
+      if (!chosen.has(option.id)) continue;
+      if (option.correct) right += 1;
+      else wrong += 1;
     }
+    earned += Math.max(0, right - wrong);
   }
   if (possible === 0) return { ok: false, reason: "quiz_content_invalid" };
   const score = (earned / possible) * 100;

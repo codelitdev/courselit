@@ -164,10 +164,19 @@ describe.serial("quiz evaluation", () => {
       body: { details: { reason: "need_to_pass" } },
     });
 
-    // A wrong option costs nothing.
-    const full = await evaluate({
+    // Choosing every option can't pass: a single-answer question takes one.
+    const everyOption = await evaluate({
       quizId: "qz_check",
       answers: { q1: ["q1a", "q1b"], q2: ["q2a", "q2b", "q2c"] },
+    });
+    expect(everyOption).toMatchObject({
+      status: 400,
+      body: { details: { reason: "answers_missing_or_invalid" } },
+    });
+
+    const full = await evaluate({
+      quizId: "qz_check",
+      answers: { q1: ["q1a"], q2: ["q2a", "q2b"] },
     });
     expect(full).toMatchObject({ status: 200, body: { pass: true, score: 100 } });
     expect((await complete()).status).toBe(200);

@@ -255,15 +255,47 @@ describe("stripQuizAnswers", () => {
 });
 
 describe("scoreQuiz", () => {
-  it("gives one point per correct option chosen, without a penalty", () => {
+  it("gives one point per correct option chosen", () => {
     expect(scoreQuiz(quiz(), { q1: ["q1a"], q2: [] })).toEqual({
       ok: true,
       value: { score: (1 / 3) * 100, pass: false },
     });
-    expect(
-      scoreQuiz(quiz(), { q1: ["q1a", "q1b"], q2: ["q2a", "q2b", "q2c"] }),
-    ).toEqual({ ok: true, value: { score: 100, pass: true } });
+    expect(scoreQuiz(quiz(), { q1: ["q1a"], q2: ["q2a", "q2b"] })).toEqual({
+      ok: true,
+      value: { score: 100, pass: true },
+    });
     expect(scoreQuiz(quiz(), {})).toEqual({ ok: true, value: { score: 0, pass: false } });
+  });
+
+  it("refuses more than one option on a single-answer question", () => {
+    expect(scoreQuiz(quiz(), { q1: ["q1a", "q1b"] })).toEqual({
+      ok: false,
+      reason: "answers_missing_or_invalid",
+    });
+  });
+
+  it("cancels a correct option for each wrong one in a multi-answer question", () => {
+    // q2: two right, one wrong -> 1 point; q1 right -> 1 point; 2 of 3.
+    expect(
+      scoreQuiz(quiz(), { q1: ["q1a"], q2: ["q2a", "q2b", "q2c"] }),
+    ).toEqual({ ok: true, value: { score: (2 / 3) * 100, pass: false } });
+    // One right and one wrong cancel out; a question never goes below zero.
+    expect(scoreQuiz(quiz(), { q2: ["q2a", "q2c"] })).toMatchObject({
+      value: { score: 0 },
+    });
+    expect(scoreQuiz(quiz(), { q2: ["q2c"] })).toMatchObject({ value: { score: 0 } });
+  });
+
+  it("can't be passed by choosing every option", () => {
+    const multiOnly = quiz({ passingGrade: 70, questions: [quiz().questions[1]!] });
+    expect(scoreQuiz(multiOnly, { q2: ["q2a", "q2b", "q2c"] })).toEqual({
+      ok: true,
+      value: { score: 50, pass: false },
+    });
+    expect(scoreQuiz(quiz(), { q1: ["q1a", "q1b"], q2: ["q2a", "q2b", "q2c"] })).toEqual({
+      ok: false,
+      reason: "answers_missing_or_invalid",
+    });
   });
 
   it("passes on the pass mark and passes every attempt without one", () => {

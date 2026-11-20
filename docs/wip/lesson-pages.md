@@ -206,8 +206,11 @@ Which tier anchors the price?
 Attributes: `id`, `passingGrade` (0–100, or none), and
 `questions: [{ id, text, options: [{ id, text, correct }] }]`. An atom node
 edited by a form; in Markdown, nested `<Question>` and `<Option>` tags. A
-question with several correct options is multiple-answer. Scoring stays as
-in `apps/api/src/quiz.ts`. Without a pass mark, every attempt passes.
+question with several correct options is multiple-answer. Scoring: one
+point per correct option chosen; a single-answer question accepts at most
+one option, and in a multi-answer question each wrong option chosen cancels
+a correct one (never below zero), so choosing every option can't pass.
+Without a pass mark, every attempt passes.
 
 ### 5.2 Answers never reach learners
 
