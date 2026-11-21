@@ -67,6 +67,10 @@ export type Lesson = {
   markdown?: string | null;
   /** Sent back as `expectedContentVersion` with content. */
   contentVersion: number;
+  /** A page has saved edits learners don't see until they are published. */
+  hasUnpublishedChanges: boolean;
+  /** When the content learners read was last replaced. */
+  contentPublishedAt: string | null;
   dripDelaySeconds: number | null;
   dripAt: string | null;
   availableAt: string | null;

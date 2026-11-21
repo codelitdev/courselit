@@ -44,6 +44,10 @@ export type LessonSummaryDto = {
   status: "draft" | "published";
   requiresEnrollment: boolean;
   contentVersion: number;
+  /** A page has a draft that differs from what learners read. */
+  hasUnpublishedChanges: boolean;
+  /** When learners' copy of the content was last replaced. */
+  contentPublishedAt: string | null;
   dripDelaySeconds: number | null;
   dripAt: string | null;
   availableAt: string | null;
@@ -52,7 +56,8 @@ export type LessonSummaryDto = {
 
 /**
  * One lesson as its authors read and write it, with the page as JSON and as
- * Markdown. Both hold the quiz's correct answers: admin responses only.
+ * Markdown: the draft when there is one, else the published content. Both
+ * hold the quiz's correct answers: admin responses only.
  */
 export type LessonDto = LessonSummaryDto & {
   content: Record<string, unknown>;
@@ -64,7 +69,10 @@ export type LessonDto = LessonSummaryDto & {
  * `stripLessonAnswers`, so its Quiz blocks have no `correct` field, and
  * there is no Markdown form (L1).
  */
-export type LearnerLessonDto = Omit<LessonSummaryDto, "contentVersion"> & {
+export type LearnerLessonDto = Omit<
+  LessonSummaryDto,
+  "contentVersion" | "hasUnpublishedChanges" | "contentPublishedAt"
+> & {
   content: LearnerLessonDocument | Record<string, unknown> | null;
 };
 
@@ -150,11 +158,32 @@ function lessonToDto(
     status: row.status,
     requiresEnrollment: row.requiresEnrollment,
     contentVersion: row.contentVersion,
+    hasUnpublishedChanges: lessonHasUnpublishedChanges(row),
+    contentPublishedAt: row.contentPublishedAt
+      ? serializeDate(row.contentPublishedAt)
+      : null,
     dripDelaySeconds: row.dripDelaySeconds,
     dripAt: row.dripAt ? serializeDate(row.dripAt) : null,
     availableAt: availableAt ? serializeDate(availableAt) : null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
   };
+}
+
+/**
+ * The content authors edit: a page's draft, or its published content when
+ * nothing is pending. SCORM and file lessons have no drafts.
+ */
+export function lessonWorkingContent(
+  row: Pick<typeof schema.lessons.$inferSelect, "content" | "draftContent">,
+): Record<string, unknown> {
+  return row.draftContent ?? row.content;
+}
+
+/** The draft differs from what learners read (as website pages derive it). */
+export function lessonHasUnpublishedChanges(
+  row: Pick<typeof schema.lessons.$inferSelect, "content" | "draftContent">,
+): boolean {
+  return row.draftContent !== null && !sameJson(row.draftContent, row.content);
 }
 
 /** The single-lesson admin read and write response: content, Markdown and version. */
@@ -163,10 +192,11 @@ export function lessonDetailToDto(
   sectionPublicId: string | null,
   mediaId: string | null,
 ): LessonDto {
+  const content = lessonWorkingContent(row);
   return {
     ...lessonToDto(row, sectionPublicId, null, mediaId),
-    content: row.content,
-    markdown: row.type === "page" ? lessonMarkdown(row.content) : null,
+    content,
+    markdown: row.type === "page" ? lessonMarkdown(content) : null,
   };
 }
 
@@ -188,12 +218,12 @@ function learnerLessonToDto(
   availableAt: Date | null,
   mediaId: string | null,
 ): LearnerLessonDto {
-  const { contentVersion: _version, ...lesson } = lessonToDto(
-    row,
-    sectionPublicId,
-    availableAt,
-    mediaId,
-  );
+  const {
+    contentVersion: _version,
+    hasUnpublishedChanges: _changes,
+    contentPublishedAt: _publishedAt,
+    ...lesson
+  } = lessonToDto(row, sectionPublicId, availableAt, mediaId);
   return { ...lesson, content: includeContent ? learnerLessonContent(row) : null };
 }
 
@@ -266,16 +296,22 @@ type PageWrite = {
 /**
  * Checks a lesson write's content (section 4.3). Pages take `content` or
  * `markdown` and are validated against the lesson profile and the stored
- * version (`previous`, for availability). SCORM lessons take their package
- * details as JSON `content`; file lessons hold no content. A page that is or becomes published must be complete,
- * and a page with a quiz can't be a free preview: grading needs a learner.
+ * content it builds on (`previous`, for availability). SCORM lessons take
+ * their package details as JSON `content`; file lessons hold no content. A
+ * page that learners will read once the write lands (`publishing`) must be
+ * complete; drafts may be incomplete. A page with a quiz can't be a free
+ * preview: grading needs a learner.
  */
 export function prepareLessonWrite(input: {
   type: LessonType;
   write: PageWrite;
-  /** Stored content; null on create. */
+  /**
+   * The content the write builds on: a page's draft, or its published
+   * content without one. Null on create.
+   */
   stored: Record<string, unknown> | null;
-  status: "draft" | "published";
+  /** The result becomes what learners read now, so it must be complete. */
+  publishing: boolean;
   requiresEnrollment: boolean;
   unavailable?: Record<string, string>;
 }):
@@ -307,13 +343,13 @@ export function prepareLessonWrite(input: {
     );
     if (!prepared.ok)
       return { ok: false, error: lessonContentError(prepared.diagnostics) };
-    if (input.status === "published" && prepared.incomplete.length) {
+    if (input.publishing && prepared.incomplete.length) {
       return { ok: false, error: lessonContentError(prepared.incomplete) };
     }
     content = prepared.content as Record<string, unknown>;
   } else {
     content = input.stored ?? emptyLessonDocument();
-    if (input.status === "published") {
+    if (input.publishing) {
       const stored = prepareLessonContent({ content }, { previous: content });
       if (stored.ok && stored.incomplete.length) {
         return { ok: false, error: lessonContentError(stored.incomplete) };
@@ -326,15 +362,55 @@ export function prepareLessonWrite(input: {
   return { ok: true, content };
 }
 
-/** Records the media a page uses in `media_references` (L5), after checking it. */
+/**
+ * Checks a page's draft as it is about to become what learners read: valid,
+ * complete (an incomplete quiz is refused here, not on draft saves), its
+ * blocks available now (blocks already published stay allowed, section 6),
+ * and no quiz in a free preview. Returns the content to publish.
+ */
+export function preparePublishedLessonContent(input: {
+  draft: Record<string, unknown>;
+  published: Record<string, unknown>;
+  requiresEnrollment: boolean;
+  unavailable?: Record<string, string>;
+}): { ok: true; content: Record<string, unknown> } | Failure {
+  const prepared = prepareLessonContent(
+    { content: input.draft },
+    { previous: input.published, unavailable: input.unavailable },
+  );
+  if (!prepared.ok)
+    return { ok: false, error: lessonContentError(prepared.diagnostics) };
+  if (prepared.incomplete.length) {
+    return { ok: false, error: lessonContentError(prepared.incomplete) };
+  }
+  const content = prepared.content as Record<string, unknown>;
+  if (!input.requiresEnrollment && hasLessonQuiz(content)) {
+    return lessonValidationError("quiz_cannot_be_previewed");
+  }
+  return { ok: true, content };
+}
+
+/**
+ * Records the media a page uses in `media_references` (L5), after checking
+ * it: the published content's and the draft's, so a file either one uses is
+ * never treated as unused.
+ */
 async function syncPageMedia(
   tx: AppDb,
   ctx: Ctx,
   lesson: { id: string; publicId: string; type: LessonType },
-  content: Record<string, unknown>,
+  contents: {
+    content: Record<string, unknown>;
+    draftContent: Record<string, unknown> | null;
+  },
   clock: Clock,
 ): Promise<void> {
-  const uses = lesson.type === "page" ? lessonMediaUses(content) : [];
+  const uses =
+    lesson.type === "page"
+      ? [contents.content, contents.draftContent].flatMap((content) =>
+          content ? lessonMediaUses(content) : [],
+        )
+      : [];
   const checked = await checkLessonMedia(tx, ctx.tenantId!, uses);
   if (!checked.ok) throw new RollbackWith(checked);
   const references = await reconcileMediaReferencesInTransaction(
@@ -668,15 +744,18 @@ export async function getProduct(
       },
     };
   }
-  // Previews read like learners: authoring access shows drafts and locked
-  // lessons, never the answers (L1).
+  // Previews read like learners: authoring access shows drafts (unpublished
+  // lessons and unpublished content edits) and locked lessons, never the
+  // answers (L1).
   return {
     ok: true,
     value: {
       ...base,
       lessons: lessons.map((lesson) =>
         learnerLessonToDto(
-          lesson.row,
+          viewer.kind === "preview"
+            ? { ...lesson.row, content: lessonWorkingContent(lesson.row) }
+            : lesson.row,
           lesson.contentAvailable,
           lesson.sectionPublicId,
           lesson.availableAt,
@@ -734,11 +813,13 @@ export async function createLesson(
     }
     const status = input.status ?? "draft";
     const requiresEnrollment = input.requiresEnrollment ?? true;
+    // A new lesson's content is its first published version: learners can't
+    // read it until the lesson is live, and a live one must be complete.
     const contentCheck = prepareLessonWrite({
       type,
       write: input,
       stored: null,
-      status,
+      publishing: status === "published",
       requiresEnrollment,
       unavailable: input.unavailable,
     });
@@ -783,7 +864,9 @@ export async function createLesson(
       title: input.title,
       type,
       content,
+      draftContent: null,
       contentVersion: 1,
+      contentPublishedAt: now,
       requiresEnrollment,
       status,
       position,
@@ -831,7 +914,7 @@ export async function createLesson(
         updatedAt: now,
       });
     }
-    await syncPageMedia(tx, ctx, row, content, clock);
+    await syncPageMedia(tx, ctx, row, row, clock);
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: ctx.tenantId,
@@ -900,23 +983,54 @@ export async function updateLesson(
     if (row.type === "page" && input.mediaId) {
       return lessonValidationError("lesson_media_not_allowed");
     }
+    const status = input.status ?? row.status;
+    // Making a lesson live publishes its pending draft with it, so it never
+    // goes live with stale content. Taking it offline leaves the draft alone.
+    const goingLive = status === "published" && row.status !== "published";
+    // Page writes land in the draft; SCORM and file lessons have no drafts.
+    const drafted = row.type === "page";
+    const working = lessonWorkingContent(row);
     const contentCheck = prepareLessonWrite({
       type: row.type,
       write: input,
-      stored: row.content,
-      status: input.status ?? row.status,
+      stored: working,
+      publishing: goingLive,
       requiresEnrollment,
       unavailable: input.unavailable,
     });
     if (!contentCheck.ok) return contentCheck;
-    const content = contentCheck.content;
+    const written = contentCheck.content;
     if (
       input.expectedContentVersion !== undefined &&
       input.expectedContentVersion !== row.contentVersion
     ) {
       return contentVersionConflict(row.contentVersion);
     }
-    const contentChanged = contentSent && !sameJson(content, row.content);
+    const contentChanged = contentSent && !sameJson(written, working);
+    const now = clock.now();
+    let content = row.content;
+    let draftContent = row.draftContent;
+    let contentPublishedAt = row.contentPublishedAt;
+    if (!drafted) {
+      content = written;
+    } else {
+      if (contentSent) draftContent = sameJson(written, row.content) ? null : written;
+      if (goingLive && draftContent !== null) {
+        const published = preparePublishedLessonContent({
+          draft: draftContent,
+          published: row.content,
+          requiresEnrollment,
+          unavailable: input.unavailable,
+        });
+        if (!published.ok) return published;
+        content = published.content;
+        draftContent = null;
+        contentPublishedAt = now;
+      }
+      if (!requiresEnrollment && hasLessonQuiz(content)) {
+        return lessonValidationError("quiz_cannot_be_previewed");
+      }
+    }
     let sectionId = row.sectionId;
     let sectionPublicId: string | null = null;
     if (input.sectionId !== undefined) {
@@ -953,11 +1067,11 @@ export async function updateLesson(
         .limit(1);
       sectionPublicId = sections[0]?.publicId ?? null;
     }
-    const now = clock.now();
-    const status = input.status ?? row.status;
     const next = {
       title: input.title ?? row.title,
       content,
+      draftContent,
+      contentPublishedAt,
       contentVersion: contentChanged ? row.contentVersion + 1 : row.contentVersion,
       requiresEnrollment,
       status,
@@ -1037,7 +1151,9 @@ export async function updateLesson(
         .limit(1);
       mediaPublicId = media[0]?.publicId ?? null;
     }
-    if (contentSent) await syncPageMedia(tx, ctx, row, content, clock);
+    if (contentSent || content !== row.content) {
+      await syncPageMedia(tx, ctx, row, { content, draftContent }, clock);
+    }
     // The version check and the write are one statement (L2): a concurrent
     // content write between our read and this update matches no row.
     const updated = await tx
@@ -1079,26 +1195,12 @@ export async function updateLesson(
   });
 }
 
-/** One lesson for its authors: content, Markdown and version (section 7). */
-export async function getLesson(
+/** A stored lesson as its admin response, with its section and own media. */
+async function lessonDetail(
   db: AppDb,
-  ctx: Ctx,
-  lessonPublicId: string,
-): Promise<{ ok: true; value: LessonDto } | { ok: false; error: PlatformError }> {
-  if (!ctx.permissions.has("products:read") || !ctx.tenantId) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  const [row] = await db
-    .select()
-    .from(schema.lessons)
-    .where(
-      and(
-        eq(schema.lessons.publicId, lessonPublicId),
-        eq(schema.lessons.schoolId, ctx.tenantId),
-      ),
-    )
-    .limit(1);
-  if (!row) return { ok: false, error: createPlatformError("not_found") };
+  schoolInternalId: string,
+  row: typeof schema.lessons.$inferSelect,
+): Promise<LessonDto> {
   const [section] = row.sectionId
     ? await db
         .select({ publicId: schema.productSections.publicId })
@@ -1112,17 +1214,188 @@ export async function getLesson(
     .innerJoin(schema.media, eq(schema.media.id, schema.mediaReferences.mediaId))
     .where(
       and(
-        eq(schema.mediaReferences.schoolId, ctx.tenantId),
+        eq(schema.mediaReferences.schoolId, schoolInternalId),
         eq(schema.mediaReferences.resourceType, "lesson_media"),
         eq(schema.mediaReferences.resourceInternalId, row.id),
         eq(schema.media.status, "active"),
       ),
     )
     .limit(1);
-  return {
-    ok: true,
-    value: lessonDetailToDto(row, section?.publicId ?? null, media?.publicId ?? null),
-  };
+  return lessonDetailToDto(row, section?.publicId ?? null, media?.publicId ?? null);
+}
+
+async function findLesson(db: AppDb, schoolInternalId: string, lessonPublicId: string) {
+  const [row] = await db
+    .select()
+    .from(schema.lessons)
+    .where(
+      and(
+        eq(schema.lessons.publicId, lessonPublicId),
+        eq(schema.lessons.schoolId, schoolInternalId),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * One lesson for its authors (section 7): the content they edit (the draft,
+ * or the published content without one) as JSON and Markdown, its version,
+ * and whether learners still read an older version.
+ */
+export async function getLesson(
+  db: AppDb,
+  ctx: Ctx,
+  lessonPublicId: string,
+): Promise<{ ok: true; value: LessonDto } | { ok: false; error: PlatformError }> {
+  if (!ctx.permissions.has("products:read") || !ctx.tenantId) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
+  const row = await findLesson(db, ctx.tenantId, lessonPublicId);
+  if (!row) return { ok: false, error: createPlatformError("not_found") };
+  return { ok: true, value: await lessonDetail(db, ctx.tenantId, row) };
+}
+
+/**
+ * Publishes a page's draft: checks it with the publish rules
+ * (`preparePublishedLessonContent`) and the media it uses, then copies it to
+ * the content learners read. The content authors edit doesn't change, so
+ * the version stays; a concurrent draft write fails this with `conflict`.
+ * With nothing pending (or for SCORM and file lessons) it changes nothing.
+ */
+export async function publishLessonContent(
+  db: AppDb,
+  ctx: Ctx,
+  lessonPublicId: string,
+  input: {
+    expectedContentVersion?: number;
+    /** Blocks the school may not add now (`lessonBlockAvailability`). */
+    unavailable?: Record<string, string>;
+  },
+  clock: Clock,
+): Promise<{ ok: true; value: LessonDto } | { ok: false; error: PlatformError }> {
+  if (!ctx.permissions.has("products:write") || !ctx.tenantId) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
+  return transactionResult(db, async (tx) => {
+    const row = await findLesson(tx, ctx.tenantId!, lessonPublicId);
+    if (!row) return { ok: false as const, error: createPlatformError("not_found") };
+    if (
+      input.expectedContentVersion !== undefined &&
+      input.expectedContentVersion !== row.contentVersion
+    ) {
+      return contentVersionConflict(row.contentVersion);
+    }
+    if (row.draftContent === null) {
+      return { ok: true as const, value: await lessonDetail(tx, ctx.tenantId!, row) };
+    }
+    const published = preparePublishedLessonContent({
+      draft: row.draftContent,
+      published: row.content,
+      requiresEnrollment: row.requiresEnrollment,
+      unavailable: input.unavailable,
+    });
+    if (!published.ok) return published;
+    const now = clock.now();
+    const next = {
+      content: published.content,
+      draftContent: null,
+      contentPublishedAt: now,
+      updatedAt: now,
+    };
+    await syncPageMedia(tx, ctx, row, next, clock);
+    const updated = await tx
+      .update(schema.lessons)
+      .set(next)
+      .where(
+        and(
+          eq(schema.lessons.id, row.id),
+          eq(schema.lessons.contentVersion, row.contentVersion),
+        ),
+      )
+      .returning({ id: schema.lessons.id });
+    if (!updated[0]) throw new RollbackWith(contentVersionConflict(null));
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: ctx.tenantId,
+      actorId: ctx.principalId,
+      action: "lesson.content_published",
+      resourceType: "lesson",
+      resourceId: row.publicId,
+      requestId: ctx.requestId,
+      createdAt: now,
+    });
+    return {
+      ok: true as const,
+      value: await lessonDetail(tx, ctx.tenantId!, { ...row, ...next }),
+    };
+  });
+}
+
+/**
+ * Throws away a page's draft, so authors edit the published content again.
+ * That changes the content they edit, so the version increases.
+ */
+export async function discardLessonDraft(
+  db: AppDb,
+  ctx: Ctx,
+  lessonPublicId: string,
+  input: { expectedContentVersion?: number },
+  clock: Clock,
+): Promise<{ ok: true; value: LessonDto } | { ok: false; error: PlatformError }> {
+  if (!ctx.permissions.has("products:write") || !ctx.tenantId) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
+  return transactionResult(db, async (tx) => {
+    const row = await findLesson(tx, ctx.tenantId!, lessonPublicId);
+    if (!row) return { ok: false as const, error: createPlatformError("not_found") };
+    if (
+      input.expectedContentVersion !== undefined &&
+      input.expectedContentVersion !== row.contentVersion
+    ) {
+      return contentVersionConflict(row.contentVersion);
+    }
+    if (row.draftContent === null) {
+      return { ok: true as const, value: await lessonDetail(tx, ctx.tenantId!, row) };
+    }
+    const now = clock.now();
+    await syncPageMedia(
+      tx,
+      ctx,
+      row,
+      { content: row.content, draftContent: null },
+      clock,
+    );
+    const updated = await tx
+      .update(schema.lessons)
+      .set({
+        draftContent: null,
+        contentVersion: sql`${schema.lessons.contentVersion} + 1`,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(schema.lessons.id, row.id),
+          eq(schema.lessons.contentVersion, row.contentVersion),
+        ),
+      )
+      .returning();
+    if (!updated[0]) throw new RollbackWith(contentVersionConflict(null));
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: ctx.tenantId,
+      actorId: ctx.principalId,
+      action: "lesson.draft_discarded",
+      resourceType: "lesson",
+      resourceId: row.publicId,
+      requestId: ctx.requestId,
+      createdAt: now,
+    });
+    return {
+      ok: true as const,
+      value: await lessonDetail(tx, ctx.tenantId!, updated[0]),
+    };
+  });
 }
 
 export async function deleteLesson(

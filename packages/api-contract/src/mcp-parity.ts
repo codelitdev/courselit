@@ -1107,6 +1107,8 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "unpublishSchoolWebsiteBlog",
   "discardSchoolWebsitePage",
   "discardSchoolWebsiteBlog",
+  "publishLessonContent",
+  "discardLessonDraft",
   "startMailSequence",
   "renameContactTag",
   "deleteContactTag",

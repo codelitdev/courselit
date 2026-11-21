@@ -2,14 +2,20 @@ import { describe, expect, it } from "bun:test";
 import {
   createPageLessonAndOpen,
   DEFAULT_LESSON_TITLE,
+  lessonDraftActionPath,
+  lessonDraftControls,
   lessonEditorHref,
   lessonFormHref,
+  lessonHasPendingChanges,
   lessonHref,
   lessonLiveAction,
   lessonPreviewPath,
+  lessonPublishRefusalTitle,
   lessonSaveStatus,
   lessonStatusLabel,
+  lessonStatusNote,
   lessonTitleError,
+  lessonVisibilityNote,
   productContentHref,
 } from "./lesson-editor";
 
@@ -138,5 +144,74 @@ describe("lessonSaveStatus", () => {
       kind: "saved",
       at: 42,
     });
+  });
+});
+
+describe("lesson page drafts", () => {
+  const live = { status: "published" as const, hasUnpublishedChanges: true };
+  const liveClean = { status: "published" as const, hasUnpublishedChanges: false };
+  const draft = { status: "draft" as const, hasUnpublishedChanges: true };
+  const idle = { busy: false, conflict: false };
+
+  it("counts unpublished changes for live lessons only", () => {
+    expect(lessonHasPendingChanges(live)).toBe(true);
+    expect(lessonHasPendingChanges(liveClean)).toBe(false);
+    expect(lessonHasPendingChanges(draft)).toBe(false);
+    expect(lessonStatusNote(live)).toBe("Unpublished changes");
+    expect(lessonStatusNote(liveClean)).toBeNull();
+    expect(lessonStatusNote(draft)).toBeNull();
+  });
+
+  it("offers publish and discard on live lessons with unpublished changes", () => {
+    expect(lessonDraftControls(live, idle)).toEqual({
+      show: true,
+      canPublish: true,
+      canDiscard: true,
+    });
+    expect(lessonDraftControls(liveClean, idle)).toEqual({
+      show: true,
+      canPublish: false,
+      canDiscard: false,
+    });
+    // A draft lesson publishes its page when made live.
+    expect(lessonDraftControls(draft, idle).show).toBe(false);
+    expect(lessonDraftControls(draft, idle).canPublish).toBe(false);
+  });
+
+  it("disables publish and discard while busy or after a conflict", () => {
+    expect(lessonDraftControls(live, { busy: true, conflict: false }).canPublish).toBe(
+      false,
+    );
+    expect(lessonDraftControls(live, { busy: false, conflict: true }).canDiscard).toBe(
+      false,
+    );
+  });
+
+  it("explains what learners see", () => {
+    expect(lessonVisibilityNote(false, live)).toBe(
+      "Learners will see this lesson once the course is live.",
+    );
+    expect(lessonVisibilityNote(true, draft)).toBe(
+      "Drafts are hidden from learners until you make them live.",
+    );
+    expect(lessonVisibilityNote(true, live)).toContain(
+      "Learners see the published version",
+    );
+    expect(lessonVisibilityNote(true, liveClean)).toContain("stay a draft");
+  });
+
+  it("titles publish refusals and builds the draft endpoints", () => {
+    expect(lessonPublishRefusalTitle("publish")).toBe(
+      "Fix these before the changes can be published:",
+    );
+    expect(lessonPublishRefusalTitle("make-live")).toBe(
+      "Fix these before the lesson can be made live:",
+    );
+    expect(lessonDraftActionPath("l/1", "publish-content")).toBe(
+      "/api/v1/lessons/l%2F1/publish-content",
+    );
+    expect(lessonDraftActionPath("l1", "discard-draft")).toBe(
+      "/api/v1/lessons/l1/discard-draft",
+    );
   });
 });

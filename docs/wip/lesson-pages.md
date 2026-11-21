@@ -211,8 +211,9 @@ profile because Markdown can't hold them.
   Platform error details are flat, so the first diagnostic is spread out
   (`code`, `message`, `fieldPath` or `line`/`column`) and up to 20
   diagnostics are in `diagnostics` as a JSON string.
-- Incomplete blocks (a quiz without questions or a correct option) save as
-  drafts from JSON, but Markdown writes and publishing refuse them.
+- Incomplete blocks (a quiz without questions or a correct option) save in
+  the draft from JSON, but Markdown writes and publishing refuse them
+  (`publishLessonContent`, or making the lesson live).
 - A page holding a quiz can't be a free preview (`quiz_cannot_be_previewed`),
   as quiz lessons couldn't on main: grading needs an enrolled learner.
 
@@ -272,21 +273,56 @@ always available there.
 
 - `lessons.type`: `"page" | "scorm" | "file"`, default `"page"`. Course
   products take `page` and `scorm`; download products take `file` only.
-- `lessons.content_version`. Updates send `expectedContentVersion`; a
-  mismatch fails with `conflict`, so an agent and a person can't overwrite
-  each other.
+- Drafts, as for website pages and blog posts: `lessons.content` is what
+  learners read; `lessons.draft_content` holds a page's unpublished edits
+  (null when nothing is pending; always null for SCORM and file lessons);
+  `lessons.content_published_at` is when `content` was last replaced.
+  - `PATCH /v1/lessons/:lessonId` with `content` or `markdown` writes the
+    draft, so the editor's autosave never changes what learners see. It is
+    validated as today (profile, availability against the draft or, without
+    one, the published content, media) except that an incomplete quiz is
+    allowed. A draft equal to the published content is stored as no draft.
+  - `POST /v1/lessons/:lessonId/publish-content` copies the draft to
+    `content` after the publish checks: valid, complete, blocks available
+    (blocks already published stay allowed), media, no quiz in a free
+    preview. `POST /v1/lessons/:lessonId/discard-draft` drops the draft.
+    Both take an optional `expectedContentVersion` and do nothing when no
+    draft is pending. ("publish-content", not "publish": a lesson's
+    `status` already says whether it is live.)
+  - Making a lesson live (`status: "published"`) publishes its pending
+    draft in the same write, so a lesson never goes live with stale or
+    empty content; an incomplete draft blocks going live. Taking a lesson
+    offline leaves its draft alone. Title, settings, `requiresEnrollment`,
+    drip and section changes apply immediately, as page names do.
+  - Creating a lesson writes `content` directly (it isn't live until made
+    live, and a live one must be complete); so do `apply_course_outline`
+    (which only creates lessons) and the main-data import.
+- `lessons.content_version` versions the content authors edit (the draft,
+  or the published content without one). Draft writes send
+  `expectedContentVersion`; a mismatch fails with `conflict`, so an agent
+  and a person can't overwrite each other. Discarding a draft bumps it;
+  publishing doesn't (the edited content is unchanged), but fails with
+  `conflict` if a draft write lands at the same time.
 - Lesson contract: new type enum; writes take `content` or `markdown`, not
-  both. The single-lesson admin read and write responses return `content`,
-  `markdown` and `contentVersion`; lists return neither content form.
-  `mediaId` remains for `scorm` and `file` only.
-- `media_references` for a lesson is synced with the document's media IDs
-  on save. Learner, public and preview media reads become
-  `GET …/lessons/:lessonId/media/:mediaId` (section 10, L5).
+  both. The single-lesson admin read and write responses return `content`
+  and `markdown` (the draft when there is one), `contentVersion`,
+  `hasUnpublishedChanges` and `contentPublishedAt`; lists return neither
+  content form. Learner, public reads and quiz evaluation use `content`
+  only; product previews show the draft. `mediaId` remains for `scorm` and
+  `file` only.
+- `media_references` for a lesson cover the media of both the draft and
+  the published content, so neither is treated as unused; they are synced
+  on every draft write, publish and discard. Learner, public and preview
+  media reads become `GET …/lessons/:lessonId/media/:mediaId` (section 10,
+  L5); learners and the public reach only media in the published content,
+  previews also the draft's.
 - MCP: `create_lesson` and `update_lesson` keep their names; their
-  descriptions say to send Markdown. A new read-only operation,
-  `getLessonContentFormat` (`get_lesson_content_format`), returns the block
-  reference for the school, including unavailable blocks and why.
-  `apply_course_outline` creates pages from Markdown.
+  descriptions say to send Markdown and that page changes are drafts.
+  `publish_lesson_content` and `discard_lesson_draft` are high-impact
+  (`confirm: true`). A read-only operation, `getLessonContentFormat`
+  (`get_lesson_content_format`), returns the block reference for the
+  school, including unavailable blocks and why. `apply_course_outline`
+  creates pages from Markdown.
 
 ## 8. Main-data import
 
@@ -314,8 +350,7 @@ what the import changed is reported per lesson in the run's `warnings`.
   `BlockUi`, listed in build-time config. Unknown stored blocks render a
   placeholder and are kept on save. Runtime blocks, if ever, only in
   sandboxed iframes (L11).
-- Block-based completion rules, drafts for published lessons, AI drafting
-  and quiz generation.
+- Block-based completion rules, AI drafting and quiz generation.
 
 ## 10. Security requirements
 

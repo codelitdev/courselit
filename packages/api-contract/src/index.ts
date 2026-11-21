@@ -1195,8 +1195,18 @@ export const lessonSummarySchema = z.object({
   position: z.number().int(),
   status: z.enum(["draft", "published"]),
   requiresEnrollment: z.boolean(),
-  /** Increases with every content change; send it back as `expectedContentVersion`. */
+  /**
+   * Increases with every change to the content authors edit (the draft, or
+   * the published content without one); send it back as `expectedContentVersion`.
+   */
   contentVersion: z.number().int().positive(),
+  /**
+   * A page has saved edits learners don't see yet. Content writes go to a
+   * draft; `publishLessonContent` (or making the lesson live) publishes it.
+   */
+  hasUnpublishedChanges: z.boolean(),
+  /** When the content learners read was last replaced (created or published). */
+  contentPublishedAt: z.string().nullable(),
   dripDelaySeconds: z.number().int().nonnegative().nullable(),
   dripAt: z.string().nullable(),
   availableAt: z.string().nullable(),
@@ -1206,6 +1216,7 @@ export const lessonSummarySchema = z.object({
 /**
  * One lesson as its authors read and write it: the page as Tiptap JSON
  * (`content`) and as Markdown (`markdown`, null for SCORM and file lessons).
+ * For a page this is its draft when it has one, else the published content.
  * Both hold the quiz's correct answers, so they never reach learners.
  */
 export const lessonSchema = lessonSummarySchema.extend({
@@ -1226,7 +1237,7 @@ export const learnerLessonContentSchema = z
   });
 
 export const learnerLessonSchema = lessonSummarySchema
-  .omit({ contentVersion: true })
+  .omit({ contentVersion: true, hasUnpublishedChanges: true, contentPublishedAt: true })
   .extend({ content: learnerLessonContentSchema.nullable() });
 
 const formatAttributeSchema = z.object({
@@ -1803,6 +1814,11 @@ export const createLessonBodySchema = z
   })
   .refine(oneContentForm, oneContentFormMessage);
 
+/**
+ * A page's `content` or `markdown` is saved as its draft: learners keep
+ * reading the published content until `publishLessonContent`, or until
+ * `status` changes to `published`, which publishes the draft too.
+ */
 export const updateLessonBodySchema = z
   .object({
     title: z.string().min(1).max(200).optional(),
@@ -1812,12 +1828,19 @@ export const updateLessonBodySchema = z
     expectedContentVersion: z.number().int().positive().optional(),
     mediaId: z.string().min(1).nullable().optional(),
     requiresEnrollment: z.boolean().optional(),
+    /** `published` makes the lesson live and publishes its draft content with it. */
     status: z.enum(["draft", "published"]).optional(),
     sectionId: z.string().min(1).nullable().optional(),
     dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
     dripAt: z.string().datetime().nullable().optional(),
   })
   .refine(oneContentForm, oneContentFormMessage);
+
+/** Publishing or discarding a lesson's draft content. */
+export const lessonDraftActionBodySchema = z.object({
+  /** The `contentVersion` the author last saw; a mismatch fails with `conflict`. */
+  expectedContentVersion: z.number().int().positive().optional(),
+});
 
 export const createSectionBodySchema = z.object({
   title: z.string().min(1).max(200),
@@ -4302,6 +4325,38 @@ export const contract = c.router({
     path: "/v1/lessons/:lessonId",
     pathParams: z.object({ lessonId: z.string() }),
     body: updateLessonBodySchema,
+    responses: {
+      200: lessonSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  publishLessonContent: {
+    method: "POST",
+    path: "/v1/lessons/:lessonId/publish-content",
+    pathParams: z.object({ lessonId: z.string() }),
+    body: lessonDraftActionBodySchema,
+    summary:
+      "Publish a lesson page's draft content so learners see it; an incomplete quiz is refused",
+    responses: {
+      200: lessonSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  discardLessonDraft: {
+    method: "POST",
+    path: "/v1/lessons/:lessonId/discard-draft",
+    pathParams: z.object({ lessonId: z.string() }),
+    body: lessonDraftActionBodySchema,
+    summary:
+      "Throw away a lesson page's unpublished content and go back to the published version",
     responses: {
       200: lessonSchema,
       400: platformErrorSchema,

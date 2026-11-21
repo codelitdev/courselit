@@ -156,6 +156,49 @@ describe("createLessonAutosave", () => {
   });
 });
 
+describe("reset and markConflict", () => {
+  it("starts over from discarded content: no resend, next save on the new version", async () => {
+    const { calls, send } = controlledSend();
+    const autosave = createLessonAutosave({
+      contentVersion: 1,
+      savedContent: doc("draft"),
+      send,
+    });
+    autosave.change(doc("edited"));
+    await tick();
+    calls[0]!.resolve({
+      ok: false,
+      failure: { kind: "error", message: "offline" },
+    });
+    expect((await autosave.flush()).status).toBe("error");
+    autosave.reset({ contentVersion: 3, savedContent: doc("published") });
+    expect(autosave.state).toEqual({ status: "saved" });
+    expect(autosave.contentVersion).toBe(3);
+    autosave.retry(); // the refused edit was dropped
+    autosave.change(doc("published")); // the reloaded content isn't resent
+    await tick();
+    expect(calls).toHaveLength(1);
+    autosave.change(doc("new"));
+    await tick();
+    expect(calls[1]).toMatchObject({ content: doc("new"), version: 3 });
+  });
+
+  it("stops saving after a conflict found by another write", async () => {
+    const { calls, send } = controlledSend();
+    const states: AutosaveState["status"][] = [];
+    const autosave = createLessonAutosave({
+      contentVersion: 1,
+      send,
+      onState: (state) => states.push(state.status),
+    });
+    autosave.markConflict();
+    autosave.change(doc("a"));
+    await tick();
+    expect(calls).toHaveLength(0);
+    expect(states).toEqual(["conflict"]);
+  });
+});
+
 describe("autosaveLabel", () => {
   it("says whether the page is saved", () => {
     expect(autosaveLabel({ status: "saved" })).toBe("All changes saved");

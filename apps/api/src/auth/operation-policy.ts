@@ -231,6 +231,8 @@ export const OPERATION_POLICIES = {
   getLessonContentFormat: schoolOp(["products:read"]),
   createLesson: schoolOp(["products:write"]),
   updateLesson: schoolOp(["products:write"]),
+  publishLessonContent: schoolOp(["products:write"]),
+  discardLessonDraft: schoolOp(["products:write"]),
   deleteLesson: schoolOp(["products:write"]),
   reorderLessons: schoolOp(["products:write"]),
   processScormPackage: schoolOp(["products:write"]),

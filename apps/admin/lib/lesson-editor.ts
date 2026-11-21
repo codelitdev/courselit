@@ -129,3 +129,66 @@ export function lessonSaveStatus(
 export function lessonPreviewPath(productId: string, lessonId: string, token: string) {
   return `/dashboard/courses/${segment(productId)}/${segment(lessonId)}#preview=${segment(token)}`;
 }
+
+/**
+ * Lesson page drafts (docs/wip/lesson-pages.md, section 7): page edits save
+ * to a draft, learners read the published content until it is published.
+ */
+type LessonDraftInfo = { status: LessonStatus; hasUnpublishedChanges: boolean };
+
+/**
+ * Edits learners don't see yet. Only a live lesson has them in the author's
+ * sense: a draft lesson is hidden anyway, and making it live publishes them.
+ */
+export function lessonHasPendingChanges(lesson: LessonDraftInfo): boolean {
+  return lesson.status === "published" && lesson.hasUnpublishedChanges;
+}
+
+/** Shown next to the Live/Draft status in the top bar. */
+export function lessonStatusNote(lesson: LessonDraftInfo): string | null {
+  return lessonHasPendingChanges(lesson) ? "Unpublished changes" : null;
+}
+
+/**
+ * The top bar's "Discard changes" and "Publish changes": shown for live
+ * lessons only (a draft lesson publishes its page when made live), enabled
+ * while there are unpublished changes and nothing else is in the way.
+ */
+export function lessonDraftControls(
+  lesson: LessonDraftInfo,
+  options: { busy: boolean; conflict: boolean },
+): { show: boolean; canPublish: boolean; canDiscard: boolean } {
+  const show = lesson.status === "published";
+  const enabled =
+    show && lesson.hasUnpublishedChanges && !options.busy && !options.conflict;
+  return { show, canPublish: enabled, canDiscard: enabled };
+}
+
+/** The settings panel's Visibility note. */
+export function lessonVisibilityNote(
+  productLive: boolean,
+  lesson: LessonDraftInfo,
+): string {
+  if (!productLive) return "Learners will see this lesson once the course is live.";
+  if (lesson.status !== "published") {
+    return "Drafts are hidden from learners until you make them live.";
+  }
+  return lesson.hasUnpublishedChanges
+    ? "Learners see the published version. Publish changes to show them your edits."
+    : "Learners can see this lesson. Your edits stay a draft until you publish them.";
+}
+
+/** The heading over the problems that kept a page from being published. */
+export function lessonPublishRefusalTitle(action: "publish" | "make-live"): string {
+  return action === "publish"
+    ? "Fix these before the changes can be published:"
+    : "Fix these before the lesson can be made live:";
+}
+
+/** The publish-content and discard-draft endpoints. */
+export function lessonDraftActionPath(
+  lessonId: string,
+  action: "publish-content" | "discard-draft",
+): string {
+  return `/api/v1/lessons/${segment(lessonId)}/${action}`;
+}

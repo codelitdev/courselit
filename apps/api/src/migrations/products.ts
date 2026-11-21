@@ -837,7 +837,9 @@ export async function importLegacyProducts(
             sectionId,
             title: lesson.title,
             type: lesson.type,
+            // Imported content is what learners read on main: published, no draft.
             content: lesson.content,
+            contentPublishedAt: product.updatedAt,
             requiresEnrollment: lesson.requiresEnrollment,
             status: lesson.status,
             position: lesson.position,

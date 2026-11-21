@@ -251,6 +251,12 @@ describe("admin and learner surfaces", () => {
     expect(pageLessonEditor).toContain("expectedContentVersion");
     expect(pageLessonEditor).toContain("/api/v1/lessons/");
     expect(pageLessonEditor).toContain('method: "DELETE"');
+    // Page edits save as a draft; live lessons publish or discard it.
+    expect(pageLessonEditor).toContain('"publish-content"');
+    expect(pageLessonEditor).toContain('"discard-draft"');
+    expect(pageLessonEditor).toContain("Publish changes");
+    expect(pageLessonEditor).toContain("Discard your unpublished changes?");
+    expect(pageLessonEditor).toContain("lessonStatusNote(lesson)");
     expect(shell).toContain("isFullScreenLessonEditor");
     expect(productContent).toContain("LessonTypeDialog");
     expect(productContent).toContain("createPageLessonAndOpen");

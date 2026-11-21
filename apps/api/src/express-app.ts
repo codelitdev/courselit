@@ -507,6 +507,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
     reorderSections: forward,
     reorderLessons: forward,
     updateLesson: forward,
+    publishLessonContent: forward,
+    discardLessonDraft: forward,
     updateSection: forward,
     getSectionDripEmail: forward,
     updateSectionDripEmail: forward,
