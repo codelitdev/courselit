@@ -505,7 +505,7 @@ describe("admin and learner surfaces", () => {
     expect(blogEditor).toContain("beforeContent");
     expect(writingEditorShell).toContain("Document settings");
     expect(writingEditorShell).toContain("h-dvh min-h-0 w-full");
-    expect(writingEditorShell).toContain("Publish changes");
+    expect(blogEditor).toContain("Publish changes");
     expect(writingEditorHeader).toContain("Add a short description");
     expect(blogEditor).toContain("/discard-draft");
     expect(blogEditor).toContain("/publish");

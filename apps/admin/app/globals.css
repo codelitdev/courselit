@@ -338,7 +338,7 @@ body:has([data-full-screen-editor]) {
   box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
-.tiptap-editor.blog-writing-editor:focus-within {
+.tiptap-editor.writing-editor:focus-within {
   border-color: transparent;
   box-shadow: none;
 }
