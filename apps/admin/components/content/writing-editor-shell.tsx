@@ -144,12 +144,13 @@ export function WritingEditorShell({
             type="button"
             variant="ghost"
             size="sm"
-            className="px-2"
+            className={settingsOpen ? "bg-muted px-2" : "px-2"}
+            aria-pressed={settingsOpen}
             aria-label={settingsOpen ? closeSettingsLabel : openSettingsLabel}
             title={settingsOpen ? closeSettingsLabel : openSettingsLabel}
             onClick={() => onSettingsOpenChange(!settingsOpen)}
           >
-            {settingsOpen ? <X className="size-4" /> : <Settings2 className="size-4" />}
+            <Settings2 className="size-4" />
           </Button>
         </div>
       </header>

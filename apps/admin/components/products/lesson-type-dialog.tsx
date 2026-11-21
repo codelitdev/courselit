@@ -70,9 +70,9 @@ export function LessonTypeDialog({
                 <span className="min-w-0 space-y-0.5">
                   <span className="flex items-center gap-1.5 text-sm font-semibold">
                     {label}
-                    {value === "scorm" ? (
+                    {locked ? (
                       <span className="rounded border px-1 text-[10px] font-medium text-muted-foreground">
-                        {locked ? "Business" : "Alpha"}
+                        Business
                       </span>
                     ) : null}
                   </span>
