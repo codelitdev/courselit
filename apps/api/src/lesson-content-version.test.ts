@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { prepareLessonContent, sameJson } from "./catalog.js";
+import { prepareLessonWrite, sameJson } from "./catalog.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { dispatch } from "./test-learner-auth.js";
@@ -34,16 +34,19 @@ async function setup() {
       body,
     });
   const update = (lessonId: string, body: Record<string, unknown>) =>
-    dispatch(runtime, { method: "PATCH", path: `/v1/lessons/${lessonId}`, headers, body });
+    dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/lessons/${lessonId}`,
+      headers,
+      body,
+    });
   const read = async (lessonId: string) => {
-    const product = await dispatch(runtime, {
+    const lesson = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${world.noteA.publicId}`,
+      path: `/v1/lessons/${lessonId}`,
       headers,
     });
-    return (product.body as { lessons: LessonBody[] }).lessons.find(
-      (lesson) => lesson.id === lessonId,
-    )!;
+    return lesson.body as LessonBody;
   };
   return { runtime, create, update, read };
 }
@@ -129,33 +132,36 @@ describe.serial("lesson content version (L2)", () => {
   });
 });
 
-describe.serial("quiz lesson content on write", () => {
+const quizPage = (attrs: Record<string, unknown>) => ({
+  type: "doc",
+  content: [{ type: "quiz", attrs }],
+});
+const quizOf = (lesson: LessonBody) =>
+  (lesson.content as { content: Array<{ attrs: Record<string, unknown> }> }).content[0]!
+    .attrs as {
+    id: string;
+    passingGrade: number | null;
+    questions: Array<{ id: string; options: Array<{ id: string; correct: boolean }> }>;
+  };
+
+describe.serial("quiz block content on write", () => {
   it("fills missing IDs, returns the saved content and keeps given IDs", async () => {
     const { runtime, create, update } = await setup();
     const created = await create({
       title: "Check",
-      type: "quiz",
-      content: {
-        requiresPassingGrade: true,
+      content: quizPage({
         questions: [
           {
             id: "keep_me",
             text: "Pick one",
-            options: [
-              { text: "Yes", correct: true },
-              { text: "No", correctAnswer: true },
-            ],
+            options: [{ text: "Yes", correct: true }, { text: "No" }],
           },
         ],
-      },
+      }),
     });
     expect(created.status).toBe(201);
     const lesson = created.body as LessonBody;
-    const quiz = lesson.content as {
-      id: string;
-      passingGrade: number | null;
-      questions: Array<{ id: string; options: Array<{ id: string; correct: boolean }> }>;
-    };
+    const quiz = quizOf(lesson);
     expect(quiz.id).toMatch(/^[A-Za-z0-9_-]{1,64}$/);
     expect(quiz.passingGrade).toBeNull();
     expect(quiz.questions[0]!.id).toBe("keep_me");
@@ -163,91 +169,232 @@ describe.serial("quiz lesson content on write", () => {
       true,
       false,
     ]);
-    expect(Object.keys(lesson.content).sort()).toEqual(["id", "passingGrade", "questions"]);
+    expect(quiz.questions[0]!.options.every((option) => /^o_/.test(option.id))).toBe(
+      true,
+    );
 
     const resent = await update(lesson.id, {
       content: lesson.content,
       expectedContentVersion: lesson.contentVersion,
     });
-    expect(resent).toMatchObject({ status: 200, body: { content: lesson.content } });
+    expect(resent).toMatchObject({
+      status: 200,
+      body: { content: lesson.content, contentVersion: lesson.contentVersion },
+    });
     await runtime.close();
   });
 
-  it("refuses duplicate and malformed IDs and too many questions", async () => {
+  it("refuses duplicate and malformed IDs, too many questions and a second quiz", async () => {
     const { runtime, create } = await setup();
     const option = (id: string, correct = false) => ({ id, text: id, correct });
     const duplicate = await create({
       title: "Check",
-      type: "quiz",
-      content: {
+      content: quizPage({
         questions: [
           { id: "q1", text: "A", options: [option("o1", true), option("o2")] },
           { id: "q2", text: "B", options: [option("o1", true), option("o3")] },
         ],
-      },
+      }),
     });
     expect(duplicate).toMatchObject({
       status: 400,
-      body: { details: { reason: "quiz_id_duplicate", path: "questions.1.options.0.id" } },
+      body: {
+        details: {
+          reason: "lesson_content_invalid",
+          code: "invalid_document",
+          fieldPath: "content.content[0].attrs.questions[1].options[0].id",
+        },
+      },
     });
     const malformed = await create({
       title: "Check",
-      type: "quiz",
-      content: {
+      content: quizPage({
         id: "<script>",
         questions: [{ text: "A", options: [option("o1", true), option("o2")] }],
-      },
+      }),
     });
     expect(malformed).toMatchObject({
       status: 400,
-      body: { details: { reason: "quiz_id_invalid" } },
+      body: {
+        details: {
+          reason: "lesson_content_invalid",
+          fieldPath: "content.content[0].attrs.id",
+        },
+      },
     });
     const tooMany = await create({
       title: "Check",
-      type: "quiz",
-      content: {
+      content: quizPage({
         questions: Array.from({ length: 101 }, () => ({
           text: "A",
           options: [{ text: "Y", correct: true }, { text: "N" }],
         })),
-      },
+      }),
     });
     expect(tooMany).toMatchObject({
       status: 400,
-      body: { details: { reason: "quiz_too_many_questions" } },
+      body: { details: { reason: "lesson_content_invalid" } },
+    });
+    const two = await create({
+      title: "Check",
+      content: {
+        type: "doc",
+        content: [
+          { type: "quiz", attrs: { questions: [] } },
+          { type: "quiz", attrs: { questions: [] } },
+        ],
+      },
+    });
+    expect(two).toMatchObject({
+      status: 400,
+      body: { details: { code: "quiz_limit", fieldPath: "content.content[1]" } },
     });
     await runtime.close();
   });
 });
 
-describe("prepareLessonContent", () => {
-  it("normalizes quizzes and leaves other content alone", () => {
-    const doc = textDoc("x");
-    expect(prepareLessonContent({ type: "text", content: doc })).toEqual({
+describe("prepareLessonWrite", () => {
+  const doc = (...content: unknown[]) => ({ type: "doc", content });
+  const quiz = {
+    type: "quiz",
+    attrs: {
+      id: "qz",
+      passingGrade: null,
+      questions: [
+        {
+          id: "q",
+          text: "Q",
+          options: [
+            { id: "a", text: "A", correct: true },
+            { id: "b", text: "B", correct: false },
+          ],
+        },
+      ],
+    },
+  };
+  const base = {
+    type: "page" as const,
+    stored: null,
+    status: "draft" as const,
+    requiresEnrollment: true,
+  };
+  const reason = (result: ReturnType<typeof prepareLessonWrite>) =>
+    result.ok ? null : result.error.safeDetails?.reason;
+
+  it("starts a page empty and keeps the stored page when no content is sent", () => {
+    expect(prepareLessonWrite({ ...base, write: {} })).toEqual({
       ok: true,
-      content: doc,
+      content: { type: "doc", content: [] },
     });
-    expect(prepareLessonContent({ type: "embed", content: { value: " " } })).toMatchObject({
-      ok: false,
+    const stored = doc({ type: "paragraph" });
+    expect(prepareLessonWrite({ ...base, stored, write: {} })).toEqual({
+      ok: true,
+      content: stored,
+    });
+  });
+
+  it("takes Markdown or JSON and returns the canonical document", () => {
+    const fromMarkdown = prepareLessonWrite({ ...base, write: { markdown: "## Hi" } });
+    expect(fromMarkdown.ok && fromMarkdown.content).toEqual(
+      doc({
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Hi" }],
+      }),
+    );
+  });
+
+  it("keeps SCORM package details as JSON and refuses other content", () => {
+    expect(
+      prepareLessonWrite({
+        ...base,
+        type: "scorm",
+        write: { content: { launchUrl: "a.html" } },
+      }),
+    ).toEqual({ ok: true, content: { launchUrl: "a.html" } });
+    expect(
+      prepareLessonWrite({
+        ...base,
+        type: "scorm",
+        stored: { packageInfo: {} },
+        write: {},
+      }),
+    ).toEqual({ ok: true, content: { packageInfo: {} } });
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "scorm", write: { markdown: "x" } })),
+    ).toBe("lesson_content_not_allowed");
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "file", write: { content: doc() } })),
+    ).toBe("lesson_content_not_allowed");
+    expect(
+      reason(prepareLessonWrite({ ...base, type: "file", write: { markdown: "x" } })),
+    ).toBe("lesson_content_not_allowed");
+  });
+
+  it("refuses publishing an incomplete page, sent or stored", () => {
+    const incomplete = doc({ type: "quiz", attrs: { id: "qz", questions: [] } });
+    expect(prepareLessonWrite({ ...base, write: { content: incomplete } }).ok).toBe(
+      true,
+    );
+    expect(
+      reason(
+        prepareLessonWrite({
+          ...base,
+          status: "published",
+          write: { content: incomplete },
+        }),
+      ),
+    ).toBe("lesson_content_invalid");
+    expect(
+      reason(
+        prepareLessonWrite({
+          ...base,
+          status: "published",
+          stored: incomplete,
+          write: {},
+        }),
+      ),
+    ).toBe("lesson_content_invalid");
+  });
+
+  it("refuses a free preview page with a quiz", () => {
+    expect(
+      reason(
+        prepareLessonWrite({
+          ...base,
+          requiresEnrollment: false,
+          write: { content: doc(quiz) },
+        }),
+      ),
+    ).toBe("quiz_cannot_be_previewed");
+    expect(
+      prepareLessonWrite({
+        ...base,
+        requiresEnrollment: false,
+        write: { content: doc() },
+      }).ok,
+    ).toBe(true);
+  });
+
+  it("refuses adding an unavailable block with plan_required", () => {
+    const embed = { type: "embed", attrs: { code: "<b>x</b>" } };
+    const refused = prepareLessonWrite({
+      ...base,
+      write: { content: doc(embed) },
+      unavailable: { embed: "trial" },
+    });
+    expect(refused.ok ? null : refused.error).toMatchObject({
+      code: "forbidden",
+      safeDetails: { reason: "plan_required", blockReason: "trial" },
     });
     expect(
-      prepareLessonContent({
-        type: "quiz",
-        requiresEnrollment: false,
-        content: { questions: [] },
-      }),
-    ).toMatchObject({ ok: false });
-    const quiz = prepareLessonContent({
-      type: "quiz",
-      content: {
-        questions: [{ text: "Q", options: [{ text: "A", correct: true }, { text: "B" }] }],
-      },
-    });
-    expect(quiz.ok && Object.keys(quiz.content).sort()).toEqual([
-      "id",
-      "passingGrade",
-      "questions",
-    ]);
+      prepareLessonWrite({
+        ...base,
+        stored: doc(embed),
+        write: { content: doc(embed, { type: "paragraph" }) },
+        unavailable: { embed: "trial" },
+      }).ok,
+    ).toBe(true);
   });
 });
 

@@ -11,6 +11,7 @@ COPY patches ./patches
 COPY apps/storefront/package.json ./apps/storefront/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/page-blocks/package.json ./packages/page-blocks/package.json
+COPY packages/lesson-content/package.json ./packages/lesson-content/package.json
 RUN bun install --filter '@courselit/storefront...' --frozen-lockfile
 
 FROM deps AS builder
@@ -19,6 +20,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY apps/storefront ./apps/storefront
 COPY packages/api-contract ./packages/api-contract
 COPY packages/page-blocks ./packages/page-blocks
+COPY packages/lesson-content ./packages/lesson-content
 RUN bun --bun run --filter @courselit/storefront build
 
 # sharp (Next.js image optimization) is the one native module traced into the

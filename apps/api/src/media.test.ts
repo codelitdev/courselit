@@ -2,10 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { LEARNER_AVATAR_MAX_BYTES } from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./test-learner-auth.js";
 import { MemoryMediaLitClient } from "./media.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
+import { dispatch } from "./test-learner-auth.js";
 
 function cookieFrom(headers?: Record<string, string>) {
   const header = headers?.["Set-Cookie"];
@@ -67,9 +67,10 @@ describe.serial("media library", () => {
       headers,
       body: {
         title: "PDF with image",
-        type: "pdf",
-        content: { value: "" },
-        mediaId: media.id,
+        content: {
+          type: "doc",
+          content: [{ type: "pdf", attrs: { media: media.id } }],
+        },
       },
     });
     expect(invalidLesson.status).toBe(400);
@@ -109,19 +110,26 @@ describe.serial("media library", () => {
       headers,
       body: {
         title: "Course video",
-        type: "video",
-        content: { value: "" },
-        mediaId: videoMediaId,
+        content: {
+          type: "doc",
+          content: [{ type: "video", attrs: { media: videoMediaId } }],
+        },
       },
     });
     expect(lesson.status).toBe(201);
-    expect(lesson.body).toMatchObject({ type: "video", mediaId: videoMediaId });
+    expect(lesson.body).toMatchObject({ type: "page", mediaId: null });
 
     const invalidUpdate = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/lessons/${(lesson.body as { id: string }).id}`,
       headers,
-      body: { mediaId: media.id },
+      body: {
+        content: {
+          type: "doc",
+          content: [{ type: "video", attrs: { media: media.id } }],
+        },
+        expectedContentVersion: 1,
+      },
     });
     expect(invalidUpdate.status).toBe(400);
     expect(invalidUpdate.body).toMatchObject({
@@ -129,23 +137,26 @@ describe.serial("media library", () => {
       details: { reason: "lesson_media_type_mismatch" },
     });
 
-    const product = await dispatch(runtime, {
-      method: "GET",
-      path: `/v1/products/${world.noteA.publicId}`,
-      headers,
-    });
-    expect(product.body).toMatchObject({
-      lessons: [{ title: "Course video", mediaId: videoMediaId }],
-    });
-
+    const videoUsage = async () =>
+      (
+        (
+          await dispatch(runtime, {
+            method: "GET",
+            path: `/v1/media/${videoMediaId}`,
+            headers,
+          })
+        ).body as { usageCount: number }
+      ).usageCount;
+    // The page's Video block references the video.
+    expect(await videoUsage()).toBe(1);
     const detached = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/lessons/${(lesson.body as { id: string }).id}`,
       headers,
-      body: { mediaId: null },
+      body: { content: { type: "doc", content: [] }, expectedContentVersion: 1 },
     });
     expect(detached.status).toBe(200);
-    expect(detached.body).toMatchObject({ mediaId: null });
+    expect(await videoUsage()).toBe(0);
 
     const listed = await dispatch(runtime, {
       method: "GET",
@@ -355,16 +366,17 @@ describe.serial("media library", () => {
       headers: adminHeaders,
       body: {
         title: "Private video",
-        type: "video",
-        content: {},
-        mediaId,
+        content: {
+          type: "doc",
+          content: [{ type: "video", attrs: { media: mediaId } }],
+        },
         status: "published",
       },
     });
     const lessonId = (lesson.body as { id: string }).id;
 
     const mediaPath = (schoolPublicId: string) =>
-      `/v1/public/${schoolPublicId}/products/${world.noteA.publicId}/lessons/${lessonId}/media`;
+      `/v1/public/${schoolPublicId}/products/${world.noteA.publicId}/lessons/${lessonId}/media/${mediaId}`;
     const publicRead = await dispatch(runtime, {
       method: "GET",
       path: mediaPath(world.schoolA.publicId),
@@ -721,17 +733,19 @@ describe.serial("media library", () => {
       `/v1/products/${world.noteA.publicId}/lessons`,
       {
         title: "Handout",
-        type: "file",
-        content: { value: "" },
-        mediaId: "med_shared",
+        content: {
+          type: "doc",
+          content: [{ type: "file", attrs: { media: "med_shared" } }],
+        },
       },
     );
     expect(fileLesson.status).toBe(201);
     const lesson = await call("POST", `/v1/products/${world.noteA.publicId}/lessons`, {
       title: "Video",
-      type: "video",
-      content: { value: "" },
-      mediaId: "med_video",
+      content: {
+        type: "doc",
+        content: [{ type: "video", attrs: { media: "med_video" } }],
+      },
     });
     expect(lesson.status).toBe(201);
     // A blog post also uses the shared image, so it outlives the product.

@@ -106,26 +106,16 @@ describe.serial("product sections", () => {
         title: "Introduction",
         content: textDoc("Start here"),
         sectionId: firstId,
-        downloadable: true,
       },
     });
     expect(lesson.status).toBe(201);
     expect(lesson.body).toMatchObject({
-      type: "text",
+      type: "page",
       content: textDoc("Start here"),
+      markdown: "Start here\n",
       sectionId: firstId,
       position: 1,
-      downloadable: true,
     });
-
-    const madeNonDownloadable = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/lessons/${(lesson.body as { id: string }).id}`,
-      headers: ownerHeaders,
-      body: { downloadable: false },
-    });
-    expect(madeNonDownloadable.status).toBe(200);
-    expect(madeNonDownloadable.body).toMatchObject({ downloadable: false });
 
     const invalidSection = await dispatch(runtime, {
       method: "POST",
@@ -361,74 +351,6 @@ describe.serial("product sections", () => {
     expect((download.body as { details?: { reason?: string } }).details?.reason).toBe(
       "download_last_section",
     );
-    await runtime.close();
-  });
-
-  it("rejects invalid embed and quiz lesson content at the API boundary", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock });
-    const world = await seedWorld(runtime, clock);
-    const ownerHeaders = {
-      cookie: world.owner.sessionCookie,
-      "x-school-id": world.schoolA.publicId,
-    };
-
-    const invalidEmbed = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/products/${world.noteA.publicId}/lessons`,
-      headers: ownerHeaders,
-      body: { title: "Missing embed", type: "embed", content: {} },
-    });
-    expect(invalidEmbed.status).toBe(400);
-
-    const invalidQuiz = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/products/${world.noteA.publicId}/lessons`,
-      headers: ownerHeaders,
-      body: {
-        title: "Incomplete quiz",
-        type: "quiz",
-        content: {
-          questions: [
-            {
-              text: "Which answer is correct?",
-              options: [{ text: "Only option", correct: true }],
-            },
-          ],
-        },
-      },
-    });
-    expect(invalidQuiz).toMatchObject({
-      status: 400,
-      body: { details: { reason: "quiz_options_required" } },
-    });
-
-    const previewQuiz = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/products/${world.noteA.publicId}/lessons`,
-      headers: ownerHeaders,
-      body: {
-        title: "Preview quiz",
-        type: "quiz",
-        requiresEnrollment: false,
-        content: {
-          questions: [
-            {
-              text: "Which answer is correct?",
-              options: [
-                { text: "Correct", correct: true },
-                { text: "Incorrect", correct: false },
-              ],
-            },
-          ],
-        },
-      },
-    });
-    expect(previewQuiz).toMatchObject({
-      status: 400,
-      body: { details: { reason: "quiz_cannot_be_previewed" } },
-    });
-
     await runtime.close();
   });
 });

@@ -2,11 +2,11 @@ import { describe, expect, it } from "bun:test";
 import { contract } from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { dispatch } from "./test-learner-auth.js";
 import { LEARNER_SESSION_COOKIE } from "./learners.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { textDoc } from "./test-content.js";
+import { dispatch } from "./test-learner-auth.js";
 
 function cookieFrom(headers?: Record<string, string>) {
   const header = headers?.["Set-Cookie"];
@@ -558,19 +558,15 @@ describe.serial("first vertical slice", () => {
 
     const adminRead = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${product.id}`,
+      path: `/v1/lessons/${lesson.id}`,
       headers: {
         cookie: world.owner.sessionCookie,
         "x-school-id": world.schoolA.publicId,
       },
     });
-    expect(
-      (
-        adminRead.body as {
-          lessons: Array<{ content: Record<string, unknown> | null }>;
-        }
-      ).lessons[0]?.content,
-    ).toEqual(textDoc("Secret draft body"));
+    expect((adminRead.body as { content: Record<string, unknown> }).content).toEqual(
+      textDoc("Secret draft body"),
+    );
 
     const crossSchool = await dispatch(runtime, {
       method: "GET",

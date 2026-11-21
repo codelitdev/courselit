@@ -1,11 +1,9 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
-
-import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 import { buildMcpParityManifest } from "./mcp-parity.js";
 import { UNAVAILABLE_PAGE_BLOCKS } from "./page-blocks.js";
+import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 
-export * from "./team-permissions.js";
 export * from "./learner-avatar.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
@@ -13,10 +11,11 @@ export * from "./safe-redirect.js";
 export * from "./youtube.js";
 export * from "./school-name.js";
 export * from "./school-subdomain.js";
+export * from "./team-permissions.js";
+
 import {
   containsQuizAnswers,
   evaluateQuizBodySchema,
-  learnerQuizSchema,
   quizEvaluationSchema,
 } from "./quiz.js";
 import { schoolNameSchema } from "./school-name.js";
@@ -247,7 +246,14 @@ export const storefrontPlanSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export const productAnalyticsRangeSchema = z.enum(["1d", "7d", "30d", "90d", "1y", "lifetime"]);
+export const productAnalyticsRangeSchema = z.enum([
+  "1d",
+  "7d",
+  "30d",
+  "90d",
+  "1y",
+  "lifetime",
+]);
 export const activityRangeSchema = productAnalyticsRangeSchema;
 const productAnalyticsMetricSchema = z.object({
   count: z.number().int().nonnegative(),
@@ -983,7 +989,12 @@ export const updateMediaBodySchema = z.object({
 });
 const ssoConnectionPathParams = z.object({ connectionId: z.string().min(1).max(64) });
 
-export const ssoConnectionStatusSchema = z.enum(["draft", "active", "suspended", "disabled"]);
+export const ssoConnectionStatusSchema = z.enum([
+  "draft",
+  "active",
+  "suspended",
+  "disabled",
+]);
 export const ssoEnforcementSchema = z.enum(["optional", "required_for_domains"]);
 export const ssoDomainSchema = z.object({
   domain: z.string(),
@@ -1045,8 +1056,13 @@ export const createSsoConnectionBodySchema = z
   .partial()
   .required({ displayName: true })
   .strict();
-export const updateSsoConnectionBodySchema = z.object(ssoSettingsFields).partial().strict();
-export const addSsoDomainBodySchema = z.object({ domain: z.string().trim().min(3).max(253) }).strict();
+export const updateSsoConnectionBodySchema = z
+  .object(ssoSettingsFields)
+  .partial()
+  .strict();
+export const addSsoDomainBodySchema = z
+  .object({ domain: z.string().trim().min(3).max(253) })
+  .strict();
 export const startSsoConnectionTestBodySchema = z
   .object({ returnUrl: z.string().url().max(1000) })
   .strict();
@@ -1160,17 +1176,25 @@ export const teamInvitationPreviewSchema = z.object({
   email: z.string(),
 });
 
-export const lessonSchema = z.object({
+/**
+ * Lesson types (docs/wip/lesson-pages.md, section 7). Course products take
+ * `page` and `scorm`; download products take `file` only.
+ */
+export const LESSON_TYPES = ["page", "scorm", "file"] as const;
+export const lessonTypeSchema = z.enum(LESSON_TYPES);
+export type LessonType = z.infer<typeof lessonTypeSchema>;
+
+/** A lesson in a list: neither content form. */
+export const lessonSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
-  type: z.enum(["text", "video", "audio", "pdf", "file", "embed", "quiz", "scorm"]),
+  type: lessonTypeSchema,
+  /** The uploaded file of a `scorm` or `file` lesson; pages reference media in their blocks. */
   mediaId: z.string().nullable(),
   sectionId: z.string().nullable(),
   position: z.number().int(),
   status: z.enum(["draft", "published"]),
-  downloadable: z.boolean(),
   requiresEnrollment: z.boolean(),
-  content: z.record(z.string(), z.unknown()).nullable(),
   /** Increases with every content change; send it back as `expectedContentVersion`. */
   contentVersion: z.number().int().positive(),
   dripDelaySeconds: z.number().int().nonnegative().nullable(),
@@ -1180,23 +1204,79 @@ export const lessonSchema = z.object({
 });
 
 /**
- * Lesson content as learners, the public and previews receive it. A quiz
- * comes stripped of its answers (`learnerQuizSchema` has no `correct`), and
- * no other content may carry a `correct` key either, so a missed strip fails
- * response validation instead of leaking answers (L1).
+ * One lesson as its authors read and write it: the page as Tiptap JSON
+ * (`content`) and as Markdown (`markdown`, null for SCORM and file lessons).
+ * Both hold the quiz's correct answers, so they never reach learners.
  */
-export const learnerLessonContentSchema = z.union([
-  learnerQuizSchema,
-  z
-    .record(z.string(), z.unknown())
-    .refine((content) => !containsQuizAnswers(content), {
-      message: "learner lesson content must not contain answers",
-    }),
-]);
+export const lessonSchema = lessonSummarySchema.extend({
+  content: z.record(z.string(), z.unknown()),
+  markdown: z.string().nullable(),
+});
 
-export const learnerLessonSchema = lessonSchema
-  .omit({ content: true, contentVersion: true })
+/**
+ * Lesson content as learners, the public and previews receive it: a page
+ * whose Quiz blocks were rebuilt without answers. No object in it may carry
+ * a `correct` key, so a missed strip fails response validation instead of
+ * leaking answers (L1). There is no Markdown form for learners.
+ */
+export const learnerLessonContentSchema = z
+  .record(z.string(), z.unknown())
+  .refine((content) => !containsQuizAnswers(content), {
+    message: "learner lesson content must not contain answers",
+  });
+
+export const learnerLessonSchema = lessonSummarySchema
+  .omit({ contentVersion: true })
   .extend({ content: learnerLessonContentSchema.nullable() });
+
+const formatAttributeSchema = z.object({
+  name: z.string(),
+  prop: z.string().optional(),
+  type: z.string().optional(),
+  default: z.unknown(),
+  required: z.boolean(),
+  description: z.string(),
+});
+type FormatBlock = {
+  name: string;
+  tag?: string;
+  summary: string;
+  example: string;
+  content?: string;
+  attributes: z.infer<typeof formatAttributeSchema>[];
+  children?: FormatBlock[];
+  unavailable?: string;
+};
+const formatBlockSchema: z.ZodType<FormatBlock> = z.lazy(() =>
+  z.object({
+    name: z.string(),
+    tag: z.string().optional(),
+    summary: z.string(),
+    example: z.string(),
+    content: z.string().optional(),
+    attributes: z.array(formatAttributeSchema),
+    children: z.array(formatBlockSchema).optional(),
+    /** Why the block may not be added now (`trial`, `plan_required`); absent when it may. */
+    unavailable: z.string().optional(),
+  }),
+);
+
+/** What a lesson page may hold, for API and MCP clients writing Markdown. */
+export const lessonContentFormatSchema = z.object({
+  markdown: z.object({
+    syntax: z.string(),
+    marks: z.array(z.string()),
+    nodes: z.array(z.string()),
+    headingLevels: z.array(z.number().int()),
+  }),
+  blocks: z.array(formatBlockSchema),
+  limits: z.object({
+    bytes: z.number().int(),
+    nodes: z.number().int(),
+    depth: z.number().int(),
+  }),
+});
+export type LessonContentFormat = z.infer<typeof lessonContentFormatSchema>;
 
 export const sectionSchema = z.object({
   id: z.string(),
@@ -1211,7 +1291,7 @@ export const sectionSchema = z.object({
 export const productDetailSchema = productSchema.extend({
   enrolled: z.boolean(),
   sections: z.array(sectionSchema),
-  lessons: z.array(lessonSchema),
+  lessons: z.array(lessonSummarySchema),
 });
 
 /** The product as learners, the public and previews read it. */
@@ -1702,34 +1782,42 @@ export const createPreviewGrantBodySchema = z.object({
   ttlSeconds: z.number().int().min(60).max(3600).default(900),
 });
 
-export const createLessonBodySchema = z.object({
-  title: z.string().min(1).max(200),
-  type: z
-    .enum(["text", "video", "audio", "pdf", "file", "embed", "quiz", "scorm"])
-    .default("text"),
-  content: z.record(z.string(), z.unknown()).default({}),
-  mediaId: z.string().min(1).nullable().optional(),
-  downloadable: z.boolean().optional(),
-  requiresEnrollment: z.boolean().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  sectionId: z.string().min(1).optional(),
-  dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
-  dripAt: z.string().datetime().nullable().optional(),
-});
+/** Lesson pages are written as Tiptap JSON (`content`) or Markdown (`markdown`), not both. */
+const lessonMarkdownSchema = z.string().max(1024 * 1024);
+const oneContentForm = (body: { content?: unknown; markdown?: unknown }) =>
+  body.content === undefined || body.markdown === undefined;
+const oneContentFormMessage = { message: "send content or markdown, not both" };
 
-export const updateLessonBodySchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.record(z.string(), z.unknown()).optional(),
-  /** The lesson's `contentVersion` the change is based on. Required with `content`. */
-  expectedContentVersion: z.number().int().positive().optional(),
-  mediaId: z.string().min(1).nullable().optional(),
-  downloadable: z.boolean().optional(),
-  requiresEnrollment: z.boolean().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  sectionId: z.string().min(1).nullable().optional(),
-  dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
-  dripAt: z.string().datetime().nullable().optional(),
-});
+export const createLessonBodySchema = z
+  .object({
+    title: z.string().min(1).max(200),
+    type: lessonTypeSchema.default("page"),
+    content: z.record(z.string(), z.unknown()).optional(),
+    markdown: lessonMarkdownSchema.optional(),
+    mediaId: z.string().min(1).nullable().optional(),
+    requiresEnrollment: z.boolean().optional(),
+    status: z.enum(["draft", "published"]).optional(),
+    sectionId: z.string().min(1).optional(),
+    dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
+    dripAt: z.string().datetime().nullable().optional(),
+  })
+  .refine(oneContentForm, oneContentFormMessage);
+
+export const updateLessonBodySchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    content: z.record(z.string(), z.unknown()).optional(),
+    markdown: lessonMarkdownSchema.optional(),
+    /** The lesson's `contentVersion` the change is based on. Required with `content` or `markdown`. */
+    expectedContentVersion: z.number().int().positive().optional(),
+    mediaId: z.string().min(1).nullable().optional(),
+    requiresEnrollment: z.boolean().optional(),
+    status: z.enum(["draft", "published"]).optional(),
+    sectionId: z.string().min(1).nullable().optional(),
+    dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
+    dripAt: z.string().datetime().nullable().optional(),
+  })
+  .refine(oneContentForm, oneContentFormMessage);
 
 export const createSectionBodySchema = z.object({
   title: z.string().min(1).max(200),
@@ -1956,9 +2044,7 @@ export const contactTagReferencesSchema = z.object({
       title: z.string(),
       type: z.enum(["broadcast", "sequence"]),
       status: z.string(),
-      usages: z.array(
-        z.enum(["filter", "exclude_filter", "trigger", "email_action"]),
-      ),
+      usages: z.array(z.enum(["filter", "exclude_filter", "trigger", "email_action"])),
     }),
   ),
   signupForms: z.array(z.object({ formId: z.string(), name: z.string() })),
@@ -1978,18 +2064,14 @@ export const renameContactTagResultSchema = z.object({
   sequencesUpdated: z.number().int().nonnegative(),
   signupFormsUpdated: z.number().int().nonnegative(),
 });
-export type RenameContactTagResult = z.infer<
-  typeof renameContactTagResultSchema
->;
+export type RenameContactTagResult = z.infer<typeof renameContactTagResultSchema>;
 
 export const deleteContactTagResultSchema = z.object({
   tag: z.string(),
   contactsUpdated: z.number().int().nonnegative(),
   references: contactTagReferencesSchema,
 });
-export type DeleteContactTagResult = z.infer<
-  typeof deleteContactTagResultSchema
->;
+export type DeleteContactTagResult = z.infer<typeof deleteContactTagResultSchema>;
 
 export const newsletterSubscribeBodySchema = z.object({
   email: z.string().trim().email(),
@@ -4047,8 +4129,7 @@ export const contract = c.router({
       lessonId: z.string(),
       mediaId: z.string(),
     }),
-    summary:
-      "Read one media item a lesson uses, under the lesson's own access rules",
+    summary: "Read one media item a lesson uses, under the lesson's own access rules",
     responses: {
       200: learnerLessonMediaSchema,
       401: platformErrorSchema,
@@ -4185,7 +4266,31 @@ export const contract = c.router({
     pathParams: z.object({ productId: z.string() }),
     body: reorderLessonsBodySchema,
     responses: {
-      200: z.object({ items: z.array(lessonSchema) }),
+      200: z.object({ items: z.array(lessonSummarySchema) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getLessonContentFormat: {
+    method: "GET",
+    path: "/v1/lesson-content-format",
+    summary:
+      "Describe the Markdown a lesson page may hold, including blocks this school may not add now",
+    responses: {
+      200: lessonContentFormatSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getLesson: {
+    method: "GET",
+    path: "/v1/lessons/:lessonId",
+    pathParams: z.object({ lessonId: z.string() }),
+    summary: "Read one lesson with its page content as JSON and Markdown",
+    responses: {
+      200: lessonSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,

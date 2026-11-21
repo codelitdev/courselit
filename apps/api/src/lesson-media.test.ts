@@ -9,14 +9,20 @@ function cookieFrom(headers?: Record<string, string>) {
   return header.split(";", 1)[0]!;
 }
 
-function imageDoc(mediaId: string | null, src = "https://media.test/image.png") {
+function imageDoc(mediaId: string | null) {
   return {
     type: "doc",
     content: [
       { type: "paragraph", content: [{ type: "text", text: "Look" }] },
-      ...(mediaId ? [{ type: "image", attrs: { src, mediaId } }] : []),
+      ...(mediaId
+        ? [{ type: "image", attrs: { media: mediaId, alt: "Diagram" } }]
+        : []),
     ],
   };
+}
+
+function videoDoc(mediaId: string) {
+  return { type: "doc", content: [{ type: "video", attrs: { media: mediaId } }] };
 }
 
 describe.serial("per-media lesson reads (L5)", () => {
@@ -83,22 +89,18 @@ describe.serial("per-media lesson reads (L5)", () => {
     };
     const videoLesson = await createLesson({
       title: "Enrolled video",
-      type: "video",
-      content: {},
-      mediaId: video.id,
+      content: videoDoc(video.id),
       status: "published",
     });
     const freeLesson = await createLesson({
       title: "Free reading",
-      type: "text",
-      content: imageDoc(image.id, image.canonicalUrl),
+      content: imageDoc(image.id),
       requiresEnrollment: false,
       status: "published",
     });
     const draftLesson = await createLesson({
       title: "Draft reading",
-      type: "text",
-      content: imageDoc(image.id, image.canonicalUrl),
+      content: imageDoc(image.id),
       requiresEnrollment: false,
       status: "draft",
     });
@@ -150,20 +152,24 @@ describe.serial("per-media lesson reads (L5)", () => {
     });
     // Enrollment doesn't widen what a lesson can serve.
     expect((await read(videoLesson.id, image.id, learnerCookie)).status).toBe(404);
-    // The lesson-level endpoint stays as it was.
+    // The lesson-level endpoint serves SCORM and file lessons; a page has no
+    // lesson-level media, only the media in its blocks.
     const single = await dispatch(runtime, {
       method: "GET",
       path: `/v1/public/${world.schoolA.publicId}/products/${productId}/lessons/${videoLesson.id}/media`,
       headers: { cookie: learnerCookie },
     });
-    expect(single).toMatchObject({ status: 200, body: { id: video.id } });
+    expect(single.status).toBe(404);
 
     // Saved content keeps the references, so removing the image revokes it.
     const removed = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/lessons/${freeLesson.id}`,
       headers,
-      body: { content: imageDoc(null), expectedContentVersion: freeLesson.contentVersion },
+      body: {
+        content: imageDoc(null),
+        expectedContentVersion: freeLesson.contentVersion,
+      },
     });
     expect(removed.status).toBe(200);
     expect((await read(freeLesson.id, image.id)).status).toBe(404);
@@ -172,7 +178,7 @@ describe.serial("per-media lesson reads (L5)", () => {
       path: `/v1/lessons/${freeLesson.id}`,
       headers,
       body: {
-        content: imageDoc(unused.id, unused.canonicalUrl),
+        content: imageDoc(unused.id),
         expectedContentVersion: freeLesson.contentVersion + 1,
       },
     });
@@ -207,7 +213,9 @@ describe.serial("per-media lesson reads (L5)", () => {
     });
     const otherProductId = (otherProduct.body as { id: string }).id;
     // A grant for one product doesn't open another product's lessons.
-    expect((await preview(videoLesson.id, video.id, otherProductId)).status).not.toBe(200);
+    expect((await preview(videoLesson.id, video.id, otherProductId)).status).not.toBe(
+      200,
+    );
     const noToken = await dispatch(runtime, {
       method: "GET",
       path: `/v1/preview/products/${productId}/lessons/${videoLesson.id}/media/${video.id}`,

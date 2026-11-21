@@ -22,7 +22,7 @@ import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { productSubscriptionsForMemberships } from "./product-subscriptions.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import { type MediaRef, type ProductSubscription } from "@courselit/api-contract";
-import { readStoredQuiz } from "@courselit/api-contract/quiz";
+import { hasLessonQuiz, readLessonQuiz } from "@courselit/lesson-content";
 import {
   queueSendLitContactSync,
   setContactMarketingSubscription,
@@ -1400,7 +1400,7 @@ export async function grantLearnerMembership(
 }
 
 /**
- * A quiz lesson completes only after a passed attempt at the quiz it holds
+ * A page with a quiz completes only after a passed attempt at the quiz it holds
  * now: a replaced quiz (new ID) starts with no attempts. A completion that is
  * already recorded stays, whatever happens to the quiz afterwards.
  */
@@ -1425,7 +1425,7 @@ async function quizBlocksCompletion(
     )
     .limit(1);
   if (completed[0]) return false;
-  const quiz = readStoredQuiz(input.lesson.content);
+  const quiz = readLessonQuiz(input.lesson.content);
   if (!quiz) return true;
   const passed = await db
     .select({ id: schema.lessonEvaluations.id })
@@ -1508,7 +1508,9 @@ export async function completeLesson(
       }),
     };
   }
-  if (row.lesson.type === "quiz") {
+  // A page's quiz must have a passed attempt at its current ID (section
+  // 5.4); passing never completes the page by itself.
+  if (row.lesson.type === "page" && hasLessonQuiz(row.lesson.content)) {
     const blocked = await quizBlocksCompletion(db, {
       schoolId: input.schoolId,
       membershipId: membership.id,

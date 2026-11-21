@@ -7,7 +7,7 @@ import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 import { dispatch } from "./test-learner-auth.js";
 
-function quizContent() {
+function quizAttrs() {
   return {
     id: "qz_check",
     passingGrade: 70,
@@ -29,6 +29,20 @@ function quizContent() {
           { id: "q2c", text: "Wrong", correct: false },
         ],
       },
+    ],
+  };
+}
+
+/** A lesson page holding a paragraph and the quiz. */
+function quizPage(attrs: Record<string, unknown> = quizAttrs()) {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "Check what you learned." }],
+      },
+      { type: "quiz", attrs },
     ],
   };
 }
@@ -67,8 +81,7 @@ async function setup(options: { enroll?: boolean } = {}) {
     headers: adminHeaders,
     body: {
       title: "Knowledge check",
-      type: "quiz",
-      content: quizContent(),
+      content: quizPage(),
       status: "published",
     },
   });
@@ -115,20 +128,18 @@ async function setup(options: { enroll?: boolean } = {}) {
       headers: learnerHeaders,
       body: {},
     });
-  const replaceQuiz = async (content: Record<string, unknown>) => {
+  const replaceQuiz = async (attrs: Record<string, unknown>) => {
     const current = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/products/${productId}`,
+      path: `/v1/lessons/${lessonId}`,
       headers: adminHeaders,
     });
-    const version = (
-      current.body as { lessons: Array<{ id: string; contentVersion: number }> }
-    ).lessons.find((item) => item.id === lessonId)!.contentVersion;
+    const version = (current.body as { contentVersion: number }).contentVersion;
     const updated = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/lessons/${lessonId}`,
       headers: adminHeaders,
-      body: { content, expectedContentVersion: version },
+      body: { content: quizPage(attrs), expectedContentVersion: version },
     });
     expect(updated.status).toBe(200);
     return updated.body as { content: Record<string, unknown> };
@@ -151,7 +162,10 @@ describe.serial("quiz evaluation", () => {
   it("grades by question and option ID and keeps production scoring per attempt", async () => {
     const { runtime, world, lessonId, evaluate, complete } = await setup();
 
-    const partial = await evaluate({ quizId: "qz_check", answers: { q1: ["q1a"], q2: [] } });
+    const partial = await evaluate({
+      quizId: "qz_check",
+      answers: { q1: ["q1a"], q2: [] },
+    });
     expect(partial).toMatchObject({
       status: 200,
       body: { quizId: "qz_check", pass: false, score: (1 / 3) * 100, passingGrade: 70 },
@@ -205,7 +219,10 @@ describe.serial("quiz evaluation", () => {
 
   it("refuses an attempt before enrollment and answers in the old shape", async () => {
     const { runtime, evaluate } = await setup({ enroll: false });
-    const beforeEnrollment = await evaluate({ quizId: "qz_check", answers: { q1: ["q1a"] } });
+    const beforeEnrollment = await evaluate({
+      quizId: "qz_check",
+      answers: { q1: ["q1a"] },
+    });
     expect(beforeEnrollment.status).toBe(403);
     const byIndex = await evaluate({ answers: [[0], [0, 1]] });
     expect(byIndex.status).toBe(400);
@@ -221,7 +238,7 @@ describe.serial("quiz evaluation", () => {
       (await evaluate({ quizId: "qz_check", answers: { q1: ["q2a"] } })).body,
     ).toMatchObject({ details: { reason: "answers_missing_or_invalid" } });
 
-    await replaceQuiz({ ...quizContent(), id: "qz_new" });
+    await replaceQuiz({ ...quizAttrs(), id: "qz_new" });
     const stale = await evaluate({ quizId: "qz_check", answers: { q1: ["q1a"] } });
     expect(stale).toMatchObject({
       status: 409,
@@ -232,7 +249,7 @@ describe.serial("quiz evaluation", () => {
 
   it("passes every attempt when the quiz has no pass mark", async () => {
     const { runtime, evaluate, replaceQuiz, complete } = await setup();
-    await replaceQuiz({ ...quizContent(), passingGrade: null });
+    await replaceQuiz({ ...quizAttrs(), passingGrade: null });
     const attempt = await evaluate({ quizId: "qz_check", answers: {} });
     expect(attempt).toMatchObject({
       status: 200,
@@ -245,24 +262,29 @@ describe.serial("quiz evaluation", () => {
   it("needs a pass at the current quiz to complete, and keeps a recorded completion", async () => {
     const { runtime, evaluate, complete, replaceQuiz } = await setup();
     const passAll = { q1: ["q1a"], q2: ["q2a", "q2b"] };
-    expect((await evaluate({ quizId: "qz_check", answers: passAll })).body).toMatchObject({
+    expect(
+      (await evaluate({ quizId: "qz_check", answers: passAll })).body,
+    ).toMatchObject({
       pass: true,
     });
 
     // Editing the quiz but keeping its ID keeps the pass.
-    await replaceQuiz({ ...quizContent(), passingGrade: 90 });
+    await replaceQuiz({ ...quizAttrs(), passingGrade: 90 });
     expect((await complete()).status).toBe(200);
 
     // A new quiz starts with no attempts, but the recorded completion stays.
-    await replaceQuiz({ ...quizContent(), id: "qz_replacement" });
+    await replaceQuiz({ ...quizAttrs(), id: "qz_replacement" });
     expect((await complete()).status).toBe(200);
     await runtime.close();
   });
 
   it("does not count a pass at a replaced quiz towards the new one", async () => {
     const { runtime, evaluate, complete, replaceQuiz } = await setup();
-    await evaluate({ quizId: "qz_check", answers: { q1: ["q1a"], q2: ["q2a", "q2b"] } });
-    await replaceQuiz({ ...quizContent(), id: "qz_replacement" });
+    await evaluate({
+      quizId: "qz_check",
+      answers: { q1: ["q1a"], q2: ["q2a", "q2b"] },
+    });
+    await replaceQuiz({ ...quizAttrs(), id: "qz_replacement" });
     expect(await complete()).toMatchObject({
       status: 400,
       body: { details: { reason: "need_to_pass" } },
@@ -291,17 +313,27 @@ describe.serial("quiz answers never reach learners (L1)", () => {
     const { runtime, world, adminHeaders, learnerHeaders, productId, lessonId } =
       await setup();
 
+    // Authors read the answers from the single-lesson read, as JSON and Markdown.
     const admin = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/lessons/${lessonId}`,
+      headers: adminHeaders,
+    });
+    expect(admin.status).toBe(200);
+    expect((admin.body as { content: unknown }).content).toEqual(quizPage());
+    expect((admin.body as { markdown: string }).markdown).toContain(
+      '<Option id="q1a" text="Correct" correct />',
+    );
+    contract.getLesson.responses[200].parse(admin.body);
+    // Lists carry neither content form.
+    const adminProduct = await dispatch(runtime, {
       method: "GET",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
     });
-    expect(admin.status).toBe(200);
-    const adminLesson = (
-      admin.body as { lessons: Array<{ id: string; content: unknown }> }
-    ).lessons.find((item) => item.id === lessonId)!;
-    expect(adminLesson.content).toEqual(quizContent());
-    contract.getProduct.responses[200].parse(admin.body);
+    expect(adminProduct.body).not.toHaveProperty("lessons.0.content");
+    expect(adminProduct.body).not.toHaveProperty("lessons.0.markdown");
+    contract.getProduct.responses[200].parse(adminProduct.body);
 
     const learner = await dispatch(runtime, {
       method: "GET",
@@ -312,7 +344,7 @@ describe.serial("quiz answers never reach learners (L1)", () => {
     const learnerLesson = (
       learner.body as { lessons: Array<{ id: string; content: unknown }> }
     ).lessons.find((item) => item.id === lessonId)!;
-    expect(learnerLesson.content).toEqual({
+    const learnerQuiz = {
       id: "qz_check",
       passingGrade: 70,
       questions: [
@@ -336,7 +368,12 @@ describe.serial("quiz answers never reach learners (L1)", () => {
           ],
         },
       ],
+    };
+    expect(learnerLesson.content).toEqual({
+      type: "doc",
+      content: [quizPage().content[0], { type: "quiz", attrs: learnerQuiz }],
     });
+    expect(learnerLesson).not.toHaveProperty("markdown");
     expect(JSON.stringify(learner.body)).not.toContain('"correct"');
     expect(learner.body).not.toHaveProperty("lessons.0.contentVersion");
     contract.getPublicProduct.responses[200].parse(learner.body);
@@ -376,12 +413,11 @@ describe.serial("quiz answers never reach learners (L1)", () => {
     const lesson = {
       id: "lsn_1",
       title: "Quiz",
-      type: "quiz",
+      type: "page",
       mediaId: null,
       sectionId: null,
       position: 1,
       status: "published",
-      downloadable: false,
       requiresEnrollment: true,
       dripDelaySeconds: null,
       dripAt: null,
@@ -402,7 +438,6 @@ describe.serial("quiz answers never reach learners (L1)", () => {
       leadMagnet: false,
       certificate: false,
       discussions: false,
-      newLessonStatus: "draft",
       includedWithCommunity: false,
       discussionSpaceId: null,
       publishedAt: null,
@@ -412,19 +447,19 @@ describe.serial("quiz answers never reach learners (L1)", () => {
       sections: [],
     };
     expect(
-      product.safeParse({ ...base, lessons: [{ ...lesson, content: quizContent() }] })
+      product.safeParse({ ...base, lessons: [{ ...lesson, content: quizPage() }] })
         .success,
     ).toBe(false);
     expect(
       product.safeParse({
         ...base,
-        lessons: [{ ...lesson, type: "text", content: { nested: [{ correct: true }] } }],
+        lessons: [{ ...lesson, content: { nested: [{ correct: true }] } }],
       }).success,
     ).toBe(false);
     expect(
       product.safeParse({
         ...base,
-        lessons: [{ ...lesson, type: "text", content: { type: "doc", content: [] } }],
+        lessons: [{ ...lesson, content: { type: "doc", content: [] } }],
       }).success,
     ).toBe(true);
   });

@@ -242,10 +242,9 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain("school?.storefrontOrigin");
     expect(productSettings).toContain("Type &quot;delete&quot; to confirm");
-    expect(lessonAuthoring).toContain("@frontlit/text-editor");
-    expect(lessonAuthoring).toContain("ResizeObserver");
-    expect(lessonAuthoring).toContain('type: "embed-resize"');
-    expect(lessonAuthoring).toContain("height={height}");
+    // Temporary page editor until the block editor lands (lesson-pages step 4).
+    expect(lessonAuthoring).toContain("markdown");
+    expect(lessonAuthoring).toContain("/api/v1/lessons/");
     expect(lessonAuthoring).toContain('method: "DELETE"');
     expect(lessonAuthoring).toContain("Save the lesson first");
     expect(scormUpload).toContain("scormResponseError");
@@ -670,7 +669,8 @@ describe("admin and learner surfaces", () => {
     expect(course).toContain("encodeURIComponent(previewToken)");
     expect(embedViewer).toContain("SandboxedEmbed");
     expect(embedViewer).toContain("youtube.com/embed");
-    expect(lessonViewer).toContain('type === "embed"');
+    // Pages render through the lesson profile; embeds use the package's sandboxed frame.
+    expect(lessonViewer).toContain("profile={lessonProfile}");
     expect(surface).not.toContain("/api/auth/");
     expect(surface).not.toContain("/api/v1/schools");
     expect(surface).not.toContain("/v1/api-keys");

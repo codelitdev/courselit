@@ -1,5 +1,5 @@
-import { type CourseLitPermission, contract } from "@courselit/api-contract";
 import { createPlatformError, type PlatformError } from "@codelitdev/platform";
+import { type CourseLitPermission, contract } from "@courselit/api-contract";
 
 export type Audience = "school" | "account" | "system" | "public" | "learner";
 
@@ -227,6 +227,8 @@ export const OPERATION_POLICIES = {
   updateSectionDripEmail: schoolOp(["products:write"]),
   deleteSection: schoolOp(["products:write"]),
   reorderSections: schoolOp(["products:write"]),
+  getLesson: schoolOp(["products:read"]),
+  getLessonContentFormat: schoolOp(["products:read"]),
   createLesson: schoolOp(["products:write"]),
   updateLesson: schoolOp(["products:write"]),
   deleteLesson: schoolOp(["products:write"]),
@@ -491,7 +493,8 @@ export function operationPermissionsAllow(
   return (
     (policy.requiredPermissions ?? []).every((permission) =>
       caller.permissions.has(permission),
-    ) && (any.length === 0 || any.some((permission) => caller.permissions.has(permission)))
+    ) &&
+    (any.length === 0 || any.some((permission) => caller.permissions.has(permission)))
   );
 }
 

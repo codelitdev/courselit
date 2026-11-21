@@ -5,11 +5,12 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { type QuizAnswers, readStoredQuiz, scoreQuiz } from "@courselit/api-contract/quiz";
+import { type QuizAnswers, scoreQuiz } from "@courselit/api-contract/quiz";
+import { hasLessonQuiz, readLessonQuiz } from "@courselit/lesson-content";
 import { and, asc, eq } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
-import * as schema from "./db/schema/index.js";
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
+import * as schema from "./db/schema/index.js";
 import { assertRateLimit } from "./rate-limit.js";
 import type { AppDb } from "./types.js";
 
@@ -77,7 +78,8 @@ async function loadQuizLessonAccess(
     !row ||
     row.product.status !== "published" ||
     row.lesson.status !== "published" ||
-    row.lesson.type !== "quiz"
+    row.lesson.type !== "page" ||
+    !hasLessonQuiz(row.lesson.content)
   ) {
     return { ok: false, error: createPlatformError("not_found") };
   }
@@ -117,7 +119,8 @@ async function loadQuizLessonAccess(
     lessonUnlockAt(row.lesson, membershipStartedAt),
     sectionAvailableAt,
   ].reduce<Date | null>(
-    (latest, candidate) => (!candidate || (latest && latest >= candidate) ? latest : candidate),
+    (latest, candidate) =>
+      !candidate || (latest && latest >= candidate) ? latest : candidate,
     null,
   );
   if (availableAt && availableAt > now) {
@@ -159,14 +162,17 @@ export async function evaluateQuizLesson(
   );
   if (!limited.ok) return limited;
 
-  const quiz = readStoredQuiz(access.value.lesson.content);
+  // The page's current quiz (section 5.3); a published page's is complete.
+  const quiz = readLessonQuiz(access.value.lesson.content);
   if (!quiz) return invalid("quiz_content_invalid");
   // Answers belong to one version of the quiz. A learner still showing a
   // replaced quiz must reload it instead of being graded against another.
   if (quiz.id !== attempt.quizId) {
     return {
       ok: false,
-      error: createPlatformError("conflict", { safeDetails: { reason: "quiz_changed" } }),
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "quiz_changed" },
+      }),
     };
   }
   const scored = scoreQuiz(quiz, attempt.answers);
@@ -193,21 +199,29 @@ export async function evaluateQuizLesson(
     pass,
     attemptId: evaluationId,
   };
-  await recordActivity(db, {
-    schoolId: input.schoolId,
-    actorId: accountId,
-    type: ActivityType.QUIZ_ATTEMPTED,
-    entityId: input.lessonPublicId,
-    metadata: activityMetadata,
-  }, clock);
-  if (pass) {
-    await recordActivity(db, {
+  await recordActivity(
+    db,
+    {
       schoolId: input.schoolId,
       actorId: accountId,
-      type: ActivityType.QUIZ_PASSED,
+      type: ActivityType.QUIZ_ATTEMPTED,
       entityId: input.lessonPublicId,
       metadata: activityMetadata,
-    }, clock);
+    },
+    clock,
+  );
+  if (pass) {
+    await recordActivity(
+      db,
+      {
+        schoolId: input.schoolId,
+        actorId: accountId,
+        type: ActivityType.QUIZ_PASSED,
+        entityId: input.lessonPublicId,
+        metadata: activityMetadata,
+      },
+      clock,
+    );
   }
   return {
     ok: true,

@@ -97,7 +97,6 @@ describe.serial("digital downloads", () => {
       body: {
         title: "Handout",
         type: "file",
-        content: {},
         mediaId,
         status: "published",
       },

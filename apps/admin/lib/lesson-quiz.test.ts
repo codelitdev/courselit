@@ -88,4 +88,28 @@ describe("lessonSaveErrorMessage", () => {
     expect(lessonSaveErrorMessage(400, { message: "Bad input" })).toBe("Bad input");
     expect(lessonSaveErrorMessage(500, null)).toBe("Unable to save the lesson.");
   });
+
+  it("explains content diagnostics and an unavailable block", () => {
+    expect(
+      lessonSaveErrorMessage(400, {
+        message: "Validation failed",
+        details: {
+          reason: "lesson_content_invalid",
+          message: "Raw HTML is not allowed.",
+          line: 3,
+        },
+      }),
+    ).toBe("Line 3: Raw HTML is not allowed.");
+    expect(
+      lessonSaveErrorMessage(400, {
+        details: { reason: "lesson_content_invalid", message: "Bad quiz.", line: null },
+      }),
+    ).toBe("Bad quiz.");
+    expect(
+      lessonSaveErrorMessage(403, {
+        message: "Forbidden",
+        details: { reason: "plan_required", blockReason: "trial" },
+      }),
+    ).toContain("trial");
+  });
 });

@@ -1,6 +1,7 @@
 # Lesson pages: one block-based lesson type
 
-Status (2026-11-20): design, not started.
+Status (2026-11-21): steps 1–3 done (step 2 in #899, step 3 stacked on it);
+steps 4–5 next.
 
 Today a lesson has one of eight fixed types (`text`, `video`, `audio`,
 `pdf`, `file`, `embed`, `quiz`, `scorm`) and the type can't change. This
@@ -181,13 +182,23 @@ Most creators **undercharge**.
 <Callout type="tip">Start with three tiers.</Callout>
 
 <Quiz id="qz_4" passingGrade={70}>
-<Question id="q1">
-Which tier anchors the price?
-<Option id="o1" correct>The top tier</Option>
-<Option id="o2">The middle tier</Option>
+
+<Question id="q1" text="Which tier anchors the price?">
+
+<Option id="o1" text="The top tier" correct />
+
+<Option id="o2" text="The middle tier" />
+
 </Question>
+
 </Quiz>
 ```
+
+That is the canonical form the API returns. On read, a question's text may
+also be a paragraph inside `<Question>` (after a blank line), and an option
+may be `<Option id="o1" correct>The top tier</Option>` on its own line.
+Quiz text is plain text. Underline and highlight are left out of the lesson
+profile because Markdown can't hold them.
 
 ### 4.3 Validation (server, every write)
 
@@ -196,8 +207,14 @@ Which tier anchors the price?
 - Media IDs belong to the school and match the block's MIME family.
 - Missing quiz, question and option IDs are filled in; duplicates are
   refused; the saved document is returned so clients reuse the IDs.
-- Errors return `validation_failed` with `diagnostics` (code, message, and a
-  JSON path or a Markdown line and column), as FrontLit's docs API does.
+- Errors return `validation_failed` with reason `lesson_content_invalid`.
+  Platform error details are flat, so the first diagnostic is spread out
+  (`code`, `message`, `fieldPath` or `line`/`column`) and up to 20
+  diagnostics are in `diagnostics` as a JSON string.
+- Incomplete blocks (a quiz without questions or a correct option) save as
+  drafts from JSON, but Markdown writes and publishing refuse them.
+- A page holding a quiz can't be a free preview (`quiz_cannot_be_previewed`),
+  as quiz lessons couldn't on main: grading needs an enrolled learner.
 
 ## 5. Quiz, grading and completion
 
@@ -246,9 +263,10 @@ would be a separate decision, weighed against L1.
 `scorm-plan.ts` stays. For blocks, CourseLit keeps a map from block name to
 plan feature and turns the school's plan into the `unavailable` list (3.3);
 the editor package knows nothing about plans. Refusals return `forbidden`
-with `plan_required`. The only v1 entry: Embed is unavailable while a
-school is on its trial (reason `trial`, L4); self-hosted installs have no
-trial, so Embed is always available there.
+with `plan_required`. The only v1 entry: Embed needs the `code_injection` feature, so it is
+unavailable while a school is on its trial (reason `trial`, L4) or has no
+plan (`plan_required`); self-hosted installs have every feature, so Embed is
+always available there.
 
 ## 7. API, MCP and storage
 
@@ -278,10 +296,14 @@ trial, so Embed is always available there.
 |---|---|
 | text | page; main's Tiptap doc normalized to the profile (unknown nodes become paragraphs; base64 images dropped and reported) |
 | video, audio, pdf | page with one matching media block, plus a File block when main marked it downloadable |
-| embed | page with one Embed block |
+| embed | page with one Embed block; a bare YouTube or Vimeo URL (which main played as a video) becomes a Video block |
 | quiz | page with one Quiz block; IDs generated; pass mark carried over |
 | file | page with a File block in a course; `file` in a download product |
 | scorm | scorm |
+
+Media blocks start empty, since lessons with media are still refused until
+MediaLit media is imported. Images that aren't on Unsplash become links;
+what the import changed is reported per lesson in the run's `warnings`.
 
 ## 9. Later
 
