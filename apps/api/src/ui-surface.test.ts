@@ -244,8 +244,9 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain("school?.storefrontOrigin");
     expect(productSettings).toContain("Type &quot;delete&quot; to confirm");
-    // Temporary page editor until the block editor lands (lesson-pages step 4).
-    expect(lessonAuthoring).toContain("markdown");
+    // Page lessons are edited with the block editor and saved as content.
+    expect(lessonAuthoring).toContain("<LessonPageEditor");
+    expect(lessonAuthoring).toContain("expectedContentVersion");
     expect(lessonAuthoring).toContain("/api/v1/lessons/");
     expect(lessonAuthoring).toContain('method: "DELETE"');
     expect(lessonAuthoring).toContain("Save the lesson first");

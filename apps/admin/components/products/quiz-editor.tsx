@@ -1,131 +1,85 @@
 "use client";
 
+import { QUIZ_LIMITS } from "@courselit/api-contract/quiz";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { Checkbox } from "@/components/ui/codelit/checkbox";
 import { Input } from "@/components/ui/codelit/input";
-import {
-  emptyQuizOption,
-  emptyQuizQuestion,
-  type QuizEditorOption,
-  type QuizEditorQuestion,
-  type QuizEditorState,
-  quizContentFromEditor,
-  quizEditorState,
+import type {
+  QuizEditorAction,
+  QuizEditorQuestion,
+  QuizEditorState,
 } from "@/lib/lesson-quiz";
 
-type QuizOption = QuizEditorOption;
-type QuizQuestion = QuizEditorQuestion;
-
+/**
+ * The quiz form, as main's quiz builder: questions with options, a checkbox
+ * per option to mark it correct (several make a multiple-answer question)
+ * and an optional pass mark. State lives with the caller (the Quiz block).
+ */
 export function QuizEditor({
-  value,
-  onChange,
+  quiz,
+  dispatch,
+  disabled = false,
 }: {
-  value: Record<string, unknown>;
-  onChange: (value: Record<string, unknown>) => void;
+  quiz: QuizEditorState;
+  dispatch: (action: QuizEditorAction) => void;
+  disabled?: boolean;
 }) {
-  const [quiz, setQuiz] = useState(() => quizEditorState(value));
-
-  function update(next: QuizEditorState) {
-    setQuiz(next);
-    onChange(quizContentFromEditor(next));
-  }
-
-  function updateQuestion(index: number, next: QuizQuestion) {
-    update({
-      ...quiz,
-      questions: quiz.questions.map((question, questionIndex) =>
-        questionIndex === index ? next : question,
-      ),
-    });
-  }
-
-  function updateOption(questionIndex: number, optionIndex: number, next: QuizOption) {
-    const question = quiz.questions[questionIndex];
-    if (!question) return;
-    updateQuestion(questionIndex, {
-      ...question,
-      options: question.options.map((option, currentIndex) =>
-        currentIndex === optionIndex ? next : option,
-      ),
-    });
-  }
-
+  const id = useId();
   return (
-    <div className="space-y-5 rounded-xl border bg-card p-5">
+    <div className="space-y-4">
       {quiz.questions.map((question, questionIndex) => (
         <QuestionEditor
           key={question.id}
           question={question}
           index={questionIndex}
-          // The production builder keeps the first question and lets users
-          // remove only subsequent questions.
+          disabled={disabled}
+          // Main's builder keeps the first question; later ones can go.
           canDelete={questionIndex > 0}
-          onChange={(next) => updateQuestion(questionIndex, next)}
-          onDelete={() =>
-            update({
-              ...quiz,
-              questions: quiz.questions.filter((_, index) => index !== questionIndex),
-            })
-          }
-          onOptionChange={(optionIndex, next) =>
-            updateOption(questionIndex, optionIndex, next)
-          }
-          onAddOption={() =>
-            updateQuestion(questionIndex, {
-              ...question,
-              options: [...question.options, emptyQuizOption()],
-            })
-          }
-          onRemoveOption={(optionIndex) =>
-            updateQuestion(questionIndex, {
-              ...question,
-              options: question.options.filter((_, index) => index !== optionIndex),
-            })
-          }
+          dispatch={dispatch}
         />
       ))}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            update({
-              ...quiz,
-              questions: [...quiz.questions, emptyQuizQuestion(quiz.questions.length + 1)],
-            })
-          }
-        >
-          <Plus className="size-4" /> Add Question
-        </Button>
-      </div>
-      <div className="border-t pt-5">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={disabled || quiz.questions.length >= QUIZ_LIMITS.questions}
+        onClick={() => dispatch({ type: "addQuestion" })}
+      >
+        <Plus className="size-4" /> Add question
+      </Button>
+      <div className="flex flex-wrap items-end gap-4 border-t pt-4">
         <div className="flex items-center gap-3 text-sm font-medium">
           <Checkbox
-            id="quiz-requires-passing-grade"
+            id={`${id}-graded`}
             checked={quiz.graded}
-            onCheckedChange={(checked) => update({ ...quiz, graded: checked === true })}
+            disabled={disabled}
+            onCheckedChange={(checked) =>
+              dispatch({ type: "setGraded", graded: checked === true })
+            }
           />
-          <label htmlFor="quiz-requires-passing-grade">Graded Quiz</label>
+          <label htmlFor={`${id}-graded`}>Graded quiz</label>
         </div>
-        <div className="field mt-4 block max-w-xs">
-          <span>Passing grade (%)</span>
+        <div className="field max-w-[10rem]">
+          <label htmlFor={`${id}-passing-grade`}>Passing grade (%)</label>
           <Input
-            id="quiz-passing-grade"
+            id={`${id}-passing-grade`}
             type="number"
             min={0}
             max={100}
             value={quiz.passingGrade}
-            disabled={!quiz.graded}
+            disabled={disabled || !quiz.graded}
             onChange={(event) =>
-              update({
-                ...quiz,
-                passingGrade: Math.min(100, Math.max(0, Number(event.target.value))),
-              })
+              dispatch({ type: "setPassingGrade", value: Number(event.target.value) })
             }
           />
         </div>
+        <p className="basis-full text-xs text-muted-foreground">
+          {quiz.graded
+            ? `Learners need ${quiz.passingGrade}% to pass before they can mark the lesson complete.`
+            : "Without a pass mark, every attempt passes."}
+        </p>
       </div>
     </div>
   );
@@ -135,34 +89,37 @@ function QuestionEditor({
   question,
   index,
   canDelete,
-  onChange,
-  onDelete,
-  onOptionChange,
-  onAddOption,
-  onRemoveOption,
+  disabled,
+  dispatch,
 }: {
-  question: QuizQuestion;
+  question: QuizEditorQuestion;
   index: number;
   canDelete: boolean;
-  onChange: (question: QuizQuestion) => void;
-  onDelete: () => void;
-  onOptionChange: (index: number, option: QuizOption) => void;
-  onAddOption: () => void;
-  onRemoveOption: (index: number) => void;
+  disabled: boolean;
+  dispatch: (action: QuizEditorAction) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const multiple = question.options.filter((option) => option.correct).length > 1;
   return (
-    <section className="rounded-lg border p-4">
+    <section className="rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold">Question #{index + 1}</h2>
+        <p className="m-0 text-sm font-semibold">
+          Question #{index + 1}
+          {multiple ? (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              Multiple answers
+            </span>
+          ) : null}
+        </p>
         <div className="flex gap-1">
           {canDelete ? (
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onDelete}
-              aria-label="Delete question"
+              disabled={disabled}
+              onClick={() => dispatch({ type: "removeQuestion", question: index })}
+              aria-label={`Delete question ${index + 1}`}
             >
               <Trash2 className="size-4 text-destructive" />
             </Button>
@@ -173,6 +130,7 @@ function QuestionEditor({
             size="sm"
             onClick={() => setCollapsed((current) => !current)}
             aria-label={collapsed ? "Expand question" : "Collapse question"}
+            aria-expanded={!collapsed}
           >
             {collapsed ? (
               <ChevronDown className="size-4" />
@@ -186,25 +144,43 @@ function QuestionEditor({
         <div className="mt-4 space-y-3">
           <Input
             value={question.text}
-            onChange={(event) => onChange({ ...question, text: event.target.value })}
+            disabled={disabled}
+            aria-label={`Question ${index + 1}`}
+            onChange={(event) =>
+              dispatch({
+                type: "setQuestionText",
+                question: index,
+                text: event.target.value,
+              })
+            }
             placeholder="Enter question"
           />
           {question.options.map((option, optionIndex) => (
             <div className="flex items-center gap-2" key={option.id}>
               <Checkbox
                 checked={option.correct}
+                disabled={disabled}
                 onCheckedChange={(checked) =>
-                  onOptionChange(optionIndex, {
-                    ...option,
+                  dispatch({
+                    type: "setOptionCorrect",
+                    question: index,
+                    option: optionIndex,
                     correct: checked === true,
                   })
                 }
-                aria-label={`Mark option ${optionIndex + 1} correct`}
+                aria-label={`Mark option ${optionIndex + 1} of question ${index + 1} correct`}
               />
               <Input
                 value={option.text}
+                disabled={disabled}
+                aria-label={`Option ${optionIndex + 1} of question ${index + 1}`}
                 onChange={(event) =>
-                  onOptionChange(optionIndex, { ...option, text: event.target.value })
+                  dispatch({
+                    type: "setOptionText",
+                    question: index,
+                    option: optionIndex,
+                    text: event.target.value,
+                  })
                 }
                 placeholder={`Option ${optionIndex + 1}`}
               />
@@ -212,16 +188,34 @@ function QuestionEditor({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onRemoveOption(optionIndex)}
-                aria-label="Delete option"
+                disabled={disabled || question.options.length <= 1}
+                onClick={() =>
+                  dispatch({
+                    type: "removeOption",
+                    question: index,
+                    option: optionIndex,
+                  })
+                }
+                aria-label={`Delete option ${optionIndex + 1} of question ${index + 1}`}
               >
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={onAddOption}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={
+              disabled || question.options.length >= QUIZ_LIMITS.optionsPerQuestion
+            }
+            onClick={() => dispatch({ type: "addOption", question: index })}
+          >
             <Plus className="size-4" /> Add option
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Tick every correct option. Learners never see which ones are correct.
+          </p>
         </div>
       ) : null}
     </section>

@@ -12,6 +12,7 @@ COPY apps/admin/package.json ./apps/admin/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/components-library/package.json ./packages/components-library/package.json
 COPY packages/page-blocks/package.json ./packages/page-blocks/package.json
+COPY packages/lesson-content/package.json ./packages/lesson-content/package.json
 RUN bun install --filter '@courselit/admin...' --frozen-lockfile
 
 FROM deps AS builder
@@ -21,6 +22,7 @@ COPY apps/admin ./apps/admin
 COPY packages/api-contract ./packages/api-contract
 COPY packages/components-library ./packages/components-library
 COPY packages/page-blocks ./packages/page-blocks
+COPY packages/lesson-content ./packages/lesson-content
 RUN bun --bun run --filter @courselit/admin build
 
 # sharp (Next.js image optimization) is the one native module traced into the
