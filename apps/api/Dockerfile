@@ -1,4 +1,12 @@
-FROM oven/bun:1.4.4-alpine AS base
+# Install and build run on the build machine's own platform ($BUILDPLATFORM):
+# the output is JavaScript, and emulating arm64 on an x86 builder (or the
+# reverse) is several times slower. Production dependencies, which may carry
+# native binaries, are installed for the target platform (prod-deps), and the
+# runner is the target platform.
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4-alpine AS base
+WORKDIR /app
+
+FROM oven/bun:1.4.4-alpine AS target-base
 WORKDIR /app
 
 FROM base AS deps
@@ -13,14 +21,14 @@ COPY apps/api ./apps/api
 COPY packages/api-contract ./packages/api-contract
 RUN bun --bun run --filter @courselit/api build
 
-FROM base AS prod-deps
+FROM target-base AS prod-deps
 COPY package.json bun.lock ./
 COPY patches ./patches
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
 RUN bun install --production --filter @courselit/api --filter @courselit/api-contract --frozen-lockfile
 
-FROM base AS runner
+FROM target-base AS runner
 ENV NODE_ENV=production
 ENV PORT=4000
 
