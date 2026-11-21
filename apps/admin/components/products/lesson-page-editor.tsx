@@ -23,6 +23,7 @@ import { CircleHelp, Image as ImageIcon } from "lucide-react";
 import {
   type ComponentProps,
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -53,6 +54,7 @@ import {
   quizEditorState,
   sameQuizContent,
 } from "@/lib/lesson-quiz";
+import { cn } from "@/lib/utils";
 import { QuizEditor } from "./quiz-editor";
 
 type ReactNodeViewProps = ComponentProps<NodeViewComponent>;
@@ -277,6 +279,10 @@ export type LessonPageEditorProps = {
   editable: boolean;
   onChange: (content: Json) => void;
   onFlushChangeReady?: (flush: () => void) => void;
+  /** Shown above the page inside the editor's scroll area (the title heading). */
+  beforeContent?: ReactNode;
+  /** The editor fills its container; the block toolbar sticks to the top. */
+  className?: string;
 };
 
 /**
@@ -291,6 +297,8 @@ export function LessonPageEditor({
   editable,
   onChange,
   onFlushChangeReady,
+  beforeContent,
+  className,
 }: LessonPageEditorProps) {
   const [request, setRequest] = useState<PickRequest | null>(null);
   const requestRef = useRef<PickRequest | null>(null);
@@ -457,9 +465,20 @@ export function LessonPageEditor({
           editable={editable}
           ariaLabel="Lesson page"
           placeholder="Write the lesson, or type / to add a video, quiz or other block"
-          className="rounded-xl bg-card"
-          editorClassName="min-h-[320px] px-4 py-3"
-        />
+          className={cn(
+            "writing-editor h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto rounded-none border-0 bg-background",
+            className,
+          )}
+          contentClassName="max-w-[46rem] pb-24"
+          editorClassName="writing-editor-content min-h-[420px]"
+          beforeContent={beforeContent}
+        >
+          {pickError ? (
+            <p role="alert" className="px-6 text-sm text-destructive sm:px-10">
+              {pickError}
+            </p>
+          ) : null}
+        </Editor>
       </MediaPickerContextProvider>
       <MediaUploadDialog<CourseLitMedia>
         {...filteredAdapters}
@@ -473,11 +492,6 @@ export function LessonPageEditor({
         metadataMode={kind === "image" ? "alt" : "auto"}
         onSelect={select}
       />
-      {pickError ? (
-        <p role="alert" className="text-sm text-destructive">
-          {pickError}
-        </p>
-      ) : null}
     </LessonEditorHostContext.Provider>
   );
 }

@@ -60,6 +60,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isFullScreenBlogEditor = /^(?:\/website)?\/blogs\/[^/]+\/edit\/?$/.test(
     pathname,
   );
+  const isFullScreenLessonEditor = /^\/products\/[^/]+\/lessons\/[^/]+\/edit\/?$/.test(
+    pathname,
+  );
   const isFullScreenMailEditor =
     /^\/marketing\/(?:editor\/[^/]+|templates\/[^/]+\/edit)\/?$/.test(pathname) ||
     /^\/products\/[^/]+\/content\/section\/[^/]+\/email\/?$/.test(pathname);
@@ -116,6 +119,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isFullScreen =
     isFullScreenPageEditor ||
     isFullScreenBlogEditor ||
+    isFullScreenLessonEditor ||
     isFullScreenMailEditor ||
     isFullScreenSetupWizard ||
     isFullScreenTeamInvitation;

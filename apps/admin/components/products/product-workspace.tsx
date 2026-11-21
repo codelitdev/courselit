@@ -650,6 +650,7 @@ export function ProductWorkspace({
             productRoot={productRoot}
             request={request}
             refresh={refresh}
+            schoolId={school?.id}
           />
         ) : null}
 
