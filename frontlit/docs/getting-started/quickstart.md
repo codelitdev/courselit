@@ -24,7 +24,7 @@ The course starts as a draft, so nobody can see it yet. You land on its **Conten
 
 ### Add a section and a lesson
 
-On the **Content** tab, select **Add section** and name it. Then select **Add lesson** inside the section, enter a **Title**, write something in the **Content** editor and select **Save and make live**.
+On the **Content** tab, select **Add section** and name it. Then select **Add lesson** inside the section and choose **Page**. The full-screen lesson editor opens: replace "Untitled lesson" with your title, write something below it (it saves automatically) and select **Make live**.
 
 Lessons start as drafts by default, and learners only see live lessons. See [Sections and lessons](/docs/products/sections-and-lessons) and [Lesson types](/docs/products/lesson-types).
 

@@ -22,7 +22,7 @@ On the **Content** tab, select the lesson's title. Or create a new lesson with *
 
 ### Switch on Free preview
 
-Turn on **Free preview**. Its description reads "Anyone can open this lesson from the sales page without joining." Then save the lesson.
+Open **Lesson settings** with the settings icon in the top bar and turn on **Free preview**. Its description reads "Anyone can open this lesson from the sales page without joining." The change saves right away.
 
 </Step>
 

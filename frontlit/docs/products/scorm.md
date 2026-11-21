@@ -4,11 +4,11 @@ description: Add a SCORM 1.2 or 2004 package to a course as a lesson and learn h
 nav_order: 70
 ---
 
-A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it. The SCORM type is marked **Alpha** in the lesson editor.
+A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it. The SCORM type is marked **Alpha** in the **Add a lesson** dialog.
 
 ## Plan
 
-SCORM lessons come with the Business plan, and with a free trial. On a plan without them, such as Pro, the **SCORM** lesson type is disabled in the lesson editor. It carries a **Business** tag and the note "SCORM lessons come with the Business plan."
+SCORM lessons come with the Business plan, and with a free trial. On a plan without them, such as Pro, the **SCORM** choice is disabled in the **Add a lesson** dialog. It carries a **Business** tag and the note "SCORM lessons come with the Business plan."
 
 SCORM lessons you already added keep playing. If you try to replace a package, you see "This lesson keeps playing. Replacing its package needs the Business plan." See [Billing and plan](/docs/settings/billing-and-plan).
 
@@ -26,7 +26,7 @@ SCORM lessons you already added keep playing. If you try to replace a package, y
 
 ### Create the lesson
 
-On the **Content** tab, select **Add lesson** in a section, choose the **SCORM** type, enter a **Title** and select **Save draft** or **Save and make live**. Under **SCORM package**, you see "Save the lesson first, then upload its SCORM package." CourseLit reopens the lesson after saving.
+On the **Content** tab, select **Add lesson** in a section, choose **SCORM** in the **Add a lesson** dialog, enter a **Title** and select **Save draft** or **Save and make live**. Under **SCORM package**, you see "Save the lesson first, then upload its SCORM package." CourseLit reopens the lesson after saving.
 
 </Step>
 
