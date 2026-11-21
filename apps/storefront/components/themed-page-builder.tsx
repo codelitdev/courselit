@@ -37,6 +37,7 @@ import {
   Header2,
   Header3,
   Header4,
+  Image,
   Input,
   Label,
   Link,
@@ -337,6 +338,11 @@ export function LearnerLink({
 /** A path on this site (`/join`), not a protocol-relative or absolute URL. */
 export function isSitePath(href: string): boolean {
   return href.startsWith("/") && !href.startsWith("//");
+}
+
+/** A themed image: the theme's card radius, sized by the caller. */
+export function LearnerImage(props: WithoutTheme<ComponentProps<typeof Image>>) {
+  return <Image {...props} theme={useSchoolThemeStyle()} />;
 }
 
 export function LearnerBadge(props: WithoutTheme<ComponentProps<typeof Badge>>) {

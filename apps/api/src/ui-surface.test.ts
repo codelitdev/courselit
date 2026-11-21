@@ -90,7 +90,9 @@ describe("admin and learner surfaces", () => {
       "storefront/components/dashboard/learner-dashboard-layout.tsx",
     );
     const learnerFeed = read("storefront/components/dashboard/learner-feed.tsx");
-    const learnerProducts = read("storefront/components/dashboard/learner-products.tsx");
+    const learnerProducts = read(
+      "storefront/components/dashboard/learner-products.tsx",
+    );
     const learnerCommunityMembership = read(
       "storefront/components/communities/learner-community-membership.tsx",
     );
@@ -132,7 +134,7 @@ describe("admin and learner surfaces", () => {
       "$",
       "{encodeURIComponent(community.id)}",
     ].join("");
-        expect(home).not.toContain("Create a school to get started");
+    expect(home).not.toContain("Create a school to get started");
     expect(home).not.toContain("CreateSchoolDialog");
     expect(account).toContain("@frontlit/media-uploader");
     expect(account).toContain('purpose: "learner_avatar"');
@@ -573,11 +575,15 @@ describe("admin and learner surfaces", () => {
     const course = read(
       "storefront/app/schools/[schoolId]/(loggedin)/dashboard/courses/[productId]/page.tsx",
     );
-    const embedViewer = read("storefront/components/embed-viewer.tsx");
+    const lessonPageRenderer = read("storefront/components/lesson-page-renderer.tsx");
+    const lessonCompletion = read("storefront/lib/lesson-completion.ts");
+    const quizAttempt = read("storefront/lib/quiz-attempt.ts");
     const lessonViewer = read("storefront/components/lesson-viewer.tsx");
-    const courseSpaceDiscussion = read("storefront/components/course-space-discussion.tsx");
+    const courseSpaceDiscussion = read(
+      "storefront/components/course-space-discussion.tsx",
+    );
     const proxy = read("storefront/app/api/[...path]/route.ts");
-    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${courseSpaceDiscussion}\n${proxy}`;
+    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${lessonCompletion}\n${quizAttempt}\n${courseSpaceDiscussion}\n${proxy}`;
     expect(publicPage).toContain("SitePageRenderer");
     expect(publicPage).toContain("SitePageSection");
     expect(publicPage).toContain("loadDataSlots");
@@ -590,7 +596,9 @@ describe("admin and learner surfaces", () => {
     expect(publicProductDetailPage).toContain('systemRoute="product"');
     expect(publicProductDetail).toContain("@frontlit/page-builder/primitives");
     expect(publicProductDetail).toContain("publicApiPath(schoolId, `/products/");
-    expect(publicProductDetail).toContain('publicApiPath(schoolId, "/checkout-sessions")');
+    expect(publicProductDetail).toContain(
+      'publicApiPath(schoolId, "/checkout-sessions")',
+    );
     expect(publicProductDetail).not.toContain("/api/v1/storefront/");
     expect(publicCheckout).toContain("/api/v1/learner/checkout-sessions/");
     expect(publicCheckout).toContain("Check status again");
@@ -667,10 +675,9 @@ describe("admin and learner surfaces", () => {
     expect(courseSpaceDiscussion).toContain("canonical space");
     expect(course).toContain("previewToken ?");
     expect(course).toContain("encodeURIComponent(previewToken)");
-    expect(embedViewer).toContain("SandboxedEmbed");
-    expect(embedViewer).toContain("youtube.com/embed");
     // Pages render through the lesson profile; embeds use the package's sandboxed frame.
-    expect(lessonViewer).toContain("profile={lessonProfile}");
+    expect(lessonViewer).toContain("<LessonPageRenderer");
+    expect(lessonPageRenderer).toContain("profile={lessonProfile}");
     expect(surface).not.toContain("/api/auth/");
     expect(surface).not.toContain("/api/v1/schools");
     expect(surface).not.toContain("/v1/api-keys");

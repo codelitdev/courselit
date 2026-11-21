@@ -1,16 +1,14 @@
 "use client";
 
-import { lessonProfile } from "@courselit/lesson-content";
-import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CourseLitLoading } from "@/components/course-lit-loader";
-import { QuizViewer } from "@/components/quiz-viewer";
+import { LessonPageRenderer } from "@/components/lesson-page-renderer";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import { ScormViewer } from "@/components/scorm-viewer";
-import { LearnerText2 } from "@/components/themed-page-builder";
-import { splitLessonPage } from "@/lib/lesson-page";
+import { LearnerButton, LearnerText2 } from "@/components/themed-page-builder";
+import { readLessonPage } from "@/lib/lesson-page";
 import { learnerHeaders } from "@/lib/school";
-import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 export type LearnerLesson = {
   id: string;
@@ -24,27 +22,24 @@ export type LearnerLesson = {
   availableAt: string | null;
 };
 
-/**
- * A lesson page, temporarily: the document through FrontLit's renderer with
- * the lesson profile, then the quiz below it. Media blocks render nothing
- * yet (no `resolveMedia`). Step 4 of docs/wip/lesson-pages.md replaces this
- * with a page-builder renderer that resolves media through
- * `…/lessons/:lessonId/media/:mediaId` and places the quiz in the page.
- */
+/** A page lesson's content; anything else (e.g. SCORM details) isn't shown here. */
 export function LessonContent({
   content,
   productId,
   lessonId,
-  quizAvailable = true,
+  previewToken,
+  onQuizChanged,
+  onQuizPassed,
 }: {
   content: Record<string, unknown>;
   productId: string;
   lessonId: string;
-  /** False in previews: grading needs an enrolled learner. */
-  quizAvailable?: boolean;
+  previewToken: string | null;
+  /** The author replaced the quiz since the lesson loaded: load it again. */
+  onQuizChanged?: () => void;
+  onQuizPassed?: () => void;
 }) {
-  const theme = useSchoolThemeStyle();
-  const { document, quiz } = splitLessonPage(content);
+  const document = readLessonPage(content);
   if (!document) {
     return (
       <LearnerText2 className="text-muted-foreground">
@@ -53,22 +48,19 @@ export function LessonContent({
     );
   }
   return (
-    <>
-      <TextRenderer
-        json={document as unknown as TextEditorContent}
-        profile={lessonProfile}
-        theme={theme}
-        className="lesson-rich-text"
-      />
-      {quiz && quizAvailable ? (
-        <QuizViewer content={quiz} lessonId={lessonId} productId={productId} />
-      ) : quiz ? (
-        <LearnerText2 className="text-muted-foreground">
-          Quiz content is available after enrollment.
-        </LearnerText2>
-      ) : null}
-    </>
+    <LessonPageRenderer
+      document={document}
+      productId={productId}
+      lessonId={lessonId}
+      previewToken={previewToken}
+      onQuizChanged={onQuizChanged ?? reloadWindow}
+      onQuizPassed={onQuizPassed}
+    />
   );
+}
+
+function reloadWindow() {
+  window.location.reload();
 }
 
 export function LessonMediaContent({
@@ -163,16 +155,11 @@ export function LessonMediaContent({
     );
   }
   return (
-    <a
-      href={media.url}
-      download={media.fileName}
-      target="_blank"
-      rel="noreferrer"
-      className="font-medium text-primary hover:underline"
-    >
-      <LearnerText2 component="span" className="font-medium text-primary">
+    <LearnerButton asChild variant="outline" className="w-fit">
+      <a href={media.url} download={media.fileName} target="_blank" rel="noreferrer">
+        <Download aria-hidden className="size-4" />
         Open {media.fileName}
-      </LearnerText2>
-    </a>
+      </a>
+    </LearnerButton>
   );
 }
