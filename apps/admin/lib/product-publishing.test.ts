@@ -253,6 +253,25 @@ describe("lesson rows and sections", () => {
     );
   });
 
+  it("marks live lessons with unpublished changes", () => {
+    const page = { type: "page", requiresEnrollment: true };
+    expect(
+      lessonMeta(
+        { ...page, status: "published", hasUnpublishedChanges: true },
+        "course",
+      ),
+    ).toBe("Page · Unpublished changes");
+    expect(
+      lessonMeta({ ...page, status: "draft", hasUnpublishedChanges: true }, "course"),
+    ).toBe("Page");
+    expect(
+      lessonMeta(
+        { ...page, status: "published", hasUnpublishedChanges: false },
+        "course",
+      ),
+    ).toBe("Page");
+  });
+
   it("names a new section after the next free number", () => {
     expect(nextSectionName([])).toBe("Section 1");
     expect(nextSectionName([{ title: "Intro" }, { title: "Section 3" }])).toBe(

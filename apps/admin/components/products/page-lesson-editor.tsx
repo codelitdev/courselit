@@ -35,12 +35,17 @@ import {
   type LessonAutosave,
 } from "@/lib/lesson-autosave";
 import {
+  lessonDraftActionPath,
+  lessonDraftControls,
   lessonFormHref,
   lessonLiveAction,
   lessonPreviewPath,
+  lessonPublishRefusalTitle,
   lessonSaveStatus,
   lessonStatusLabel,
+  lessonStatusNote,
   lessonTitleError,
+  lessonVisibilityNote,
   productContentHref,
 } from "@/lib/lesson-editor";
 import {
@@ -88,12 +93,30 @@ async function schoolFetch(schoolId: string, path: string, init: RequestInit = {
   return fetch(path, { ...init, credentials: "include", cache: "no-store", headers });
 }
 
-/** One autosave: the whole page as JSON, with the version it is based on. */
+/** The draft state a content write reports back; the editor keeps the content. */
+type LessonDraftFields = Pick<
+  Lesson,
+  "contentVersion" | "hasUnpublishedChanges" | "contentPublishedAt"
+>;
+
+function draftFields(lesson: Lesson): LessonDraftFields {
+  return {
+    contentVersion: lesson.contentVersion,
+    hasUnpublishedChanges: lesson.hasUnpublishedChanges,
+    contentPublishedAt: lesson.contentPublishedAt,
+  };
+}
+
+/**
+ * One autosave: the whole page as JSON, with the version it is based on.
+ * It is saved as the lesson's draft; learners keep the published page.
+ */
 async function sendPageContent(
   schoolId: string,
   lessonId: string,
   content: unknown,
   expectedContentVersion: number,
+  onSaved: (saved: LessonDraftFields) => void,
 ): Promise<AutosaveSendResult> {
   const response = await schoolFetch(
     schoolId,
@@ -106,7 +129,8 @@ async function sendPageContent(
       failure: lessonSaveFailure(response.status, await readErrorBody(response)),
     };
   }
-  const saved = (await response.json()) as { contentVersion: number };
+  const saved = (await response.json()) as Lesson;
+  onSaved(draftFields(saved));
   return { ok: true, contentVersion: saved.contentVersion };
 }
 
@@ -152,6 +176,11 @@ export function PageLessonEditor({
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [changingStatus, setChangingStatus] = useState(false);
+  const [publishingContent, setPublishingContent] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  /** Remounts the page editor when its content is replaced (a discarded draft). */
+  const [editorKey, setEditorKey] = useState(0);
   const [previewing, setPreviewing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -216,7 +245,15 @@ export function PageLessonEditor({
         contentVersion: loaded.contentVersion,
         savedContent: document,
         send: (content, expectedContentVersion) =>
-          sendPageContent(selected.id, lessonId, content, expectedContentVersion),
+          sendPageContent(
+            selected.id,
+            lessonId,
+            content,
+            expectedContentVersion,
+            (saved) => {
+              if (active) setLesson((current) => current && { ...current, ...saved });
+            },
+          ),
         onState: (state) => {
           if (!active) return;
           setAutosaveState(state);
@@ -386,7 +423,7 @@ export function PageLessonEditor({
         setRefusal({
           title:
             action.nextStatus === "published"
-              ? "Fix these before the lesson can be made live:"
+              ? lessonPublishRefusalTitle("make-live")
               : "Fix these before the lesson can be moved to drafts:",
           diagnostics: caught.failure.diagnostics,
         });
@@ -397,6 +434,93 @@ export function PageLessonEditor({
       }
     } finally {
       setChangingStatus(false);
+    }
+  }
+
+  /** The response of publish-content or discard-draft, or null when it was refused. */
+  async function draftAction(
+    action: "publish-content" | "discard-draft",
+  ): Promise<Lesson | null> {
+    if (!school) throw new Error("The school isn't loaded yet.");
+    const response = await schoolFetch(
+      school.id,
+      lessonDraftActionPath(lessonId, action),
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expectedContentVersion:
+            autosave.current?.contentVersion ?? lesson?.contentVersion,
+        }),
+      },
+    );
+    if (response.ok) return (await response.json()) as Lesson;
+    const failure = lessonSaveFailure(response.status, await readErrorBody(response));
+    if (failure.kind === "conflict") {
+      // Changed elsewhere: stop saving, as a conflicting autosave does.
+      autosave.current?.markConflict();
+      return null;
+    }
+    if (failure.kind === "invalid" && action === "publish-content") {
+      setRefusal({
+        title: lessonPublishRefusalTitle("publish"),
+        diagnostics: failure.diagnostics,
+      });
+      return null;
+    }
+    throw new LessonWriteError(failure);
+  }
+
+  /** Publishes the saved draft so learners see it. */
+  async function publishContent() {
+    if (!lesson || publishingContent) return;
+    setPublishingContent(true);
+    setError(null);
+    setRefusal(null);
+    try {
+      if (!(await flushEdits("published"))) return;
+      const published = await draftAction("publish-content");
+      if (!published) return;
+      setLesson((current) => current && { ...current, ...draftFields(published) });
+      toast.success("Published your changes. Learners see them now.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to publish changes.");
+    } finally {
+      setPublishingContent(false);
+    }
+  }
+
+  /** Throws the draft away and reloads the published page into the editor. */
+  async function discardDraft() {
+    if (!lesson || discarding) return;
+    setDiscarding(true);
+    setError(null);
+    setRefusal(null);
+    try {
+      // Let a save in flight land first, so it can't recreate the draft.
+      flushEditor.current();
+      const state = (await autosave.current?.flush()) ?? { status: "saved" };
+      if (state.status === "conflict") {
+        setError(LESSON_CONFLICT_MESSAGE);
+        return;
+      }
+      const reverted = await draftAction("discard-draft");
+      if (!reverted) return;
+      const document = reverted.content ?? emptyLessonDocument();
+      autosave.current?.reset({
+        contentVersion: reverted.contentVersion,
+        savedContent: document,
+      });
+      setPageContent(document);
+      setEditorKey((key) => key + 1);
+      setLesson((current) => current && { ...current, ...draftFields(reverted) });
+      toast.success(
+        "Discarded your changes. The page is back to the published version.",
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to discard changes.");
+    } finally {
+      setDiscardDialogOpen(false);
+      setDiscarding(false);
     }
   }
 
@@ -475,8 +599,9 @@ export function PageLessonEditor({
 
   const live = lesson.status === "published";
   const liveAction = lessonLiveAction(lesson.status);
-  const busy = changingStatus || deleting;
+  const busy = changingStatus || deleting || publishingContent || discarding;
   const conflict = autosaveState.status === "conflict";
+  const draftControls = lessonDraftControls(lesson, { busy, conflict });
 
   return (
     <AuthGate>
@@ -486,6 +611,7 @@ export function PageLessonEditor({
         contextLabel={product.title}
         title={title.trim() || "Untitled lesson"}
         statusLabel={lessonStatusLabel(lesson.status)}
+        statusNote={lessonStatusNote(lesson)}
         saveStatus={lessonSaveStatus(autosaveState, {
           savingDetails,
           detailsError,
@@ -498,15 +624,39 @@ export function PageLessonEditor({
           unavailableLabel: "Preview as a learner",
         }}
         actions={
-          <Button
-            type="button"
-            size="sm"
-            variant={live ? "outline" : "primary"}
-            disabled={busy || conflict}
-            onClick={() => void changeStatus()}
-          >
-            {changingStatus ? liveAction.busyLabel : liveAction.label}
-          </Button>
+          <>
+            {draftControls.show ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:inline-flex"
+                  disabled={!draftControls.canDiscard}
+                  onClick={() => setDiscardDialogOpen(true)}
+                >
+                  Discard changes
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!draftControls.canPublish}
+                  onClick={() => void publishContent()}
+                >
+                  {publishingContent ? "Publishing…" : "Publish changes"}
+                </Button>
+              </>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              variant={live ? "outline" : "primary"}
+              disabled={busy || conflict}
+              onClick={() => void changeStatus()}
+            >
+              {changingStatus ? liveAction.busyLabel : liveAction.label}
+            </Button>
+          </>
         }
         settingsTitle="Lesson settings"
         settingsOpen={settingsOpen}
@@ -579,11 +729,7 @@ export function PageLessonEditor({
             <div className="border-t pt-6">
               <h3 className="text-sm font-semibold">Visibility</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {product.status !== "published"
-                  ? "Learners will see this lesson once the course is live."
-                  : live
-                    ? "Learners can see this lesson. Changes reach them as they save."
-                    : "Drafts are hidden from learners until you make them live."}
+                {lessonVisibilityNote(product.status === "published", lesson)}
               </p>
             </div>
 
@@ -665,6 +811,7 @@ export function PageLessonEditor({
           ) : null}
           <div className="min-h-0 flex-1">
             <LessonPageEditor
+              key={editorKey}
               school={school}
               initialContent={pageContent}
               unavailableReasons={unavailableReasons}
@@ -683,6 +830,35 @@ export function PageLessonEditor({
           </div>
         </div>
       </WritingEditorShell>
+
+      <Dialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Discard your unpublished changes?</DialogTitle>
+            <DialogDescription>
+              The page goes back to the version learners see now. Your unpublished edits
+              can&apos;t be recovered.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDiscardDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={discarding}
+              onClick={() => void discardDraft()}
+            >
+              {discarding ? "Discarding…" : "Discard changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>

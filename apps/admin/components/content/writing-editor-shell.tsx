@@ -25,6 +25,8 @@ type WritingEditorShellProps = {
   title: string;
   /** "Draft", "Published", "Live", ... */
   statusLabel: string;
+  /** Said next to the status, e.g. "Unpublished changes". */
+  statusNote?: string | null;
   saveStatus: WritingSaveStatus;
   preview: WritingEditorPreview;
   /** The document's own actions (publish, discard, make live), right of the save status. */
@@ -80,6 +82,7 @@ export function WritingEditorShell({
   contextLabel,
   title,
   statusLabel,
+  statusNote = null,
   saveStatus,
   preview,
   actions,
@@ -130,6 +133,11 @@ export function WritingEditorShell({
           <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
             {statusLabel}
           </span>
+          {statusNote ? (
+            <span className="hidden rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-800 md:inline dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              {statusNote}
+            </span>
+          ) : null}
           <span
             className={`hidden min-w-24 text-right text-xs lg:inline ${
               saveStatus.kind === "error" ? "text-destructive" : "text-muted-foreground"

@@ -31,6 +31,14 @@ export type LessonAutosave = {
   retry(): void;
   /** Waits for every change to be sent; resolves with the resulting state. */
   flush(): Promise<AutosaveState>;
+  /**
+   * Starts over from content saved elsewhere (a discarded draft): drops
+   * pending and refused edits and bases the next save on `contentVersion`.
+   * Call after `flush`, so no save is in flight.
+   */
+  reset(next: { contentVersion: number; savedContent: unknown }): void;
+  /** Another write (a publish) found the content changed elsewhere; stop saving. */
+  markConflict(): void;
   readonly state: AutosaveState;
   readonly contentVersion: number;
 };
@@ -121,6 +129,20 @@ export function createLessonAutosave(options: {
     async flush() {
       while (running) await running;
       return state;
+    },
+    reset(next) {
+      version = next.contentVersion;
+      lastSaved = JSON.stringify(next.savedContent);
+      pending = undefined;
+      hasPending = false;
+      refused = undefined;
+      hasRefused = false;
+      set({ status: "saved" });
+    },
+    markConflict() {
+      pending = undefined;
+      hasPending = false;
+      set({ status: "conflict" });
     },
     get state() {
       return state;
