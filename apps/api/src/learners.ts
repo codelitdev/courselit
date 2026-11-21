@@ -22,7 +22,7 @@ import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { productSubscriptionsForMemberships } from "./product-subscriptions.js";
 import { loadSchoolByPublicId } from "./schools.js";
 import { type MediaRef, type ProductSubscription } from "@courselit/api-contract";
-import { hasLessonQuiz, readLessonQuiz } from "@courselit/lesson-content";
+import { hasLessonQuiz, lessonMediaUses, readLessonQuiz } from "@courselit/lesson-content";
 import {
   queueSendLitContactSync,
   setContactMarketingSubscription,
@@ -309,6 +309,16 @@ export async function getLearnerLessonMedia(
     .limit(1);
   const media = mediaRows[0]?.media;
   if (!media) return { ok: false, error: createPlatformError("not_found") };
+  // A page's media references cover its draft too; learners and the public
+  // only reach media in the published content. Previews read the draft.
+  if (
+    !preview &&
+    input.mediaPublicId !== undefined &&
+    row.lesson.type === "page" &&
+    !lessonMediaUses(row.lesson.content).some((use) => use.mediaId === media.publicId)
+  ) {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
 
   try {
     const privateAsset =

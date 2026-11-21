@@ -156,6 +156,15 @@ describe.serial("media library", () => {
       body: { content: { type: "doc", content: [] }, expectedContentVersion: 1 },
     });
     expect(detached.status).toBe(200);
+    // The draft drops it, but learners' published page still uses it.
+    expect(await videoUsage()).toBe(1);
+    const published = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/lessons/${(lesson.body as { id: string }).id}/publish-content`,
+      headers,
+      body: {},
+    });
+    expect(published.status).toBe(200);
     expect(await videoUsage()).toBe(0);
 
     const listed = await dispatch(runtime, {

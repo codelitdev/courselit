@@ -2176,12 +2176,24 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
+        "draft_content": {
+          "name": "draft_content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "content_version": {
           "name": "content_version",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 1
+        },
+        "content_published_at": {
+          "name": "content_published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "requires_enrollment": {
           "name": "requires_enrollment",

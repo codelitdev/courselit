@@ -142,7 +142,15 @@ async function setup(options: { enroll?: boolean } = {}) {
       body: { content: quizPage(attrs), expectedContentVersion: version },
     });
     expect(updated.status).toBe(200);
-    return updated.body as { content: Record<string, unknown> };
+    // The write is a draft; learners are graded on it once it is published.
+    const published = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/lessons/${lessonId}/publish-content`,
+      headers: adminHeaders,
+      body: {},
+    });
+    expect(published.status).toBe(200);
+    return published.body as { content: Record<string, unknown> };
   };
   return {
     runtime,
@@ -244,6 +252,36 @@ describe.serial("quiz evaluation", () => {
       status: 409,
       body: { code: "conflict", details: { reason: "quiz_changed" } },
     });
+    await runtime.close();
+  });
+
+  it("grades against the published quiz while a draft is pending", async () => {
+    const { runtime, adminHeaders, lessonId, evaluate } = await setup();
+    const current = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/lessons/${lessonId}`,
+      headers: adminHeaders,
+    });
+    const drafted = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/lessons/${lessonId}`,
+      headers: adminHeaders,
+      body: {
+        content: quizPage({ ...quizAttrs(), id: "qz_draft" }),
+        expectedContentVersion: (current.body as { contentVersion: number })
+          .contentVersion,
+      },
+    });
+    expect(drafted).toMatchObject({
+      status: 200,
+      body: { hasUnpublishedChanges: true },
+    });
+    expect(
+      (await evaluate({ quizId: "qz_check", answers: { q1: ["q1a"] } })).status,
+    ).toBe(200);
+    expect(
+      await evaluate({ quizId: "qz_draft", answers: { q1: ["q1a"] } }),
+    ).toMatchObject({ status: 409, body: { details: { reason: "quiz_changed" } } });
     await runtime.close();
   });
 

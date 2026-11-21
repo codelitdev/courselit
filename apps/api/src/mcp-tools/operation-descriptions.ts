@@ -136,11 +136,15 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   getLessonContentFormat:
     "Describes what a lesson page may hold, as Markdown: the text syntax, every block tag (<Video>, <Audio>, <PDF>, <File>, <Image>, <Embed>, <Callout>, <Quiz>) with its props and an example, and the size limits. Blocks this school may not add now are listed with the reason (for example trial). Read it before writing lesson Markdown.",
   getLesson:
-    "Reads one lesson with its page as Markdown (markdown) and as JSON (content), plus contentVersion for the next update. The Markdown includes the quiz's correct answers and IDs.",
+    "Reads one lesson with its page as Markdown (markdown) and as JSON (content), plus contentVersion for the next update. For a page this is its draft when it has one (hasUnpublishedChanges is true), else what learners read. The Markdown includes the quiz's correct answers and IDs.",
   createLesson:
     'Adds a lesson to a product. Course lessons are pages (type page, the default) or SCORM; download products take file lessons only. Send a page as Markdown in markdown: headings ## to ####, lists, links, tables, and block tags such as <Video media="med_…" />, <Callout type="tip">…</Callout> and at most one <Quiz>; call get_lesson_content_format for every tag. Leave quiz, question and option IDs out; the saved lesson returns them. For several page lessons at once, prefer apply_course_outline.',
   updateLesson:
-    "Changes a lesson's title, page, published state or other settings. Send the page as Markdown in markdown (or JSON in content, not both), and with it expectedContentVersion, the contentVersion you last read; if someone changed the lesson since, the call fails with a conflict, so read it again with get_lesson and reapply the change. Start from the Markdown get_lesson returns and keep the quiz, question and option IDs in it, so learners' attempts stay attached.",
+    "Changes a lesson's title, page, published state or other settings. Send the page as Markdown in markdown (or JSON in content, not both), and with it expectedContentVersion, the contentVersion you last read; if someone changed the lesson since, the call fails with a conflict, so read it again with get_lesson and reapply the change. Start from the Markdown get_lesson returns and keep the quiz, question and option IDs in it, so learners' attempts stay attached. A page change is saved as a draft that learners don't see until publish_lesson_content, or until status becomes published, which makes the lesson live with its draft.",
+  publishLessonContent:
+    "Publishes a lesson page's draft so learners see it. Fails if the draft has an incomplete quiz. Pass expectedContentVersion to publish only the version you read. Confirm with the user first.",
+  discardLessonDraft:
+    "Throws away a lesson page's unpublished draft and goes back to what learners read. Confirm with the user first.",
   deleteLesson: "Deletes a lesson. Confirm with the user first.",
   reorderLessons:
     "Sets the order of lessons within a product's sections. Pass the lessonIds in the order wanted.",

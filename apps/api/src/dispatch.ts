@@ -63,6 +63,7 @@ import {
   learnerCommunityMediaListQuerySchema,
   learnerGifSearchQuerySchema,
   leaveCommunityBodySchema,
+  lessonDraftActionBodySchema,
   listContactsQuerySchema,
   listProductsQuerySchema,
   mediaCategorySchema,
@@ -147,6 +148,8 @@ import {
   reorderLessons,
   reorderSections,
   updateLesson,
+  publishLessonContent,
+  discardLessonDraft,
   updateSection,
 } from "./catalog.js";
 import {
@@ -5574,8 +5577,12 @@ export async function dispatch(
         decodeURIComponent(lessonMatch[1]!),
         {
           ...parsed.data,
+          // Content writes and making a lesson live (which publishes its
+          // draft) both check the blocks the school may add now.
           unavailable:
-            parsed.data.content !== undefined || parsed.data.markdown !== undefined
+            parsed.data.content !== undefined ||
+            parsed.data.markdown !== undefined ||
+            parsed.data.status === "published"
               ? await lessonBlockAvailability(scormDeps(deps), context.tenantId!)
               : undefined,
           dripAt:
@@ -5587,6 +5594,39 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (!result.ok) return errorResponse(result.error);
+      return { status: 200, body: result.value };
+    }
+    const lessonDraftMatch =
+      /^\/v1\/lessons\/([^/]+)\/(publish-content|discard-draft)$/.exec(path);
+    if (request.method === "POST" && lessonDraftMatch) {
+      const parsed = lessonDraftActionBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const lessonPublicId = decodeURIComponent(lessonDraftMatch[1]!);
+      const result =
+        lessonDraftMatch[2] === "publish-content"
+          ? await publishLessonContent(
+              deps.db,
+              context,
+              lessonPublicId,
+              {
+                ...parsed.data,
+                unavailable: await lessonBlockAvailability(
+                  scormDeps(deps),
+                  context.tenantId!,
+                ),
+              },
+              deps.clock,
+            )
+          : await discardLessonDraft(
+              deps.db,
+              context,
+              lessonPublicId,
+              parsed.data,
+              deps.clock,
+            );
       if (!result.ok) return errorResponse(result.error);
       return { status: 200, body: result.value };
     }

@@ -137,9 +137,22 @@ export const lessons = pgTable(
     }),
     title: text("title").notNull(),
     type: text("type").$type<"page" | "scorm" | "file">().notNull().default("page"),
+    /** What learners read: the published page, or a SCORM lesson's package details. */
     content: jsonb("content").$type<Record<string, unknown>>().notNull().default({}),
-    /** Increases with every content change; updates must name the one they are based on. */
+    /**
+     * A page's unpublished edits. Author writes land here; publishing copies
+     * them to `content` and clears this. Null when there is nothing pending,
+     * and always null for SCORM and file lessons.
+     */
+    draftContent: jsonb("draft_content").$type<Record<string, unknown>>(),
+    /**
+     * Increases with every change to the content authors edit (the draft, or
+     * the published content without one); writes must name the one they are
+     * based on.
+     */
     contentVersion: integer("content_version").notNull().default(1),
+    /** When `content` was last replaced: on create and on each content publish. */
+    contentPublishedAt: timestamp("content_published_at", { withTimezone: true }),
     requiresEnrollment: boolean("requires_enrollment").notNull().default(true),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
     position: integer("position").notNull().default(1),

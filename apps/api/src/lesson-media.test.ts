@@ -161,7 +161,8 @@ describe.serial("per-media lesson reads (L5)", () => {
     });
     expect(single.status).toBe(404);
 
-    // Saved content keeps the references, so removing the image revokes it.
+    // Content writes are drafts: learners keep the published image until
+    // the draft is published, and only then does removing it revoke it.
     const removed = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/lessons/${freeLesson.id}`,
@@ -172,6 +173,15 @@ describe.serial("per-media lesson reads (L5)", () => {
       },
     });
     expect(removed.status).toBe(200);
+    expect((await read(freeLesson.id, image.id)).status).toBe(200);
+    const publishContent = (lessonId: string) =>
+      dispatch(runtime, {
+        method: "POST",
+        path: `/v1/lessons/${lessonId}/publish-content`,
+        headers,
+        body: {},
+      });
+    expect((await publishContent(freeLesson.id)).status).toBe(200);
     expect((await read(freeLesson.id, image.id)).status).toBe(404);
     const swapped = await dispatch(runtime, {
       method: "PATCH",
@@ -183,7 +193,8 @@ describe.serial("per-media lesson reads (L5)", () => {
       },
     });
     expect(swapped.status).toBe(200);
-    expect((await read(freeLesson.id, unused.id)).status).toBe(200);
+    // Media only the draft uses is referenced, but learners can't reach it.
+    expect((await read(freeLesson.id, unused.id)).status).toBe(404);
 
     // Previews: the grant's product only, drafts included, no enrollment.
     const grant = await dispatch(runtime, {
@@ -205,6 +216,10 @@ describe.serial("per-media lesson reads (L5)", () => {
     });
     expect((await preview(draftLesson.id, image.id)).status).toBe(200);
     expect((await preview(draftLesson.id, unused.id)).status).toBe(404);
+    // Previews read the draft, so its media is served there.
+    expect((await preview(freeLesson.id, unused.id)).status).toBe(200);
+    expect((await publishContent(freeLesson.id)).status).toBe(200);
+    expect((await read(freeLesson.id, unused.id)).status).toBe(200);
     const otherProduct = await dispatch(runtime, {
       method: "POST",
       path: "/v1/products",

@@ -202,6 +202,7 @@ describe("lesson page writes", () => {
       const course = await t.newProduct("course");
       const video = await t.upload("talk.mp4", "video/mp4");
       const pdf = await t.upload("book.pdf", "application/pdf");
+      const audio = await t.upload("talk.mp3", "audio/mpeg");
       const create = (content: unknown) =>
         t.call("POST", `/v1/products/${course}/lessons`, { title: "Media", content });
 
@@ -285,6 +286,32 @@ describe("lesson page writes", () => {
         expectedContentVersion: 1,
       });
       expect(trimmed.status).toBe(200);
+      // The draft drops the video, but the published page still uses it, so
+      // it stays referenced until the draft is published (or discarded).
+      expect(await references()).toEqual([pdf, video].sort());
+      const swapped = await t.call("PATCH", `/v1/lessons/${lessonId}`, {
+        content: doc({ type: "audio", attrs: { media: audio } }),
+        expectedContentVersion: 2,
+      });
+      expect(swapped.status).toBe(200);
+      expect(await references()).toEqual([audio, pdf, video].sort());
+      const discarded = await t.call(
+        "POST",
+        `/v1/lessons/${lessonId}/discard-draft`,
+        {},
+      );
+      expect(discarded.status).toBe(200);
+      expect(await references()).toEqual([pdf, video].sort());
+      await t.call("PATCH", `/v1/lessons/${lessonId}`, {
+        content: doc({ type: "pdf", attrs: { media: pdf } }),
+        expectedContentVersion: (discarded.body as Lesson).contentVersion,
+      });
+      const published = await t.call(
+        "POST",
+        `/v1/lessons/${lessonId}/publish-content`,
+        {},
+      );
+      expect(published.status).toBe(200);
       expect(await references()).toEqual([pdf]);
     } finally {
       await t.runtime.close();

@@ -275,7 +275,7 @@ describe("prepareLessonWrite", () => {
   const base = {
     type: "page" as const,
     stored: null,
-    status: "draft" as const,
+    publishing: false,
     requiresEnrollment: true,
   };
   const reason = (result: ReturnType<typeof prepareLessonWrite>) =>
@@ -331,7 +331,7 @@ describe("prepareLessonWrite", () => {
     ).toBe("lesson_content_not_allowed");
   });
 
-  it("refuses publishing an incomplete page, sent or stored", () => {
+  it("allows an incomplete draft and refuses publishing it, sent or stored", () => {
     const incomplete = doc({ type: "quiz", attrs: { id: "qz", questions: [] } });
     expect(prepareLessonWrite({ ...base, write: { content: incomplete } }).ok).toBe(
       true,
@@ -340,7 +340,7 @@ describe("prepareLessonWrite", () => {
       reason(
         prepareLessonWrite({
           ...base,
-          status: "published",
+          publishing: true,
           write: { content: incomplete },
         }),
       ),
@@ -349,7 +349,7 @@ describe("prepareLessonWrite", () => {
       reason(
         prepareLessonWrite({
           ...base,
-          status: "published",
+          publishing: true,
           stored: incomplete,
           write: {},
         }),
