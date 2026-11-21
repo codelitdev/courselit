@@ -108,9 +108,9 @@ function LessonTypeChips({
           >
             <Icon className="size-4" aria-hidden="true" />
             {label}
-            {value === "scorm" ? (
+            {isLocked ? (
               <span className="rounded border px-1 text-[10px] font-medium text-muted-foreground">
-                {isLocked ? "Business" : "Alpha"}
+                Business
               </span>
             ) : null}
           </button>
