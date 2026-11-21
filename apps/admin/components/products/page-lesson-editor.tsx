@@ -298,10 +298,15 @@ export function PageLessonEditor({
         return true;
       })
       .catch((caught: unknown) => {
+        const message = caught instanceof Error ? caught.message : "Unable to save.";
         if (caught instanceof LessonWriteError && caught.failure.kind === "invalid") {
           setRefusal({ title: refusedTitle, diagnostics: caught.failure.diagnostics });
+        } else {
+          setError(message);
         }
-        setDetailsError(caught instanceof Error ? caught.message : "Unable to save.");
+        // A refused section or free-preview change is undone on screen, so
+        // nothing is left unsaved; a refused title still waits to be saved.
+        if (patch.title !== undefined) setDetailsError(message);
         return false;
       })
       .finally(() => {
