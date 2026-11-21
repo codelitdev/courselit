@@ -28,21 +28,31 @@ To reorder sections, drag the grip handle on a section header. You can also focu
 
 ## Add a lesson
 
-Select **Add lesson** at the bottom of a section. The lesson editor opens with these fields:
+Select **Add lesson** at the bottom of a section and choose the lesson type in the **Add a lesson** dialog. The type cannot change after the lesson is created. See [Lesson types](/docs/products/lesson-types).
 
-- **Type**, chosen once when you create the lesson. See [Lesson types](/docs/products/lesson-types).
-- **Title**, up to 200 characters.
-- **Section**, so you can place the lesson in any section of the course.
-- The content for the chosen type.
-- **Free preview**, for lessons that are not quizzes. See [Free preview lessons](/docs/products/free-preview-lessons).
+- **Page** creates a draft lesson called "Untitled lesson" and opens it in the full-screen lesson editor.
+- **SCORM** opens the lesson form, where you enter a title and upload a package. See [SCORM lessons](/docs/products/scorm).
 
-Save with **Save draft** or **Save and make live**. You can edit a lesson later by selecting its title in the list. Editing a live lesson shows **Save changes** and **Move to drafts**.
+### Write a page lesson
+
+The full-screen editor shows the lesson title as a large heading, with the page below it. Type `/` to add a block, such as a video, image, callout or quiz, and drag the handle beside a block to move it. Changes to the title and the page save automatically; the top bar shows "Saving…" and then "Saved just now".
+
+The top bar also has:
+
+- **← Content**, back to the course's **Content** tab.
+- The eye icon, which opens the lesson in a learner preview in a new tab.
+- **Make live**, or **Move to drafts** for a live lesson. If something on the page blocks it, such as a quiz without a correct option, a message above the page lists what to fix.
+- The settings icon, which opens **Lesson settings**: the lesson's **Section**, **Free preview** (see [Free preview lessons](/docs/products/free-preview-lessons)) and **Delete lesson**.
+
+If someone else (or an agent) changes the lesson while you have it open, the editor stops saving and asks you to **Reload**, so nobody's work is overwritten.
+
+Select a lesson's title in the list to edit it again: page lessons open in the full-screen editor, SCORM lessons in the lesson form.
 
 Each lesson row shows a short type tag, its title, its type (and "Free preview" when that applies), and a **Live** or **Draft** switch.
 
 ## Reorder and move lessons
 
-Drag a lesson by its grip handle to reorder it, or to move it into another section, including an empty one. You can also use the up and down arrow keys on the handle. To move a lesson with the editor instead, change its **Section**.
+Drag a lesson by its grip handle to reorder it, or to move it into another section, including an empty one. You can also use the up and down arrow keys on the handle. To move a lesson from its editor instead, change its **Section** in **Lesson settings**.
 
 ## Control what learners see
 
@@ -58,8 +68,8 @@ The tab header shows "3 of 5 lessons live" so you can see progress at a glance. 
 
 ### Choose the default for new lessons
 
-New lessons start as **Draft**, hidden from learners until you make them live. In the lesson editor, you can choose between saving a draft and saving live.
+New lessons start as **Draft**, hidden from learners until you make them live. Make a page lesson live with **Make live** in the lesson editor; the SCORM lesson form offers **Save draft** and **Save and make live**.
 
 ## Delete a lesson
 
-Open the lesson and select **Delete**. Confirm in the dialog "Are you sure you want to delete this lesson?" Deleting is permanent and removes the lesson from the product.
+Open the lesson and select **Delete lesson** in **Lesson settings** (or **Delete** in the SCORM lesson form). Confirm in the dialog "Are you sure you want to delete this lesson?" Deleting is permanent and removes the lesson from the product.

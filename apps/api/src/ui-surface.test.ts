@@ -38,6 +38,7 @@ describe("admin and learner surfaces", () => {
     const productOverview = read("admin/components/products/product-overview.tsx");
     const productSettings = read("admin/components/products/product-settings.tsx");
     const lessonAuthoring = read("admin/components/products/lesson-authoring.tsx");
+    const pageLessonEditor = read("admin/components/products/page-lesson-editor.tsx");
     const scormUpload = read("admin/components/products/scorm-lesson-upload.tsx");
     // Sections are released (dripped) from the product content page.
     const sectionAuthoring = read("admin/components/products/product-content.tsx");
@@ -244,9 +245,17 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain("school?.storefrontOrigin");
     expect(productSettings).toContain("Type &quot;delete&quot; to confirm");
-    // Page lessons are edited with the block editor and saved as content.
-    expect(lessonAuthoring).toContain("<LessonPageEditor");
-    expect(lessonAuthoring).toContain("expectedContentVersion");
+    // Page lessons are written in the full-screen block editor and saved as content.
+    expect(pageLessonEditor).toContain("<LessonPageEditor");
+    expect(pageLessonEditor).toContain("<WritingEditorShell");
+    expect(pageLessonEditor).toContain("expectedContentVersion");
+    expect(pageLessonEditor).toContain("/api/v1/lessons/");
+    expect(pageLessonEditor).toContain('method: "DELETE"');
+    expect(shell).toContain("isFullScreenLessonEditor");
+    expect(productContent).toContain("LessonTypeDialog");
+    expect(productContent).toContain("createPageLessonAndOpen");
+    // SCORM packages and download files keep the lesson form.
+    expect(lessonAuthoring).not.toContain("LessonPageEditor");
     expect(lessonAuthoring).toContain("/api/v1/lessons/");
     expect(lessonAuthoring).toContain('method: "DELETE"');
     expect(lessonAuthoring).toContain("Save the lesson first");
@@ -344,6 +353,7 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).not.toContain("<ArrowLeft");
     expect(sectionAuthoring).not.toContain("<ArrowLeft");
     expect(lessonAuthoring).not.toContain("<ArrowLeft");
+    expect(pageLessonEditor).not.toContain("<ArrowLeft");
     expect(acceptInvitation).toContain("useSetBreadcrumb");
     expect(acceptInvitation).not.toContain("Back to dashboard");
     expect(communityWorkspace).toContain("CommunityMediaPreview");
@@ -505,7 +515,7 @@ describe("admin and learner surfaces", () => {
     expect(blogEditor).toContain("beforeContent");
     expect(writingEditorShell).toContain("Document settings");
     expect(writingEditorShell).toContain("h-dvh min-h-0 w-full");
-    expect(writingEditorShell).toContain("Publish changes");
+    expect(blogEditor).toContain("Publish changes");
     expect(writingEditorHeader).toContain("Add a short description");
     expect(blogEditor).toContain("/discard-draft");
     expect(blogEditor).toContain("/publish");

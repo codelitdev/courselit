@@ -9,6 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/codelit/button";
@@ -37,6 +38,12 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import {
+  createPageLessonAndOpen,
+  lessonFormHref,
+  lessonHref,
+} from "@/lib/lesson-editor";
+import { usePlanFeatures } from "@/lib/plan-features";
+import {
   type DripForm,
   type DripMode,
   draftLessonIds,
@@ -53,6 +60,7 @@ import {
   validateDripForm,
 } from "@/lib/product-publishing";
 import { cn } from "@/lib/utils";
+import { type CourseLessonType, LessonTypeDialog } from "./lesson-type-dialog";
 import type { Lesson, Section } from "./product-types";
 import { AddRow, CardHead, WorkspaceCard } from "./product-ui";
 import {
@@ -62,6 +70,9 @@ import {
 } from "./product-workspace";
 
 type DropPosition = "before" | "after";
+
+const addLessonRowClass =
+  "flex items-center gap-2.5 rounded-b-xl px-5 pb-3.5 pt-3 text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-[var(--primary-ink)] disabled:opacity-50 sm:pl-[50px]";
 
 function DropLine({ position }: { position: DropPosition }) {
   return (
@@ -258,6 +269,7 @@ export function ProductContent({
   productRoot,
   request,
   refresh,
+  schoolId,
 }: {
   product: ProductDetail;
   setProduct: Dispatch<SetStateAction<ProductDetail | null>>;
@@ -265,11 +277,17 @@ export function ProductContent({
   productRoot: string;
   request: WorkspaceRequest;
   refresh: () => Promise<void>;
+  schoolId: string | null | undefined;
 }) {
   const productId = product.id;
   const isDownload = product.kind === "download";
   const noun = isDownload ? "file" : "lesson";
+  const router = useRouter();
+  const scormIncluded = usePlanFeatures(schoolId).has("scorm");
   const [busy, setBusy] = useState(false);
+  /** The section "Add lesson" was clicked in, while the type dialog is open. */
+  const [addingToSection, setAddingToSection] = useState<string | null>(null);
+  const [creatingLesson, setCreatingLesson] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
   const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
   const [dripOpen, setDripOpen] = useState<string | null>(null);
@@ -348,6 +366,28 @@ export function ProductContent({
     } finally {
       setBusy(false);
       await refresh().catch(() => undefined);
+    }
+  }
+
+  async function addLesson(type: CourseLessonType) {
+    const sectionId = addingToSection;
+    if (!sectionId || creatingLesson) return;
+    if (type === "scorm") {
+      router.push(lessonFormHref(productId, sectionId, { type: "scorm" }));
+      return;
+    }
+    setCreatingLesson(true);
+    try {
+      await createPageLessonAndOpen({
+        productId,
+        sectionId,
+        create: (path, body) =>
+          request<Lesson>(path, { method: "POST", body: JSON.stringify(body) }),
+        navigate: (href) => router.push(href),
+      });
+    } catch (caught) {
+      toast.error(errorText(caught, "Unable to add a lesson."));
+      setCreatingLesson(false);
     }
   }
 
@@ -1053,7 +1093,7 @@ export function ProductContent({
                         {lessonShortLabel(lesson.type)}
                       </span>
                       <Link
-                        href={`${productRoot}/content/section/${section.id}/lesson?id=${encodeURIComponent(lesson.id)}`}
+                        href={lessonHref(productId, section.id, lesson)}
                         className={cn(
                           "flex min-w-0 flex-col gap-0.5 rounded focus-visible:outline-2 focus-visible:outline-ring",
                           activeLessonDrag() && "pointer-events-none select-none",
@@ -1079,13 +1119,25 @@ export function ProductContent({
                   );
                 })}
                 <li>
-                  <Link
-                    href={`${productRoot}/content/section/${section.id}/lesson`}
-                    className="flex items-center gap-2.5 rounded-b-xl px-5 pb-3.5 pt-3 text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-[var(--primary-ink)] sm:pl-[50px]"
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                    Add {noun}
-                  </Link>
+                  {isDownload ? (
+                    <Link
+                      href={lessonFormHref(productId, section.id, { type: "file" })}
+                      className={addLessonRowClass}
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      Add {noun}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={busy || creatingLesson}
+                      onClick={() => setAddingToSection(section.id)}
+                      className={cn(addLessonRowClass, "w-full text-left")}
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      Add {noun}
+                    </button>
+                  )}
                 </li>
               </ul>
             ) : null}
@@ -1102,6 +1154,16 @@ export function ProductContent({
           onClick={() => void addSection()}
         />
       ) : null}
+
+      <LessonTypeDialog
+        open={Boolean(addingToSection)}
+        onOpenChange={(open) => {
+          if (!open && !creatingLesson) setAddingToSection(null);
+        }}
+        scormIncluded={scormIncluded}
+        busy={creatingLesson}
+        onChoose={(type) => void addLesson(type)}
+      />
 
       <Dialog
         open={Boolean(sectionToDelete)}
