@@ -16,12 +16,21 @@ import {
   type BillingEngine,
   createBilling,
 } from "@codelitdev/billing/workflows";
+import type { CanonicalSubscription } from "@codelitdev/billing/core";
 import type { Clock } from "@codelitdev/platform";
 import { createBillingAuditHook } from "./billing-audit.js";
 import { verification } from "./db/schema/auth.generated.js";
 import * as billingSchema from "./db/schema/billing.generated.js";
 import { enqueuePlanFeatureSync } from "./plan-features.js";
 import { planLimits } from "./plan-limits-config.js";
+import {
+  identifySchoolGroup,
+  ProductEvent,
+  schoolPublicId,
+  subscriptionTransitionEvents,
+  trackProductEvent,
+  trackSchoolEvent,
+} from "./product-events.js";
 import { PLAN_FEATURES } from "./school-plan.js";
 import type { AppDb } from "./types.js";
 
@@ -112,9 +121,27 @@ export async function composeBilling(
         // with the plan change. The SSO work itself never runs here: a failed
         // statement would abort the billing write. Queued on every projection;
         // the sync reads the current plan and is safe to repeat.
-        async afterProjection({ next }) {
+        async afterProjection({ previous, next }) {
           const client = (store.getTransaction() ?? db) as Pick<AppDb, "execute">;
           await enqueuePlanFeatureSync(client, next.billableEntityId, clock);
+          // Through the billing transaction: a second connection could wait on it.
+          await trackSubscriptionProjection(
+            (store.getTransaction() ?? db) as AppDb,
+            previous,
+            next,
+          );
+        },
+        async afterCheckoutOpen({ attempt }) {
+          await trackSchoolEvent((store.getTransaction() ?? db) as AppDb, attempt.billableEntityId, {
+            event: ProductEvent.CHECKOUT_CREATED,
+            userId: attempt.payerId,
+            properties: {
+              plan: attempt.plan,
+              interval: attempt.interval,
+              offer_key: attempt.offerKey,
+              provider: attempt.provider,
+            },
+          });
         },
       },
     },
@@ -162,4 +189,45 @@ export async function runBoundedMaintenance(billing: BillingEngine): Promise<num
     limit: 25,
     workerId: "reference-maintenance",
   });
+}
+
+/**
+ * Product events for a subscription projection. Reads the school's public id
+ * outside the billing transaction and never throws into it.
+ */
+async function trackSubscriptionProjection(
+  db: AppDb,
+  previous: CanonicalSubscription | null,
+  next: CanonicalSubscription,
+) {
+  const events = subscriptionTransitionEvents(previous, next);
+  if (events.length === 0) return;
+  try {
+    const schoolId = await schoolPublicId(db, next.billableEntityId);
+    for (const event of events) {
+      trackProductEvent({
+        event,
+        userId: next.payerId,
+        schoolId,
+        properties: {
+          plan: next.plan,
+          previous_plan: previous?.plan,
+          interval: next.interval,
+          offer_key: next.offerKey,
+          status: next.status,
+          previous_status: previous?.status,
+          provider: next.provider,
+        },
+      });
+    }
+    identifySchoolGroup(schoolId, {
+      plan: next.status === "active" || next.status === "trialing" || next.status === "past_due"
+        ? next.plan
+        : "none",
+      status: next.status,
+      interval: next.interval,
+    });
+  } catch {
+    // Telemetry must never fail a billing projection.
+  }
 }

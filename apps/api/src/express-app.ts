@@ -663,16 +663,20 @@ export function createExpressApp(deps: DispatchDeps): Express {
       res: express.Response,
       next: express.NextFunction,
     ) => {
-      deps.observability?.captureException({
-        error,
-        source: "express",
-        context: { method: req.method, path: req.path },
-      });
+      const isSyntax = error instanceof SyntaxError;
+      // A malformed request body is the client's mistake (answered with 400),
+      // not a server error worth tracking.
+      if (!isSyntax) {
+        deps.observability?.captureException({
+          error,
+          source: "express",
+          context: { method: req.method, path: req.path },
+        });
+      }
       if (res.headersSent) {
         next(error);
         return;
       }
-      const isSyntax = error instanceof SyntaxError;
       res.status(isSyntax ? 400 : 500).json({
         code: isSyntax ? "validation_failed" : "internal_error",
         message: isSyntax

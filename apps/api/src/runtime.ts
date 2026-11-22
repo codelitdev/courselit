@@ -50,6 +50,30 @@ export type Runtime = DispatchDeps & {
   close(): Promise<void>;
 };
 
+let migratedDataDir: Promise<Blob> | null = null;
+
+/**
+ * A PGlite data directory with every migration applied, built once per
+ * process. Migrating a fresh PGlite takes seconds, and the tests create one
+ * database per test, so each runtime starts from a copy of this instead.
+ */
+function migratedPgliteDataDir(): Promise<Blob> {
+  migratedDataDir ??= (async () => {
+    const { PGlite } = await import("@electric-sql/pglite");
+    const template = new PGlite();
+    try {
+      await migrate(drizzle(template), { migrationsFolder });
+      return await template.dumpDataDir("none");
+    } finally {
+      await template.close();
+    }
+  })().catch((error: unknown) => {
+    migratedDataDir = null;
+    throw error;
+  });
+  return migratedDataDir;
+}
+
 export async function createPgliteRuntime(options: {
   clock?: Clock;
   apiKeyPepper?: string;
@@ -68,11 +92,10 @@ export async function createPgliteRuntime(options: {
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const { PGlite } = await import("@electric-sql/pglite");
-  const client = new PGlite();
+  const client = new PGlite({ loadDataDir: await migratedPgliteDataDir() });
   const db = drizzle(client, {
     schema: { ...schema, ...billingSchema },
   }) as AppDb;
-  await migrate(db, { migrationsFolder });
   const clock = options.clock ?? systemClock;
   const billingMode = options.billingMode ?? "cloud";
   let handler: ReturnType<typeof toNodeHandler> | undefined;

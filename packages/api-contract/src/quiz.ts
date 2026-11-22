@@ -1,5 +1,5 @@
 /**
- * The shape of a lesson page's Quiz block (docs/wip/lesson-pages.md,
+ * The shape of a lesson page's Quiz block (docs/lesson-pages.md,
  * section 5). Everything here is pure, so the API, the admin editor and the
  * storefront use the same rules.
  *

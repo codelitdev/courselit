@@ -7,6 +7,7 @@ import { createAdminNotification } from "./notifications.js";
 import { parsePermissions } from "./permissions.js";
 import { queueSchoolEmail, renderSchoolEmail } from "./school-emails.js";
 import type { AppDb } from "./types.js";
+import { reportError } from "./telemetry.js";
 
 /** Staff notification type for a new product purchase or paid community join. */
 export const NEW_SALE_NOTIFICATION_TYPE = "new_sale";
@@ -425,5 +426,6 @@ export async function notifyPaymentSucceeded(
       resourceType: input.resourceType,
       error: error instanceof Error ? error.message : String(error),
     }); // eslint-disable-line no-console
+    reportError(error, "commerce.purchase_notification");
   }
 }

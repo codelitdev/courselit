@@ -20,6 +20,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import { ProductEvent, trackProductEvent } from "./product-events.js";
 import * as schema from "./db/schema/index.js";
 import {
   deleteUnreferencedMedia,
@@ -557,6 +558,12 @@ export async function createProduct(
       });
     }
   });
+  trackProductEvent({
+    event: ProductEvent.PRODUCT_CREATED,
+    userId: ctx.principalId,
+    schoolId: publicSchoolId,
+    properties: { product_type: row.kind, product_id: row.publicId },
+  });
   return { ok: true, value: await toDto(db, row, publicSchoolId, null) };
 }
 
@@ -583,6 +590,8 @@ export async function updateProduct(
     return { ok: false, error: createPlatformError("forbidden") };
   }
   return db.transaction(async (tx) => {
+    // Locked, so concurrent updates run one after another: two publishes at
+    // once see the second one as already published.
     const existing = await tx
       .select()
       .from(schema.products)
@@ -592,7 +601,8 @@ export async function updateProduct(
           eq(schema.products.schoolId, ctx.tenantId!),
         ),
       )
-      .limit(1);
+      .limit(1)
+      .for("update");
     const row = existing[0];
     if (!row) {
       return { ok: false as const, error: createPlatformError("not_found") };
@@ -834,6 +844,14 @@ export async function updateProduct(
       requestId: ctx.requestId,
       createdAt: now,
     });
+    if (status === "published" && row.status !== "published") {
+      trackProductEvent({
+        event: ProductEvent.PRODUCT_PUBLISHED,
+        userId: ctx.principalId,
+        schoolId: publicSchoolId,
+        properties: { product_type: row.kind, product_id: row.publicId },
+      });
+    }
     return {
       ok: true as const,
       value: await toDto(

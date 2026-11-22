@@ -1177,7 +1177,7 @@ export const teamInvitationPreviewSchema = z.object({
 });
 
 /**
- * Lesson types (docs/wip/lesson-pages.md, section 7). Course products take
+ * Lesson types (docs/lesson-pages.md, section 7). Course products take
  * `page` and `scorm`; download products take `file` only.
  */
 export const LESSON_TYPES = ["page", "scorm", "file"] as const;

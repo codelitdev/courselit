@@ -1,7 +1,23 @@
 "use client";
 
-import { createBrowserObservability } from "@codelitdev/observability/browser";
+import {
+  type BrowserObservability,
+  createBrowserObservability,
+} from "@codelitdev/observability/browser";
 import { type ReactNode, useEffect } from "react";
+
+let active: BrowserObservability | null = null;
+let pendingSchoolId: string | null = null;
+
+/**
+ * Ties the session's events to the selected school's PostHog group, the same
+ * group the API sends school events with. Safe to call before init or when
+ * telemetry is off.
+ */
+export function setObservedSchool(schoolId: string | null | undefined) {
+  pendingSchoolId = schoolId ?? null;
+  if (active && pendingSchoolId) active.group("school", pendingSchoolId);
+}
 
 export function BrowserObservabilityProvider({
   apiKey,
@@ -43,6 +59,8 @@ export function BrowserObservabilityProvider({
           };
         };
         observability.identify(session.user);
+        active = observability;
+        if (pendingSchoolId) observability.group("school", pendingSchoolId);
       } catch {
         // Telemetry must not break the admin shell.
       }

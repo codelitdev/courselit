@@ -20,6 +20,7 @@ import {
   persistInvitationToken,
   readInvitationTokenFromHash,
 } from "@/lib/invitation-token";
+import { setObservedSchool } from "../browser-observability";
 
 const RESUME_PROMPTED_KEY = "courselit.onboarding.resume-prompted";
 
@@ -217,6 +218,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         // First load of a session: an owner with an unfinished setup is offered
         // the Resume dialog. Team members never see the wizard.
         const selectedSchool = items.find((item) => item.selected) ?? items[0];
+        setObservedSchool(selectedSchool?.id);
         const path = window.location.pathname;
         const exempt =
           path.startsWith("/onboarding") ||

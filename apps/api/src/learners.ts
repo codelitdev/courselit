@@ -36,6 +36,7 @@ import {
 } from "./shadow-users.js";
 import { sessionMethodAllowed } from "./sign-in-policy.js";
 import type { AppDb } from "./types.js";
+import { reportError } from "./telemetry.js";
 
 /** How a learner proved who they are to a school. */
 export type LearnerAuthenticationMethod = "email" | "google" | "sso";
@@ -884,6 +885,7 @@ export async function enqueueLearnerContactSync(
     });
   } catch (err) {
     console.error("[enqueueLearnerContactSync failed]", err);
+    reportError(err, "learners.contact_sync");
   }
 }
 
@@ -949,6 +951,7 @@ export async function admitLearner(
     );
   } catch (err) {
     console.error("[recordActivity failed on login]", err);
+    reportError(err, "activity.record");
   }
 
   const now = clock.now();

@@ -405,6 +405,12 @@ describe.serial("storefront commerce", () => {
     ).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontPayments)).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontInvoices)).toHaveLength(1);
+    // Free access is an enrolment, recorded once even when the checkout replays.
+    const enrolled = await runtime.db
+      .select()
+      .from(schema.activities)
+      .where(eq(schema.activities.type, "enrolled"));
+    expect(enrolled).toHaveLength(1);
     await runtime.close();
   });
 
