@@ -100,6 +100,8 @@ If someone else, or an AI assistant, changes the lesson while you have it open, 
 
 Learners open lessons in the course viewer. A page shows its blocks in order, styled with your school's theme. When they finish, they select **Mark complete**.
 
+![A page lesson in the course viewer](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/learner-lesson.png)
+
 - A page with a quiz can be marked complete only after the learner passes the quiz. Otherwise they see "Pass the quiz to complete this lesson."
 - A SCORM lesson can be marked complete only after the package has reported progress.
 

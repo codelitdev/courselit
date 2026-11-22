@@ -52,6 +52,8 @@ For example, a quiz with one single-answer question and one question with two co
 
 Learners answer the questions and select **Submit answers**. CourseLit grades the attempt and shows **Passed** or **Not passed** with their score, for example "Score: 66.67% · Passing grade: 70%".
 
+![A learner's quiz attempt marked Not passed with a score of 66.67%](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/quiz-result.png)
+
 - Learners never see which answers were correct, not even after submitting. Correct answers never leave CourseLit's servers, so they can't be found in the page either.
 - A learner can try again as many times as they like. Very many attempts in a short time are paused for a few minutes.
 - If you change the quiz while a learner has it open, they are told "This quiz has changed since you opened it." and get the new version.
