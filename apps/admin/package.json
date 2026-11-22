@@ -10,7 +10,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@codelitdev/design-system": "0.15.0",
+    "@codelitdev/design-system": "0.16.0",
     "@codelitdev/observability": "0.15.0",
     "@courselit/api-contract": "workspace:*",
     "@courselit/components-library": "workspace:*",

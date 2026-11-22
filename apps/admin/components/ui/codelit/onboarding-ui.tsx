@@ -425,16 +425,25 @@ export function FileRow({
   );
 }
 
-/** Copies text and flips its label to "Copied" for a moment. */
+/**
+ * Copies text and flips its label to "Copied" for a moment. If the clipboard is
+ * unavailable or the write is refused, the label stays as it was; the value is
+ * still on screen to select by hand.
+ */
 export function useCopy(): [string | null, (key: string, text: string) => void] {
   const [copied, setCopied] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   function copy(key: string, text: string) {
-    void navigator.clipboard?.writeText(text).catch(() => undefined);
-    setCopied(key);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied(null), 2000);
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopied(key);
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setCopied(null), 2000);
+      },
+      () => undefined,
+    );
   }
   return [copied, copy];
 }
