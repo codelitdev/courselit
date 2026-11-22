@@ -1,5 +1,5 @@
 /**
- * Lesson pages on the server (docs/wip/lesson-pages.md, sections 4.3, 6, 7):
+ * Lesson pages on the server (docs/lesson-pages.md, sections 4.3, 6, 7):
  * which blocks a school may add now, the media a page references, and how
  * content diagnostics become API errors. The format itself lives in
  * `@courselit/lesson-content`.

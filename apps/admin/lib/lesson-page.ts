@@ -1,5 +1,5 @@
 /**
- * The admin's side of lesson pages (docs/wip/lesson-pages.md, sections
+ * The admin's side of lesson pages (docs/lesson-pages.md, sections
  * 3.3, 4.3, 6 and 7): which blocks may be added now, what a refused save
  * means, and where a diagnostic points. No React, so it is unit-tested.
  */

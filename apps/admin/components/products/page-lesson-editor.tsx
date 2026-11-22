@@ -135,7 +135,7 @@ async function sendPageContent(
 }
 
 /**
- * The full-screen editor of a page lesson (docs/wip/lesson-pages.md,
+ * The full-screen editor of a page lesson (docs/lesson-pages.md,
  * section 3.4): the title as a heading, the block page autosaving below it,
  * and the section, free preview and deletion in the settings panel.
  */

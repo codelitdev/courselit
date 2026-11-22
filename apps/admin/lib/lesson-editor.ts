@@ -131,7 +131,7 @@ export function lessonPreviewPath(productId: string, lessonId: string, token: st
 }
 
 /**
- * Lesson page drafts (docs/wip/lesson-pages.md, section 7): page edits save
+ * Lesson page drafts (docs/lesson-pages.md, section 7): page edits save
  * to a draft, learners read the published content until it is published.
  */
 type LessonDraftInfo = { status: LessonStatus; hasUnpublishedChanges: boolean };

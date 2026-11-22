@@ -1,7 +1,10 @@
 # Lesson pages: one block-based lesson type
 
-Status (2026-11-22): all five steps done. Steps 1–4 and lesson drafts
-landed in #901–#906; step 5 (cleanup and docs in `frontlit/docs`) follows.
+Status (2026-11-22): done. All five steps of section 11 and lesson drafts
+landed in #901–#907, and the author and learner docs are in
+`frontlit/docs/products/` (`lesson-types.md`, `quizzes.md`). Section 9 lists
+what is left for later. Imported video, audio and PDF lessons keep empty
+media blocks until MediaLit media is imported (section 8).
 
 Before this change a lesson had one of eight fixed types (`text`, `video`,
 `audio`, `pdf`, `file`, `embed`, `quiz`, `scorm`) and the type couldn't

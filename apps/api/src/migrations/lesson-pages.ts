@@ -1,5 +1,5 @@
 /**
- * Main's lesson types to the rewrite's (docs/wip/lesson-pages.md, section 8):
+ * Main's lesson types to the rewrite's (docs/lesson-pages.md, section 8):
  *
  * | Main              | New                                                         |
  * |-------------------|-------------------------------------------------------------|
