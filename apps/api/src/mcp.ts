@@ -1,7 +1,4 @@
-import {
-  createMcpServerKit,
-  type McpServerKit,
-} from "@codelitdev/mcp-server-kit";
+import { createMcpServerKit, type McpServerKit } from "@codelitdev/mcp-server-kit";
 import { createPlatformError, readOrCreateRequestId } from "@codelitdev/platform";
 import { mcpParityManifest } from "@courselit/api-contract";
 import { authenticateMcpRequest } from "./auth/authenticate.js";
@@ -91,7 +88,7 @@ export function createCourseLitMcp(deps: DispatchDeps): McpServerKit<Ctx> {
     description:
       "CourseLit MCP server: build and run an online school. Create courses and digital downloads with their sections and lessons, and manage pricing plans, communities, the school website, media, contacts, certificates and school settings.",
     instructions:
-      "Every call acts on the connected school. Each tool does one thing and is named for it (list_*, get_*, create_*, update_*, delete_*). Read before you write. Deleting, publishing, archiving, emailing contacts and changing payment or access settings need confirm: true, so ask the user first. apply_course_outline adds sections and text lessons to a course in one call.",
+      "Every call acts on the connected school. Each tool does one thing and is named for it (list_*, get_*, create_*, update_*, delete_*). Read before you write. Deleting, publishing, archiving, emailing contacts and changing payment or access settings need confirm: true, so ask the user first. apply_course_outline adds sections and page lessons (written in Markdown) to a course in one call.",
     onError: ({ error, source }) =>
       deps.observability?.captureException({ error, source }),
     authenticate: (headers) => authenticateMcpRequest(headers, deps),

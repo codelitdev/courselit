@@ -22,7 +22,7 @@ export type LearnerLesson = {
   availableAt: string | null;
 };
 
-/** A page lesson's content; anything else (e.g. SCORM details) isn't shown here. */
+/** A page lesson's content; SCORM and file lessons render through `LessonMediaContent`. */
 export function LessonContent({
   content,
   productId,
@@ -43,7 +43,7 @@ export function LessonContent({
   if (!document) {
     return (
       <LearnerText2 className="text-muted-foreground">
-        This lesson type is not available in this viewer yet.
+        This lesson can't be shown.
       </LearnerText2>
     );
   }
