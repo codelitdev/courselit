@@ -19,7 +19,7 @@ The assistant then calls tools such as these, in order.
 | Step | Tool | What it does |
 | --- | --- | --- |
 | 1 | `create_product` | Creates the course as a draft and returns its `id` |
-| 2 | `apply_course_outline` | Adds all sections and their text lessons in one call, with Markdown lesson bodies |
+| 2 | `apply_course_outline` | Adds all sections and their page lessons in one call, with Markdown lesson bodies |
 | 3 | `create_plan` | Adds a plan, which a product needs before it can go live |
 | 4 | `get_product` | Reads the course back so the assistant can check the result |
 
@@ -34,6 +34,6 @@ Publishing a product is an ordinary write tool, so it does not ask you for expli
 ## Tips
 
 - Name the school and the course in your request, so the assistant uses the right ones.
-- For video, audio, PDF and quiz lessons, tell the assistant to use `create_lesson`. `apply_course_outline` creates text lessons only. Media files must already be in the media library, because assistants cannot upload files.
+- Lessons are pages, so one lesson can mix text with videos, PDFs, files, callouts and a quiz. Ask for a quiz and the assistant adds a Quiz block. Media files must already be in the media library, because assistants cannot upload files; YouTube and Vimeo videos can be linked by address.
 - If a call times out, ask the assistant to run the outline again. `apply_course_outline` skips sections and lessons that already exist, so it does not create duplicates.
 - Give the connection only the permissions it needs. A connection that can write products does not need to send email or change payment settings. See [Permissions and scopes](/docs/developers/permissions-and-scopes).

@@ -1,10 +1,11 @@
 /**
- * The quiz shape shared by the quiz lesson today and the Quiz block of a
- * lesson page later (docs/wip/lesson-pages.md, section 5). Everything here is
- * pure, so the API, the admin editor and the storefront use the same rules.
+ * The shape of a lesson page's Quiz block (docs/wip/lesson-pages.md,
+ * section 5). Everything here is pure, so the API, the admin editor and the
+ * storefront use the same rules.
  *
  * Authors see `correct` on every option. Learners only ever get the output of
- * `stripQuizAnswers`, whose type and schema have no `correct` field (L1).
+ * `stripLessonAnswers` (`@courselit/lesson-content`), whose quiz type and
+ * schema here have no `correct` field (L1).
  */
 import { z } from "zod";
 
@@ -66,8 +67,7 @@ const ID_PREFIX: Record<QuizIdKind, string> = {
   question: "q_",
   option: "o_",
 };
-const ID_ALPHABET =
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const ID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 /** A random ID such as `q_3fZk9P0aQm1x`, matching QUIZ_ID_PATTERN. */
 export function createQuizId(kind: QuizIdKind): string {
@@ -146,7 +146,8 @@ export function normalizeQuiz(
   const questions: QuizQuestion[] = [];
   for (const [questionIndex, questionValue] of input.questions.entries()) {
     const questionPath = `questions.${questionIndex}`;
-    if (!isRecord(questionValue)) return fail("quiz_question_text_required", questionPath);
+    if (!isRecord(questionValue))
+      return fail("quiz_question_text_required", questionPath);
     const questionId = readId(questionValue.id, "question");
     if ("reason" in questionId) return fail(questionId.reason, `${questionPath}.id`);
     if (typeof questionValue.text !== "string" || !questionValue.text.trim()) {
@@ -176,7 +177,11 @@ export function normalizeQuiz(
     if (!quizOptions.some((option) => option.correct)) {
       return fail("quiz_correct_answer_required", `${questionPath}.options`);
     }
-    questions.push({ id: questionId.id, text: questionValue.text, options: quizOptions });
+    questions.push({
+      id: questionId.id,
+      text: questionValue.text,
+      options: quizOptions,
+    });
   }
 
   return { ok: true, value: { id: quizId.id, passingGrade, questions } };
@@ -186,20 +191,6 @@ export function normalizeQuiz(
 export function readStoredQuiz(content: unknown): Quiz | null {
   const result = normalizeQuiz(content, { fillIds: false });
   return result.ok ? result.value : null;
-}
-
-/** The learner's view of a quiz: no `correct`, by construction (L1). */
-export function stripQuizAnswers(quiz: Quiz): LearnerQuiz {
-  return {
-    id: quiz.id,
-    passingGrade: quiz.passingGrade,
-    questions: quiz.questions.map((question) => ({
-      id: question.id,
-      text: question.text,
-      multiple: question.options.filter((option) => option.correct).length > 1,
-      options: question.options.map((option) => ({ id: option.id, text: option.text })),
-    })),
-  };
 }
 
 export type QuizScore =
@@ -262,7 +253,8 @@ export function scoreQuiz(quiz: Quiz, answers: QuizAnswers): QuizScore {
 /** True when any object inside `value` has a `correct` key. */
 export function containsQuizAnswers(value: unknown, depth = 0): boolean {
   if (depth > 128 || !value || typeof value !== "object") return false;
-  if (Array.isArray(value)) return value.some((item) => containsQuizAnswers(item, depth + 1));
+  if (Array.isArray(value))
+    return value.some((item) => containsQuizAnswers(item, depth + 1));
   return Object.entries(value).some(
     ([key, child]) => key === "correct" || containsQuizAnswers(child, depth + 1),
   );

@@ -1,6 +1,6 @@
 ---
 title: Upload media for a lesson
-description: Upload a video, audio file, PDF or image with the REST API in three steps and attach it to a lesson or product.
+description: Upload a video, audio file, PDF or image with the REST API in three steps and use it in a lesson or as a product image.
 nav_order: 140
 ---
 
@@ -143,7 +143,7 @@ The response is `201` with the library item. Its `id` is the media ID to use in 
 
 ### Attach it to a lesson
 
-Pass the media ID as `mediaId` when you create the lesson. The lesson `type` must match the file, which is `video` for a video, `audio` for audio and `pdf` for a PDF. A `file` lesson accepts any file.
+Use the media ID in a block of a page lesson. Each block takes files of its own kind: `<Video>` a video, `<Audio>` an audio file, `<PDF>` a PDF, `<Image>` an image, and `<File>` any file.
 
 ```bash
 curl -X POST "$COURSELIT_API_URL/v1/products/$PRODUCT_ID/lessons" \
@@ -151,14 +151,13 @@ curl -X POST "$COURSELIT_API_URL/v1/products/$PRODUCT_ID/lessons" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Welcome video",
-    "type": "video",
-    "mediaId": "med_0190c0de0000700080000000000000a6",
     "sectionId": "sec_0190c0de0000700080000000000000a2",
-    "status": "published"
+    "status": "published",
+    "markdown": "<Video media=\"med_0190c0de0000700080000000000000a6\" caption=\"Welcome\" />"
   }'
 ```
 
-If the file type does not match the lesson type, the call fails with `lesson_media_type_mismatch`.
+If the file doesn't match its block, the call fails with `lesson_media_type_mismatch`. A media ID that isn't in the school's library fails with `lesson_media_not_found`. A SCORM lesson takes its package as `mediaId` instead.
 
 To use an image as a product image, send `featuredImage` in the product update with the library item's `id` as `mediaId` and its `canonicalUrl` as `url`. The file must be an image.
 

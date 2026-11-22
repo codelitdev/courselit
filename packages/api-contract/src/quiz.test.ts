@@ -10,7 +10,6 @@ import {
   type Quiz,
   readStoredQuiz,
   scoreQuiz,
-  stripQuizAnswers,
 } from "./quiz.js";
 
 function quiz(overrides: Partial<Quiz> = {}): Quiz {
@@ -197,11 +196,15 @@ describe("normalizeQuiz", () => {
     const option = (correct: boolean) => ({ text: "Option", correct });
     const question = (options: number) => ({
       text: "Question",
-      options: [option(true), ...Array.from({ length: options - 1 }, () => option(false))],
+      options: [
+        option(true),
+        ...Array.from({ length: options - 1 }, () => option(false)),
+      ],
     });
     expect(
-      normalizeQuiz({ questions: Array.from({ length: QUIZ_LIMITS.questions }, () => question(2)) })
-        .ok,
+      normalizeQuiz({
+        questions: Array.from({ length: QUIZ_LIMITS.questions }, () => question(2)),
+      }).ok,
     ).toBe(true);
     expect(
       normalizeQuiz({
@@ -217,10 +220,9 @@ describe("normalizeQuiz", () => {
   });
 });
 
-describe("stripQuizAnswers", () => {
-  it("drops every correct flag and marks multiple-answer questions", () => {
-    const stripped = stripQuizAnswers(quiz());
-    expect(stripped).toEqual({
+describe("learnerQuizSchema", () => {
+  it("accepts a quiz without answers", () => {
+    const stripped = {
       id: "qz_1",
       passingGrade: 70,
       questions: [
@@ -244,12 +246,12 @@ describe("stripQuizAnswers", () => {
           ],
         },
       ],
-    });
+    };
     expect(containsQuizAnswers(stripped)).toBe(false);
     expect(learnerQuizSchema.safeParse(stripped).success).toBe(true);
   });
 
-  it("is the only shape the learner schema accepts", () => {
+  it("refuses a quiz that carries answers", () => {
     expect(learnerQuizSchema.safeParse(quiz()).success).toBe(false);
   });
 });
@@ -264,7 +266,10 @@ describe("scoreQuiz", () => {
       ok: true,
       value: { score: 100, pass: true },
     });
-    expect(scoreQuiz(quiz(), {})).toEqual({ ok: true, value: { score: 0, pass: false } });
+    expect(scoreQuiz(quiz(), {})).toEqual({
+      ok: true,
+      value: { score: 0, pass: false },
+    });
   });
 
   it("refuses more than one option on a single-answer question", () => {
@@ -276,9 +281,10 @@ describe("scoreQuiz", () => {
 
   it("cancels a correct option for each wrong one in a multi-answer question", () => {
     // q2: two right, one wrong -> 1 point; q1 right -> 1 point; 2 of 3.
-    expect(
-      scoreQuiz(quiz(), { q1: ["q1a"], q2: ["q2a", "q2b", "q2c"] }),
-    ).toEqual({ ok: true, value: { score: (2 / 3) * 100, pass: false } });
+    expect(scoreQuiz(quiz(), { q1: ["q1a"], q2: ["q2a", "q2b", "q2c"] })).toEqual({
+      ok: true,
+      value: { score: (2 / 3) * 100, pass: false },
+    });
     // One right and one wrong cancel out; a question never goes below zero.
     expect(scoreQuiz(quiz(), { q2: ["q2a", "q2c"] })).toMatchObject({
       value: { score: 0 },
@@ -292,7 +298,9 @@ describe("scoreQuiz", () => {
       ok: true,
       value: { score: 50, pass: false },
     });
-    expect(scoreQuiz(quiz(), { q1: ["q1a", "q1b"], q2: ["q2a", "q2b", "q2c"] })).toEqual({
+    expect(
+      scoreQuiz(quiz(), { q1: ["q1a", "q1b"], q2: ["q2a", "q2b", "q2c"] }),
+    ).toEqual({
       ok: false,
       reason: "answers_missing_or_invalid",
     });
@@ -348,9 +356,11 @@ describe("evaluateQuizBodySchema", () => {
 
 describe("containsQuizAnswers", () => {
   it("finds a correct key at any depth", () => {
-    expect(containsQuizAnswers({ type: "doc", content: [{ attrs: { correct: false } }] })).toBe(
-      true,
+    expect(
+      containsQuizAnswers({ type: "doc", content: [{ attrs: { correct: false } }] }),
+    ).toBe(true);
+    expect(containsQuizAnswers({ type: "doc", content: [{ text: "correct" }] })).toBe(
+      false,
     );
-    expect(containsQuizAnswers({ type: "doc", content: [{ text: "correct" }] })).toBe(false);
   });
 });

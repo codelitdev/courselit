@@ -1,11 +1,11 @@
 # Lesson pages: one block-based lesson type
 
-Status (2026-11-21): steps 1–3 done (step 2 in #899, step 3 stacked on it);
-steps 4–5 next.
+Status (2026-11-22): all five steps done. Steps 1–4 and lesson drafts
+landed in #901–#906; step 5 (cleanup and docs in `frontlit/docs`) follows.
 
-Today a lesson has one of eight fixed types (`text`, `video`, `audio`,
-`pdf`, `file`, `embed`, `quiz`, `scorm`) and the type can't change. This
-change replaces the six content types with one **Page** lesson: a document
+Before this change a lesson had one of eight fixed types (`text`, `video`,
+`audio`, `pdf`, `file`, `embed`, `quiz`, `scorm`) and the type couldn't
+change. This change replaced the six content types with one **Page** lesson: a document
 where the author places blocks (text, video, audio, PDF, file, embed,
 callout, quiz) in any order. SCORM stays its own type, and digital-download
 items keep a `file` record that isn't offered as a lesson type.

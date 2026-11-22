@@ -35,22 +35,9 @@ Select **Add lesson** at the bottom of a section and choose the lesson type in t
 
 ### Write a page lesson
 
-The full-screen editor shows the lesson title as a large heading, with the page below it. Type `/` to add a block, such as a video, image, callout or quiz, and drag the handle beside a block to move it. Changes to the title and the page save automatically; the top bar shows "Saving…" and then "Saved just now".
+The full-screen editor shows the lesson title as a large heading, with the page below it. Type `/` to add a block, such as a video, image, callout or quiz, and drag the handle beside a block to move it. Changes save automatically as a draft; learners see them after you select **Publish changes** (or **Make live** for a new lesson). The settings icon opens **Lesson settings**, with the lesson's **Section**, **Free preview** and **Delete lesson**.
 
-Page changes save as a draft, so learners never see a half-finished edit. Learners keep reading the published page until you publish your changes. While a live lesson has changes learners don't see yet, the top bar shows **Unpublished changes** next to **Live**. Title, section and free preview changes apply right away.
-
-The top bar also has:
-
-- **← Content**, back to the course's **Content** tab.
-- The eye icon, which opens the lesson in a learner preview in a new tab.
-- **Publish changes**, on a live lesson with unpublished changes. Learners see the new page right away.
-- **Discard changes**, on a live lesson with unpublished changes. After you confirm "Discard your unpublished changes?", the page goes back to the version learners see. Discarded edits can't be recovered.
-- **Make live**, or **Move to drafts** for a live lesson. Making a lesson live also publishes its page. Moving it to drafts keeps your unpublished changes.
-
-If something on the page blocks publishing or making the lesson live, such as a quiz without a correct option, a message above the page lists what to fix. You can keep saving such a page; it just can't be published until it's complete.
-- The settings icon, which opens **Lesson settings**: the lesson's **Section**, **Free preview** (see [Free preview lessons](/docs/products/free-preview-lessons)) and **Delete lesson**.
-
-If someone else (or an agent) changes the lesson while you have it open, the editor stops saving and asks you to **Reload**, so nobody's work is overwritten.
+**← Content** in the top bar goes back to this tab, and the eye icon opens a learner preview of the lesson in a new tab. For blocks, drafts, publishing and discarding changes, see [The lesson editor](/docs/products/lesson-types#the-lesson-editor).
 
 Select a lesson's title in the list to edit it again: page lessons open in the full-screen editor, SCORM lessons in the lesson form.
 

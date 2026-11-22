@@ -4,7 +4,7 @@ description: Add a SCORM 1.2 or 2004 package to a course as a lesson and learn h
 nav_order: 70
 ---
 
-A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it. The SCORM type is marked **Alpha** in the **Add a lesson** dialog.
+A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it.
 
 ## Plan
 
@@ -64,10 +64,10 @@ CourseLit tells you why the package was rejected:
 
 Learners see a **Enter SCORM content** button that opens the activity in a separate window. CourseLit saves their progress in the package, so they can leave and return.
 
-A learner cannot select **Mark complete** on a SCORM lesson until the package has reported progress, such as a completed status or recorded interaction. Learners see "Complete the SCORM activity before marking this lesson complete."
+A learner cannot select **Mark complete** on a SCORM lesson until the package has reported progress, such as a completed status or recorded interaction. Learners see "Finish the SCORM activity to complete this lesson."
 
 SCORM lessons count like any other lesson towards finishing a course. See [Certificates](/docs/products/certificates).
 
 ## Before you sell a SCORM course
 
-Because SCORM support is marked **Alpha**, test your package as a learner before you sell the course. [Invite yourself](/docs/products/customers) with a second email address and work through the lesson.
+Test your package as a learner before you sell the course. [Invite yourself](/docs/products/customers) with a second email address and work through the lesson.
