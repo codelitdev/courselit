@@ -399,19 +399,7 @@ export function UsesPreview({ name }: { name: string }) {
     </span>
   );
   return (
-    <div className="grid gap-4 xl:grid-cols-2 max-[1180px]:grid-cols-1">
-      <div className="flex flex-col gap-2">
-        <Label>In your emails</Label>
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>From {shown}</span>
-            <span>Today</span>
-          </div>
-          <div className="h-2.5 rounded-md bg-muted" />
-          <div className="h-2.5 w-[70%] rounded-md bg-muted" />
-          <div className="text-sm font-semibold">{shown}</div>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label>In your community</Label>
         <div className="flex gap-3 rounded-2xl border border-border bg-card p-4">
@@ -430,7 +418,7 @@ export function UsesPreview({ name }: { name: string }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 xl:col-span-2">
+      <div className="flex flex-col gap-2">
         <Label>On certificates</Label>
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-6 text-center">
           <b>Certificate of completion</b>

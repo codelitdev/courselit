@@ -103,7 +103,7 @@ export function AboutStep({
       <StepHeader
         eyebrow="Welcome to CourseLit"
         title="First, what should we call you?"
-        sub="Your name goes on your emails, your community posts and the certificates you issue."
+        sub="Your name goes on your community posts and the certificates you issue."
       />
       <FieldBlock
         label="Your name"
