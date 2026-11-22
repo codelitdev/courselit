@@ -1119,12 +1119,15 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
 
 /**
  * Operations that reach outside the school's own workspace: they email real
- * people or search an outside service. Their MCP tools advertise
- * `openWorldHint: true`; every other tool advertises `false`.
+ * people (sequences, test emails, access grants, community invitations) or
+ * search an outside service. Their MCP tools advertise `openWorldHint: true`;
+ * every other tool advertises `false`.
  */
 export const MCP_OPEN_WORLD_OPERATIONS: ReadonlySet<string> = new Set([
   "startMailSequence",
   "sendMailSequenceTestEmail",
+  "grantLearnerMembership",
+  "inviteCommunityMember",
   "searchUnsplash",
 ]);
 

@@ -253,6 +253,8 @@ describe.serial("one MCP tool per operation", () => {
     for (const name of [
       "start_mail_sequence",
       "send_mail_sequence_test_email",
+      "grant_learner_membership",
+      "invite_community_member",
       "search_unsplash",
     ]) {
       expect(tools.get(name)?.annotations?.openWorldHint).toBe(true);
