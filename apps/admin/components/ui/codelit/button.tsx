@@ -4,6 +4,11 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// CodeLit button — mirrors the design system's `.cl-btn` spec.
+// `soft` is the accent-wash variant unique to CodeLit; use `primary` once per view.
+// Colors resolve from design-system tokens (@codelitdev/design-system/styles.css);
+// product-scoped tokens (--primary-soft / --primary-hover) are referenced as raw
+// vars so they resolve at use-time under `data-product`, never frozen at :root.
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] border border-transparent text-sm font-semibold outline-none transition-[background-color,border-color,color] focus-visible:shadow-[var(--shadow-focus)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {

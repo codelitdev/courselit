@@ -17,5 +17,8 @@
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
+  },
+  "registries": {
+    "@codelit": "https://cdn.jsdelivr.net/npm/@codelitdev/design-system@0.14.0/public/r/{name}.json"
   }
 }

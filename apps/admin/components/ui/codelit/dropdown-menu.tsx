@@ -4,6 +4,8 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// CodeLit dropdown menu — matches the design system's popover treatment
+// (Select's content styling): token-radius, popover shadow, muted item hover.
 function DropdownMenu(props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
