@@ -1,5 +1,5 @@
 /**
- * The Quiz block of a lesson page (docs/wip/lesson-pages.md, section 5.1).
+ * The Quiz block of a lesson page (docs/lesson-pages.md, section 5.1).
  * Server-safe: no React. The admin editor and the storefront add their own
  * UI and renderer for it in their apps.
  *

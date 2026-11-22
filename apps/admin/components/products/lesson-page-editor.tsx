@@ -286,7 +286,7 @@ export type LessonPageEditorProps = {
 };
 
 /**
- * The page editor of a lesson (docs/wip/lesson-pages.md, section 3.4):
+ * The page editor of a lesson (docs/lesson-pages.md, section 3.4):
  * `@frontlit/text-editor` with the lesson profile, the `/` menu, drag
  * handles, the admin's media library for media blocks and CourseLit's Quiz.
  */

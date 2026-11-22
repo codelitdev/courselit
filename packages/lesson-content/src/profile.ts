@@ -14,7 +14,7 @@ import { quizBlock } from "./quiz-block.ts";
 export const LESSON_IMAGE_HOSTS = ["images.unsplash.com"];
 
 /**
- * The lesson page format (docs/wip/lesson-pages.md, section 4.1). Text:
+ * The lesson page format (docs/lesson-pages.md, section 4.1). Text:
  * paragraph, headings 2–4, lists, quote, code block, simple tables, links,
  * divider. Underline and highlight are left out because Markdown can't hold
  * them, and every lesson must round-trip through Markdown for the API.

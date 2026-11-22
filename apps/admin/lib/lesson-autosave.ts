@@ -1,7 +1,7 @@
 import type { LessonDiagnostic, LessonSaveFailure } from "./lesson-page";
 
 /**
- * Autosave for a lesson page (docs/wip/lesson-pages.md, section 7). Every
+ * Autosave for a lesson page (docs/lesson-pages.md, section 7). Every
  * save sends the whole document with the `contentVersion` it is based on.
  * One request at a time; edits made meanwhile are sent next, as one save.
  * A version conflict stops autosaving for good: the author must reload, so
