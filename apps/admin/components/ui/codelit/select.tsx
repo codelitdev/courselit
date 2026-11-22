@@ -1,10 +1,11 @@
-"use client";
-
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
 import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
+// CodeLit select — mirrors `.cl-select`. A Radix select whose trigger matches
+// the Input, with a token-styled popover.
 function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }

@@ -1,7 +1,9 @@
 import { Label as LabelPrimitive } from "radix-ui";
 import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
+// CodeLit form label — mirrors `.cl-field__label` (13px, semibold).
 function Label({
   className,
   ...props

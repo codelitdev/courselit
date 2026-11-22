@@ -1,6 +1,9 @@
 import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
+// CodeLit textarea — the multiline form of `.cl-input`. Same border/focus
+// treatment; vertical resize, 80px min height.
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
