@@ -457,6 +457,13 @@ import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
 import { schoolUsage } from "./usage.js";
 import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
+  identifySchoolGroup,
+  onboardingTransitionEvents,
+  ProductEvent,
+  schoolSubject,
+  trackProductEvent,
+} from "./product-events.js";
+import {
   AUDIT_LOG_FEATURE,
   REMOVE_BRANDING_FEATURE,
   schoolPlan,
@@ -546,12 +553,19 @@ function requestIdFrom(request: IncomingRequest, deps: DispatchDeps) {
 function emitSchoolTelemetry(
   deps: DispatchDeps,
   request: IncomingRequest,
-  input: { requestId: string; schoolId: string; principalId?: string },
+  input: {
+    requestId: string;
+    schoolId: string;
+    principalId?: string;
+    /** A school's learner: counted under the school's subject, never as a PostHog person. */
+    learner?: boolean;
+  },
 ) {
   deps.observability?.captureEvent({
     event: "request.context",
     source: "http.dispatch",
-    subjectId: input.principalId,
+    subjectId: input.learner ? schoolSubject(input.schoolId) : input.principalId,
+    ...(input.learner ? { groups: { school: input.schoolId } } : {}),
     properties: {
       path: request.path.split("?")[0] ?? request.path,
       method: request.method,
@@ -1169,6 +1183,7 @@ export async function dispatch(
         requestId,
         schoolId: result.value.dto.schoolId,
         principalId: result.value.dto.id,
+        learner: true,
       });
       return {
         status: 200,
@@ -1247,6 +1262,7 @@ export async function dispatch(
         requestId,
         schoolId: learnerAuth.value.school.publicId,
         principalId: learnerAuth.value.learner.publicId,
+        learner: true,
       });
       const learnerCommunityViewer = {
         kind: "learner" as const,
@@ -1413,6 +1429,10 @@ export async function dispatch(
           });
         } catch (profileErr) {
           console.error("[readLearnerProfile error]", profileErr);
+          deps.observability?.captureException({
+            error: profileErr,
+            source: "learner.profile",
+          });
         }
         return {
           status: 200,
@@ -2355,6 +2375,17 @@ export async function dispatch(
         schoolId: result.value.id,
         principalId: auth.principalId,
       });
+      identifySchoolGroup(result.value.id, {
+        name: result.value.name,
+        status: result.value.status,
+        billing_mode: deps.billingMode,
+      });
+      trackProductEvent({
+        event: ProductEvent.SCHOOL_CREATED,
+        userId: auth.principalId,
+        schoolId: result.value.id,
+        properties: { status: result.value.status, billing_mode: deps.billingMode },
+      });
       if (deps.observability) {
         void processNextIntegrationJob(
           deps.db,
@@ -2875,6 +2906,13 @@ export async function dispatch(
         decodeURIComponent(publishWebsitePageMatch[1]!),
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.WEBSITE_PAGE_PUBLISHED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
     const publishWebsiteBlogMatch =
@@ -2962,6 +3000,14 @@ export async function dispatch(
           },
           deps.clock,
         );
+        if (result.ok && parsed.data.provider) {
+          trackProductEvent({
+            event: ProductEvent.PAYMENTS_CONNECTED,
+            userId: context.principalId,
+            schoolId: school.value.publicId,
+            properties: { provider: parsed.data.provider },
+          });
+        }
         return result.ok
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
@@ -4949,6 +4995,13 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_ADDED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok
         ? { status: 201, body: result.value }
         : errorResponse(result.error);
@@ -4972,6 +5025,13 @@ export async function dispatch(
         deps.clock,
         { resolver: deps.dnsResolver },
       );
+      if (result.ok && result.value.verificationStatus === "verified") {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_VERIFIED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok
         ? { status: 200, body: result.value }
         : errorResponse(result.error);
@@ -4991,6 +5051,13 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_REMOVED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
 
@@ -5232,6 +5299,11 @@ export async function dispatch(
       );
       if (result.ok) {
         await inviteSent(deps, context, "team");
+        trackProductEvent({
+          event: ProductEvent.TEAM_MEMBER_INVITED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
         const acceptUrl = new URL(
           `/team-invitations/${encodeURIComponent(result.id)}`,
           deps.auth.webOrigin,
@@ -5777,6 +5849,16 @@ export async function dispatch(
               principalId: auth.principalId,
               billing,
               patch: parsed.data,
+              onTransition: (previous, next) => {
+                for (const item of onboardingTransitionEvents(previous, next)) {
+                  trackProductEvent({
+                    event: item.event,
+                    userId: auth.principalId,
+                    schoolId: school.value.publicId,
+                    properties: { step: item.step },
+                  });
+                }
+              },
             },
             deps.clock,
           ),

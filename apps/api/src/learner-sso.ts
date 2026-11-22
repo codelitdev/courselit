@@ -9,6 +9,7 @@ import { createShadowUser } from "./shadow-users.js";
 import { isVerifiedSsoDomainEmail } from "./sign-in-policy.js";
 import { parseSsoEmail } from "./sso-email.js";
 import type { AppDb } from "./types.js";
+import { reportError } from "./telemetry.js";
 
 // Linking an identity an IdP vouched for to a school account. An IdP proves
 // nothing about an email address, so everything here stays inside the one
@@ -357,6 +358,7 @@ async function afterSignIn(
     );
   } catch (error) {
     console.error("[recordActivity failed on sso sign-in]", error);
+    reportError(error, "activity.record");
   }
   await db
     .update(schema.schoolAccounts)

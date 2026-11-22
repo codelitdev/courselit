@@ -302,6 +302,11 @@ export async function updateSchoolOnboarding(
       resumePromptHidden?: boolean;
       markDone?: OnboardingChecklistKey[];
     };
+    /** Called after the update with the step and status before and after it. */
+    onTransition?: (
+      previous: { step: string; status: string },
+      next: { step: string; status: string },
+    ) => void;
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -322,6 +327,10 @@ export async function updateSchoolOnboarding(
     })
     .where(eq(schema.schoolOnboarding.schoolId, input.schoolId))
     .returning();
+  input.onTransition?.(
+    { step: row.step, status: row.status },
+    { step: updated!.step, status: updated!.status },
+  );
   return toDto(db, updated!, input, clock);
 }
 

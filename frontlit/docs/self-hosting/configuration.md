@@ -82,8 +82,9 @@ In the email service, give the organization a default email provider and turn on
 | --- | --- | --- |
 | `RATE_LIMIT_PER_MINUTE` | `1200` per address in production, 10,000 otherwise | Requests per client address per minute. See [Rate limits and retries](/docs/developers/rate-limits-and-retries). |
 | `LOG_LEVEL` | `info` | Log verbosity |
-| `POSTHOG_API_KEY`, `POSTHOG_HOST` | unset | Send product analytics and error reports to PostHog |
-| `OTLP_LOGS_ENDPOINT`, `OTLP_LOGS_AUTHORIZATION` | unset | Send logs to an OpenTelemetry endpoint |
+| `POSTHOG_API_KEY`, `POSTHOG_HOST` | unset; host `https://us.i.posthog.com` | Send product analytics (sign-up, school setup, billing and learner milestones, grouped by school), error reports and logs to PostHog |
+| `OTLP_LOGS_ENDPOINT`, `OTLP_LOGS_AUTHORIZATION` | PostHog's logs endpoint when `POSTHOG_API_KEY` is set | Send logs to another OpenTelemetry endpoint instead |
+| `DEPLOY_ENV` | `NODE_ENV` | A label for the environment, passed to analytics, error reports and logs |
 
 Payment provider keys for learner purchases are not environment variables. Each school enters its own Stripe, Lemon Squeezy or Razorpay credentials in the admin, and CourseLit stores them encrypted in the database.
 
@@ -93,7 +94,7 @@ Payment provider keys for learner purchases are not environment variables. Each 
 | --- | --- | --- | --- |
 | `API_URL` | Required | `http://127.0.0.1:4000` | The address of the API that the admin server calls. It is read at runtime. |
 | `PORT` | Optional | `3000` in the image | The listening port |
-| `POSTHOG_API_KEY`, `POSTHOG_HOST` | Optional | unset | Browser analytics |
+| `POSTHOG_API_KEY`, `POSTHOG_HOST` | Optional | unset | Browser analytics, browser errors and server rendering errors |
 | `DEPLOY_ENV` | Optional | none | A label for the environment, passed to analytics |
 
 ## Storefront
@@ -103,3 +104,5 @@ Payment provider keys for learner purchases are not environment variables. Each 
 | `API_URL` | Required | `http://127.0.0.1:4000` | The address of the API that the storefront server calls |
 | `PORT` | Optional | `3001` in the image | The listening port |
 | `SCORM_CACHE_DIR` | Optional | A `courselit-scorm` folder in the system temp directory | Where SCORM packages are unpacked for learners |
+| `POSTHOG_API_KEY`, `POSTHOG_HOST` | Optional | unset | Server rendering error reports. Learners' browsers are never tracked. |
+| `DEPLOY_ENV` | Optional | none | A label for the environment, passed to error reports |

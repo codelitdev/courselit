@@ -78,6 +78,7 @@ import {
 } from "./previews";
 import { ResumeDialog } from "./resume-dialog";
 import { markResumePrompted, shouldOfferResume } from "./session";
+import { setObservedSchool } from "@/components/browser-observability";
 import {
   AboutStep,
   BrandStep,
@@ -610,6 +611,7 @@ export function SetupWizard({
       }
       rows("done", "done", "done", "run");
       await Promise.all([selectSchool(created.id), wait(STEP_MS)]);
+      setObservedSchool(created.id);
       rows("done", "done", "done", "done");
       // From here on the URL describes the school, not a new one.
       window.history.replaceState(null, "", "/onboarding/setup");
