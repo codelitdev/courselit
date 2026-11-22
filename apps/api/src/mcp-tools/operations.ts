@@ -3,7 +3,12 @@ import {
   PLATFORM_ERROR_CODES,
   type PlatformErrorCode,
 } from "@codelitdev/platform";
-import { contract, mcpParityManifest, mcpToolName } from "@courselit/api-contract";
+import {
+  contract,
+  MCP_OPEN_WORLD_OPERATIONS,
+  mcpParityManifest,
+  mcpToolName,
+} from "@courselit/api-contract";
 import { z } from "zod";
 import { resolveOperationId } from "../auth/operation-policy.js";
 import type { DispatchDeps } from "../deps.js";
@@ -151,7 +156,9 @@ function operationTool(
   const route = routes[operationId]!;
   const description = OPERATION_DESCRIPTIONS[operationId];
   if (!description) {
-    throw new Error(`MCP tool ${tool} (${operationId}) has no entry in OPERATION_DESCRIPTIONS`);
+    throw new Error(
+      `MCP tool ${tool} (${operationId}) has no entry in OPERATION_DESCRIPTIONS`,
+    );
   }
   const pathShape = objectShape(route.pathParams);
   const queryShape = objectShape(route.query);
@@ -167,6 +174,7 @@ function operationTool(
     name: tool,
     description,
     risk,
+    annotations: { openWorldHint: MCP_OPEN_WORLD_OPERATIONS.has(operationId) },
     inputSchema: forMcp(
       z.object({
         ...pathShape,
@@ -181,7 +189,9 @@ function operationTool(
       const input = args as Record<string, unknown>;
       const pick = (names: string[]) =>
         Object.fromEntries(
-          names.flatMap((name) => (input[name] === undefined ? [] : [[name, input[name]]])),
+          names.flatMap((name) =>
+            input[name] === undefined ? [] : [[name, input[name]]],
+          ),
         );
       return runOperation(deps, context, operationId, {
         pathParams: pick(pathKeys),
@@ -210,4 +220,3 @@ export function operationTools(
     return [operationTool(deps, entry.rest.operationId, tool, entry.risk)];
   });
 }
-

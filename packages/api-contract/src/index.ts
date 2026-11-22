@@ -6141,6 +6141,7 @@ export type Contract = typeof contract;
 export {
   buildMcpParityManifest,
   MCP_HIGH_IMPACT_OPERATIONS,
+  MCP_OPEN_WORLD_OPERATIONS,
   type McpParityManifestEntry,
   mcpOperationRisk,
   mcpToolName,
