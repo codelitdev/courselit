@@ -152,7 +152,7 @@ Then suggest two or three next steps, without doing them unless asked:
 | --- | --- |
 | A tool returns `forbidden` with `details.confirmation` set to `required` | It needs `confirm: true`. Ask the person first, then call it again |
 | A tool returns `forbidden` for another reason | Their account can't do that in this school. Tell them, and suggest they ask the school owner |
-| `validation_failed` with `unsupported_markdown` | Remove raw HTML from the lesson and try again |
+| `validation_failed` with `lesson_content_invalid` | Fix what `details.message` names, such as raw HTML, and try again |
 | CourseLit tools disappear or fail to sign in | Ask them to reconnect under **Settings**, **AI assistants** in the dashboard |
 
 For every tool, see [MCP tools](/docs/developers/mcp-tools).

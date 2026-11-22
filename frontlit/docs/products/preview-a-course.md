@@ -40,12 +40,13 @@ In preview you can open every lesson in the course. Compared with what a learner
 
 - **Draft courses.** You can preview a course before it is live.
 - **Draft lessons.** Lessons that are still in **Draft** appear.
+- **Unpublished changes.** Each page shows its latest edits, including changes you haven't published yet.
 - **Locked content.** Lessons that need a membership, and sections held back by a [drip schedule](/docs/products/drip-schedules), are open.
 
 ## What a preview does not do
 
 - You cannot mark lessons complete, and no progress or certificates are recorded.
-- **Quiz** lessons do not show their questions. You see "Quiz content is available after enrollment." To test a quiz, [invite yourself](/docs/products/customers) as a learner with a second email address.
+- Quizzes show their questions, but you can't submit answers: "Enrolled learners answer this quiz to complete the lesson." To test a quiz, [invite yourself](/docs/products/customers) as a learner with a second email address.
 - The discussion panel does not show posts. You see "Discussion space content is available to enrolled learners."
 - Previews do not change how learners see your course. Learners still see only live lessons in a live course.
 

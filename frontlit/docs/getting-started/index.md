@@ -10,7 +10,7 @@ You run everything from the admin dashboard. Your learners never see it: they us
 
 ## What you can do with CourseLit
 
-- Teach with **courses** made of sections and lessons: text, video, audio, PDF, files, embeds, quizzes and SCORM packages.
+- Teach with **courses** made of sections and lessons. A lesson is a page that mixes text, video, audio, PDF, files, embeds, callouts and a quiz, or a SCORM package.
 - Sell or give away **digital downloads**, including free ones that grow your mailing list.
 - Run a **community** with spaces where members post, comment and react.
 - Charge with one-time, subscription or instalment **payment plans**, or offer things for free.

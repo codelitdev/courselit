@@ -86,7 +86,7 @@ Operations that make no sense for an assistant are not tools. These include ever
 
 ## The course outline tool
 
-One tool is not a single REST operation. `apply_course_outline` adds sections and text lessons to a course or download in one call, in the order you give.
+One tool is not a single REST operation. `apply_course_outline` adds sections and page lessons to a course in one call, in the order you give.
 
 ```json
 {
@@ -103,11 +103,11 @@ One tool is not a single REST operation. `apply_course_outline` adds sections an
 }
 ```
 
-- Lesson bodies are Markdown, with headings, emphasis, lists, links, code blocks and tables. Raw HTML is not allowed and fails with `validation_failed` and `details.reason` set to `unsupported_markdown`.
+- Lesson bodies are Markdown, with headings, emphasis, lists, links, code blocks and tables, plus block tags such as `<Video>`, `<Callout>` and one `<Quiz>`. `get_lesson_content_format` lists every tag with its props. Raw HTML is not allowed: the call fails with `validation_failed`, `details.reason` set to `lesson_content_invalid` and `details.code` set to `unsupported_syntax`, and nothing is created.
 - New lessons are drafts unless you set `status` to `published`. The product's own status does not change.
 - A section or lesson whose title already exists in the same place, compared without regard to case, is kept as it is and not duplicated. The call is safe to retry or to extend later.
 - It takes up to 50 sections and up to 100 lessons per section.
-- It creates text lessons only. For video, audio, PDF, file, embed, quiz and SCORM lessons, use `create_lesson`.
+- It creates page lessons only. For SCORM lessons, use `create_lesson`.
 
 The response lists the product, how many sections and lessons were created, and each section with its lessons and whether each one was created or already existed.
 

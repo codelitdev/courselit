@@ -18,7 +18,7 @@ The course opens in a full-screen viewer:
 
 - A sidebar lists the lessons, grouped into sections. A lock icon marks lessons that are not available.
 - The header shows the course and lesson title, a light and dark mode switch, a **Discussions** button if discussions are on, and **Exit**.
-- Each lesson shows its content: text, video, audio, PDF, a file to open, embedded content, a quiz or a SCORM activity.
+- Each lesson shows its content: a page of text, images, video, audio, PDFs, files, embedded content and a quiz, or a SCORM activity.
 - **Previous** and **Next** buttons move between lessons. On the first lesson, **Previous** reads **Overview**, and on the last, **Next** reads **Finish**.
 
 ### Locked lessons
@@ -27,7 +27,7 @@ A lesson is locked when:
 
 - It has no content yet.
 - It is scheduled for later, in which case the learner sees "This lesson unlocks on" followed by the date and time. Schedules come from drip settings on the section.
-- The learner does not have access to the course and the lesson requires it. Quizzes always require access.
+- The learner does not have access to the course and the lesson requires it. Lessons with a quiz always require access.
 
 Locked lessons show "Content Locked". If the learner does not have access, a buy button is shown too.
 
@@ -35,8 +35,8 @@ Locked lessons show "Content Locked". If the learner does not have access, a buy
 
 Learners click **Mark complete** at the bottom of a lesson. It then changes to a disabled **Completed** button. Their completed lessons count towards the progress bar on their dashboard and in your [Customers](/docs/learners/product-customers) screen.
 
-- A quiz lesson can only be marked complete after the learner passes the quiz. Otherwise they see "Pass the quiz before marking this lesson complete."
-- A SCORM lesson can only be marked complete after the learner finishes the SCORM activity. Otherwise they see "Complete the SCORM activity before marking this lesson complete."
+- A lesson with a quiz can only be marked complete after the learner passes the quiz. Otherwise they see "Pass the quiz to complete this lesson." Learners see their score and whether they passed, never which answers were correct, and can retry as often as they like. See [Quizzes](/docs/products/quizzes).
+- A SCORM lesson can only be marked complete after the learner finishes the SCORM activity. Otherwise they see "Finish the SCORM activity to complete this lesson."
 
 When a learner has completed every published lesson in a course that has a certificate switched on, a **View certificate** link appears. See [Certificates](/docs/learners/certificates).
 
