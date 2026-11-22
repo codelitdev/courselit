@@ -186,7 +186,11 @@ describe.serial("one MCP tool per operation", () => {
           tools: Array<{
             name: string;
             description: string;
-            annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean };
+            annotations?: {
+              readOnlyHint?: boolean;
+              destructiveHint?: boolean;
+              openWorldHint?: boolean;
+            };
             inputSchema: { properties?: Record<string, unknown> };
           }>;
         };
@@ -235,6 +239,28 @@ describe.serial("one MCP tool per operation", () => {
     ]) {
       expect(tools.get(name)?.annotations?.destructiveHint).toBe(true);
       expect(tools.get(name)?.inputSchema.properties).toHaveProperty("confirm");
+    }
+    await runtime.close();
+  });
+
+  it("marks only tools that email people or search outside services as open-world", async () => {
+    const { runtime, world } = await setup();
+    const tools = new Map(
+      (await listTools(runtime, owner(world))).map(
+        (tool) => [tool.name, tool] as const,
+      ),
+    );
+    for (const name of [
+      "start_mail_sequence",
+      "send_mail_sequence_test_email",
+      "grant_learner_membership",
+      "invite_community_member",
+      "search_unsplash",
+    ]) {
+      expect(tools.get(name)?.annotations?.openWorldHint).toBe(true);
+    }
+    for (const name of ["list_sections", "create_section", "delete_section"]) {
+      expect(tools.get(name)?.annotations?.openWorldHint).toBe(false);
     }
     await runtime.close();
   });

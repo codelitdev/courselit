@@ -1117,6 +1117,20 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "updateSchoolLoginMethods",
 ]);
 
+/**
+ * Operations that reach outside the school's own workspace: they email real
+ * people (sequences, test emails, access grants, community invitations) or
+ * search an outside service. Their MCP tools advertise `openWorldHint: true`;
+ * every other tool advertises `false`.
+ */
+export const MCP_OPEN_WORLD_OPERATIONS: ReadonlySet<string> = new Set([
+  "startMailSequence",
+  "sendMailSequenceTestEmail",
+  "grantLearnerMembership",
+  "inviteCommunityMember",
+  "searchUnsplash",
+]);
+
 /** `listWebsitePages` -> `list_website_pages`: one snake_case tool per operation. */
 export function mcpToolName(operationId: string): string {
   return operationId.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
