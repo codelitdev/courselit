@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ChevronLeft, CircleAlert, Eye } from "lucide-react";
+import { ArrowRight, ChevronLeft, CircleAlert, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,7 +8,17 @@ import { useAdminShellContext } from "@/components/layout/admin-shell-context";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
 import { CourseLitLoading } from "@/components/loading";
 import { Button } from "@/components/ui/codelit/button";
-import { cn } from "@/lib/utils";
+import { OnboardingResumeDialog } from "@/components/ui/codelit/onboarding-resume-dialog";
+import {
+  OnboardingFooter,
+  OnboardingPreview,
+  OnboardingShell,
+} from "@/components/ui/codelit/onboarding-shell";
+import {
+  type RowState,
+  Spinner,
+  StatusBadge,
+} from "@/components/ui/codelit/onboarding-ui";
 import {
   AiForm,
   AiStatusPane,
@@ -71,12 +81,10 @@ import {
 import {
   EmailPreview,
   HomePreview,
-  PreviewFrame,
   ProductPreview,
   UsesPreview,
   WirePreview,
 } from "./previews";
-import { ResumeDialog } from "./resume-dialog";
 import { markResumePrompted, shouldOfferResume } from "./session";
 import { setObservedSchool } from "@/components/browser-observability";
 import {
@@ -92,8 +100,6 @@ import {
   type StepCtx,
   type UploadSlot,
 } from "./steps";
-import type { RowState } from "./ui";
-import { Badge, Spinner } from "./ui";
 
 export type WizardProps = {
   /** `?new=1`: start another school for a user who already has one. */
@@ -1081,7 +1087,7 @@ export function SetupWizard({
   } else if (step === "build") {
     previewTitle = "Live preview";
     if (isPaidOffer(data))
-      previewBadge = <Badge tone="wait">Hidden until it has a price</Badge>;
+      previewBadge = <StatusBadge tone="wait">Hidden until it has a price</StatusBadge>;
     previewBody = <ProductPreview data={data} schoolName={schoolName} fullUrl={host} />;
   } else if (step === "email") {
     previewTitle = "Where your address appears";
@@ -1093,8 +1099,9 @@ export function SetupWizard({
         : step === "plan" || inGoingLive
           ? "Ready to go live"
           : "Live preview";
-    if (step === "live") previewBadge = <Badge tone="ok">Live</Badge>;
-    else if (step === "plan") previewBadge = <Badge tone="wait">Not live yet</Badge>;
+    if (step === "live") previewBadge = <StatusBadge tone="ok">Live</StatusBadge>;
+    else if (step === "plan")
+      previewBadge = <StatusBadge tone="wait">Not live yet</StatusBadge>;
     previewBody = <HomePreview data={data} schoolName={schoolName} fullUrl={host} />;
   }
 
@@ -1172,9 +1179,7 @@ export function SetupWizard({
     continueFrom();
   }
 
-  const savedLabel = saveState === "saving" ? "Saving…" : "Saved";
   const hasSchool = Boolean(school);
-  const mobileLabel = groups[stepIndex]?.label ?? "";
 
   if (booting) {
     return <CourseLitLoading label="Loading your setup" />;
@@ -1321,143 +1326,24 @@ export function SetupWizard({
     : siteUrl;
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
-      <header className="grid h-16 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-6 border-b border-border bg-card px-6 max-md:h-14 max-md:grid-cols-[1fr_auto] max-md:gap-3 max-md:px-4">
-        <div className="flex items-center gap-2 font-bold">
-          <CourseLitLogo className="size-7" />
-          <span className="max-md:hidden">CourseLit</span>
-        </div>
-        <ol
-          aria-label="Setup progress"
-          className="flex items-center justify-center gap-2 max-md:hidden"
-        >
-          {groups.map((group, index) => {
-            const done = index < stepIndex;
-            const now = index === stepIndex;
-            const skipped =
-              (group.key === "email" && data.email.skipped) ||
-              (group.key === "offer" && !data.offer && index < stepIndex);
-            return (
-              <li
-                key={group.key}
-                aria-current={now ? "step" : undefined}
-                className={cn(
-                  "flex items-center gap-2 text-[13px] text-muted-foreground",
-                  now && "font-semibold text-foreground",
-                  done && "text-foreground",
-                  skipped && "opacity-60",
-                )}
-              >
-                <span
-                  className={cn(
-                    "grid size-6 place-items-center rounded-full bg-muted text-xs font-semibold",
-                    done &&
-                      "bg-[oklch(0.56_0.13_150/0.12)] text-[oklch(0.44_0.12_150)]",
-                    now && "bg-primary text-primary-foreground",
-                  )}
-                >
-                  {done ? (
-                    <Check aria-hidden className="size-3.5" strokeWidth={3} />
-                  ) : (
-                    index + 1
-                  )}
-                </span>
-                <span
-                  className={cn("max-[1180px]:hidden", now && "max-[1180px]:inline")}
-                >
-                  {group.label}
-                </span>
-                {index < groups.length - 1 ? (
-                  <span
-                    aria-hidden
-                    className="ml-1 h-px w-4 bg-border max-[1180px]:w-2"
-                  />
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-        <div className="flex items-center gap-3">
-          {hasSchool ? (
-            <span
-              role="status"
-              className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
-            >
-              {saveState === "saving" ? (
-                <Spinner className="size-3.5" />
-              ) : (
-                <Check aria-hidden className="size-3.5" />
-              )}
-              <span className="max-md:hidden">{savedLabel}</span>
-            </span>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => void finishLater()}
-          >
-            Finish later
-          </Button>
-        </div>
-      </header>
-
-      <div
-        aria-hidden
-        className="flex flex-col gap-1.5 border-b border-border bg-card px-4 py-3 md:hidden"
-      >
-        <div className="flex justify-between text-[13px]">
-          <b className="font-semibold">{mobileLabel}</b>
-          <span className="text-muted-foreground">
-            Step {stepIndex + 1} of {groups.length}
-          </span>
-        </div>
-        <div className="h-1 overflow-hidden rounded-full bg-muted">
-          <i
-            className="block h-full rounded-full bg-primary transition-[width]"
-            style={{ width: `${Math.round(((stepIndex + 1) / groups.length) * 100)}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(420px,1fr)_minmax(0,1fr)]">
-        <section
-          aria-label="Setup"
-          className="flex min-h-0 flex-col border-r border-border"
-        >
-          {/* The pane scrolls, so its scrollbar sits on the pane's edge; the
-              form stays a centred column inside it. */}
-          <div ref={formRef} className="flex min-h-0 flex-1 flex-col overflow-auto">
-            <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col gap-6 px-12 pb-8 pt-12 max-[1180px]:px-9 max-[1180px]:pt-10 max-md:gap-5 max-md:px-4 max-md:pb-6 max-md:pt-6">
-              {failed ? (
-                <div
-                  role="alert"
-                  className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
-                >
-                  <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
-                  <div className="min-w-0 flex-1">
-                    <b className="font-semibold">We couldn&apos;t save this step.</b>{" "}
-                    Check your connection and try again. Nothing you entered is lost.
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const retry = failed.retry;
-                      setFailed(null);
-                      retry();
-                    }}
-                  >
-                    Retry
-                  </Button>
-                </div>
-              ) : null}
-              {form}
-  </div>
-          </div>
-          {showFooter ? (
-            <footer className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border bg-card px-12 py-3.5 max-[1180px]:px-9 max-md:px-4 max-md:py-3">
+    <>
+      <OnboardingShell
+        logo={<CourseLitLogo className="size-7" />}
+        productName="CourseLit"
+        steps={groups.map((group, index) => ({
+          key: group.key,
+          label: group.label,
+          skipped:
+            (group.key === "email" && data.email.skipped) ||
+            (group.key === "offer" && !data.offer && index < stepIndex),
+        }))}
+        current={stepIndex}
+        saveState={hasSchool ? saveState : undefined}
+        onFinishLater={() => void finishLater()}
+        scrollRef={formRef}
+        footer={
+          showFooter ? (
+            <OnboardingFooter>
               {canBack || (inCreating && !createReady) ? (
                 <Button type="button" variant="ghost" onClick={back} disabled={saving}>
                   <ChevronLeft aria-hidden className="size-4" />
@@ -1509,23 +1395,55 @@ export function SetupWizard({
                   {nextBusy ? null : <ArrowRight aria-hidden className="size-4" />}
                 </Button>
               )}
-            </footer>
-          ) : null}
-        </section>
+            </OnboardingFooter>
+          ) : null
+        }
+        preview={
+          <OnboardingPreview
+            title={previewTitle}
+            badge={previewBadge}
+            open={prevOpen}
+            onClose={() => setPrevOpen(false)}
+          >
+            {previewBody}
+          </OnboardingPreview>
+        }
+      >
+        {failed ? (
+          <div
+            role="alert"
+            className="flex items-center gap-2.5 rounded-[var(--radius)] bg-[var(--destructive-soft)] px-3.5 py-3 text-sm"
+          >
+            <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
+            <div className="min-w-0 flex-1">
+              <b className="font-semibold">We couldn&apos;t save this step.</b> Check
+              your connection and try again. Nothing you entered is lost.
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const retry = failed.retry;
+                setFailed(null);
+                retry();
+              }}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : null}
+        {form}
+      </OnboardingShell>
 
-        <PreviewFrame
-          title={previewTitle}
-          badge={previewBadge}
-          open={prevOpen}
-          onClose={() => setPrevOpen(false)}
-        >
-          {previewBody}
-        </PreviewFrame>
-      </div>
-
-      <ResumeDialog
+      <OnboardingResumeDialog
         open={showResume}
-        schoolName={schoolName}
+        description={
+          <>
+            You&apos;re part way through setting up {schoolName}. Everything you entered
+            is saved.
+          </>
+        }
         rows={resumeRows(
           resumeStep,
           { firstRun, hosted },
@@ -1537,10 +1455,11 @@ export function SetupWizard({
           markResumePrompted();
           setShowResume(false);
         }}
-        onDashboard={() => {
+        onExit={() => {
           markResumePrompted();
           window.location.assign("/");
         }}
+        neverAgainLabel={`Never show this again for ${schoolName}`}
         onNeverAgain={async () => {
           markResumePrompted();
           const current = schoolRef.current;
@@ -1552,6 +1471,6 @@ export function SetupWizard({
           window.location.assign("/");
         }}
       />
-    </div>
+    </>
   );
 }

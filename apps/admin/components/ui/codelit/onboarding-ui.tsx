@@ -13,11 +13,15 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { cn } from "@/lib/utils";
 
-/** Status colours the admin tokens do not define. */
-export const OK_TEXT = "text-[oklch(0.44_0.12_150)]";
-export const OK_SOFT = "bg-[oklch(0.56_0.13_150/0.12)]";
-export const WARN_TEXT = "text-[oklch(0.48_0.11_70)]";
-export const WARN_SOFT = "bg-[oklch(0.66_0.13_75/0.15)]";
+// CodeLit onboarding building blocks — the pieces a setup step is made of: the
+// step heading, labelled fields, notes, a segmented control, choice tiles, a
+// progress list, a file drop zone and rows, copyable values, and status badges.
+// Colours come from design-system tokens (@codelitdev/design-system/styles.css).
+
+const OK_TEXT = "text-[var(--success)]";
+const OK_SOFT = "bg-[var(--success-soft)]";
+const WARN_TEXT = "text-[var(--warning)]";
+const WARN_SOFT = "bg-[var(--warning-soft)]";
 
 export function Spinner({ className }: { className?: string }) {
   return <Loader2 aria-hidden className={cn("size-4 animate-spin", className)} />;
@@ -163,6 +167,7 @@ export function Seg<T extends string>({
   className?: string;
 }) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would bring a legend and its own box; this is a button group.
     <div
       role="group"
       aria-label={label}
@@ -461,7 +466,7 @@ export function CopyRow({
   );
 }
 
-export function Badge({
+export function StatusBadge({
   tone = "wait",
   children,
   pulse,
