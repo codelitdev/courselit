@@ -19,6 +19,6 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@codelit": "https://cdn.jsdelivr.net/npm/@codelitdev/design-system@0.15.0/public/r/{name}.json"
+    "@codelit": "https://cdn.jsdelivr.net/npm/@codelitdev/design-system@0.16.0/public/r/{name}.json"
   }
 }
