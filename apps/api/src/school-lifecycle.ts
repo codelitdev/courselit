@@ -4,6 +4,7 @@ import { and, eq, isNull, notInArray } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { queueSchoolEmail, renderSchoolEmail } from "./school-emails.js";
 import { schoolPlan } from "./school-plan.js";
+import { ProductEvent, trackSchoolEvent } from "./product-events.js";
 import type { AppDb } from "./types.js";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -111,12 +112,34 @@ async function noticeOwnerOnce(
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(date);
 
+/** Lifecycle changes worth a product event; the rest change nothing visible. */
+const TRACKED_LIFECYCLE_ACTIONS: ReadonlySet<LifecycleAction> = new Set([
+  "activated",
+  "trial_closed",
+  "read_only",
+  "expired_pending",
+]);
+
 /**
  * Moves a school through its lifecycle from its plan (docs/wip/plan-limits.md,
  * section 3). Safe to run any number of times. Does nothing when billing
  * can't be read (S23) or while the school is suspended or under maintenance.
  */
 export async function evaluateSchoolLifecycle(
+  deps: LifecycleDeps,
+  schoolId: string,
+): Promise<LifecycleAction> {
+  const action = await applySchoolLifecycle(deps, schoolId);
+  if (TRACKED_LIFECYCLE_ACTIONS.has(action)) {
+    await trackSchoolEvent(deps.db, schoolId, {
+      event: ProductEvent.SCHOOL_LIFECYCLE_CHANGED,
+      properties: { action },
+    });
+  }
+  return action;
+}
+
+async function applySchoolLifecycle(
   deps: LifecycleDeps,
   schoolId: string,
 ): Promise<LifecycleAction> {

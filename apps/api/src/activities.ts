@@ -4,6 +4,7 @@ import { and, eq, gte, lt, inArray } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { ActivityType, type ActivityType as ActivityTypeValue } from "./activity-types.js";
 import { type AnalyticsRange, analyticsWindow } from "./analytics-range.js";
+import { productEventForActivity, trackSchoolEvent } from "./product-events.js";
 import { schoolRevenueEvents } from "./revenue.js";
 import type { AppDb } from "./types.js";
 
@@ -63,7 +64,7 @@ export async function recordActivity(
 ): Promise<void> {
   const now = clock.now();
   const id = uuidv7(clock);
-  await db
+  const inserted = await db
     .insert(schema.activities)
     .values({
       id,
@@ -76,7 +77,21 @@ export async function recordActivity(
       createdAt: now,
       updatedAt: now,
     })
-    .onConflictDoNothing({ target: schema.activities.dedupeKey });
+    .onConflictDoNothing({ target: schema.activities.dedupeKey })
+    .returning({ id: schema.activities.id });
+  // A repeat (same dedupe key) is not a new event for product analytics either.
+  const event = inserted.length ? productEventForActivity(input.type) : null;
+  if (event) {
+    const metadata = input.metadata ?? {};
+    await trackSchoolEvent(db, input.schoolId, {
+      event,
+      properties: {
+        currency: typeof metadata.currency === "string" ? metadata.currency : undefined,
+        amount_minor:
+          typeof metadata.amountMinor === "number" ? metadata.amountMinor : undefined,
+      },
+    });
+  }
 }
 
 export type ActivityRange = AnalyticsRange;

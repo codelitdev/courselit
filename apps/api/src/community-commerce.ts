@@ -28,6 +28,7 @@ import {
 import { nextRefundedAmount } from "./revenue.js";
 import { amountMinorForPlan } from "./storefront.js";
 import type { AppDb } from "./types.js";
+import { reportError } from "./telemetry.js";
 
 type CommunityCheckoutStatus =
   | "pending"
@@ -742,6 +743,10 @@ export async function startLearnerCommunityCheckout(
       checkout: row.publicId,
       provider: paymentProvider!.name,
       error: thrown instanceof Error ? thrown.message : String(thrown),
+    });
+    reportError(thrown, "commerce.checkout_refused", {
+      provider: paymentProvider!.name,
+      entity_type: "community",
     });
     await db
       .update(schema.communityCheckoutAttempts)

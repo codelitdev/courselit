@@ -18,7 +18,7 @@
       "version": "1.0.0-alpha.0",
       "dependencies": {
         "@codelitdev/design-system": "0.15.0",
-        "@codelitdev/observability": "0.5.0",
+        "@codelitdev/observability": "0.15.0",
         "@courselit/api-contract": "workspace:*",
         "@courselit/components-library": "workspace:*",
         "@courselit/lesson-content": "workspace:*",
@@ -64,7 +64,7 @@
         "@codelitdev/billing": "0.13.0",
         "@codelitdev/mcp-server-kit": "0.5.0",
         "@codelitdev/oauth-server-kit": "0.10.0",
-        "@codelitdev/observability": "0.5.0",
+        "@codelitdev/observability": "0.15.0",
         "@codelitdev/platform": "0.13.0",
         "@codelitdev/platform-conformance": "0.9.0",
         "@courselit/api-contract": "workspace:*",
@@ -106,7 +106,7 @@
       "version": "1.0.0-alpha.0",
       "dependencies": {
         "@codelitdev/design-system": "0.15.0",
-        "@codelitdev/observability": "0.5.0",
+        "@codelitdev/observability": "0.15.0",
         "@courselit/api-contract": "workspace:*",
         "@courselit/lesson-content": "workspace:*",
         "@courselit/page-blocks": "workspace:*",
@@ -313,7 +313,7 @@
 
     "@codelitdev/oauth-server-kit": ["@codelitdev/oauth-server-kit@0.10.0", "", { "peerDependencies": { "@better-auth/oauth-provider": "^1.7.16", "better-auth": "^1.7.16", "express": "^4.21.2" } }, "sha512-1cTvPWslQmvHDP9JDyb1/v+q6mnB9W4h7AwCwOwTgH8f4ASxr4Q9saLaB3uiqY1hThq8ovgKQYPDvb3cnsztWQ=="],
 
-    "@codelitdev/observability": ["@codelitdev/observability@0.5.0", "", { "dependencies": { "pino": "^9.6.0" }, "peerDependencies": { "express": "^4.21.2", "posthog-js": "^1.200.0", "posthog-node": "^4.0.0" }, "optionalPeers": ["express", "posthog-js", "posthog-node"] }, "sha512-rQcB9fkaustBImNc3u7MSE4eCufD+DyLA02u2jLqoWcrq2cjrmTjbWrJ4AV4gdhtMGuiLjM0R6vdF9PWsTB7aQ=="],
+    "@codelitdev/observability": ["@codelitdev/observability@0.15.0", "", { "dependencies": { "pino": "^9.6.0" }, "peerDependencies": { "express": "^4.21.2", "posthog-js": "^1.200.0", "posthog-node": "^4.0.0" }, "optionalPeers": ["express", "posthog-js", "posthog-node"] }, "sha512-ojYH3fdivdlb4B+U/WRxQg9YRHQjwowKXgICBDBfjEOPKZ5BlCPQiaA4A5tGK25ztQ9Po26dDp4R4qM4AzYixg=="],
 
     "@codelitdev/platform": ["@codelitdev/platform@0.13.0", "", { "dependencies": { "tldts": "7.4.19" }, "peerDependencies": { "@codelitdev/billing": ">=0.13.0", "drizzle-orm": "^0.45.2" }, "optionalPeers": ["@codelitdev/billing", "drizzle-orm"] }, "sha512-0N3aHRcVRn88jO07qz+Yf2UzN5jkflndbN39m1GGAH5FT2qg+w1fPRmbuo9r669DR1D5oypJe78ZWxs3kPuiiw=="],
 

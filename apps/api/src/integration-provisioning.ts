@@ -43,6 +43,7 @@ import {
   decryptIntegrationSecret,
   encryptIntegrationSecret,
 } from "./utils/integration-secrets.js";
+import { reportError } from "./telemetry.js";
 
 const MAX_ERROR_LENGTH = 2000;
 
@@ -789,6 +790,9 @@ export async function processNextIntegrationJob(
     } catch (error) {
       const actionRequired = isActionRequired(error);
       await failJob(db, job, clock, error, actionRequired);
+      if (actionRequired) {
+        reportError(error, "worker.integration_job", { job_id: job.id, kind: job.type });
+      }
       logger.warn(
         {
           jobId: job.id,
@@ -842,6 +846,9 @@ export async function processNextPlatformJob(
   } catch (error) {
     const actionRequired = job.attempts + 1 >= MAX_PLATFORM_JOB_ATTEMPTS;
     await failJob(db, job, clock, error, actionRequired);
+    if (actionRequired) {
+      reportError(error, "worker.platform_job", { job_id: job.id, kind: job.type });
+    }
     logger.warn(
       {
         jobId: job.id,
@@ -911,6 +918,9 @@ export async function processNextSystemEmailJob(
       error instanceof IntegrationActionRequiredError ||
       job.attempts + 1 >= MAX_SYSTEM_EMAIL_ATTEMPTS;
     await failJob(db, job, clock, error, actionRequired);
+    if (actionRequired) {
+      reportError(error, "worker.system_email", { job_id: job.id });
+    }
     logger.warn(
       {
         jobId: job.id,
@@ -962,6 +972,7 @@ export function startIntegrationWorker(
       }
     } catch (error) {
       logger.error({ error: safeError(error) }, "Integration worker poll error");
+      reportError(error, "worker.integrations");
     } finally {
       if (!stopped) {
         timer = setTimeout(tick, intervalMs);

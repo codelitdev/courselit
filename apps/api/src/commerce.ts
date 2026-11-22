@@ -32,6 +32,7 @@ import { notifyCheckoutRefused, notifyPaymentSucceeded } from "./purchase-notifi
 import { nextRefundedAmount } from "./revenue.js";
 import { amountMinorForPlan, sourceTypeForKind } from "./storefront.js";
 import type { AppDb } from "./types.js";
+import { reportError } from "./telemetry.js";
 
 type CheckoutStatus =
   | "pending"
@@ -632,6 +633,19 @@ async function fulfillFreeCheckout(
       .update(schema.storefrontCheckoutAttempts)
       .set({ membershipId: membership.id, updatedAt: now })
       .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
+    // A free product is an enrolment (paid ones record a purchase), so it
+    // counts in the school's overview like any other enrolment.
+    await recordActivity(
+      tx as unknown as AppDb,
+      {
+        schoolId: context.schoolId,
+        actorId: context.schoolAccountId ?? context.learnerId!,
+        type: ActivityType.ENROLLED,
+        entityId: product.publicId,
+        metadata: { membershipId: membership.publicId },
+      },
+      clock,
+    );
     const providerPaymentId = `free_${current.publicId}`;
     const payment = {
       id: uuidv7(clock),
@@ -893,6 +907,10 @@ export async function startLearnerCheckout(
       checkout: row.publicId,
       provider: paymentProvider!.name,
       error: thrown instanceof Error ? thrown.message : String(thrown),
+    });
+    reportError(thrown, "commerce.checkout_refused", {
+      provider: paymentProvider!.name,
+      entity_type: "product",
     });
     await markCheckoutFailed(db, row.id, clock);
     await unstageLearnerMembership(db, membership.id, existingMembership);
