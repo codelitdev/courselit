@@ -757,6 +757,10 @@ export const publicSiteSettingsSchema = z.object({
   /** Where the "Powered by CourseLit" badge links; null hides the badge. */
   courseLitBadgeUrl: z.string().nullable(),
   canonicalHost: z.string().nullable(),
+  /** Where the storefront is reached, e.g. `https://learn.example.com`: the
+   * verified custom domain, else the school's subdomain. For absolute URLs
+   * in structured data and feeds. */
+  siteOrigin: z.string().nullable(),
   /** The school has a published product (public or hidden) or a live
    * community, so learners have something to sign in to. */
   hasPublishedOffers: z.boolean(),

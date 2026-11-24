@@ -376,7 +376,9 @@ import {
   getSchoolCodeInjection,
   getSchoolPaymentSettings,
   listSchoolsForUser,
+  defaultStorefrontHost,
   loadSchoolByPublicId,
+  storefrontOriginForHost,
   resolveSchoolByHost,
   updateSchoolCodeInjection,
   updateSchool,
@@ -931,6 +933,9 @@ export async function dispatch(
               ? courseLitBadgeUrl(school.subdomain)
               : null,
             canonicalHost: verifiedCustomHost?.hostname ?? null,
+            siteOrigin: storefrontOriginForHost(
+              verifiedCustomHost?.hostname ?? defaultStorefrontHost(school.subdomain),
+            ),
             hasPublishedOffers: Boolean(publishedProduct || liveCommunity),
             hideFromSearch: school.hideFromSearch,
             blockAiTraining: school.blockAiTraining,

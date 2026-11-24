@@ -36,6 +36,16 @@ It leaves out drafts, unlisted products, and any page whose **Search engine visi
 
 When you [connect your own domain](/docs/website/custom-domain), `robots.txt` and the sitemap use it for every address.
 
+## Structured data and RSS
+
+Your site also describes itself to search engines and AI tools in a format they read directly (schema.org structured data):
+
+- Your homepage describes your school and site.
+- Each course's sales page describes it as a course, and each download's as a product, with its payment plans and prices.
+- Each blog post describes its title, summary, author and dates.
+
+Your blog has an RSS feed at `/blog/rss.xml` with your 50 newest posts, so readers can follow it in a feed reader.
+
 ## Who can change these settings
 
 You need the `school:write` permission. See [Permissions](/docs/settings/permissions).
