@@ -22,7 +22,6 @@ import { Users } from "lucide-react";
 import { createContext, type ReactNode, useContext, useId, useMemo } from "react";
 import { PreviewBrowser } from "@/components/ui/codelit/onboarding-shell";
 import {
-  addressPreview,
   buyCta,
   isPaidOffer,
   offerDescription,
@@ -418,45 +417,3 @@ export function UsesPreview({ name }: { name: string }) {
   );
 }
 
-export function EmailPreview({
-  data,
-  schoolName,
-}: {
-  data: WizardData;
-  schoolName: string;
-}) {
-  const sender = data.email.sender.trim() || schoolName;
-  return (
-    <>
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="flex items-center gap-3 border-b border-border p-4">
-          <span className="grid size-10 place-items-center rounded-full bg-[var(--primary-soft)] font-bold text-primary">
-            {schoolName[0]?.toUpperCase()}
-          </span>
-          <div className="flex flex-col text-sm">
-            <b>{sender}</b>
-            <span className="text-muted-foreground">to a contact of {schoolName}</span>
-          </div>
-          <span className="ml-auto text-xs text-muted-foreground">Today</span>
-        </div>
-        <div aria-hidden className="flex flex-col gap-2.5 p-5">
-          <div className="h-3.5 w-2/5 rounded-md bg-muted" />
-          <div className="h-2.5 rounded-md bg-muted" />
-          <div className="h-2.5 rounded-md bg-muted" />
-          <div className="h-2.5 w-3/4 rounded-md bg-muted" />
-          <div className="mt-2 h-9 w-[120px] rounded-[9px] bg-[var(--primary-soft)]" />
-        </div>
-        <div className="flex flex-col gap-1 border-t border-border bg-muted/50 p-4 text-xs text-muted-foreground">
-          <span>{schoolName}</span>
-          <span className="whitespace-pre-line">{addressPreview(data.email)}</span>
-          <span>
-            <u>Unsubscribe</u> · <u>Update preferences</u>
-          </span>
-        </div>
-      </div>
-      <p className="text-[12.5px] text-muted-foreground">
-        Every marketing email gets this footer automatically.
-      </p>
-    </>
-  );
-}

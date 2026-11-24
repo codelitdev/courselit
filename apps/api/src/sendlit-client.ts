@@ -17,6 +17,7 @@ import {
   type GeneralSettings,
   type ListContactsQuery,
   type ListSequencesQuery,
+  type PostalAddress,
   type ProvisionedTeamUsage,
   type ProvisionTeamInput,
   type ProvisionTeamResponse,
@@ -109,6 +110,9 @@ export type SendLitSystemTemplate = SystemTemplate;
 export type SendLitSequence = Sequence;
 export type SendLitSequenceEmail = Sequence["emails"][number];
 export type SendLitGeneralSettings = GeneralSettings;
+/** The mailing address in parts; SendLit formats the footer text. */
+export type SendLitGeneralSettingsInput = { postalAddress: SendLitPostalAddress };
+export type SendLitPostalAddress = PostalAddress;
 export type SendLitSequenceStats = SequenceStats;
 export type SendLitEmailTestResult = SequenceEmailTestResult;
 export type SendLitTrackEventInput = TrackEventInput;
@@ -294,7 +298,7 @@ export async function getSendLitGeneralSettings(
 
 export async function updateSendLitGeneralSettings(
   teamApiKey: string,
-  input: { mailingAddress: string },
+  input: SendLitGeneralSettingsInput,
   options: SendLitClientOptions = {},
 ): Promise<SendLitGeneralSettings> {
   return team(teamApiKey, options, (s) => s.settings.general.update(input));

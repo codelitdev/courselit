@@ -9,7 +9,6 @@ import {
   detectLocaleDefaults,
   ERROR_COPY,
   emptyWizardData,
-  formatMailingAddress,
   hasNewConnection,
   hasUploadsInFlight,
   isValidSubdomain,
@@ -27,7 +26,6 @@ import {
   toServerStep,
   type UploadedFile,
   validateBuild,
-  validateEmail,
   validateSchool,
 } from "./flow";
 
@@ -52,7 +50,6 @@ describe("step flow", () => {
       "offer",
       "build",
       "brand",
-      "email",
       "plan",
       "live",
     ]);
@@ -60,7 +57,6 @@ describe("step flow", () => {
       "school",
       "offer",
       "brand",
-      "email",
       "live",
     ]);
   });
@@ -80,19 +76,18 @@ describe("step flow", () => {
       "School",
       "First offer",
       "Your site",
-      "Email",
       "Plan",
       "Live",
     ]);
     expect(stepperIndex(groups, "build")).toBe(stepperIndex(groups, "offer"));
     expect(stepperGroups({ firstRun: false, hosted: false }).map((g) => g.key)).toEqual(
-      ["school", "offer", "site", "email", "live"],
+      ["school", "offer", "site", "live"],
     );
   });
 
   it("never stores the about step and resumes sensibly", () => {
     expect(toServerStep("about")).toBe("school");
-    expect(toServerStep("email")).toBe("email");
+    expect(toServerStep("brand")).toBe("brand");
     expect(resolveResumeStep("build", { hosted: true, hasOffer: false })).toBe("brand");
     expect(resolveResumeStep("plan", { hosted: false, hasOffer: true })).toBe("live");
     expect(resolveResumeStep("school", { hosted: true, hasOffer: true })).toBe("offer");
@@ -134,17 +129,9 @@ describe("subdomain rules", () => {
 });
 
 describe("locale defaults", () => {
-  it("prefills currency, language and country from the browser locale", () => {
-    expect(detectLocaleDefaults("en-GB")).toEqual({
-      currency: "GBP",
-      language: "en",
-      country: "GB",
-    });
-    expect(detectLocaleDefaults("de-DE")).toEqual({
-      currency: "EUR",
-      language: "de",
-      country: "DE",
-    });
+  it("prefills currency and language from the browser locale", () => {
+    expect(detectLocaleDefaults("en-GB")).toEqual({ currency: "GBP", language: "en" });
+    expect(detectLocaleDefaults("de-DE")).toEqual({ currency: "EUR", language: "de" });
     expect(detectLocaleDefaults("hi-IN").currency).toBe("INR");
   });
 
@@ -198,17 +185,6 @@ describe("validation", () => {
     expect(validateBuild(download)).toEqual({});
   });
 
-  it("requires a street address and postal code for email", () => {
-    const data = emptyWizardData();
-    expect(Object.keys(validateEmail(data.email)).sort()).toEqual([
-      "address",
-      "postal",
-    ]);
-    data.email.line1 = "18 Harbour Lane";
-    data.email.postal = "BS1 4RN";
-    expect(validateEmail(data.email)).toEqual({});
-  });
-
   it("detects uploads in flight", () => {
     const data = emptyWizardData();
     expect(hasUploadsInFlight(data)).toBe(false);
@@ -219,7 +195,7 @@ describe("validation", () => {
 
 describe("draft serialization", () => {
   it("round-trips finished data and drops in-flight uploads", () => {
-    const data = emptyWizardData({ currency: "GBP", language: "en", country: "GB" });
+    const data = emptyWizardData({ currency: "GBP", language: "en" });
     data.school = "Inkwell Studio";
     data.subdomain = "inkwell-studio";
     data.offer = "download";
@@ -231,8 +207,7 @@ describe("draft serialization", () => {
     ];
     data.course.cover = file({ id: "c", status: "uploading", mediaId: null });
     data.brand.tagline = "Painting lessons";
-    data.email.line1 = "18 Harbour Lane";
-    data.refs = { productId: "p1", fileLessons: { f1: "l1" }, emailSaved: true };
+    data.refs = { productId: "p1", fileLessons: { f1: "l1" } };
 
     const restored = parseDraft(JSON.parse(JSON.stringify(serializeDraft(data))));
     expect(restored.school).toBe("Inkwell Studio");
@@ -244,7 +219,6 @@ describe("draft serialization", () => {
     expect(restored.brand.tagline).toBe("Painting lessons");
     expect(restored.refs.productId).toBe("p1");
     expect(restored.refs.fileLessons).toEqual({ f1: "l1" });
-    expect(restored.refs.emailSaved).toBe(true);
   });
 
   it("tolerates empty and malformed drafts", () => {
@@ -285,18 +259,9 @@ describe("copy helpers", () => {
     expect(aiPromptFor(null, "", "")).toContain("your school");
   });
 
-  it("formats the mailing address", () => {
-    const data = emptyWizardData();
-    data.email = {
-      ...data.email,
-      line1: "18 Harbour Lane",
-      city: "Bristol",
-      postal: "BS1 4RN",
-      country: "GB",
-    };
-    expect(formatMailingAddress(data.email)).toBe(
-      "18 Harbour Lane\nBristol, BS1 4RN\nUnited Kingdom",
-    );
+  it("drops the email step from older drafts", () => {
+    const restored = parseDraft({ school: "Inkwell", email: { line1: "18 Harbour Lane" } });
+    expect(restored).not.toHaveProperty("email");
   });
 });
 

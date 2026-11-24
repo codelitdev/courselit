@@ -112,16 +112,16 @@ describe("sendlit-client", () => {
 
       if (init?.method === "GET") {
         return new Response(
-          JSON.stringify({ mailingAddress: "123 Main St", updatedAt: "2026-01-01" }),
+          JSON.stringify({ postalAddress: { line1: "123 Main St", country: "US" }, updatedAt: "2026-01-01" }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
       }
       if (init?.method === "PUT") {
         putCalled = true;
         const body = JSON.parse(init?.body as string);
-        expect(body.mailingAddress).toBe("456 New St");
+        expect(body).toEqual({ postalAddress: { line1: "456 New St", country: "US" } });
         return new Response(
-          JSON.stringify({ mailingAddress: "456 New St", updatedAt: "2026-01-02" }),
+          JSON.stringify({ postalAddress: body.postalAddress, updatedAt: "2026-01-02" }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
       }
@@ -132,18 +132,18 @@ describe("sendlit-client", () => {
       config: { server: "http://127.0.0.1:4101", provisioningApiKey: null },
       fetcher,
     });
-    expect(settings.mailingAddress).toBe("123 Main St");
+    expect(settings.postalAddress).toEqual({ line1: "123 Main St", country: "US" });
 
     const updated = await updateSendLitGeneralSettings(
       "team_key",
-      { mailingAddress: "456 New St" },
+      { postalAddress: { line1: "456 New St", country: "US" } },
       {
         config: { server: "http://127.0.0.1:4101", provisioningApiKey: null },
         fetcher,
       },
     );
     expect(putCalled).toBe(true);
-    expect(updated.mailingAddress).toBe("456 New St");
+    expect(updated.postalAddress).toEqual({ line1: "456 New St", country: "US" });
   });
 
   it("handles contact operations", async () => {

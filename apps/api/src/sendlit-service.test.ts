@@ -121,10 +121,12 @@ describe("SendLit Service", () => {
 
       if (url.includes("/settings/general")) {
         if (method === "GET") {
-          return jsonResponse({ mailingAddress: "123 School Lane" });
+          return jsonResponse({
+            postalAddress: { line1: "123 School Lane", country: "US" },
+          });
         }
         if (method === "PUT") {
-          return jsonResponse({ mailingAddress: body.mailingAddress });
+          return jsonResponse({ postalAddress: body.postalAddress });
         }
       }
 
@@ -278,13 +280,17 @@ describe("SendLit Service", () => {
       // 1. Settings
       const settings = await getMailingSettings(runtime.db, schoolId, clock);
       expect(settings.ok).toBe(true);
-      if (settings.ok) expect(settings.value.mailingAddress).toBe("123 School Lane");
+      if (settings.ok) {
+        expect(settings.value.postalAddress?.line1).toBe("123 School Lane");
+      }
 
       const updatedSettings = await updateMailingSettings(runtime.db, schoolId, clock, {
-        mailingAddress: "456 Academy Blvd",
+        postalAddress: { line1: "456 Academy Blvd", country: "US" },
       });
       expect(updatedSettings.ok).toBe(true);
-      if (updatedSettings.ok) expect(updatedSettings.value.mailingAddress).toBe("456 Academy Blvd");
+      if (updatedSettings.ok) {
+        expect(updatedSettings.value.postalAddress?.line1).toBe("456 Academy Blvd");
+      }
 
       // 2. Contact tags
       const addTag = await addTagToContact(runtime.db, schoolId, clock, "c_1", "vip");
@@ -479,13 +485,20 @@ describe("SendLit Service", () => {
       });
 
     const originalFetch = globalThis.fetch;
+    const generalSettingsBodies: unknown[] = [];
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? "GET";
       const body = init?.body ? JSON.parse(init.body as string) : undefined;
 
       if (url.includes("/settings/general")) {
-        return jsonResponse({ mailingAddress: body?.mailingAddress ?? "100 Education Way" });
+        if (method !== "GET") generalSettingsBodies.push(body);
+        return jsonResponse({
+          postalAddress: body?.postalAddress ?? {
+            line1: "100 Education Way",
+            country: "US",
+          },
+        });
       }
       if (url.includes("/contacts")) {
         return jsonResponse({ items: [sendLitContact({ tags: ["vip"] })], total: 1 });
@@ -518,17 +531,45 @@ describe("SendLit Service", () => {
         headers: adminHeaders,
       });
       expect(getSettings.status).toBe(200);
-      expect(getSettings.body).toMatchObject({ mailingAddress: "100 Education Way" });
+      expect(getSettings.body).toMatchObject({
+        postalAddress: { line1: "100 Education Way", country: "US" },
+      });
 
-      // 2. PATCH /v1/school/mails/settings
-      const patchSettings = await dispatch(runtime, {
+      // 2. PATCH /v1/school/mails/settings: the address goes to SendLit as is.
+      const postalAddress = {
+        line1: "F-102 Shanti Dham Society",
+        city: "Indore",
+        postalCode: "452020",
+        country: "IN",
+      };
+      const patchParts = await dispatch(runtime, {
         method: "PATCH",
         path: "/v1/school/mails/settings",
         headers: adminHeaders,
-        body: { mailingAddress: "200 University Ave" },
+        body: { postalAddress },
       });
-      expect(patchSettings.status).toBe(200);
-      expect(patchSettings.body).toMatchObject({ mailingAddress: "200 University Ave" });
+      expect(patchParts.status).toBe(200);
+      expect(patchParts.body).toMatchObject({ postalAddress });
+      expect(generalSettingsBodies.at(-1)).toEqual({ postalAddress });
+
+      // Only an address in parts, with a country-code shape, is accepted.
+      const sentBefore = generalSettingsBodies.length;
+      for (const body of [
+        {},
+        { mailingAddress: "200 University Ave" },
+        { mailingAddress: "200 University Ave", postalAddress },
+        { postalAddress: { ...postalAddress, country: "India" } },
+        { postalAddress: { ...postalAddress, line1: " " } },
+      ]) {
+        const refused = await dispatch(runtime, {
+          method: "PATCH",
+          path: "/v1/school/mails/settings",
+          headers: adminHeaders,
+          body,
+        });
+        expect(refused.status).toBe(400);
+      }
+      expect(generalSettingsBodies).toHaveLength(sentBefore);
 
 
       // 6. GET /v1/school/mails/sequences needs a type: SendLit lists

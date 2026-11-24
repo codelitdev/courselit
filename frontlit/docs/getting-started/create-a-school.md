@@ -1,10 +1,10 @@
 ---
 title: Create your school
-description: Use the setup wizard to create a school, set up your first offer, brand your site and get ready to send email.
+description: Use the setup wizard to create a school, set up your first offer and brand your site.
 nav_order: 40
 ---
 
-The setup wizard creates your school and walks you through your first offer, your site's look and your email setup. It starts automatically the first time you sign in without a school. You can also start it later by choosing **Add school** in the school switcher, or select **New school** on the Schools page.
+The setup wizard creates your school and walks you through your first offer and your site's look. It starts automatically the first time you sign in without a school. You can also start it later by choosing **Add school** in the school switcher, or select **New school** on the Schools page.
 
 Everything after naming your school is optional, and you can change any choice later in the normal admin screens.
 
@@ -36,7 +36,7 @@ Fill in:
 - **Currency**, which sets the prices learners see. The choices are USD, EUR, GBP, INR, AUD and CAD.
 - **Language**, for your site and learner emails. The choices are English, Español, Français, Deutsch, हिन्दी and Português.
 
-When you continue, CourseLit creates your school. It sets up your website, with a homepage and drafts of your Terms and Privacy pages, your community (ready for when you switch it on) and your email setup. If a part fails, you can retry it.
+When you continue, CourseLit creates your school. It sets up your website, with a homepage and drafts of your Terms and Privacy pages, and your community (ready for when you switch it on). If a part fails, you can retry it.
 
 </Step>
 
@@ -72,15 +72,7 @@ If you prefer to build in a chat with an AI assistant, this step also offers a w
 
 Add an optional **Logo**, pick a **Theme**, and write a **Tagline** shown under your school's name on the homepage. You can fine-tune colours and fonts later in the page editor.
 
-</Step>
-
-<Step>
-
-### Get ready to send email
-
-Anti-spam law requires a postal address in every marketing email, so the wizard asks for your **Street address**, **City**, **State or region** (optional), **Postal code** and **Country**. The address appears in the footer of the emails you send. Set a **Sender name**, which is who your emails say they are from.
-
-You can choose **Skip for now**. Email then stays off until you add a mailing address.
+The wizard doesn't set up marketing email. When you first open **Marketing**, it asks for your mailing address; see [Marketing settings](/docs/marketing/marketing-settings).
 
 </Step>
 

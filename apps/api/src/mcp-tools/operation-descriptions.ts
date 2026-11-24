@@ -224,9 +224,9 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
 
   // Email
   getMailingSettings:
-    "Reads the school's email settings: sender name, reply-to and mailing address.",
+    "Reads the school's mailing address (postalAddress), the postal address printed in every marketing email's footer. It is null until it is set.",
   updateMailingSettings:
-    "Changes the school's email sender name, reply-to or mailing address.",
+    "Sets the school's mailing address, printed in every marketing email's footer and required before any marketing email goes out. Send postalAddress: line1, optional line2, city, region and postalCode, and an ISO 3166-1 alpha-2 country code.",
   getSchoolEmailDelivery:
     "Reads whether the school's email is set up to send, and what is still missing.",
   listMailSequences: "Lists the school's email sequences with their status.",

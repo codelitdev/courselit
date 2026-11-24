@@ -2293,7 +2293,6 @@ export const onboardingStepSchema = z.enum([
   "offer",
   "build",
   "brand",
-  "email",
   "plan",
   "live",
 ]);
@@ -2404,15 +2403,26 @@ export const schoolEmailDeliverySchema = z.object({
   sender: z.enum(["school", "platform"]),
   integrationStatus: z.string().nullable(),
 });
+/** A postal address in parts; `country` is an ISO 3166-1 alpha-2 code. */
+export const postalAddressSchema = z.object({
+  line1: z.string().trim().min(1).max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(100).optional(),
+  region: z.string().trim().max(100).optional(),
+  postalCode: z.string().trim().max(20).optional(),
+  country: z.string().regex(/^[A-Z]{2}$/),
+});
 export const mailingSettingsSchema = z
   .object({
-    mailingAddress: z.string().nullable(),
+    /** The postal address every marketing email's footer prints; null until
+     * it is set. SendLit formats it into the footer text. */
+    postalAddress: postalAddressSchema.nullable(),
     updatedAt: z.string().nullable().optional(),
   })
   .passthrough();
 export const updateMailingSettingsBodySchema = z
-  .object({ mailingAddress: z.string().trim().min(1).max(1000) })
-  .passthrough();
+  .object({ postalAddress: postalAddressSchema })
+  .strict();
 export const mailSequenceListQuerySchema = z.object({
   /** Broadcasts and sequences are listed separately. */
   type: z.enum(["broadcast", "sequence"]),

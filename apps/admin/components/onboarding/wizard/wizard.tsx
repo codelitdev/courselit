@@ -31,7 +31,6 @@ import {
   ApiError,
   adoptProduct,
   applyBranding,
-  applyEmail,
   assertAcceptedFile,
   type BillingCatalog,
   checkSubdomain,
@@ -79,7 +78,6 @@ import {
   type WizardStep,
 } from "./flow";
 import {
-  EmailPreview,
   HomePreview,
   ProductPreview,
   UsesPreview,
@@ -91,7 +89,6 @@ import {
   AboutStep,
   BrandStep,
   BuildStep,
-  EmailStep,
   LiveStep,
   OfferStep,
   PlanStep,
@@ -120,7 +117,7 @@ type SchoolInfo = {
   origin: string | null;
 };
 
-type LiveKey = "site" | "community" | "offer" | "email";
+type LiveKey = "site" | "community" | "offer";
 type SaveState = "saved" | "saving";
 
 function uid(): string {
@@ -198,7 +195,6 @@ export function SetupWizard({
     site: "wait",
     community: "wait",
     offer: "wait",
-    email: "wait",
   });
   const [liveFailed, setLiveFailed] = useState<LiveKey | null>(null);
   const [paidConfirmed, setPaidConfirmed] = useState(false);
@@ -338,7 +334,6 @@ export function SetupWizard({
         restored.school = info.name;
         restored.subdomain = info.subdomain || restored.subdomain;
         restored.subdomainTouched = true;
-        if (!restored.email.sender) restored.email.sender = info.name;
         setSchool(info);
         schoolRef.current = info;
         setData(restored);
@@ -558,9 +553,6 @@ export function SetupWizard({
     const current = dataRef.current;
     const next: Partial<WizardData> = { school: value };
     if (!current.subdomainTouched) next.subdomain = slugify(value);
-    if (!current.email.sender || current.email.sender === current.school) {
-      next.email = { ...current.email, sender: value };
-    }
     patch(next);
   }
 
@@ -573,12 +565,8 @@ export function SetupWizard({
     setCreating(true);
     setCreateError(null);
     setCreateReady(false);
-    const rows = (
-      site: RowState,
-      community: RowState,
-      email: RowState,
-      open: RowState,
-    ) => setCreateRows({ site, community, email, open });
+    const rows = (site: RowState, community: RowState, open: RowState) =>
+      setCreateRows({ site, community, open });
     let created = schoolRef.current;
     // The real work takes a fraction of a second. Each row stays on screen for
     // at least a beat, so the creator can read what is being set up.
@@ -588,14 +576,11 @@ export function SetupWizard({
     let stopped = false;
     try {
       if (!created) {
-        rows("run", "wait", "wait", "wait");
+        rows("run", "wait", "wait");
         const pacing = (async () => {
           await wait(STEP_MS);
           if (stopped) return;
-          rows("done", "run", "wait", "wait");
-          await wait(STEP_MS);
-          if (stopped) return;
-          rows("done", "done", "run", "wait");
+          rows("done", "run", "wait");
           await wait(STEP_MS);
         })();
         const result = await createSchool({
@@ -615,10 +600,10 @@ export function SetupWizard({
         setSchool(created);
         await pacing;
       }
-      rows("done", "done", "done", "run");
+      rows("done", "done", "run");
       await Promise.all([selectSchool(created.id), wait(STEP_MS)]);
       setObservedSchool(created.id);
-      rows("done", "done", "done", "done");
+      rows("done", "done", "done");
       // From here on the URL describes the school, not a new one.
       window.history.replaceState(null, "", "/onboarding/setup");
       stepRef.current = "offer";
@@ -638,9 +623,9 @@ export function SetupWizard({
         return;
       }
       if (!created) {
-        rows("fail", "wait", "wait", "wait");
+        rows("fail", "wait", "wait");
       } else {
-        rows("done", "done", "done", "fail");
+        rows("done", "done", "fail");
       }
       setCreateError(
         errorText(error, "We couldn't create your school. Please try again."),
@@ -652,7 +637,6 @@ export function SetupWizard({
   const liveKeys = useMemo<LiveKey[]>(() => {
     const keys: LiveKey[] = ["site", "community"];
     if (data.offer && data.offer !== "community") keys.push("offer");
-    keys.push("email");
     return keys;
   }, [data.offer]);
 
@@ -667,7 +651,7 @@ export function SetupWizard({
       setLiveFailed(null);
       setErrors({});
       if (!from) {
-        setLiveRows({ site: "wait", community: "wait", offer: "wait", email: "wait" });
+        setLiveRows({ site: "wait", community: "wait", offer: "wait" });
       }
       for (const key of keys.slice(start)) {
         setLiveRows((rows) => ({ ...rows, [key]: "run" }));
@@ -679,17 +663,6 @@ export function SetupWizard({
             if (state.offer === "community") await publishOffer(current.id, state);
           } else if (key === "offer") {
             await publishOffer(current.id, state);
-          } else if (
-            key === "email" &&
-            !state.email.skipped &&
-            !state.refs.emailSaved
-          ) {
-            await applyEmail(current.id, state);
-            setData((s) => ({ ...s, refs: { ...s.refs, emailSaved: true } }));
-            dataRef.current = {
-              ...dataRef.current,
-              refs: { ...dataRef.current.refs, emailSaved: true },
-            };
           }
           setLiveRows((rows) => ({ ...rows, [key]: "done" }));
         } catch {
@@ -837,24 +810,6 @@ export function SetupWizard({
           const current = schoolRef.current;
           if (!current) return;
           await applyBranding(current.id, dataRef.current, current.name);
-          goTo("email");
-        });
-        return;
-      case "email":
-        void run(async () => {
-          const current = schoolRef.current;
-          if (!current) return;
-          await applyEmail(current.id, dataRef.current);
-          setData((state) => ({
-            ...state,
-            email: { ...state.email, skipped: false },
-            refs: { ...state.refs, emailSaved: true },
-          }));
-          dataRef.current = {
-            ...dataRef.current,
-            email: { ...dataRef.current.email, skipped: false },
-            refs: { ...dataRef.current.refs, emailSaved: true },
-          };
           if (hosted) await enterPlanOrLive();
           else await runGoingLive();
         });
@@ -875,13 +830,6 @@ export function SetupWizard({
     } else if (step === "build") {
       goTo("brand");
     } else if (step === "brand") {
-      goTo("email");
-    } else if (step === "email") {
-      patch({ email: { ...dataRef.current.email, skipped: true } });
-      dataRef.current = {
-        ...dataRef.current,
-        email: { ...dataRef.current.email, skipped: true },
-      };
       void (hosted ? enterPlanOrLive() : runGoingLive());
     }
   }
@@ -932,10 +880,7 @@ export function SetupWizard({
       refs:
         current.offer === offer
           ? current.refs
-          : {
-              communityId: current.refs.communityId,
-              emailSaved: current.refs.emailSaved,
-            },
+          : { communityId: current.refs.communityId },
     };
     if (offer === "community" && !current.community.name) {
       next.community = {
@@ -1003,7 +948,6 @@ export function SetupWizard({
       desc: "Your homepage, plus Terms and Privacy drafts to review",
     },
     { key: "community", name: "Community", desc: "Ready for when you switch it on" },
-    { key: "email", name: "Email", desc: "So you can send to your contacts" },
     { key: "open", name: "Opening your school", desc: "Switching you over to it" },
   ].map((row) => ({ ...row, state: createRows[row.key] ?? ("wait" as RowState) }));
 
@@ -1026,13 +970,6 @@ export function SetupWizard({
           ? "Saved, hidden until you add a price"
           : "Its sales page",
       },
-      email: {
-        name: "Email",
-        desc:
-          liveRows.email === "fail"
-            ? "Couldn't finish setting up email"
-            : "So you can send to your contacts",
-      },
     };
     return { key, ...base[key], state: liveRows[key] };
   });
@@ -1048,14 +985,6 @@ export function SetupWizard({
         : offerTitleOr(data) +
           (isPaidOffer(data) ? ", hidden until you add a price" : ""),
       state: (!data.offer || isPaidOffer(data) ? "later" : "done") as RowState,
-    },
-    {
-      key: "email",
-      name: "Email",
-      desc: data.email.skipped
-        ? "Off until you add a mailing address"
-        : "Ready to send",
-      state: (data.email.skipped ? "later" : "done") as RowState,
     },
   ];
 
@@ -1089,9 +1018,6 @@ export function SetupWizard({
     if (isPaidOffer(data))
       previewBadge = <StatusBadge tone="wait">Hidden until it has a price</StatusBadge>;
     previewBody = <ProductPreview data={data} schoolName={schoolName} fullUrl={host} />;
-  } else if (step === "email") {
-    previewTitle = "Where your address appears";
-    previewBody = <EmailPreview data={data} schoolName={schoolName} />;
   } else {
     previewTitle =
       step === "live"
@@ -1113,51 +1039,38 @@ export function SetupWizard({
     !isLast &&
     !(step === "school" && !creating && flow.indexOf(step) === 0);
   const canSkip =
-    ["offer", "build", "brand", "email"].includes(step) &&
+    ["offer", "build", "brand"].includes(step) &&
     !aiOpen &&
     !saving &&
     !inGoingLive &&
     !inCreating;
-  const emailFailed = inGoingLive && liveFailed === "email";
   let nextLabel = "Continue";
   if (saving) nextLabel = "Saving…";
   else if (inGoingLive)
-    nextLabel = emailFailed
-      ? "Go live without email"
-      : liveReady
-        ? "Continue"
-        : "Going live…";
+    nextLabel = liveReady ? "Continue" : "Going live…";
   else if (step === "plan") nextLabel = "Continue to checkout";
-  else if (step === "email")
-    nextLabel = hosted ? "Save and continue" : "Save and finish";
   else if (step === "build")
     nextLabel = uploadsBusy ? "Uploading…" : "Save and continue";
-  else if (step === "brand" && uploadsBusy) nextLabel = "Uploading…";
+  else if (step === "brand")
+    nextLabel = uploadsBusy
+      ? "Uploading…"
+      : hosted
+        ? "Save and continue"
+        : "Save and finish";
   else if (inCreating)
     nextLabel = createError ? "Try again" : createReady ? "Continue" : "Creating…";
   const nextBusy =
     saving ||
-    (inGoingLive && !emailFailed && !liveReady) ||
+    (inGoingLive && !liveReady) ||
     (inCreating && !createError && !createReady);
   const nextDisabled =
     nextBusy ||
-    (inGoingLive && !emailFailed && !liveFailed && !liveReady) ||
+    (inGoingLive && !liveFailed && !liveReady) ||
     (step === "offer" && !data.offer) ||
     ((step === "build" || step === "brand") && uploadsBusy) ||
     (step === "school" && !inCreating && availability === "checking");
 
   function onNext() {
-    if (inGoingLive && emailFailed) {
-      setData((state) => ({ ...state, email: { ...state.email, skipped: true } }));
-      dataRef.current = {
-        ...dataRef.current,
-        email: { ...dataRef.current.email, skipped: true },
-      };
-      setGoingLive(false);
-      toast.success(`${schoolName} is live`);
-      goTo("live");
-      return;
-    }
     if (inGoingLive && liveReady) {
       setLiveReady(false);
       setGoingLive(false);
@@ -1283,8 +1196,6 @@ export function SetupWizard({
             onRemoveUpload={removeUpload}
           />
         );
-      case "email":
-        return <EmailStep ctx={ctx} />;
       case "plan":
         return (
           <PlanStep
@@ -1333,9 +1244,7 @@ export function SetupWizard({
         steps={groups.map((group, index) => ({
           key: group.key,
           label: group.label,
-          skipped:
-            (group.key === "email" && data.email.skipped) ||
-            (group.key === "offer" && !data.offer && index < stepIndex),
+          skipped: group.key === "offer" && !data.offer && index < stepIndex,
         }))}
         current={stepIndex}
         saveState={hasSchool ? saveState : undefined}

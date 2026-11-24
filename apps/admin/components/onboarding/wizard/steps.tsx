@@ -52,7 +52,6 @@ import { cn } from "@/lib/utils";
 import type { BillingCatalog } from "./api";
 import {
   buildCopy,
-  COUNTRIES,
   CURRENCIES,
   domainExample,
   type FieldErrors,
@@ -1012,103 +1011,6 @@ export function BrandStep({
           }
         />
       </FieldBlock>
-    </>
-  );
-}
-
-// ----------------------------------------------------------------------- email
-
-export function EmailStep({ ctx }: { ctx: StepCtx }) {
-  const { data, patch, errors, disabled } = ctx;
-  const email = data.email;
-  const set = (key: keyof typeof email, value: string) =>
-    patch({ email: { ...email, [key]: value } });
-  return (
-    <>
-      <StepHeader
-        eyebrow="Email"
-        title="Get ready to send email"
-        sub="Anti-spam law requires a postal address in every marketing email. It appears in the footer of the emails you send."
-      />
-      <div className="flex flex-col gap-4">
-        <FieldBlock label="Street address" htmlFor="e-l1" error={errors.address}>
-          <Input
-            id="e-l1"
-            autoComplete="street-address"
-            value={email.line1}
-            disabled={disabled}
-            aria-invalid={Boolean(errors.address)}
-            onChange={(event) => set("line1", event.target.value)}
-          />
-        </FieldBlock>
-        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-          <FieldBlock label="City" htmlFor="e-city">
-            <Input
-              id="e-city"
-              autoComplete="address-level2"
-              value={email.city}
-              disabled={disabled}
-              onChange={(event) => set("city", event.target.value)}
-            />
-          </FieldBlock>
-          <FieldBlock label="State or region" htmlFor="e-reg" aside="Optional">
-            <Input
-              id="e-reg"
-              autoComplete="address-level1"
-              value={email.region}
-              disabled={disabled}
-              onChange={(event) => set("region", event.target.value)}
-            />
-          </FieldBlock>
-        </div>
-        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-          <FieldBlock label="Postal code" htmlFor="e-pc" error={errors.postal}>
-            <Input
-              id="e-pc"
-              autoComplete="postal-code"
-              value={email.postal}
-              disabled={disabled}
-              aria-invalid={Boolean(errors.postal)}
-              onChange={(event) => set("postal", event.target.value)}
-            />
-          </FieldBlock>
-          <FieldBlock label="Country" htmlFor="e-co">
-            <Select
-              value={email.country}
-              onValueChange={(value) => set("country", value)}
-            >
-              <SelectTrigger id="e-co" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COUNTRIES.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FieldBlock>
-        </div>
-        <Hint>
-          A PO box or business address works too, if you&apos;d rather not share your
-          home address.
-        </Hint>
-      </div>
-      <section className="flex flex-col gap-3 border-t border-border pt-5">
-        <FieldBlock
-          label="Sender name"
-          htmlFor="e-from"
-          hint="Who your emails say they're from."
-        >
-          <Input
-            id="e-from"
-            value={email.sender}
-            disabled={disabled}
-            onChange={(event) => set("sender", event.target.value)}
-          />
-        </FieldBlock>
-      </section>
     </>
   );
 }

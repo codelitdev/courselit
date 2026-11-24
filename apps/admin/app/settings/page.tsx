@@ -23,7 +23,7 @@ import {
 import type { SchoolPaymentSettings } from "@courselit/api-contract";
 import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
@@ -31,6 +31,10 @@ import { AuditLogSettings } from "@/components/settings/audit-log-settings";
 import { StorageSettings } from "@/components/settings/storage-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
+import {
+  MailDeliverySettings,
+  MailingAddressGate,
+} from "@/components/mails/mailing-address-setup";
 import { LoginProviderSettings } from "@/components/settings/login-provider-settings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
@@ -61,7 +65,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/codelit/select";
-import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
 const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "storage", "audit-log"] as const;
@@ -118,6 +121,21 @@ type SchoolItem = {
   permissions?: string[];
 };
 
+
+/** Marketing settings ask for the mailing address first, like the other
+ * marketing screens; the other settings pages render as they are. */
+function MailsSetupGate({
+  enabled,
+  schoolId,
+  children,
+}: {
+  enabled: boolean;
+  schoolId: string | null;
+  children: ReactNode;
+}) {
+  if (!enabled) return <>{children}</>;
+  return <MailingAddressGate schoolId={schoolId}>{children}</MailingAddressGate>;
+}
 
 export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const router = useRouter();
@@ -190,10 +208,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const [webhookRetrying, setWebhookRetrying] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const [mailingAddress, setMailingAddress] = useState("");
-  const [mailingAddressSaving, setMailingAddressSaving] = useState(false);
-  const [mailingAddressSaved, setMailingAddressSaved] = useState(false);
-  const [mailingAddressError, setMailingAddressError] = useState<string | null>(null);
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
@@ -237,57 +251,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
       })
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!schoolId || mode !== "mails") return;
-    void fetch("/api/v1/school/mails/settings", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { "x-school-id": schoolId },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { mailingAddress?: string } | null) => {
-        if (data?.mailingAddress) {
-          setMailingAddress(data.mailingAddress);
-        }
-      })
-      .catch(() => {});
-  }, [mode, schoolId]);
-
-  async function saveMailingSettings() {
-    if (!schoolId || mailingAddressSaving) return;
-    setMailingAddressSaving(true);
-    setMailingAddressError(null);
-    setMailingAddressSaved(false);
-    try {
-      const response = await fetch("/api/v1/school/mails/settings", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({ mailingAddress }),
-      });
-      const body = (await response.json().catch(() => null)) as {
-        mailingAddress?: string;
-        message?: string;
-      } | null;
-      if (!response.ok) {
-        throw new Error(body?.message ?? "Unable to save mailing settings.");
-      }
-      if (body?.mailingAddress !== undefined) {
-        setMailingAddress(body.mailingAddress);
-      }
-      setMailingAddressSaved(true);
-    } catch (caught) {
-      setMailingAddressError(
-        caught instanceof Error ? caught.message : "Unable to save mailing settings.",
-      );
-    } finally {
-      setMailingAddressSaving(false);
-    }
-  }
 
   /** Ask the API to register the provider's webhook again. */
   async function retryWebhook() {
@@ -386,6 +349,10 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   return (
     <AuthGate>
       <div className="page-shell">
+        <MailsSetupGate
+          enabled={mode === "mails"}
+          schoolId={schoolId}
+        >
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">{pageDetails.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{pageDetails.description}</p>
@@ -720,45 +687,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           {mode === "mails" && selectedTab === "delivery" ? (
             <div className="space-y-4 pt-4">
               <EmailDeliveryNotice schoolId={schoolId} />
-              <form
-                className="space-y-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void saveMailingSettings();
-                }}
-              >
-                <div className="space-y-1.5">
-                  <Label htmlFor="mailing-address">Mailing Address</Label>
-                  <Textarea
-                    id="mailing-address"
-                    rows={5}
-                    value={mailingAddress}
-                    onChange={(event) => setMailingAddress(event.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This is required in order to comply with the CAN-SPAM Act.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    disabled={!schoolId || mailingAddressSaving}
-                  >
-                    {mailingAddressSaving ? "Saving…" : "Save"}
-                  </Button>
-                  {mailingAddressSaved ? (
-                    <p className="text-sm text-muted-foreground" role="status">
-                      Mailing settings saved.
-                    </p>
-                  ) : null}
-                  {mailingAddressError ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {mailingAddressError}
-                    </p>
-                  ) : null}
-                </div>
-              </form>
+              <MailDeliverySettings schoolId={schoolId} />
             </div>
           ) : null}
           </PlatformTabsContent>
@@ -822,6 +751,8 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
         ) : null}
 
         
+
+        </MailsSetupGate>
 
         <Dialog open={resetOpen} onOpenChange={setResetOpen}>
           <DialogContent>

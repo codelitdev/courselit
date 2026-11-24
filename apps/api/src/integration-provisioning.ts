@@ -148,7 +148,6 @@ async function provisionOneSendLitSchool(
   const payload = job.payload as {
     externalId?: string;
     name?: string;
-    mailingAddress?: string;
   };
   if (typeof payload.externalId !== "string" || typeof payload.name !== "string") {
     throw new IntegrationActionRequiredError("Invalid SendLit provisioning payload");
@@ -194,7 +193,6 @@ async function provisionOneSendLitSchool(
           schoolId: job.schoolId,
           name: payload.name,
         }),
-        mailingAddress: payload.mailingAddress,
         // SendLit only accepts a positive quota here; it is set to 0 below
         // before the team is used, so a new team never starts unlimited (S20).
         quota: { monthlyLimit: 1 },

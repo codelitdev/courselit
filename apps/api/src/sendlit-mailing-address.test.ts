@@ -47,13 +47,13 @@ describe("starting a sequence", () => {
         ),
       );
 
-    let mailingAddress: string | null = null;
+    let postalAddress: { line1: string; country: string } | null = null;
     const started: string[] = [];
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/settings/general") && (init?.method ?? "GET") === "GET") {
-        return jsonResponse({ mailingAddress });
+        return jsonResponse({ postalAddress });
       }
       if (url.endsWith("/sequences/seq_1") && (init?.method ?? "GET") === "GET") {
         return jsonResponse({
@@ -87,10 +87,7 @@ describe("starting a sequence", () => {
       // Nothing was started while the address was missing.
       expect(started).toHaveLength(0);
 
-      mailingAddress = "   ";
-      expect((await startSequence(runtime.db, school!.id, clock, "seq_1")).ok).toBe(false);
-
-      mailingAddress = "12 Sprite Lane, Portland, OR 97201";
+      postalAddress = { line1: "12 Sprite Lane", country: "US" };
       const ok = await startSequence(runtime.db, school!.id, clock, "seq_1");
       expect(ok.ok).toBe(true);
       expect(started).toHaveLength(1);
