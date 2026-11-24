@@ -68,6 +68,10 @@ export const schools = pgTable("schools", {
   codeInjectionBody: text("code_injection_body").notNull().default(""),
   /** "Remove CourseLit branding". Honoured only with `remove_branding`. */
   hideCourseLitBranding: boolean("hide_courselit_branding").notNull().default(false),
+  /** Pre-launch: robots.txt keeps every crawler out. */
+  hideFromSearch: boolean("hide_from_search").notNull().default(false),
+  /** robots.txt blocks AI training crawlers; AI search crawlers stay allowed. */
+  blockAiTraining: boolean("block_ai_training").notNull().default(true),
   /** Each learner's upload budget (S2): 100 MB unless the school changes it, up to 1 GB. */
   learnerUploadLimitBytes: bigint("learner_upload_limit_bytes", { mode: "number" })
     .notNull()

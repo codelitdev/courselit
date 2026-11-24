@@ -59,6 +59,8 @@ export type SchoolDto = {
   locale: string;
   currency: string;
   hideCourseLitBranding: boolean;
+  hideFromSearch: boolean;
+  blockAiTraining: boolean;
   learnerUploadLimitBytes: number;
   permissions?: CourseLitPermission[];
   /** Whether the caller owns this school (owner-only settings such as API keys). */
@@ -107,6 +109,8 @@ export function toSchoolDto(
     locale: row.locale,
     currency: row.currency,
     hideCourseLitBranding: row.hideCourseLitBranding,
+    hideFromSearch: row.hideFromSearch,
+    blockAiTraining: row.blockAiTraining,
     learnerUploadLimitBytes: row.learnerUploadLimitBytes,
     ...(permissions === undefined ? {} : { permissions: [...permissions] }),
     ...(selected === undefined ? {} : { selected }),
@@ -170,6 +174,8 @@ export async function createSchool(
     codeInjectionHead: "",
     codeInjectionBody: "",
     hideCourseLitBranding: false,
+    hideFromSearch: false,
+    blockAiTraining: true,
     learnerUploadLimitBytes: LEARNER_UPLOAD_LIMIT_DEFAULT,
     graceEndsAt: null,
     suspendedReason: null,
@@ -434,8 +440,9 @@ export async function resolveSchoolByHost(db: AppDb, rawHost: string) {
 }
 
 /**
- * Updates a school's own settings: its currency and whether to hide the
- * CourseLit badge. The caller checks the plan before turning the badge off.
+ * Updates a school's own settings: its currency, whether to hide the
+ * CourseLit badge, and how search engines and AI crawlers treat its site.
+ * The caller checks the plan before turning the badge off.
  */
 export async function updateSchool(
   db: AppDb,
@@ -444,6 +451,8 @@ export async function updateSchool(
     actorId: string;
     currency?: string;
     hideCourseLitBranding?: boolean;
+    hideFromSearch?: boolean;
+    blockAiTraining?: boolean;
     learnerUploadLimitBytes?: number;
     requestId?: string;
   },
@@ -487,6 +496,12 @@ export async function updateSchool(
         ...(input.hideCourseLitBranding === undefined
           ? {}
           : { hideCourseLitBranding: input.hideCourseLitBranding }),
+        ...(input.hideFromSearch === undefined
+          ? {}
+          : { hideFromSearch: input.hideFromSearch }),
+        ...(input.blockAiTraining === undefined
+          ? {}
+          : { blockAiTraining: input.blockAiTraining }),
         ...(input.learnerUploadLimitBytes === undefined
           ? {}
           : { learnerUploadLimitBytes: input.learnerUploadLimitBytes }),

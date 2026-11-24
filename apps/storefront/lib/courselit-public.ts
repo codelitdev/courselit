@@ -20,6 +20,10 @@ export interface PublicSettings {
   ownerOnlyCodeInjection?: boolean;
   /** Where the "Powered by CourseLit" badge links; null hides it. */
   courseLitBadgeUrl?: string | null;
+  /** Pre-launch: robots.txt keeps every crawler out. */
+  hideFromSearch?: boolean;
+  /** robots.txt blocks AI training crawlers. */
+  blockAiTraining?: boolean;
 }
 
 export interface PublicPage {
@@ -79,6 +83,22 @@ export function getSettings(
   options: { noStore?: boolean } = {},
 ): Promise<PublicSettings | null> {
   return getFromApi<PublicSettings>(schoolId, "/site/settings", options);
+}
+
+export interface PublicSitemapEntry {
+  slug: string;
+  updatedAt: string;
+}
+
+export interface PublicSitemap {
+  pages: PublicSitemapEntry[];
+  products: PublicSitemapEntry[];
+  communities: PublicSitemapEntry[];
+  blogPosts: PublicSitemapEntry[];
+}
+
+export function getSitemap(schoolId: string): Promise<PublicSitemap | null> {
+  return getFromApi<PublicSitemap>(schoolId, "/site/sitemap");
 }
 
 /** Pass an empty slug to resolve the homepage. */
