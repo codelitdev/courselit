@@ -87835,7 +87835,6 @@
                         "offer",
                         "build",
                         "brand",
-                        "email",
                         "plan",
                         "live"
                       ]
@@ -88067,7 +88066,6 @@
                       "offer",
                       "build",
                       "brand",
-                      "email",
                       "plan",
                       "live"
                     ]
@@ -88130,7 +88128,6 @@
                         "offer",
                         "build",
                         "brand",
-                        "email",
                         "plan",
                         "live"
                       ]
@@ -92199,8 +92196,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "mailingAddress": {
-                      "type": "string",
+                    "postalAddress": {
+                      "type": "object",
+                      "properties": {
+                        "line1": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "line2": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "city": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "region": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "country": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{2}$"
+                        }
+                      },
+                      "required": [
+                        "line1",
+                        "country"
+                      ],
                       "nullable": true
                     },
                     "updatedAt": {
@@ -92209,7 +92237,7 @@
                     }
                   },
                   "required": [
-                    "mailingAddress"
+                    "postalAddress"
                   ],
                   "additionalProperties": true
                 }
@@ -92352,16 +92380,45 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "mailingAddress": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 1000
+                  "postalAddress": {
+                    "type": "object",
+                    "properties": {
+                      "line1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "line2": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "city": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "region": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      "country": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{2}$"
+                      }
+                    },
+                    "required": [
+                      "line1",
+                      "country"
+                    ]
                   }
                 },
                 "required": [
-                  "mailingAddress"
+                  "postalAddress"
                 ],
-                "additionalProperties": true
+                "additionalProperties": false
               }
             }
           }
@@ -92374,8 +92431,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "mailingAddress": {
-                      "type": "string",
+                    "postalAddress": {
+                      "type": "object",
+                      "properties": {
+                        "line1": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "line2": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "city": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "region": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "country": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{2}$"
+                        }
+                      },
+                      "required": [
+                        "line1",
+                        "country"
+                      ],
                       "nullable": true
                     },
                     "updatedAt": {
@@ -92384,7 +92472,7 @@
                     }
                   },
                   "required": [
-                    "mailingAddress"
+                    "postalAddress"
                   ],
                   "additionalProperties": true
                 }
