@@ -1770,3 +1770,92 @@ export async function getPublishedBlogPost(
     .limit(1);
   return row ? toPublicBlogDto(row) : null;
 }
+
+// ---------------------------------------------------------------------------
+// Sitemap
+// ---------------------------------------------------------------------------
+
+export type PublicSitemapEntryDto = { slug: string; updatedAt: string };
+
+/** What a school's storefront sitemap lists: published standalone pages,
+ * public products and live communities (their sales pages), and published
+ * blog posts. Pages whose search setting is off are left out. The storefront
+ * turns these into URLs. */
+export type PublicSitemapDto = {
+  pages: PublicSitemapEntryDto[];
+  products: PublicSitemapEntryDto[];
+  communities: PublicSitemapEntryDto[];
+  blogPosts: PublicSitemapEntryDto[];
+};
+
+export async function getPublicSitemap(
+  db: AppDb,
+  schoolId: string,
+): Promise<PublicSitemapDto> {
+  // A sales page set to "hide from search engines" hides its product too.
+  const indexable = or(
+    isNull(schema.websitePages.robotsAllowed),
+    ne(schema.websitePages.robotsAllowed, false),
+  );
+  const [pages, products, communities, blogPosts] = await Promise.all([
+    db
+      .select({ slug: schema.websitePages.slug, updatedAt: schema.websitePages.updatedAt })
+      .from(schema.websitePages)
+      .where(
+        and(
+          eq(schema.websitePages.schoolId, schoolId),
+          isNull(schema.websitePages.productId),
+          isNull(schema.websitePages.communityId),
+          isNotNull(schema.websitePages.publishedAt),
+          indexable,
+        ),
+      ),
+    db
+      .select({ slug: schema.products.slug, updatedAt: schema.products.updatedAt })
+      .from(schema.products)
+      .leftJoin(
+        schema.websitePages,
+        eq(schema.websitePages.productId, schema.products.id),
+      )
+      .where(
+        and(
+          eq(schema.products.schoolId, schoolId),
+          eq(schema.products.status, "published"),
+          eq(schema.products.privacy, "public"),
+          indexable,
+        ),
+      ),
+    db
+      .select({ slug: schema.communities.slug, updatedAt: schema.communities.updatedAt })
+      .from(schema.communities)
+      .leftJoin(
+        schema.websitePages,
+        eq(schema.websitePages.communityId, schema.communities.id),
+      )
+      .where(
+        and(
+          eq(schema.communities.schoolId, schoolId),
+          eq(schema.communities.enabled, true),
+          isNull(schema.communities.deletedAt),
+          indexable,
+        ),
+      ),
+    db
+      .select({ slug: schema.blogPosts.slug, updatedAt: schema.blogPosts.updatedAt })
+      .from(schema.blogPosts)
+      .where(
+        and(eq(schema.blogPosts.schoolId, schoolId), isNotNull(schema.blogPosts.publishedAt)),
+      )
+      .orderBy(desc(schema.blogPosts.publishedAt)),
+  ]);
+  const toEntry = (row: { slug: string; updatedAt: Date }): PublicSitemapEntryDto => ({
+    slug: row.slug,
+    updatedAt: row.updatedAt.toISOString(),
+  });
+  return {
+    pages: pages.map(toEntry),
+    products: products.map(toEntry),
+    communities: communities.map(toEntry),
+    blogPosts: blogPosts.map(toEntry),
+  };
+}

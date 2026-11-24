@@ -499,6 +499,69 @@ describe.serial("school website", () => {
     }
   });
 
+  it("serves the school's search settings and sitemap to the storefront", async () => {
+    const { runtime, world, admin, publicGet } = await setup();
+    const sitemap = async () =>
+      (await publicGet("/v1/public/site/sitemap")).body as Record<
+        "pages" | "products" | "communities" | "blogPosts",
+        Array<{ slug: string }>
+      >;
+    const slugs = (entries: Array<{ slug: string }>) => entries.map((entry) => entry.slug);
+    try {
+      // AI training crawlers are blocked by default; the site is searchable.
+      expect((await publicGet("/v1/public/site/settings")).body).toMatchObject({
+        hideFromSearch: false,
+        blockAiTraining: true,
+      });
+      const updated = await admin("PATCH", `/v1/schools/${world.schoolA.publicId}`, {
+        hideFromSearch: true,
+        blockAiTraining: false,
+      });
+      expect(updated.status).toBe(200);
+      expect(updated.body).toMatchObject({ hideFromSearch: true, blockAiTraining: false });
+      expect((await publicGet("/v1/public/site/settings")).body).toMatchObject({
+        hideFromSearch: true,
+        blockAiTraining: false,
+      });
+
+      // Only the published homepage, nothing unpublished or switched off.
+      expect(await sitemap()).toEqual({
+        pages: [expect.objectContaining({ slug: "" })],
+        products: [],
+        communities: [],
+        blogPosts: [],
+      });
+
+      // Published public products and live communities are listed; an
+      // unlisted product isn't, and neither is a sales page kept from search.
+      await runtime.db
+        .update(schema.products)
+        .set({ status: "published", privacy: "public" })
+        .where(eq(schema.products.publicId, world.noteA.publicId));
+      await runtime.db
+        .update(schema.communities)
+        .set({ enabled: true })
+        .where(eq(schema.communities.schoolId, world.schoolA.id));
+      let listed = await sitemap();
+      expect(slugs(listed.products)).toEqual(["seed-product"]);
+      expect(slugs(listed.communities)).toEqual(["community"]);
+
+      await runtime.db
+        .update(schema.products)
+        .set({ privacy: "unlisted" })
+        .where(eq(schema.products.publicId, world.noteA.publicId));
+      await runtime.db
+        .update(schema.websitePages)
+        .set({ robotsAllowed: false })
+        .where(eq(schema.websitePages.slug, "community"));
+      listed = await sitemap();
+      expect(listed.products).toEqual([]);
+      expect(listed.communities).toEqual([]);
+    } finally {
+      await runtime.close();
+    }
+  });
+
   it("drafts, publishes, and serves blog posts with their author", async () => {
     const { runtime, admin, publicGet } = await setup();
     try {

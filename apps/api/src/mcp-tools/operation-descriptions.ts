@@ -168,7 +168,8 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Reads the custom code added to the head and body of every public page.",
   updateSchoolCodeInjection:
     "Changes the custom code added to every public page. It runs for all visitors. Confirm with the user first.",
-  updateSchool: "Changes the school's name or other profile details.",
+  updateSchool:
+    "Changes school settings: currency, whether to hide the CourseLit badge, the learner upload limit, and search visibility (`hideFromSearch` keeps every crawler out before launch; `blockAiTraining`, on by default, blocks AI training crawlers while AI search stays allowed).",
   listSchoolHosts:
     "Lists the custom domains attached to the school and their verification status.",
   createSchoolHost:

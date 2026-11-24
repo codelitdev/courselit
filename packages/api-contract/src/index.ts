@@ -566,6 +566,11 @@ export const schoolSchema = z.object({
   currency: z.string(),
   /** The owner asked to remove the "Powered by CourseLit" badge. */
   hideCourseLitBranding: z.boolean(),
+  /** Pre-launch: the storefront's robots.txt keeps every crawler out. */
+  hideFromSearch: z.boolean(),
+  /** The storefront's robots.txt blocks AI training crawlers; AI search
+   * crawlers stay allowed. On by default. */
+  blockAiTraining: z.boolean(),
   /** How much each learner may upload, in bytes. */
   learnerUploadLimitBytes: z.number().int(),
   permissions: z.array(z.string()).optional(),
@@ -755,6 +760,10 @@ export const publicSiteSettingsSchema = z.object({
   /** The school has a published product (public or hidden) or a live
    * community, so learners have something to sign in to. */
   hasPublishedOffers: z.boolean(),
+  /** Pre-launch: robots.txt keeps every crawler out. */
+  hideFromSearch: z.boolean(),
+  /** robots.txt blocks AI training crawlers. */
+  blockAiTraining: z.boolean(),
 });
 /** One entry in a school's audit log. */
 export const auditEventSchema = z.object({
@@ -788,6 +797,14 @@ export const updateSchoolCodeInjectionBodySchema = z
     (value) =>
       value.codeInjectionHead !== undefined || value.codeInjectionBody !== undefined,
   );
+const publicSitemapEntrySchema = z.object({ slug: z.string(), updatedAt: z.string() });
+/** What the storefront's sitemap.xml lists; the storefront builds the URLs. */
+export const publicSiteSitemapSchema = z.object({
+  pages: z.array(publicSitemapEntrySchema),
+  products: z.array(publicSitemapEntrySchema),
+  communities: z.array(publicSitemapEntrySchema),
+  blogPosts: z.array(publicSitemapEntrySchema),
+});
 export const publicSitePageSchema = z.object({
   pageId: z.string(),
   name: z.string(),
@@ -851,6 +868,10 @@ export const updateSchoolBodySchema = z
       .optional(),
     /** Needs a paid plan (`remove_branding`) to turn on. */
     hideCourseLitBranding: z.boolean().optional(),
+    /** Keep every crawler out of the storefront (pre-launch). */
+    hideFromSearch: z.boolean().optional(),
+    /** Block AI training crawlers; AI search crawlers stay allowed. */
+    blockAiTraining: z.boolean().optional(),
     /** Each learner's upload budget: 1 MB to 1 GB. */
     learnerUploadLimitBytes: z
       .number()
@@ -864,6 +885,8 @@ export const updateSchoolBodySchema = z
     (value) =>
       value.currency !== undefined ||
       value.hideCourseLitBranding !== undefined ||
+      value.hideFromSearch !== undefined ||
+      value.blockAiTraining !== undefined ||
       value.learnerUploadLimitBytes !== undefined,
   );
 export const schoolHostSchema = z.object({
@@ -3485,6 +3508,16 @@ export const contract = c.router({
       200: publicSitePageSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  getPublicSiteSitemap: {
+    method: "GET",
+    path: "/v1/public/:schoolId/site/sitemap",
+    pathParams: publicSchoolPathParams,
+    responses: {
+      200: publicSiteSitemapSchema,
+      403: platformErrorSchema,
       500: platformErrorSchema,
     },
   },

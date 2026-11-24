@@ -254,6 +254,7 @@ import {
   getWebsiteBranding,
   getWebsitePage,
   listBlogPosts,
+  getPublicSitemap,
   listPublishedBlogPosts,
   listWebsitePages,
   listWebsiteThemes,
@@ -931,7 +932,12 @@ export async function dispatch(
               : null,
             canonicalHost: verifiedCustomHost?.hostname ?? null,
             hasPublishedOffers: Boolean(publishedProduct || liveCommunity),
+            hideFromSearch: school.hideFromSearch,
+            blockAiTraining: school.blockAiTraining,
           });
+        }
+        if (route === "/site/sitemap") {
+          return ok(await getPublicSitemap(deps.db, school.id));
         }
         if (route === "/site/pages") {
           const slug = query.get("slug") ?? "";
@@ -2964,6 +2970,8 @@ export async function dispatch(
           actorId: context.principalId,
           currency: parsed.data.currency,
           hideCourseLitBranding: parsed.data.hideCourseLitBranding,
+          hideFromSearch: parsed.data.hideFromSearch,
+          blockAiTraining: parsed.data.blockAiTraining,
           learnerUploadLimitBytes: parsed.data.learnerUploadLimitBytes,
           requestId: context.requestId,
         },
