@@ -390,6 +390,7 @@ export const OPERATION_POLICIES = {
   listPublicCommunityPlans: publicOp(),
   getPublicSiteSettings: publicOp(),
   getPublicSitePage: publicOp(),
+  getPublicSiteSitemap: publicOp(),
   listPublicSiteBlogs: publicOp(),
   getPublicSiteBlog: publicOp(),
   verifyCertificate: publicOp(),

@@ -32,6 +32,7 @@ const communityParityExemptions = [
   ["getLearnerCommunityCheckout", "learner.communities.checkout.get"],
   ["getPublicSiteSettings", "public.site.settings.get"],
   ["getPublicSitePage", "public.site.pages.get"],
+  ["getPublicSiteSitemap", "public.site.sitemap.get"],
   ["listPublicSiteBlogs", "public.site.blogs.list"],
   ["getPublicSiteBlog", "public.site.blogs.get"],
   ["listLearnerSpaces", "learner.spaces.list"],

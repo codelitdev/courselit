@@ -9420,6 +9420,20 @@
           "notNull": true,
           "default": false
         },
+        "hide_from_search": {
+          "name": "hide_from_search",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "block_ai_training": {
+          "name": "block_ai_training",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
         "learner_upload_limit_bytes": {
           "name": "learner_upload_limit_bytes",
           "type": "bigint",

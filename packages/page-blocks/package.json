@@ -7,14 +7,15 @@
     ".": "./src/index.ts",
     "./theme": "./src/theme.ts",
     "./captcha": "./src/captcha.ts",
-    "./copyright": "./src/copyright.ts"
+    "./copyright": "./src/copyright.ts",
+    "./markdown": "./src/markdown.ts"
   },
   "peerDependencies": {
     "react": ">=19.0.0"
   },
   "dependencies": {
     "@courselit/api-contract": "workspace:*",
-    "@frontlit/page-builder": "0.1.0",
+    "@frontlit/page-builder": "0.2.0",
     "@frontlit/text-editor": "0.1.0",
     "lucide-react": "^1.41.0"
   },

@@ -8,6 +8,7 @@ import {
   CreditCard,
   ExternalLink,
   Globe,
+  Search,
   Info,
   Key,
   LogIn,
@@ -40,6 +41,7 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
 import { DomainSettings } from "@/components/website/domain-settings";
+import { SearchSettings } from "@/components/website/search-settings";
 import {
   Card,
   CardContent,
@@ -69,7 +71,7 @@ import currencies from "@/data/currencies.json";
 
 const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "storage", "audit-log"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
-const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
+const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain", "search"] as const;
 type SettingsMode = "general" | "website" | "mails";
 type SettingsTab =
   | (typeof GENERAL_SETTINGS_TABS)[number]
@@ -160,7 +162,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     mode === "website"
       ? {
           title: "Website settings",
-          description: "Manage your website branding, domain, and code injection.",
+          description: "Manage your website branding, domain, code injection, and search engine access.",
         }
         : mode === "mails"
           ? {
@@ -367,6 +369,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
               { value: "branding", label: "Branding", icon: <Palette className="size-4" /> },
               { value: "code-injection", label: "Code Injection", icon: <Code className="size-4" /> },
               { value: "domain", label: "Domain", icon: <Globe className="size-4" /> },
+              { value: "search", label: "Search engines", icon: <Search className="size-4" /> },
             ]}
           >
             <PlatformTabsContent value="branding" className="w-full pt-4">
@@ -377,6 +380,9 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             </PlatformTabsContent>
             <PlatformTabsContent value="domain" className="w-full pt-4">
               <DomainSettings />
+            </PlatformTabsContent>
+            <PlatformTabsContent value="search" className="w-full pt-4">
+              <SearchSettings />
             </PlatformTabsContent>
           </PlatformTabs>
         ) : null}

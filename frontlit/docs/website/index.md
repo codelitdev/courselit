@@ -10,7 +10,7 @@ The **Website** menu has three entries:
 
 - **Pages** lists the pages of your site and opens each one in the page editor.
 - **Blogs** lists your blog posts and opens each one in the blog editor.
-- **Settings** holds your **Branding**, **Code Injection** and **Domain** options.
+- **Settings** holds your **Branding**, **Code Injection**, **Domain** and **Search engines** options.
 
 Everything you change on a page or blog post is saved as a draft first. Visitors only see your changes after you publish them.
 
@@ -38,7 +38,7 @@ Access to the Website menu depends on the permissions your role has. See [Permis
 | See pages, blogs and branding | `storefront:read` |
 | Create pages and blog posts, edit drafts, change branding and the theme | `storefront:write` |
 | Publish, unpublish or delete pages and blog posts | `storefront:publish` |
-| Change code injection or your domain | `school:write` |
+| Change code injection, your domain or search engine access | `school:write` |
 
 ## What to read next
 
@@ -83,6 +83,12 @@ Serve your site from your own domain.
 <Card title="Code injection" href="/docs/website/code-injection">
 
 Add tracking or other scripts to every page.
+
+</Card>
+
+<Card title="Search engines and AI crawlers" href="/docs/website/search-engines">
+
+Hide your site before launch and block AI training crawlers.
 
 </Card>
 

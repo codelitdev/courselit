@@ -6,7 +6,8 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import { type MediaRef, SCHOOL_BRANDING_IMAGE_MAX_BYTES } from "@courselit/api-contract";
-import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { blockDefaults } from "@frontlit/page-builder/schema";
+import { and, desc, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
 import { privacyPolicyDoc, termsOfServiceDoc } from "./legal-templates.js";
@@ -277,7 +278,41 @@ function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
-/** Draft/publish status is derived from the row, never stored. */
+type SharedWidgetsSettings = Pick<
+  typeof schema.websiteSettings.$inferSelect,
+  "sharedWidgets" | "draftSharedWidgets"
+>;
+
+/** JSON with object keys sorted, so equal settings compare equal whatever
+ * order they were saved in. */
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+      : v,
+  );
+}
+
+/** Header/footer settings with the block's defaults filled in. The builder
+ * saves defaults the stored settings leave out (opening the editor is
+ * enough), and that alone must not count as a change. */
+function sharedWidgetSettings(widgets: SharedWidgetsRow, name: "header" | "footer") {
+  return stableJson({ ...blockDefaults[name], ...widgets[name]?.settings });
+}
+
+/** The draft header/footer differ from the live ones. They are shared by
+ * every page and go live with any page's publish, so this is site-wide. */
+function sharedWidgetsChanged(settings: SharedWidgetsSettings): boolean {
+  return (["header", "footer"] as const).some(
+    (name) =>
+      sharedWidgetSettings(settings.sharedWidgets, name) !==
+      sharedWidgetSettings(settings.draftSharedWidgets, name),
+  );
+}
+
+/** Draft/publish status is derived from the row, never stored. It covers
+ * the page's own content; the shared header/footer are reported once for
+ * the site (`sharedWidgetsHaveChanges`). */
 export function derivePageStatus(
   page: typeof schema.websitePages.$inferSelect,
 ): WebsiteContentStatus {
@@ -732,6 +767,8 @@ export type WebsiteContentSummaryDto = {
   kind: "page" | "blog";
   slug: string;
   status: WebsiteContentStatus;
+  /** Pages only: the site's shared header/footer have unpublished edits. */
+  sharedWidgetsHaveChanges?: boolean;
   deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
@@ -759,13 +796,17 @@ export type WebsitePageDto = WebsiteContentSummaryDto & {
 
 type PageRow = typeof schema.websitePages.$inferSelect;
 
-function toPageSummary(row: PageRow): WebsiteContentSummaryDto {
+function toPageSummary(
+  row: PageRow,
+  settings?: SharedWidgetsSettings | null,
+): WebsiteContentSummaryDto {
   return {
     id: row.publicId,
     name: row.name,
     kind: "page",
     slug: row.slug,
     status: derivePageStatus(row),
+    ...(settings ? { sharedWidgetsHaveChanges: sharedWidgetsChanged(settings) } : {}),
     deletable: row.deletable,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -808,7 +849,7 @@ async function toPageDto(
     }
   }
   return {
-    ...toPageSummary(row),
+    ...toPageSummary(row, settings),
     pageId: row.publicId,
     deletable: row.deletable,
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -879,7 +920,15 @@ export async function listWebsitePages(
       ),
     )
     .orderBy(desc(schema.websitePages.updatedAt));
-  return rows.map(toPageSummary);
+  const [settings] = await db
+    .select({
+      sharedWidgets: schema.websiteSettings.sharedWidgets,
+      draftSharedWidgets: schema.websiteSettings.draftSharedWidgets,
+    })
+    .from(schema.websiteSettings)
+    .where(eq(schema.websiteSettings.schoolId, schoolId))
+    .limit(1);
+  return rows.map((row) => toPageSummary(row, settings));
 }
 
 export async function createWebsitePage(
@@ -1790,4 +1839,114 @@ export async function getPublishedBlogPost(
     )
     .limit(1);
   return row ? toPublicBlogDto(row) : null;
+}
+
+// ---------------------------------------------------------------------------
+// Sitemap
+// ---------------------------------------------------------------------------
+
+export type PublicSitemapEntryDto = { slug: string; title: string; updatedAt: string };
+
+/** What a school's storefront sitemap lists: published standalone pages,
+ * public products and live communities (their sales pages), and published
+ * blog posts. Pages whose search setting is off are left out. The storefront
+ * turns these into URLs. */
+export type PublicSitemapDto = {
+  pages: PublicSitemapEntryDto[];
+  products: PublicSitemapEntryDto[];
+  communities: PublicSitemapEntryDto[];
+  blogPosts: PublicSitemapEntryDto[];
+};
+
+export async function getPublicSitemap(
+  db: AppDb,
+  schoolId: string,
+): Promise<PublicSitemapDto> {
+  // A sales page set to "hide from search engines" hides its product too.
+  const indexable = or(
+    isNull(schema.websitePages.robotsAllowed),
+    ne(schema.websitePages.robotsAllowed, false),
+  );
+  const [pages, products, communities, blogPosts] = await Promise.all([
+    db
+      .select({
+        slug: schema.websitePages.slug,
+        title: sql<string>`coalesce(nullif(${schema.websitePages.title}, ''), ${schema.websitePages.name})`,
+        updatedAt: schema.websitePages.updatedAt,
+      })
+      .from(schema.websitePages)
+      .where(
+        and(
+          eq(schema.websitePages.schoolId, schoolId),
+          isNull(schema.websitePages.productId),
+          isNull(schema.websitePages.communityId),
+          isNotNull(schema.websitePages.publishedAt),
+          indexable,
+        ),
+      ),
+    db
+      .select({
+        slug: schema.products.slug,
+        title: schema.products.title,
+        updatedAt: schema.products.updatedAt,
+      })
+      .from(schema.products)
+      .leftJoin(
+        schema.websitePages,
+        eq(schema.websitePages.productId, schema.products.id),
+      )
+      .where(
+        and(
+          eq(schema.products.schoolId, schoolId),
+          eq(schema.products.status, "published"),
+          eq(schema.products.privacy, "public"),
+          indexable,
+        ),
+      ),
+    db
+      .select({
+        slug: schema.communities.slug,
+        title: schema.communities.name,
+        updatedAt: schema.communities.updatedAt,
+      })
+      .from(schema.communities)
+      .leftJoin(
+        schema.websitePages,
+        eq(schema.websitePages.communityId, schema.communities.id),
+      )
+      .where(
+        and(
+          eq(schema.communities.schoolId, schoolId),
+          eq(schema.communities.enabled, true),
+          isNull(schema.communities.deletedAt),
+          indexable,
+        ),
+      ),
+    db
+      .select({
+        slug: schema.blogPosts.slug,
+        title: sql<string>`coalesce(nullif(${schema.blogPosts.title}, ''), ${schema.blogPosts.slug})`,
+        updatedAt: schema.blogPosts.updatedAt,
+      })
+      .from(schema.blogPosts)
+      .where(
+        and(eq(schema.blogPosts.schoolId, schoolId), isNotNull(schema.blogPosts.publishedAt)),
+      )
+      .orderBy(desc(schema.blogPosts.publishedAt)),
+  ]);
+  const toEntry = (row: {
+    slug: string;
+    title: string | null;
+    updatedAt: Date;
+  }): PublicSitemapEntryDto => ({
+    slug: row.slug,
+    title: row.title?.trim() || row.slug,
+    updatedAt: row.updatedAt.toISOString(),
+  });
+  return {
+    pages: pages.map(toEntry),
+    products: products.map(toEntry),
+    communities: communities.map(toEntry),
+    blogPosts: blogPosts.map(toEntry),
+  };
 }

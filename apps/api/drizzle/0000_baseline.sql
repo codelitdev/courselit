@@ -1017,6 +1017,8 @@ CREATE TABLE "schools" (
 	"code_injection_head" text DEFAULT '' NOT NULL,
 	"code_injection_body" text DEFAULT '' NOT NULL,
 	"hide_courselit_branding" boolean DEFAULT false NOT NULL,
+	"hide_from_search" boolean DEFAULT false NOT NULL,
+	"block_ai_training" boolean DEFAULT true NOT NULL,
 	"learner_upload_limit_bytes" bigint DEFAULT 104857600 NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,

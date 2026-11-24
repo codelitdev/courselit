@@ -8,6 +8,7 @@ import { PublicCommunitiesCatalog } from "@/components/public-communities-catalo
 import { PublicProductsCatalog } from "@/components/public-products-catalog";
 import { SitePageRenderer, SitePageSection } from "@/components/site-page-renderer";
 import { learnersCanSignIn, withLoginLink } from "@/lib/header-account";
+import { salesPageBlock } from "@/lib/sales-page-blocks";
 import { siteLogoAlt, siteLogoUrl } from "@/lib/site-branding";
 import {
   getPageBySlug,
@@ -241,39 +242,7 @@ export async function PublicSitePage({
         ),
       };
     }
-    const isLegacySalesSlot =
-      instance.name === "data-slot" &&
-      instance.settings?.slot === "courselit.sales-page-content";
-    const isLegacySalesBanner = [
-      "banner",
-      "courselit-banner",
-      "courselit-product-banner",
-      "courselit-community-banner",
-    ].includes(instance.name);
-    if (salesResource && (isLegacySalesSlot || isLegacySalesBanner)) {
-      const legacyTextPosition = instance.settings?.alignment;
-      const legacyTextAlignment = instance.settings?.textAlignment;
-      return {
-        ...instance,
-        name:
-          salesResource.resourceType === "community"
-            ? "courselit-community"
-            : "courselit-product",
-        settings: {
-          ...instance.settings,
-          textPosition:
-            typeof legacyTextPosition === "string" &&
-            ["left", "right", "top", "bottom"].includes(legacyTextPosition)
-              ? legacyTextPosition
-              : "left",
-          textAlignment:
-            typeof legacyTextAlignment === "string" &&
-            ["left", "center", "right"].includes(legacyTextAlignment)
-              ? legacyTextAlignment
-              : "left",
-        },
-      };
-    }
+    if (salesResource) return salesPageBlock(instance, salesResource.resourceType);
     return instance;
   });
   let systemContent = providedSystemContent ?? null;

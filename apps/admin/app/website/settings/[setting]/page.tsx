@@ -7,6 +7,6 @@ export default async function WebsiteSettingPage({
   params: Promise<{ setting: string }>;
 }) {
   const { setting } = await params;
-  if (setting !== "branding" && setting !== "code-injection") notFound();
+  if (setting !== "branding" && setting !== "code-injection" && setting !== "search") notFound();
   return <SettingsPage mode="website" />;
 }
