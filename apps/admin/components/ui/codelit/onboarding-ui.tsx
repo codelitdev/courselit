@@ -203,6 +203,7 @@ export function Tile({
   desc,
   children,
   className,
+  indicator = true,
 }: {
   name: string;
   checked: boolean;
@@ -212,6 +213,8 @@ export function Tile({
   desc?: ReactNode;
   children?: ReactNode;
   className?: string;
+  /** The radio dot. Off for cards whose border already shows the choice. */
+  indicator?: boolean;
 }) {
   return (
     <label
@@ -247,14 +250,16 @@ export function Tile({
         ) : null}
         {children}
       </span>
-      <span
-        aria-hidden
-        className={cn(
-          "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] border-input",
-          checked &&
-            "border-primary after:size-2.5 after:rounded-full after:bg-primary after:content-['']",
-        )}
-      />
+      {indicator ? (
+        <span
+          aria-hidden
+          className={cn(
+            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] border-input",
+            checked &&
+              "border-primary after:size-2.5 after:rounded-full after:bg-primary after:content-['']",
+          )}
+        />
+      ) : null}
     </label>
   );
 }

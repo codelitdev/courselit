@@ -978,7 +978,8 @@ export function BrandStep({
               checked={data.brand.themeId === preset.id}
               onChange={() => patch({ brand: { ...data.brand, themeId: preset.id } })}
               title={preset.name}
-              className="flex-col gap-2 p-3.5"
+              indicator={false}
+              className="gap-2 p-3.5"
             >
               <span aria-hidden className="mt-1 flex gap-1.5">
                 {preset.dots.map((dot, index) => (
