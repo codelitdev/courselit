@@ -1347,6 +1347,11 @@ export const sectionSchema = z.object({
 
 export const productDetailSchema = productSchema.extend({
   enrolled: z.boolean(),
+  /**
+   * Whether an active community plan includes the product (all products, or
+   * this one by name). Such a product can go live without a plan of its own.
+   */
+  includedInCommunityPlan: z.boolean(),
   sections: z.array(sectionSchema),
   lessons: z.array(lessonSummarySchema),
 });

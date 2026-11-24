@@ -437,6 +437,7 @@ export function ProductWorkspace({
     certificate: product.certificate,
     leadMagnet: product.leadMagnet,
     plans,
+    includedInCommunityPlan: product.includedInCommunityPlan,
     lessons: product.lessons,
   });
   const readyToLaunch = canGoLive(steps);

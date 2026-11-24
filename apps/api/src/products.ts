@@ -564,7 +564,7 @@ export async function createProduct(
 }
 
 /** Whether an active community plan includes the product (all products, or listed). */
-async function includedInActiveCommunityPlan(
+export async function includedInActiveCommunityPlan(
   db: AppDb,
   schoolId: string,
   productPublicId: string,

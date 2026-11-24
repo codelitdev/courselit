@@ -39390,6 +39390,9 @@
                     "enrolled": {
                       "type": "boolean"
                     },
+                    "includedInCommunityPlan": {
+                      "type": "boolean"
+                    },
                     "sections": {
                       "type": "array",
                       "items": {
@@ -39544,6 +39547,7 @@
                     "createdAt",
                     "updatedAt",
                     "enrolled",
+                    "includedInCommunityPlan",
                     "sections",
                     "lessons"
                   ]

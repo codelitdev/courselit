@@ -30,6 +30,8 @@ export type Product = {
   kind: ProductKind;
   status: ProductStatus;
   slug: string;
+  /** An active community plan includes it, so it needs no plan of its own. */
+  includedInCommunityPlan?: boolean;
   publishedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;

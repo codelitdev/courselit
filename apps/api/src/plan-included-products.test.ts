@@ -1170,6 +1170,39 @@ describe.serial("community plans: further states and edges", () => {
       );
     }));
 
+  it("[43] the admin product reports whether an active community plan includes it, so it can go live without its own plan", () =>
+    withSetup(async (t) => {
+      const product = await t.createProduct("Course", false);
+      const included = async () => {
+        const response = await dispatch(t.runtime, {
+          method: "GET",
+          path: `/v1/products/${product}`,
+          headers: t.adminHeaders(),
+        });
+        expect(response.status).toBe(200);
+        return (response.body as { includedInCommunityPlan: boolean }).includedInCommunityPlan;
+      };
+      expect(await included()).toBe(false);
+      const picked = await t.createPlan({ name: "Picked", includedProducts: [product] });
+      expect(await included()).toBe(true);
+      expect((await t.updatePlan(picked.id, { includedProducts: [] })).status).toBe(200);
+      expect(await included()).toBe(false);
+      const everything = await t.createPlan({ name: "Everything", includesAllProducts: true });
+      expect(await included()).toBe(true);
+      const archived = await dispatch(t.runtime, {
+        method: "POST",
+        path: `/v1/community-plans/${everything.id}/archive`,
+        headers: t.adminHeaders(),
+        body: {},
+      });
+      expect(archived.status).toBe(200);
+      // Archived plans don't count, as for publishing itself.
+      expect(await included()).toBe(false);
+      // Another school's all-products plan doesn't count either.
+      await t.createPlan({ name: "B everything", includesAllProducts: true }, t.B);
+      expect(await included()).toBe(false);
+    }));
+
   it("[33] changing the default plan leaves existing members' included products alone", () =>
     withSetup(async (t) => {
       const product = await t.createProduct("Course", true);

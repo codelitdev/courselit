@@ -84,6 +84,8 @@ export type ChecklistInput = {
   certificate: boolean;
   leadMagnet: boolean;
   plans: readonly PlanLike[];
+  /** An active community plan includes the product: a way to join already. */
+  includedInCommunityPlan?: boolean;
   lessons: readonly LessonLike[];
 };
 
@@ -109,11 +111,13 @@ function documentHasText(node: unknown): boolean {
 
 /**
  * The steps on the Overview tab. The first two are required to go live: a way
- * to join (an active plan) and something to get (a live lesson, or a file).
+ * to join (an active plan, or a community plan that includes the product) and
+ * something to get (a live lesson, or a file).
  */
 export function launchChecklist(input: ChecklistInput): ChecklistStep[] {
   const activePlans = input.plans.filter((plan) => plan.status === "active");
-  const hasPlan = activePlans.length > 0;
+  const viaCommunity = Boolean(input.includedInCommunityPlan);
+  const hasPlan = activePlans.length > 0 || viaCommunity;
   const { total, live } = lessonCounts(input.lessons);
   const isDownload = input.kind === "download";
 
@@ -121,9 +125,11 @@ export function launchChecklist(input: ChecklistInput): ChecklistStep[] {
     {
       key: "plans",
       title: "Add a payment plan",
-      detail: hasPlan
+      detail: activePlans.length
         ? `${plural(activePlans.length, "plan")}.`
-        : "Free, one time, subscription or EMI.",
+        : viaCommunity
+          ? "Included with your community."
+          : "Free, one time, subscription or EMI.",
       required: true,
       done: hasPlan,
       cta: "Add plan",
