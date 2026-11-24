@@ -71123,6 +71123,9 @@
                               "published_with_changes"
                             ]
                           },
+                          "sharedWidgetsHaveChanges": {
+                            "type": "boolean"
+                          },
                           "deletable": {
                             "type": "boolean"
                           },
@@ -71497,6 +71500,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -71913,6 +71919,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -72544,6 +72553,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -75340,6 +75352,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
+                    },
                     "deletable": {
                       "type": "boolean"
                     },
@@ -75755,6 +75770,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -76314,6 +76332,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
+                    },
                     "deletable": {
                       "type": "boolean"
                     },
@@ -76725,6 +76746,9 @@
                               "published_with_changes"
                             ]
                           },
+                          "sharedWidgetsHaveChanges": {
+                            "type": "boolean"
+                          },
                           "deletable": {
                             "type": "boolean"
                           },
@@ -77099,6 +77123,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -77515,6 +77542,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -78122,6 +78152,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"
@@ -79014,6 +79047,9 @@
                         "published_with_changes"
                       ]
                     },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
+                    },
                     "deletable": {
                       "type": "boolean"
                     },
@@ -79477,6 +79513,9 @@
                         "published",
                         "published_with_changes"
                       ]
+                    },
+                    "sharedWidgetsHaveChanges": {
+                      "type": "boolean"
                     },
                     "deletable": {
                       "type": "boolean"

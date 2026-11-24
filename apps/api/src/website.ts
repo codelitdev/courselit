@@ -6,6 +6,7 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
+import { blockDefaults } from "@frontlit/page-builder/schema";
 import { and, desc, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
@@ -277,7 +278,41 @@ function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
-/** Draft/publish status is derived from the row, never stored. */
+type SharedWidgetsSettings = Pick<
+  typeof schema.websiteSettings.$inferSelect,
+  "sharedWidgets" | "draftSharedWidgets"
+>;
+
+/** JSON with object keys sorted, so equal settings compare equal whatever
+ * order they were saved in. */
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+      : v,
+  );
+}
+
+/** Header/footer settings with the block's defaults filled in. The builder
+ * saves defaults the stored settings leave out (opening the editor is
+ * enough), and that alone must not count as a change. */
+function sharedWidgetSettings(widgets: SharedWidgetsRow, name: "header" | "footer") {
+  return stableJson({ ...blockDefaults[name], ...widgets[name]?.settings });
+}
+
+/** The draft header/footer differ from the live ones. They are shared by
+ * every page and go live with any page's publish, so this is site-wide. */
+function sharedWidgetsChanged(settings: SharedWidgetsSettings): boolean {
+  return (["header", "footer"] as const).some(
+    (name) =>
+      sharedWidgetSettings(settings.sharedWidgets, name) !==
+      sharedWidgetSettings(settings.draftSharedWidgets, name),
+  );
+}
+
+/** Draft/publish status is derived from the row, never stored. It covers
+ * the page's own content; the shared header/footer are reported once for
+ * the site (`sharedWidgetsHaveChanges`). */
 export function derivePageStatus(
   page: typeof schema.websitePages.$inferSelect,
 ): WebsiteContentStatus {
@@ -711,6 +746,8 @@ export type WebsiteContentSummaryDto = {
   kind: "page" | "blog";
   slug: string;
   status: WebsiteContentStatus;
+  /** Pages only: the site's shared header/footer have unpublished edits. */
+  sharedWidgetsHaveChanges?: boolean;
   deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
@@ -738,13 +775,17 @@ export type WebsitePageDto = WebsiteContentSummaryDto & {
 
 type PageRow = typeof schema.websitePages.$inferSelect;
 
-function toPageSummary(row: PageRow): WebsiteContentSummaryDto {
+function toPageSummary(
+  row: PageRow,
+  settings?: SharedWidgetsSettings | null,
+): WebsiteContentSummaryDto {
   return {
     id: row.publicId,
     name: row.name,
     kind: "page",
     slug: row.slug,
     status: derivePageStatus(row),
+    ...(settings ? { sharedWidgetsHaveChanges: sharedWidgetsChanged(settings) } : {}),
     deletable: row.deletable,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -787,7 +828,7 @@ async function toPageDto(
     }
   }
   return {
-    ...toPageSummary(row),
+    ...toPageSummary(row, settings),
     pageId: row.publicId,
     deletable: row.deletable,
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -858,7 +899,15 @@ export async function listWebsitePages(
       ),
     )
     .orderBy(desc(schema.websitePages.updatedAt));
-  return rows.map(toPageSummary);
+  const [settings] = await db
+    .select({
+      sharedWidgets: schema.websiteSettings.sharedWidgets,
+      draftSharedWidgets: schema.websiteSettings.draftSharedWidgets,
+    })
+    .from(schema.websiteSettings)
+    .where(eq(schema.websiteSettings.schoolId, schoolId))
+    .limit(1);
+  return rows.map((row) => toPageSummary(row, settings));
 }
 
 export async function createWebsitePage(

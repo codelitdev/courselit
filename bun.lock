@@ -69,6 +69,7 @@
         "@codelitdev/platform-conformance": "0.15.0",
         "@courselit/api-contract": "workspace:*",
         "@courselit/lesson-content": "workspace:*",
+        "@frontlit/page-builder": "0.1.0",
         "@frontlit/text-editor": "0.1.0",
         "@node-saml/node-saml": "5.2.0",
         "@ts-rest/express": "3.52.1",

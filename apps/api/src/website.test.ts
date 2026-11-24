@@ -21,6 +21,7 @@ type PageBody = {
   id: string;
   slug: string;
   status: string;
+  sharedWidgetsHaveChanges?: boolean;
   layout: Widget[];
   draftLayout: Widget[];
   draftTitle: string | null;
@@ -209,7 +210,10 @@ describe.serial("school website", () => {
         .body as PageBody;
       expect(home.draftLayout[0]!.settings?.logoText).toBe("Acme");
       expect(home.layout[0]!.settings?.logoText).toBeUndefined();
+      // The homepage itself is unchanged; the pending header is reported for
+      // the site, since publishing any page takes it live.
       expect(home.status).toBe("published");
+      expect(home.sharedWidgetsHaveChanges).toBe(true);
 
       const publishPermissionDenied = await dispatch(runtime, {
         method: "POST",
@@ -264,6 +268,73 @@ describe.serial("school website", () => {
         });
         expect(unavailable.status).toBe(400);
       }
+    } finally {
+      await runtime.close();
+    }
+  });
+
+  it("reports a header or footer only edit once for the site", async () => {
+    const { runtime, world, admin } = await setup();
+    try {
+      const homeId = await pageBySlug(runtime, world, "");
+      const homePath = `/v1/school/website/pages/${homeId}`;
+      const home = (await admin("GET", homePath)).body as PageBody;
+      expect(home).toMatchObject({ status: "published", sharedWidgetsHaveChanges: false });
+      const created = await admin("POST", "/v1/school/website/pages", {
+        name: "Unpublished",
+      });
+      const unpublishedId = (created.body as { id: string }).id;
+      const [header, ...rest] = home.draftLayout;
+      const body = rest.slice(0, -1);
+      const footer = rest.at(-1)!;
+      const withFooter = (settings: Record<string, unknown>) => ({
+        layout: [header, ...body, { ...footer, settings }],
+      });
+
+      // The builder fills in block defaults when the editor opens and saves
+      // them; that alone is not a change.
+      const opened = await admin(
+        "PATCH",
+        homePath,
+        withFooter({ showThemeSwitcher: true, ...footer.settings }),
+      );
+      expect(opened.body).toMatchObject({ sharedWidgetsHaveChanges: false });
+
+      const edited = await admin(
+        "PATCH",
+        homePath,
+        withFooter({ ...footer.settings, copyrightText: "© Acme" }),
+      );
+      // The page's own status is unchanged; the edit is a site-wide flag.
+      expect(edited.body).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: true,
+      });
+      const listed = (await admin("GET", "/v1/school/website/pages")).body as {
+        items: { id: string; status: string; sharedWidgetsHaveChanges?: boolean }[];
+      };
+      const listedItem = (id: string) => listed.items.find((item) => item.id === id);
+      expect(listedItem(homeId)).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: true,
+      });
+      expect(listedItem(unpublishedId)?.status).toBe("draft");
+
+      const discarded = await admin("POST", `${homePath}/discard-draft`);
+      expect(discarded.body).toMatchObject({ sharedWidgetsHaveChanges: false });
+      const discardedFooter = (discarded.body as PageBody).draftLayout.at(-1)!;
+      expect(discardedFooter.settings?.copyrightText).toBeUndefined();
+
+      await admin(
+        "PATCH",
+        homePath,
+        withFooter({ ...footer.settings, copyrightText: "© Acme" }),
+      );
+      const published = await admin("POST", `${homePath}/publish`);
+      expect(published.body).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: false,
+      });
     } finally {
       await runtime.close();
     }
