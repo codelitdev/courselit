@@ -51,9 +51,11 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
 
   // Spaces
   listSpaces: "Lists the school's spaces, in their display order.",
-  createSpace: "Creates a space.",
+  createSpace:
+    "Creates a space. Its logo is an icon name from the space icon list (for example MessagesSquare, Megaphone, Lightbulb); it defaults to MessagesSquare.",
   getSpace: "Reads one space by spaceId.",
-  updateSpace: "Changes a space's name, description or visibility.",
+  updateSpace:
+    "Changes a space's name, description, icon (logo, an icon name from the space icon list) or visibility.",
   orderSpaces:
     "Sets the display order of the school's spaces. Pass every spaceId in the order wanted.",
   deleteSpace:

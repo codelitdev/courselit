@@ -6,6 +6,7 @@ import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 
 export * from "./learner-avatar.js";
 export * from "./school-branding.js";
+export * from "./space-icons.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";

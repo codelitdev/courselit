@@ -1,3 +1,4 @@
+import { DEFAULT_SPACE_ICON, SPACE_ICONS } from "@courselit/api-contract/space-icons";
 import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
@@ -1032,5 +1033,50 @@ describe.serial("school spaces and included products", () => {
     await grant(["communities:moderate"]);
     expect(await spaceIds()).toEqual([general!.publicId]);
     expect(posted.status).toBe(201);
+  });
+
+  it("keeps a space's icon to the shared icon list", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const headers = {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      };
+      const call = (method: string, path: string, body?: unknown) =>
+        dispatch(runtime, { method, path, headers, body });
+
+      // No icon given: the default.
+      const plain = await call("POST", "/v1/spaces", { name: "Plain" });
+      expect(plain.status).toBe(201);
+      expect(plain.body).toMatchObject({ logo: DEFAULT_SPACE_ICON });
+      const spaceId = (plain.body as { id: string }).id;
+
+      const announcements = await call("POST", "/v1/spaces", {
+        name: "Announcements",
+        logo: "Megaphone",
+      });
+      expect(announcements.body).toMatchObject({ logo: "Megaphone" });
+
+      // Names outside the list are refused, on create and on update.
+      for (const logo of ["NotAnIcon", "Skull", "megaphone"]) {
+        const refused = await call("POST", "/v1/spaces", { name: "Odd", logo });
+        expect(refused.status).toBe(400);
+        expect(refused.body).toMatchObject({ details: { reason: "invalid_logo" } });
+      }
+      const badUpdate = await call("PATCH", `/v1/spaces/${spaceId}`, { logo: "Skull" });
+      expect(badUpdate.status).toBe(400);
+
+      const updated = await call("PATCH", `/v1/spaces/${spaceId}`, { logo: "Lightbulb" });
+      expect(updated.status).toBe(200);
+      expect(updated.body).toMatchObject({ logo: "Lightbulb" });
+      expect(SPACE_ICONS.some((icon) => icon.name === "Lightbulb")).toBe(true);
+    } finally {
+      await runtime.close();
+    }
   });
 });
