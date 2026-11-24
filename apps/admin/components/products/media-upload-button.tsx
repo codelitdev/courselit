@@ -39,6 +39,8 @@ export function MediaField({
   accessPolicy = "public",
   allowUnsplash = false,
   disabled = false,
+  maxUploadBytes,
+  tooLargeMessage = "This file is too large.",
 }: {
   school: School;
   purpose: MediaUploadPurpose;
@@ -48,6 +50,9 @@ export function MediaField({
   accessPolicy?: MediaAccessPolicy;
   allowUnsplash?: boolean;
   disabled?: boolean;
+  /** Largest file allowed, for uploads and library picks alike. */
+  maxUploadBytes?: number;
+  tooLargeMessage?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +78,10 @@ export function MediaField({
     }
     if (!mediaMatchesAcceptedTypes(selected.media, acceptedTypes)) {
       setError("This media does not match the accepted file type.");
+      return;
+    }
+    if (maxUploadBytes && selected.media.byteSize > maxUploadBytes) {
+      setError(tooLargeMessage);
       return;
     }
     setError(null);
@@ -131,6 +140,7 @@ export function MediaField({
         onOpenChange={setOpen}
         title={`${media ? "Change" : "Select"} ${label}`}
         acceptedTypes={acceptedTypes}
+        maxUploadBytes={maxUploadBytes}
         allowUnsplash={allowUnsplash}
         onSelect={selectMedia}
       >

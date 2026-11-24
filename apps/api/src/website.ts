@@ -5,7 +5,7 @@ import {
   type PlatformError,
   uuidv7,
 } from "@codelitdev/platform";
-import type { MediaRef } from "@courselit/api-contract";
+import { type MediaRef, SCHOOL_BRANDING_IMAGE_MAX_BYTES } from "@courselit/api-contract";
 import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
@@ -546,6 +546,25 @@ export async function getWebsiteBranding(
   return toBrandingDto(await loadSettings(db, schoolId, clock));
 }
 
+/** A logo from the media library must be an image within the branding limit. */
+async function brandingLogoRejection(
+  db: AppDb,
+  schoolId: string,
+  logo: MediaRef | null | undefined,
+): Promise<string | null> {
+  const mediaId = normalizeMediaRef(logo ?? null)?.mediaId;
+  if (!mediaId) return null;
+  const [media] = await db
+    .select({ kind: schema.media.kind, byteSize: schema.media.byteSize })
+    .from(schema.media)
+    .where(and(eq(schema.media.schoolId, schoolId), eq(schema.media.publicId, mediaId)))
+    .limit(1);
+  if (!media) return null;
+  if (media.kind !== "image") return "logo_not_image";
+  if (media.byteSize > SCHOOL_BRANDING_IMAGE_MAX_BYTES) return "logo_too_large";
+  return null;
+}
+
 export async function updateWebsiteBranding(
   db: AppDb,
   schoolId: string,
@@ -565,6 +584,8 @@ export async function updateWebsiteBranding(
       .limit(1);
     if (!theme) return invalid("theme_not_found");
   }
+  const logoRejection = await brandingLogoRejection(db, schoolId, patch.logo);
+  if (logoRejection) return invalid(logoRejection);
   return db.transaction(async (tx) => {
     await loadSettings(tx as AppDb, schoolId, clock);
     const [updated] = await tx

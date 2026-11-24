@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { LEARNER_AVATAR_MAX_BYTES } from "@courselit/api-contract";
+import {
+  LEARNER_AVATAR_MAX_BYTES,
+  SCHOOL_BRANDING_IMAGE_MAX_BYTES,
+} from "@courselit/api-contract";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { MemoryMediaLitClient } from "./media.js";
@@ -455,6 +458,99 @@ describe.serial("media library", () => {
     });
     expect(enrolledDetail.body).toMatchObject({ enrolled: true });
     await runtime.close();
+  });
+
+  it("limits branding images to small image files, for uploads and library picks", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const headers = {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      };
+      const authorize = (body: Record<string, unknown>) =>
+        dispatch(runtime, {
+          method: "POST",
+          path: "/v1/media/upload-authorizations",
+          headers,
+          body: { accessPolicy: "public", ...body },
+        });
+      const upload = async (body: Record<string, unknown>) => {
+        const authorization = await authorize(body);
+        expect(authorization.status).toBe(201);
+        const finalized = await dispatch(runtime, {
+          method: "POST",
+          path: "/v1/media",
+          headers,
+          body: {
+            uploadId: (authorization.body as { uploadId: string }).uploadId,
+            accessPolicy: "public",
+          },
+        });
+        expect(finalized.status).toBe(201);
+        return finalized.body as { id: string; canonicalUrl: string };
+      };
+
+      for (const [body, reason] of [
+        [
+          {
+            fileName: "logo.png",
+            mimeType: "image/png",
+            byteSize: SCHOOL_BRANDING_IMAGE_MAX_BYTES + 1,
+          },
+          "file_too_large",
+        ],
+        [
+          { fileName: "logo.pdf", mimeType: "application/pdf", byteSize: 1024 },
+          "unsupported_branding_type",
+        ],
+      ] as const) {
+        const refused = await authorize({ ...body, purpose: "school_branding" });
+        expect(refused.status).toBe(400);
+        expect(refused.body).toMatchObject({ details: { reason } });
+      }
+      const atLimit = await upload({
+        fileName: "logo.png",
+        mimeType: "image/png",
+        byteSize: SCHOOL_BRANDING_IMAGE_MAX_BYTES,
+        purpose: "school_branding",
+      });
+      // Other purposes keep their larger limit.
+      const bigCover = await upload({
+        fileName: "cover.png",
+        mimeType: "image/png",
+        byteSize: SCHOOL_BRANDING_IMAGE_MAX_BYTES + 1,
+        purpose: "product_artwork",
+      });
+      const video = await upload({
+        fileName: "intro.mp4",
+        mimeType: "video/mp4",
+        byteSize: 1024,
+        purpose: "lesson_media",
+      });
+
+      const setLogo = (media: { id: string; canonicalUrl: string }) =>
+        dispatch(runtime, {
+          method: "PATCH",
+          path: "/v1/school/website/branding",
+          headers,
+          body: { logo: { mediaId: media.id, url: media.canonicalUrl } },
+        });
+      for (const [media, reason] of [
+        [bigCover, "logo_too_large"],
+        [video, "logo_not_image"],
+      ] as const) {
+        const refused = await setLogo(media);
+        expect(refused.status).toBe(400);
+        expect(refused.body).toMatchObject({ details: { reason } });
+      }
+      const saved = await setLogo(atLimit);
+      expect(saved.status).toBe(200);
+      expect(saved.body).toMatchObject({ logo: { mediaId: atLimit.id } });
+    } finally {
+      await runtime.close();
+    }
   });
 
   it("keeps learner-uploaded profile media out of the default admin library", async () => {

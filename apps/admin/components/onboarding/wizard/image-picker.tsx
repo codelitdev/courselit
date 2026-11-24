@@ -21,6 +21,7 @@ export function WizardImagePicker({
   purpose,
   title,
   acceptedTypes,
+  maxUploadBytes,
   disabled,
   onPick,
   children,
@@ -29,6 +30,8 @@ export function WizardImagePicker({
   purpose: MediaUploadPurpose;
   title: string;
   acceptedTypes: string[];
+  /** Largest upload the dialog accepts. */
+  maxUploadBytes?: number;
   disabled?: boolean;
   onPick: (file: UploadedFile) => void;
   children: ReactNode;
@@ -77,6 +80,7 @@ export function WizardImagePicker({
         {...adapters}
         title={title}
         acceptedTypes={acceptedTypes}
+        maxUploadBytes={maxUploadBytes}
         allowUnsplash={false}
         allowExistingMedia={false}
         metadataMode="alt"

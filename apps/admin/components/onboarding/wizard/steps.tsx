@@ -2,6 +2,7 @@
 
 import { courseLitPlanHighlights } from "@courselit/api-contract/courselit-plans";
 import { formatMoney } from "@courselit/api-contract/money";
+import { SCHOOL_BRANDING_IMAGE_MAX_BYTES } from "@courselit/api-contract/school-branding";
 import {
   AlignLeft,
   BookOpen,
@@ -931,6 +932,7 @@ export function BrandStep({
                 purpose="school_branding"
                 title="Select your logo"
                 acceptedTypes={LOGO_TYPES}
+                maxUploadBytes={SCHOOL_BRANDING_IMAGE_MAX_BYTES}
                 onPick={(file) => onSelectImage("logo", file)}
               >
                 <Button type="button" variant="outline" size="sm">

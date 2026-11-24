@@ -8,6 +8,7 @@ import type {
 } from "@frontlit/media-uploader";
 import { matchesMime } from "@frontlit/media-uploader";
 import { useCallback, useMemo, useState } from "react";
+import { brandingImageErrorMessage } from "./branding-image";
 import { type MediaUploadAuthorization, uploadAuthorizedMedia } from "./media-upload";
 
 export type MediaUploadPurpose =
@@ -121,6 +122,8 @@ export function uploadErrorMessage(
   if (reason === "billing_unavailable") {
     return "Uploads are paused for a moment. Try again shortly.";
   }
+  const brandingMessage = brandingImageErrorMessage(reason);
+  if (brandingMessage) return brandingMessage;
   return typeof body?.message === "string" && body.message.trim() ? body.message : fallback;
 }
 

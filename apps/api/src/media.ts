@@ -12,6 +12,7 @@ import {
   LEARNER_AVATAR_MAX_BYTES,
   LEARNER_AVATAR_MIME_TYPES,
   type MediaRef,
+  SCHOOL_BRANDING_IMAGE_MAX_BYTES,
 } from "@courselit/api-contract";
 import {
   and,
@@ -771,6 +772,14 @@ export async function authorizeMediaUpload(
     input.byteSize > 1_000_000_000
   ) {
     return invalid("invalid_file_size");
+  }
+  if (input.purpose === "school_branding") {
+    if (kindForMime(input.mimeType) !== "image") {
+      return invalid("unsupported_branding_type");
+    }
+    if (input.byteSize > SCHOOL_BRANDING_IMAGE_MAX_BYTES) {
+      return invalid("file_too_large");
+    }
   }
   const refused = await gate.reserve(ctx.tenantId!, { kind: "staff" }, input.byteSize);
   if (refused) return { ok: false, error: refused };
