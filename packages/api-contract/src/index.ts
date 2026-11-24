@@ -644,6 +644,11 @@ export const websiteContentSummarySchema = z.object({
   kind: z.enum(["page", "blog"]),
   slug: z.string(),
   status: z.enum(["draft", "published", "published_with_changes"]),
+  /** Pages only: the site's shared header/footer have unpublished edits.
+   * They are shared by every page, so publishing any page takes them live
+   * and discarding any page's draft resets them. Status covers only the
+   * page's own content. */
+  sharedWidgetsHaveChanges: z.boolean().optional(),
   /** False for the home page and other pages the website needs. */
   deletable: z.boolean(),
   featuredImage: mediaRefSchema.nullable().optional(),

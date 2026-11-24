@@ -300,6 +300,8 @@ function sharedWidgetSettings(widgets: SharedWidgetsRow, name: "header" | "foote
   return stableJson({ ...blockDefaults[name], ...widgets[name]?.settings });
 }
 
+/** The draft header/footer differ from the live ones. They are shared by
+ * every page and go live with any page's publish, so this is site-wide. */
 function sharedWidgetsChanged(settings: SharedWidgetsSettings): boolean {
   return (["header", "footer"] as const).some(
     (name) =>
@@ -308,17 +310,14 @@ function sharedWidgetsChanged(settings: SharedWidgetsSettings): boolean {
   );
 }
 
-/** Draft/publish status is derived from the row, never stored. The header
- * and footer are shared by every page and go live with any page's publish,
- * so while their draft differs from the live one every published page has
- * changes to publish. */
+/** Draft/publish status is derived from the row, never stored. It covers
+ * the page's own content; the shared header/footer are reported once for
+ * the site (`sharedWidgetsHaveChanges`). */
 export function derivePageStatus(
   page: typeof schema.websitePages.$inferSelect,
-  settings?: SharedWidgetsSettings | null,
 ): WebsiteContentStatus {
   if (!page.publishedAt) return "draft";
   const hasChanges =
-    (settings != null && sharedWidgetsChanged(settings)) ||
     !sameJson(page.layout, page.draftLayout) ||
     page.title !== page.draftTitle ||
     page.description !== page.draftDescription ||
@@ -747,6 +746,8 @@ export type WebsiteContentSummaryDto = {
   kind: "page" | "blog";
   slug: string;
   status: WebsiteContentStatus;
+  /** Pages only: the site's shared header/footer have unpublished edits. */
+  sharedWidgetsHaveChanges?: boolean;
   deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
@@ -783,7 +784,8 @@ function toPageSummary(
     name: row.name,
     kind: "page",
     slug: row.slug,
-    status: derivePageStatus(row, settings),
+    status: derivePageStatus(row),
+    ...(settings ? { sharedWidgetsHaveChanges: sharedWidgetsChanged(settings) } : {}),
     deletable: row.deletable,
     updatedAt: row.updatedAt.toISOString(),
   };
