@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
+import { storefrontOriginForHost } from "./schools.js";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { MemoryMediaLitClient } from "./media.js";
@@ -444,6 +445,8 @@ describe.serial("school website", () => {
         theme: { primary: "#112233" },
         codeInjectionHead: "",
         canonicalHost: "learn.example.com",
+        // Local setups add `STOREFRONT_PORT`.
+        siteOrigin: storefrontOriginForHost("learn.example.com"),
       });
 
       await admin("PATCH", "/v1/school/website/branding", { themeId: "classic" });

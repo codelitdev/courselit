@@ -14,6 +14,8 @@ export interface PublicSettings {
   codeInjectionHead: string;
   codeInjectionBody: string;
   canonicalHost?: string | null;
+  /** The storefront origin (custom domain, else subdomain), for absolute URLs. */
+  siteOrigin?: string | null;
   /** A published product (public or hidden) or a live community exists. */
   hasPublishedOffers?: boolean;
   /** The code is the owner's alone for now (a trial); fetched separately. */

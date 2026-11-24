@@ -28289,6 +28289,10 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "siteOrigin": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "hasPublishedOffers": {
                       "type": "boolean"
                     },
@@ -28310,6 +28314,7 @@
                     "ownerOnlyCodeInjection",
                     "courseLitBadgeUrl",
                     "canonicalHost",
+                    "siteOrigin",
                     "hasPublishedOffers",
                     "hideFromSearch",
                     "blockAiTraining"
