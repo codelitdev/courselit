@@ -5,7 +5,7 @@ import {
   type MediaUploaderAdapters,
   type SelectedMedia,
 } from "@frontlit/media-uploader";
-import { Paperclip, X } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import {
   LearnerButton as Button,
@@ -28,10 +28,10 @@ import {
   LearnerTooltipTrigger,
 } from "@/components/themed-page-builder";
 import type { LearnerCommunityMedia } from "@/lib/community-media-uploader";
-import { LearnerGifPicker, LearnerPostGifs, MAX_POST_GIFS } from "./learner-gif-picker";
+import { LearnerGifPicker, MAX_POST_GIFS } from "./learner-gif-picker";
+import { LearnerPostAttachments } from "./learner-post-attachments";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 import {
-  LearnerPostVideos,
   LearnerYoutubePicker,
   MAX_POST_VIDEOS,
 } from "./learner-youtube-picker";
@@ -144,30 +144,20 @@ export function LearnerPostComposerDialog({
             editorClassName="min-h-[200px] px-8 py-4 sm:px-16"
           />
 
-          {media.length > 0 ? (
-            <ul
-              className="flex list-none flex-wrap gap-2 p-0"
-              aria-label="Attached media"
-            >
-              {media.map((item) => (
-                <li key={item.id}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onMediaRemove(item.id)}
-                    aria-label={`Remove ${item.fileName}`}
-                  >
-                    <span className="max-w-48 truncate">{item.fileName}</span>
-                    <X className="size-4" aria-hidden="true" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          <LearnerPostGifs urls={gifUrls} onRemove={onGifRemove} />
-          <LearnerPostVideos urls={videoUrls} onRemove={onVideoRemove} />
+          <LearnerPostAttachments
+            files={media.map((item) => ({
+              id: item.id,
+              type: item.kind,
+              url: item.url,
+              thumbnailUrl: item.thumbnailUrl,
+              name: item.fileName,
+            }))}
+            gifUrls={gifUrls}
+            videoUrls={videoUrls}
+            onRemoveFile={onMediaRemove}
+            onRemoveGif={onGifRemove}
+            onRemoveVideo={onVideoRemove}
+          />
 
           <div className="flex flex-wrap items-center gap-2 pt-4">
             {/* The dialog's own trigger wraps the button, so the tooltip root sits outside it. */}

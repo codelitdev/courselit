@@ -4,7 +4,7 @@ import type {
   gifSchema,
   learnerGifSearchResponseSchema,
 } from "@courselit/api-contract";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { z } from "zod";
 import {
@@ -207,43 +207,6 @@ export function LearnerGifPicker({
         ) : null}
       </LearnerPopoverContent>
     </LearnerPopover>
-  );
-}
-
-/** GIFs attached to a post. With `onRemove`, each GIF gets a remove button. */
-export function LearnerPostGifs({
-  urls,
-  onRemove,
-}: {
-  urls: readonly string[];
-  onRemove?: (url: string) => void;
-}) {
-  if (urls.length === 0) return null;
-  return (
-    <ul className="flex list-none flex-wrap gap-3 p-0" aria-label="GIFs">
-      {urls.map((url) => (
-        <li key={url} className="relative">
-          <LearnerCardImage
-            src={url}
-            alt="GIF"
-            loading="lazy"
-            className="h-48 w-auto max-w-full object-cover"
-          />
-          {onRemove ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="absolute top-2 right-2 size-7"
-              onClick={() => onRemove(url)}
-              aria-label="Remove GIF"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </Button>
-          ) : null}
-        </li>
-      ))}
-    </ul>
   );
 }
 

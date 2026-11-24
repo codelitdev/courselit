@@ -16,8 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   EllipsisVertical,
-  FileText,
-  Film,
   Flag,
   Megaphone,
   Paperclip,
@@ -55,7 +53,6 @@ import {
   LearnerAvatar,
   LearnerAvatarFallback,
   LearnerAvatarImage,
-  LearnerCardImage,
   LearnerDropdownMenuItem,
   LearnerHeader2,
   LearnerHeader3,
@@ -76,14 +73,13 @@ import { RequestError, requestJson } from "@/lib/request-json";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import {
   LearnerGifPicker,
-  LearnerPostGifs,
   MAX_POST_GIFS,
   withGif,
 } from "./learner-gif-picker";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
+import { LearnerPostAttachments } from "./learner-post-attachments";
 import {
-  LearnerPostVideos,
   LearnerYoutubePicker,
   MAX_POST_VIDEOS,
   withVideo,
@@ -317,83 +313,37 @@ function isOwnedByLearner(
   );
 }
 
+/** A post's or comment's attachments, in the shared sideways-scrolling row. */
 function MediaAttachments({
   items,
   onRemove,
+  gifUrls,
+  videoUrls,
+  onRemoveGif,
+  onRemoveVideo,
 }: {
   items: MediaAttachment[];
   onRemove?: (id: string) => void;
+  gifUrls?: readonly string[];
+  videoUrls?: readonly string[];
+  onRemoveGif?: (url: string) => void;
+  onRemoveVideo?: (url: string) => void;
 }) {
-  if (items.length === 0) return null;
-
   return (
-    <ul className="grid list-none gap-3 p-0 sm:grid-cols-2" aria-label="Attached media">
-      {items.map((item) => (
-        <li key={item.id} className="min-w-0">
-          <PageCard className="relative overflow-hidden">
-            {item.type === "image" && item.url ? (
-              <LearnerCardImage
-                src={item.url}
-                alt={item.title}
-                flush
-                className="block h-auto max-h-[28rem] w-full bg-muted object-contain"
-              />
-            ) : item.type === "video" && item.url ? (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="relative block aspect-video bg-muted hover:opacity-90"
-              >
-                {item.thumbnailUrl ? (
-                  <LearnerCardImage
-                    src={item.thumbnailUrl}
-                    alt={item.title}
-                    flush
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <LearnerText2 className="flex size-full items-center justify-center gap-2 text-muted-foreground">
-                    <Film className="size-5" /> Open video
-                  </LearnerText2>
-                )}
-              </a>
-            ) : (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex min-h-24 items-center gap-3 p-3 hover:bg-muted/40"
-              >
-                <FileText className="size-5 shrink-0 text-primary" />
-                <LearnerText2 component="span" className="min-w-0 truncate">
-                  {item.fileName}
-                </LearnerText2>
-              </a>
-            )}
-            <div className="flex items-center justify-between gap-2 border-t px-3 py-2">
-              <LearnerText2
-                component="span"
-                className="min-w-0 truncate text-muted-foreground"
-                title={item.title}
-              >
-                {item.title}
-              </LearnerText2>
-              {onRemove ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemove(item.id)}
-                >
-                  Remove
-                </Button>
-              ) : null}
-            </div>
-          </PageCard>
-        </li>
-      ))}
-    </ul>
+    <LearnerPostAttachments
+      files={items.map((item) => ({
+        id: item.id,
+        type: item.type,
+        url: item.url,
+        thumbnailUrl: item.thumbnailUrl,
+        name: item.title || item.fileName,
+      }))}
+      gifUrls={gifUrls}
+      videoUrls={videoUrls}
+      onRemoveFile={onRemove}
+      onRemoveGif={onRemoveGif}
+      onRemoveVideo={onRemoveVideo}
+    />
   );
 }
 
@@ -1940,18 +1890,14 @@ export function LearnerCommunity({
                           <MediaAttachments
                             items={postEditMedia}
                             onRemove={removePostEditMedia}
-                          />
-                          <LearnerPostGifs
-                            urls={postEditGifs}
-                            onRemove={(url) =>
+                            gifUrls={postEditGifs}
+                            onRemoveGif={(url) =>
                               setPostEditGifs((current) =>
                                 current.filter((item) => item !== url),
                               )
                             }
-                          />
-                          <LearnerPostVideos
-                            urls={postEditVideos}
-                            onRemove={(url) =>
+                            videoUrls={postEditVideos}
+                            onRemoveVideo={(url) =>
                               setPostEditVideos((current) =>
                                 current.filter((item) => item !== url),
                               )
@@ -2005,13 +1951,11 @@ export function LearnerCommunity({
                         />
                       )}
                       {editingPostId === post.id ? null : (
-                        <>
-                          <MediaAttachments
-                            items={post.media.map(communityMediaToAttachment)}
-                          />
-                          <LearnerPostGifs urls={post.gifUrls} />
-                          <LearnerPostVideos urls={post.videoUrls} />
-                        </>
+                        <MediaAttachments
+                          items={post.media.map(communityMediaToAttachment)}
+                          gifUrls={post.gifUrls}
+                          videoUrls={post.videoUrls}
+                        />
                       )}
                       <div className="flex flex-wrap items-center gap-2 border-t pt-4">
                         <CommunityReactionsBar
