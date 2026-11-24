@@ -78000,7 +78000,8 @@
                       "type": "string",
                       "enum": [
                         "invalid",
-                        "taken"
+                        "taken",
+                        "reserved"
                       ],
                       "nullable": true
                     },

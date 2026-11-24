@@ -4,6 +4,11 @@ import { and, desc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import * as schema from "./db/schema/index.js";
 import { getPaymentProvider } from "./payments.js";
 import { getMailingSettings } from "./sendlit-service.js";
+import {
+  isReservedSubdomain,
+  isValidSubdomain,
+  reservedAmong,
+} from "./reserved-subdomains.js";
 import type { AppDb } from "./types.js";
 
 export const ONBOARDING_CHECKLIST_KEYS = [
@@ -328,12 +333,6 @@ export async function updateSchoolOnboarding(
 // School address availability
 // ---------------------------------------------------------------------------
 
-const SUBDOMAIN_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-export function isValidSubdomain(value: string): boolean {
-  return value.length >= 3 && value.length <= 63 && SUBDOMAIN_PATTERN.test(value);
-}
-
 async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>> {
   if (candidates.length === 0) return new Set();
   const [schools, hosts] = await Promise.all([
@@ -355,25 +354,31 @@ export async function checkSchoolSubdomain(
 ): Promise<{
   subdomain: string;
   available: boolean;
-  reason: "invalid" | "taken" | null;
+  reason: "invalid" | "taken" | "reserved" | null;
   suggestions: string[];
 }> {
   const subdomain = rawSubdomain.trim();
   if (!isValidSubdomain(subdomain)) {
     return { subdomain, available: false, reason: "invalid", suggestions: [] };
   }
-  if ((await takenAmong(db, [subdomain])).size === 0) {
-    return { subdomain, available: true, reason: null, suggestions: [] };
-  }
+  let reason: "taken" | "reserved";
+  if (await isReservedSubdomain(db, subdomain)) reason = "reserved";
+  else if ((await takenAmong(db, [subdomain])).size > 0) reason = "taken";
+  else return { subdomain, available: true, reason: null, suggestions: [] };
   const ideas = [`${subdomain}-studio`, `${subdomain}-art`, `${subdomain}-school`];
   for (let i = 2; i <= 9; i++) ideas.push(`${subdomain}${i}`);
   const candidates = ideas.filter(isValidSubdomain);
-  const taken = await takenAmong(db, candidates);
+  const [taken, reserved] = await Promise.all([
+    takenAmong(db, candidates),
+    reservedAmong(db, candidates),
+  ]);
   return {
     subdomain,
     available: false,
-    reason: "taken",
-    suggestions: candidates.filter((value) => !taken.has(value)).slice(0, 3),
+    reason,
+    suggestions: candidates
+      .filter((value) => !taken.has(value) && !reserved.has(value))
+      .slice(0, 3),
   };
 }
 

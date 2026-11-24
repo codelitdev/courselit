@@ -869,6 +869,12 @@ CREATE TABLE "schools" (
 	CONSTRAINT "schools_subdomain_unique" UNIQUE("subdomain")
 );
 --> statement-breakpoint
+CREATE TABLE "reserved_subdomains" (
+	"subdomain" text PRIMARY KEY NOT NULL,
+	"reason" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "selected_schools" (
 	"user_id" text PRIMARY KEY NOT NULL,
 	"school_id" uuid NOT NULL

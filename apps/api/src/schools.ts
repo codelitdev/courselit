@@ -18,6 +18,7 @@ import {
   type CourseLitPermission,
 } from "./permissions.js";
 import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
+import { isReservedSubdomain } from "./reserved-subdomains.js";
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { CONTACT_PUBLIC_ID_PREFIX, SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
@@ -110,6 +111,14 @@ export async function createSchool(
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolDto } | { ok: false; error: PlatformError }> {
+  if (await isReservedSubdomain(db, input.subdomain)) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "subdomain_reserved" },
+      }),
+    };
+  }
   const duplicate = await db
     .select()
     .from(schema.schools)

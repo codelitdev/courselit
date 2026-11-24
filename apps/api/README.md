@@ -132,6 +132,23 @@ before serving traffic when the schema cannot be upgraded. The API development
 command runs the same migration runner before starting the watcher, so local
 schema changes are applied automatically.
 
+## Reserved subdomains
+
+New schools can't take product and infrastructure hostnames (`RESERVED_SUBDOMAINS`
+in `src/reserved-subdomains.ts`) or any subdomain in the `reserved_subdomains`
+table. Fill the table, for example with the subdomains of schools still on the
+classic app, from a local file with one subdomain per line (or a JSON array of
+strings). Keep that file out of the repository:
+
+```sh
+DATABASE_URL=postgres://... bun --cwd apps/api run migrate:reserved-subdomains \
+  /absolute/path/to/legacy-subdomains.txt [--reason legacy]
+```
+
+Values are trimmed and lowercased, invalid labels are skipped with a warning,
+and rows that already exist are left alone, so the command can be re-run. It
+prints how many subdomains were read, inserted, already present and invalid.
+
 ## Legacy domain import
 
 `migrate:domains` imports a JSON export of the legacy `Domain` collection. It is

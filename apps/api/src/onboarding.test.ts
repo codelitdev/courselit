@@ -2,6 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
+import {
+  importReservedSubdomains,
+  parseReservedSubdomainList,
+} from "./reserved-subdomains.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { type SeededWorld, seedWorld } from "./seed.js";
 
@@ -275,6 +279,96 @@ describe("school subdomain availability", () => {
       headers: {},
     });
     expect(anonymous.status).toBe(401);
+    await runtime.close();
+  });
+});
+
+describe("reserved school addresses", () => {
+  async function reservedSetup() {
+    const { runtime, world } = await setup();
+    await importReservedSubdomains(runtime.db, ["old-school", "taken-art"], "legacy");
+    const check = async (subdomain: string) =>
+      (
+        await dispatch(runtime, {
+          method: "GET",
+          path: `/v1/schools/subdomain-availability?subdomain=${encodeURIComponent(subdomain)}`,
+          headers: { cookie: world.owner.sessionCookie },
+        })
+      ).body as {
+        subdomain: string;
+        available: boolean;
+        reason: string | null;
+        suggestions: string[];
+      };
+    const create = (subdomain: string) =>
+      dispatch(runtime, {
+        method: "POST",
+        path: "/v1/schools",
+        headers: { cookie: world.owner.sessionCookie },
+        body: { name: "Reserved School", subdomain },
+      });
+    return { runtime, check, create };
+  }
+
+  it("rejects product hostnames in the check and on create", async () => {
+    const { runtime, check, create } = await reservedSetup();
+    const result = await check("dash");
+    expect(result).toMatchObject({ available: false, reason: "reserved" });
+    expect(result.suggestions).toEqual(["dash-studio", "dash-art", "dash-school"]);
+    const created = await create("dash");
+    expect(created.status).toBe(409);
+    expect(JSON.stringify(created.body)).toContain("subdomain_reserved");
+    expect(
+      await runtime.db
+        .select()
+        .from(schema.schools)
+        .where(eq(schema.schools.subdomain, "dash")),
+    ).toHaveLength(0);
+    await runtime.close();
+  });
+
+  it("rejects subdomains reserved in the database in the check and on create", async () => {
+    const { runtime, check, create } = await reservedSetup();
+    expect(await check("old-school")).toMatchObject({
+      available: false,
+      reason: "reserved",
+    });
+    const created = await create("old-school");
+    expect(created.status).toBe(409);
+    expect(JSON.stringify(created.body)).toContain("subdomain_reserved");
+    await runtime.close();
+  });
+
+  it("leaves reserved names out of suggestions and still allows normal names", async () => {
+    const { runtime, check, create } = await reservedSetup();
+    expect((await create("taken")).status).toBe(201);
+    const taken = await check("taken");
+    expect(taken.reason).toBe("taken");
+    expect(taken.suggestions).toEqual(["taken-studio", "taken-school", "taken2"]);
+    expect(await check("new-school")).toMatchObject({ available: true, reason: null });
+    expect((await create("new-school")).status).toBe(201);
+    await runtime.close();
+  });
+
+  it("imports a list idempotently, normalising and skipping invalid labels", async () => {
+    const { runtime } = await setup();
+    const { valid, invalid } = parseReservedSubdomainList(
+      "# legacy\n  Old-School \nold-school\n\nbad_name\nab\nsecond\n",
+    );
+    expect(valid).toEqual(["old-school", "second"]);
+    expect(invalid).toEqual(["bad_name", "ab"]);
+    expect(parseReservedSubdomainList('["One-x", " two "]').valid).toEqual([
+      "one-x",
+      "two",
+    ]);
+    expect(await importReservedSubdomains(runtime.db, valid, "legacy")).toEqual({
+      inserted: 2,
+      existing: 0,
+    });
+    expect(
+      await importReservedSubdomains(runtime.db, [...valid, "third"], "legacy"),
+    ).toEqual({ inserted: 1, existing: 2 });
+    expect(await runtime.db.select().from(schema.reservedSubdomains)).toHaveLength(3);
     await runtime.close();
   });
 });

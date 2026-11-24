@@ -159,7 +159,10 @@ export function SchoolStep({
   const { data, patch, errors, disabled } = ctx;
   const fullUrl = `${data.subdomain || "your-school"}.${siteDomain}`;
   const badAddress =
-    Boolean(errors.subdomain) || availability === "taken" || availability === "invalid";
+    Boolean(errors.subdomain) ||
+    availability === "taken" ||
+    availability === "reserved" ||
+    availability === "invalid";
   if (creating) {
     return (
       <>
@@ -242,11 +245,14 @@ export function SchoolStep({
                 <span className="font-mono">{fullUrl}</span> is yours to take
               </p>
             ) : null}
-            {availability === "taken" ? (
+            {availability === "taken" || availability === "reserved" ? (
               <div className="flex flex-col gap-2">
                 <p className="flex items-center gap-1.5 text-destructive">
                   <CircleX aria-hidden className="size-3.5" />
-                  {fullUrl} is taken.{suggestions.length ? " Try one of these:" : ""}
+                  {availability === "taken"
+                    ? `${fullUrl} is taken.`
+                    : "This address isn't available."}
+                  {suggestions.length ? " Try one of these:" : ""}
                 </p>
                 {suggestions.length ? (
                   <div className="flex flex-wrap gap-1.5">
@@ -265,7 +271,7 @@ export function SchoolStep({
               </div>
             ) : null}
             {availability === "invalid" || errors.subdomain ? (
-              availability !== "taken" ? (
+              availability !== "taken" && availability !== "reserved" ? (
                 <p className="text-destructive">
                   Use 3 to 63 lowercase letters, numbers and single hyphens.
                 </p>

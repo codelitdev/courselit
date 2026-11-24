@@ -135,7 +135,13 @@ export function sanitizeSubdomainInput(value: string): string {
     .slice(0, 63);
 }
 
-export type SubdomainStatus = "idle" | "checking" | "ok" | "taken" | "invalid";
+export type SubdomainStatus =
+  | "idle"
+  | "checking"
+  | "ok"
+  | "taken"
+  | "reserved"
+  | "invalid";
 
 /** Whether a check result makes the school form submittable. */
 export function canSubmitSubdomain(status: SubdomainStatus, value: string): boolean {
@@ -421,6 +427,7 @@ export const ERROR_COPY = {
   postal: "Add a postal code.",
   subdomain: "Use 3 to 63 lowercase letters, numbers and single hyphens.",
   subdomainTaken: "That address is taken. Pick another.",
+  subdomainReserved: "This address isn't available. Pick another.",
 } as const;
 
 const blank = (value: string | null | undefined) => !String(value ?? "").trim();
@@ -437,6 +444,7 @@ export function validateSchool(
   if (blank(data.school)) errors.school = ERROR_COPY.school;
   if (!isValidSubdomain(data.subdomain)) errors.subdomain = ERROR_COPY.subdomain;
   else if (availability === "taken") errors.subdomain = ERROR_COPY.subdomainTaken;
+  else if (availability === "reserved") errors.subdomain = ERROR_COPY.subdomainReserved;
   return errors;
 }
 

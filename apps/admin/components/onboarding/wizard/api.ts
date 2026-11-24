@@ -110,7 +110,7 @@ export type CreatedSchool = {
 export type SubdomainCheck = {
   subdomain: string;
   available: boolean;
-  reason: "invalid" | "taken" | null;
+  reason: "invalid" | "taken" | "reserved" | null;
   suggestions: string[];
 };
 

@@ -44,6 +44,7 @@ import {
   deriveSiteDomain,
   detectLocaleDefaults,
   emptyWizardData,
+  ERROR_COPY,
   type FieldErrors,
   hasUploadsInFlight,
   isPaidOffer,
@@ -390,7 +391,11 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
           if (!active) return;
           setSuggestions(result.suggestions ?? []);
           setAvailability(
-            result.available ? "ok" : result.reason === "invalid" ? "invalid" : "taken",
+            result.available
+              ? "ok"
+              : result.reason === "invalid" || result.reason === "reserved"
+                ? result.reason
+                : "taken",
           );
         })
         .catch(() => {
@@ -612,7 +617,13 @@ export function SetupWizard({ isNew, checkoutReturn, resume }: WizardProps) {
       if (error instanceof ApiError && error.reason === "subdomain_taken") {
         setCreating(false);
         setAvailability("taken");
-        setErrors({ subdomain: "That address is taken. Pick another." });
+        setErrors({ subdomain: ERROR_COPY.subdomainTaken });
+        return;
+      }
+      if (error instanceof ApiError && error.reason === "subdomain_reserved") {
+        setCreating(false);
+        setAvailability("reserved");
+        setErrors({ subdomain: ERROR_COPY.subdomainReserved });
         return;
       }
       if (!created) {

@@ -127,6 +127,7 @@ describe("subdomain rules", () => {
     expect(canSubmitSubdomain("ok", "inkwell")).toBe(true);
     expect(canSubmitSubdomain("checking", "inkwell")).toBe(false);
     expect(canSubmitSubdomain("taken", "inkwell")).toBe(false);
+    expect(canSubmitSubdomain("reserved", "inkwell")).toBe(false);
     expect(canSubmitSubdomain("ok", "no")).toBe(false);
   });
 });
@@ -162,6 +163,9 @@ describe("validation", () => {
     expect(
       validateSchool({ school: "A", subdomain: "abc" }, "taken").subdomain,
     ).toBeDefined();
+    expect(
+      validateSchool({ school: "A", subdomain: "abc" }, "reserved").subdomain,
+    ).toBe("This address isn't available. Pick another.");
     expect(validateSchool({ school: "A", subdomain: "abc" }, "ok")).toEqual({});
   });
 
