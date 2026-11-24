@@ -160,6 +160,8 @@ export function LearnerSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {/* Above the account menu, so the menu stays at the very bottom. */}
+        <CourseLitBadge className="group-data-[collapsible=icon]:hidden" />
         <SidebarMenu>
           <SidebarMenuItem>
             {user ? (
@@ -254,7 +256,6 @@ export function LearnerSidebar({
             )}
           </SidebarMenuItem>
         </SidebarMenu>
-        <CourseLitBadge className="group-data-[collapsible=icon]:hidden" />
       </SidebarFooter>
 
       <SidebarRail />
