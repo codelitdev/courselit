@@ -3,7 +3,10 @@ import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
 import { layoutToMarkdown } from "@frontlit/page-builder/schema";
 import { courseLitBlocksMarkdown, richTextMarkdown } from "./markdown";
 
-const block = (name: string, settings: Record<string, unknown> = {}): WidgetInstance => ({
+const block = (
+  name: string,
+  settings: Record<string, unknown> = {},
+): WidgetInstance => ({
   widgetId: name,
   name,
   deletable: true,
@@ -61,6 +64,19 @@ describe("courseLitBlocksMarkdown", () => {
                 amountMinor: 4900,
               },
             ],
+            community: {
+              id: "com_1",
+              plans: [
+                {
+                  id: "c1",
+                  name: "Members",
+                  type: "subscription",
+                  currency: "USD",
+                  amountMinor: 1000,
+                  billingInterval: "month",
+                },
+              ],
+            },
           },
         },
       }),
@@ -77,6 +93,9 @@ describe("courseLitBlocksMarkdown", () => {
     expect(markdown).toContain("## React in depth");
     expect(markdown).toContain("Hooks to server components.");
     expect(markdown).toMatch(/- \*\*Lifetime\*\*: \$49\.00/);
+    expect(markdown).toContain(
+      "### Also included with a community plan\n\n- **Members**: $10.00 / month",
+    );
     expect(markdown).toContain("## Curriculum");
     expect(markdown).toContain("### Basics\n\n- Why React");
     expect(markdown).toContain("- Bonus");

@@ -19,6 +19,7 @@ import {
   type PublicSettings,
   type PublicSitemap,
 } from "./courselit-public";
+import { communityPlansIncludingProduct } from "./community-plans";
 import { salesPageBlock } from "./sales-page-blocks";
 import { siteLogoUrl, siteTitle } from "./site-branding";
 
@@ -120,10 +121,18 @@ async function salesMarkdown(
 ): Promise<string | null> {
   const product = await getPublicProductDetail(schoolId, slug);
   if (product) {
-    const [page, plans] = await Promise.all([
+    const [page, plans, siteCommunity] = await Promise.all([
       getPageBySlug(schoolId, product.slug),
       getPublicProductPlans(schoolId, product.id),
+      getPublicCommunity(schoolId, "community"),
     ]);
+    // Like the page: community plans that unlock this product are offered too.
+    const communityPlans = siteCommunity
+      ? communityPlansIncludingProduct(
+          product,
+          await getPublicCommunityPlans(schoolId, siteCommunity.id),
+        )
+      : [];
     const layout = page?.layout.length
       ? page.layout.map((block) => salesPageBlock(block, "product"))
       : [
@@ -136,7 +145,13 @@ async function salesMarkdown(
         ...basePageData(settings),
         courseLitSalesData: {
           resourceType: "product",
-          product: { ...product, plans, community: null },
+          product: {
+            ...product,
+            plans,
+            community: communityPlans.length
+              ? { id: siteCommunity!.id, plans: communityPlans }
+              : null,
+          },
         },
       }),
     );

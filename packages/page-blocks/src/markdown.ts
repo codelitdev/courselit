@@ -125,7 +125,11 @@ export function courseLitBlocksMarkdown(
         `## ${title}`,
         product.kind === "download" ? "Digital download" : "Course",
         richTextMarkdown(description),
-        plansMarkdown([...product.plans, ...(product.community?.plans ?? [])]),
+        plansMarkdown(product.plans),
+        plansMarkdown(
+          product.community?.plans ?? [],
+          "### Also included with a community plan",
+        ),
       ];
     },
 
