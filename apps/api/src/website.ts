@@ -6,7 +6,7 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import type { MediaRef } from "@courselit/api-contract";
-import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SharedWidgetsRow, WebsiteWidgetRow } from "./db/schema/index.js";
 import { privacyPolicyDoc, termsOfServiceDoc } from "./legal-templates.js";
@@ -1775,7 +1775,7 @@ export async function getPublishedBlogPost(
 // Sitemap
 // ---------------------------------------------------------------------------
 
-export type PublicSitemapEntryDto = { slug: string; updatedAt: string };
+export type PublicSitemapEntryDto = { slug: string; title: string; updatedAt: string };
 
 /** What a school's storefront sitemap lists: published standalone pages,
  * public products and live communities (their sales pages), and published
@@ -1799,7 +1799,11 @@ export async function getPublicSitemap(
   );
   const [pages, products, communities, blogPosts] = await Promise.all([
     db
-      .select({ slug: schema.websitePages.slug, updatedAt: schema.websitePages.updatedAt })
+      .select({
+        slug: schema.websitePages.slug,
+        title: sql<string>`coalesce(nullif(${schema.websitePages.title}, ''), ${schema.websitePages.name})`,
+        updatedAt: schema.websitePages.updatedAt,
+      })
       .from(schema.websitePages)
       .where(
         and(
@@ -1811,7 +1815,11 @@ export async function getPublicSitemap(
         ),
       ),
     db
-      .select({ slug: schema.products.slug, updatedAt: schema.products.updatedAt })
+      .select({
+        slug: schema.products.slug,
+        title: schema.products.title,
+        updatedAt: schema.products.updatedAt,
+      })
       .from(schema.products)
       .leftJoin(
         schema.websitePages,
@@ -1826,7 +1834,11 @@ export async function getPublicSitemap(
         ),
       ),
     db
-      .select({ slug: schema.communities.slug, updatedAt: schema.communities.updatedAt })
+      .select({
+        slug: schema.communities.slug,
+        title: schema.communities.name,
+        updatedAt: schema.communities.updatedAt,
+      })
       .from(schema.communities)
       .leftJoin(
         schema.websitePages,
@@ -1841,15 +1853,24 @@ export async function getPublicSitemap(
         ),
       ),
     db
-      .select({ slug: schema.blogPosts.slug, updatedAt: schema.blogPosts.updatedAt })
+      .select({
+        slug: schema.blogPosts.slug,
+        title: sql<string>`coalesce(nullif(${schema.blogPosts.title}, ''), ${schema.blogPosts.slug})`,
+        updatedAt: schema.blogPosts.updatedAt,
+      })
       .from(schema.blogPosts)
       .where(
         and(eq(schema.blogPosts.schoolId, schoolId), isNotNull(schema.blogPosts.publishedAt)),
       )
       .orderBy(desc(schema.blogPosts.publishedAt)),
   ]);
-  const toEntry = (row: { slug: string; updatedAt: Date }): PublicSitemapEntryDto => ({
+  const toEntry = (row: {
+    slug: string;
+    title: string | null;
+    updatedAt: Date;
+  }): PublicSitemapEntryDto => ({
     slug: row.slug,
+    title: row.title?.trim() || row.slug,
     updatedAt: row.updatedAt.toISOString(),
   });
   return {

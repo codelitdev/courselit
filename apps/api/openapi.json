@@ -28814,12 +28814,16 @@
                           "slug": {
                             "type": "string"
                           },
+                          "title": {
+                            "type": "string"
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
                         },
                         "required": [
                           "slug",
+                          "title",
                           "updatedAt"
                         ]
                       }
@@ -28832,12 +28836,16 @@
                           "slug": {
                             "type": "string"
                           },
+                          "title": {
+                            "type": "string"
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
                         },
                         "required": [
                           "slug",
+                          "title",
                           "updatedAt"
                         ]
                       }
@@ -28850,12 +28858,16 @@
                           "slug": {
                             "type": "string"
                           },
+                          "title": {
+                            "type": "string"
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
                         },
                         "required": [
                           "slug",
+                          "title",
                           "updatedAt"
                         ]
                       }
@@ -28868,12 +28880,16 @@
                           "slug": {
                             "type": "string"
                           },
+                          "title": {
+                            "type": "string"
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
                         },
                         "required": [
                           "slug",
+                          "title",
                           "updatedAt"
                         ]
                       }

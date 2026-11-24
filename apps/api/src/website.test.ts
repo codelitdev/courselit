@@ -548,6 +548,8 @@ describe.serial("school website", () => {
       let listed = await sitemap();
       expect(slugs(listed.products)).toEqual(["seed-product"]);
       expect(slugs(listed.communities)).toEqual(["community"]);
+      expect(listed.products[0]).toMatchObject({ title: expect.any(String) });
+      expect((await sitemap()).pages[0]).toMatchObject({ slug: "", title: "Homepage" });
 
       await runtime.db
         .update(schema.products)

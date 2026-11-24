@@ -17,7 +17,7 @@
     "@courselit/lesson-content": "workspace:*",
     "@courselit/page-blocks": "workspace:*",
     "@frontlit/media-uploader": "0.1.0",
-    "@frontlit/page-builder": "0.1.0",
+    "@frontlit/page-builder": "0.2.0",
     "@frontlit/text-editor": "0.1.0",
     "@sendlit/email-blocks": "0.7.0",
     "@sendlit/email-editor": "0.3.1",
