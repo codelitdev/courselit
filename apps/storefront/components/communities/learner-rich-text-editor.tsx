@@ -13,6 +13,7 @@ import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
+import { communityEditorProfile } from "@/lib/community-text-profile";
 
 const COMMUNITY_TEXT_IMAGE_TYPES = [
   "image/jpeg",
@@ -64,6 +65,8 @@ export function LearnerRichTextEditor({
   const pendingPicker = useRef<((image: PickedImage | null) => void) | null>(null);
   const selectedMediaByUrl = useRef(new Map<string, string>());
   const adapters = useLearnerCommunityMediaUploader();
+  // Basic rich text only; see communityTextProfile.
+  const profile = communityEditorProfile(editorProps.initialContent);
 
   const filteredAdapters = {
     ...adapters,
@@ -123,7 +126,12 @@ export function LearnerRichTextEditor({
   return (
     <div className="space-y-2">
       <ImagePickerContextProvider pickImage={pickImage}>
-        <Editor {...editorProps} onChange={handleChange} onError={handleError} />
+        <Editor
+          {...editorProps}
+          profile={profile}
+          onChange={handleChange}
+          onError={handleError}
+        />
       </ImagePickerContextProvider>
       <ImageUploadDialog<LearnerCommunityMedia>
         {...filteredAdapters}
