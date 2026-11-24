@@ -28289,7 +28289,17 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "siteOrigin": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "hasPublishedOffers": {
+                      "type": "boolean"
+                    },
+                    "hideFromSearch": {
+                      "type": "boolean"
+                    },
+                    "blockAiTraining": {
                       "type": "boolean"
                     }
                   },
@@ -28304,7 +28314,10 @@
                     "ownerOnlyCodeInjection",
                     "courseLitBadgeUrl",
                     "canonicalHost",
-                    "hasPublishedOffers"
+                    "siteOrigin",
+                    "hasPublishedOffers",
+                    "hideFromSearch",
+                    "blockAiTraining"
                   ]
                 }
               }
@@ -28765,6 +28778,247 @@
           }
         },
         "operationId": "getPublicSitePage",
+        "security": []
+      }
+    },
+    "/v1/public/{schoolId}/site/sitemap": {
+      "get": {
+        "tags": [
+          "Public Website"
+        ],
+        "parameters": [
+          {
+            "name": "schoolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "slug",
+                          "title",
+                          "updatedAt"
+                        ]
+                      }
+                    },
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "slug",
+                          "title",
+                          "updatedAt"
+                        ]
+                      }
+                    },
+                    "communities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "slug",
+                          "title",
+                          "updatedAt"
+                        ]
+                      }
+                    },
+                    "blogPosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "slug",
+                          "title",
+                          "updatedAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "pages",
+                    "products",
+                    "communities",
+                    "blogPosts"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "unauthenticated",
+                        "credential_ambiguous",
+                        "tenant_required",
+                        "tenant_forbidden",
+                        "forbidden",
+                        "not_found",
+                        "conflict",
+                        "validation_failed",
+                        "rate_limited",
+                        "internal_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "string",
+                            "format": "null",
+                            "nullable": true
+                          }
+                        ],
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getPublicSiteSitemap",
         "security": []
       }
     },
@@ -66396,6 +66650,12 @@
                           "hideCourseLitBranding": {
                             "type": "boolean"
                           },
+                          "hideFromSearch": {
+                            "type": "boolean"
+                          },
+                          "blockAiTraining": {
+                            "type": "boolean"
+                          },
                           "learnerUploadLimitBytes": {
                             "type": "integer"
                           },
@@ -66483,6 +66743,8 @@
                           "locale",
                           "currency",
                           "hideCourseLitBranding",
+                          "hideFromSearch",
+                          "blockAiTraining",
                           "learnerUploadLimitBytes"
                         ]
                       }
@@ -66706,6 +66968,12 @@
                     "hideCourseLitBranding": {
                       "type": "boolean"
                     },
+                    "hideFromSearch": {
+                      "type": "boolean"
+                    },
+                    "blockAiTraining": {
+                      "type": "boolean"
+                    },
                     "learnerUploadLimitBytes": {
                       "type": "integer"
                     },
@@ -66796,6 +67064,8 @@
                     "locale",
                     "currency",
                     "hideCourseLitBranding",
+                    "hideFromSearch",
+                    "blockAiTraining",
                     "learnerUploadLimitBytes"
                   ]
                 }
@@ -79751,6 +80021,12 @@
                   "hideCourseLitBranding": {
                     "type": "boolean"
                   },
+                  "hideFromSearch": {
+                    "type": "boolean"
+                  },
+                  "blockAiTraining": {
+                    "type": "boolean"
+                  },
                   "learnerUploadLimitBytes": {
                     "type": "integer",
                     "minimum": 1048576,
@@ -79807,6 +80083,12 @@
                       "type": "string"
                     },
                     "hideCourseLitBranding": {
+                      "type": "boolean"
+                    },
+                    "hideFromSearch": {
+                      "type": "boolean"
+                    },
+                    "blockAiTraining": {
                       "type": "boolean"
                     },
                     "learnerUploadLimitBytes": {
@@ -79896,6 +80178,8 @@
                     "locale",
                     "currency",
                     "hideCourseLitBranding",
+                    "hideFromSearch",
+                    "blockAiTraining",
                     "learnerUploadLimitBytes"
                   ]
                 }

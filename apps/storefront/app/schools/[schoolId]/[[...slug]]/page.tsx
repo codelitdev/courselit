@@ -7,13 +7,17 @@ import {
   type PublicSystemRoute,
   publicSystemRouteForSlug,
 } from "@/components/public-site-page";
+import { JsonLd } from "@/components/json-ld";
 import {
   getPublicCommunity,
   getPublicProduct,
+  getPublicProductDetail,
+  getPublicProductPlans,
   getSettings,
 } from "@/lib/courselit-public";
 import { metadataForPublicPage } from "@/lib/public-page-metadata";
 import { siteLogoUrl as siteLogoUrlFor, siteTitle as siteTitleFor } from "@/lib/site-branding";
+import { homeJsonLd, productJsonLd } from "@/lib/structured-data";
 
 interface Props {
   params: Promise<{ schoolId: string; slug?: string[] }>;
@@ -103,30 +107,41 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
   const systemRoute: PublicSystemRoute | undefined = publicSystemRouteForSlug(pageSlug);
 
   if (systemRoute || !pageSlug) {
+    const settings = pageSlug ? null : await getSettings(schoolId);
     return (
-      <PublicSitePage
-        pageSlug={pageSlug}
-        allowEmpty={!pageSlug}
-        systemRoute={systemRoute}
-        schoolId={schoolId}
-      />
+      <>
+        {pageSlug ? null : <JsonLd data={homeJsonLd(settings)} />}
+        <PublicSitePage
+          pageSlug={pageSlug}
+          allowEmpty={!pageSlug}
+          systemRoute={systemRoute}
+          schoolId={schoolId}
+        />
+      </>
     );
   }
 
 
-  const product = await getPublicProduct(schoolId, pageSlug);
+  const product = await getPublicProductDetail(schoolId, pageSlug);
   if (product) {
+    const [settings, plans] = await Promise.all([
+      getSettings(schoolId),
+      getPublicProductPlans(schoolId, product.id),
+    ]);
     return (
-      <PublicSitePage
-        pageSlug={pageSlug}
-        salesPageSlug={product.slug}
-        allowEmpty
-        fallbackToHomepage
-        systemRoute="product"
-        systemContent={<PublicProductDetail productId={product.id} />}
-        salesResource={{ resourceType: "product", resourceId: product.id }}
-        schoolId={schoolId}
-      />
+      <>
+        <JsonLd data={productJsonLd(settings, product, plans)} />
+        <PublicSitePage
+          pageSlug={pageSlug}
+          salesPageSlug={product.slug}
+          allowEmpty
+          fallbackToHomepage
+          systemRoute="product"
+          systemContent={<PublicProductDetail productId={product.id} />}
+          salesResource={{ resourceType: "product", resourceId: product.id }}
+          schoolId={schoolId}
+        />
+      </>
     );
   }
 
