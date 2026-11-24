@@ -1,6 +1,6 @@
 ---
 title: Search engines and AI crawlers
-description: Control whether search engines and AI crawlers can visit your website, and see the robots.txt and sitemap your site publishes.
+description: Control whether search engines and AI crawlers can visit your website, and see the robots.txt, sitemap, llms.txt and Markdown pages your site publishes.
 nav_order: 85
 ---
 
@@ -45,6 +45,17 @@ Your site also describes itself to search engines and AI tools in a format they 
 - Each blog post describes its title, summary, author and dates.
 
 Your blog has an RSS feed at `/blog/rss.xml` with your 50 newest posts, so readers can follow it in a feed reader.
+
+## Pages for AI agents
+
+AI assistants and agents read Markdown more easily than web pages, so your site offers both:
+
+- `/llms.txt` is an index of your site for AI tools (see [llmstxt.org](https://llmstxt.org)). It links to every published page, course, download, community and blog post.
+- Every public page has a Markdown version. Add `.md` to its address, for example `/p/my-course.md` or `/index.md` for the homepage. A tool that asks for `text/markdown` gets it at the normal address too.
+
+A course's Markdown page includes its description, prices and curriculum, so an AI assistant can answer questions about it accurately. Learner-only pages such as the dashboard and checkout have no Markdown version.
+
+When your site is hidden from search engines, `/llms.txt` lists nothing.
 
 ## Who can change these settings
 

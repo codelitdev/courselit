@@ -801,7 +801,11 @@ export const updateSchoolCodeInjectionBodySchema = z
     (value) =>
       value.codeInjectionHead !== undefined || value.codeInjectionBody !== undefined,
   );
-const publicSitemapEntrySchema = z.object({ slug: z.string(), updatedAt: z.string() });
+const publicSitemapEntrySchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  updatedAt: z.string(),
+});
 /** What the storefront's sitemap.xml lists; the storefront builds the URLs. */
 export const publicSiteSitemapSchema = z.object({
   pages: z.array(publicSitemapEntrySchema),

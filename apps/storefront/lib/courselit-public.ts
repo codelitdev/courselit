@@ -89,6 +89,7 @@ export function getSettings(
 
 export interface PublicSitemapEntry {
   slug: string;
+  title: string;
   updatedAt: string;
 }
 
@@ -263,6 +264,15 @@ type PublicOfferListItem = {
   priceMinor: number | null;
   membersCount?: number;
 };
+
+/** The school's public catalog: up to 50 published public products. */
+export async function listPublicProducts(schoolId: string): Promise<PublicOfferListItem[]> {
+  const result = await getFromApi<{ items?: PublicOfferListItem[] }>(
+    schoolId,
+    "/products?limit=50",
+  );
+  return result?.items ?? [];
+}
 
 /** The school's published products and communities as homepage offers.
  * Courses and downloads first, then the community. Failures read as "none". */
