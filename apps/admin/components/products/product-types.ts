@@ -81,6 +81,8 @@ export type StorefrontPlan = {
   id: string;
   name: string;
   description: string;
+  /** Community plans: every published product, including later ones. */
+  includesAllProducts?: boolean;
   includedProducts: string[];
   providerProductId: string | null;
   type: "free" | "onetime" | "emi" | "subscription";

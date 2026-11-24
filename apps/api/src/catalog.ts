@@ -134,7 +134,6 @@ async function productToDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: discussionSpace?.publicId ?? null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),

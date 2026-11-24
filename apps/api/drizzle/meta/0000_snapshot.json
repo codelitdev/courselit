@@ -6641,13 +6641,6 @@
           "notNull": true,
           "default": false
         },
-        "included_with_community": {
-          "name": "included_with_community",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "discussion_space_id": {
           "name": "discussion_space_id",
           "type": "uuid",
@@ -10895,6 +10888,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'"
+        },
+        "includes_all_products": {
+          "name": "includes_all_products",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "provider_product_id": {
           "name": "provider_product_id",

@@ -67,11 +67,23 @@ export async function findLearnerMembership(
   return rows[0] ?? null;
 }
 
+export type MembershipWriteOptions = {
+  /**
+   * Skip the mailing events (`queueMembershipEvents`). Set for rows the
+   * system adds or revokes on its own, such as a newly published product
+   * reaching all-products plan members or a plan edit reconciling its
+   * members, so only a learner's own action (joining, approval, buying)
+   * starts sequences.
+   */
+  silent?: boolean;
+};
+
 /** Create or update one relationship, keeping checkout retries idempotent. */
 export async function upsertLearnerMembership(
   db: AppDb,
   input: MembershipInput,
   clock: Clock,
+  options: MembershipWriteOptions = {},
 ): Promise<LearnerMembershipRow> {
   const included = input.isIncludedInPlan ?? false;
   const existing = await findLearnerMembership(db, {
@@ -111,6 +123,7 @@ export async function upsertLearnerMembership(
       .set(values)
       .where(eq(schema.learnerMemberships.id, existing.id));
     const updated = { ...existing, ...values };
+    if (options.silent) return updated;
     await queueMembershipEvents(db, {
       membership: updated,
       previousStatus: existing.status,
@@ -131,6 +144,7 @@ export async function upsertLearnerMembership(
     createdAt: now,
   } satisfies typeof schema.learnerMemberships.$inferInsert;
   await db.insert(schema.learnerMemberships).values(row);
+  if (options.silent) return row;
   await queueMembershipEvents(db, {
     membership: row,
     previousStatus: null,
@@ -210,7 +224,7 @@ export async function revokeLearnerMembership(
   membershipId: string,
   status: Extract<LearnerMembershipStatus, "expired" | "payment_failed" | "rejected">,
   clock: Clock,
-  options: {
+  options: MembershipWriteOptions & {
     cancelSubscription?: boolean;
     paymentProvider?: PaymentProvider | null;
   } = {},
@@ -247,6 +261,7 @@ export async function revokeLearnerMembership(
     .update(schema.learnerMemberships)
     .set({ status, updatedAt: now })
     .where(eq(schema.learnerMemberships.parentMembershipId, membershipId));
+  if (options.silent) return;
   for (const row of [membership, ...children]) {
     await queueMembershipEvents(db, {
       membership: row,

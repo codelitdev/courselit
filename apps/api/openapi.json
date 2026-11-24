@@ -23286,9 +23286,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -23396,7 +23393,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -24065,6 +24061,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -24158,6 +24157,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -25237,9 +25237,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -25279,7 +25276,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -25633,9 +25629,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -25664,7 +25657,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -26009,9 +26001,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -26048,7 +26037,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -27853,6 +27841,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -28029,6 +28020,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -38357,9 +38349,6 @@
                   },
                   "discussions": {
                     "type": "boolean"
-                  },
-                  "includedWithCommunity": {
-                    "type": "boolean"
                   }
                 }
               }
@@ -38471,9 +38460,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -38502,7 +38488,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -39134,9 +39119,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -39303,7 +39285,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -40199,6 +40180,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -40290,6 +40274,7 @@
                           "productId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -40535,6 +40520,10 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "default": false,
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -40635,6 +40624,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -40726,6 +40718,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -41093,6 +41086,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -41184,6 +41180,7 @@
                           "productId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -41366,6 +41363,9 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -41463,6 +41463,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -41554,6 +41557,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -41918,6 +41922,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -42009,6 +42016,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -42317,6 +42325,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -42408,6 +42419,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -42650,6 +42662,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -42743,6 +42758,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -42989,6 +43005,10 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "default": false,
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -43086,6 +43106,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -43179,6 +43202,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -43531,6 +43555,9 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -43625,6 +43652,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -43718,6 +43748,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -44080,6 +44111,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -44173,6 +44207,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -44479,6 +44514,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -44572,6 +44610,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -44962,9 +45001,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -45124,7 +45160,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -48474,9 +48509,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -48636,7 +48668,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",

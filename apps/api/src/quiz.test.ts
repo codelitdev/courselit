@@ -476,7 +476,6 @@ describe.serial("quiz answers never reach learners (L1)", () => {
       leadMagnet: false,
       certificate: false,
       discussions: false,
-      includedWithCommunity: false,
       discussionSpaceId: null,
       publishedAt: null,
       createdAt: "2026-03-01T00:00:00.000Z",

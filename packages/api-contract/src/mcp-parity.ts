@@ -1102,6 +1102,8 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "grantLearnerMembership",
   "archivePlan",
   "archiveCommunityPlan",
+  // Changing a plan's included products grants or revokes existing members' access.
+  "updateCommunityPlan",
   "publishSchoolWebsitePage",
   "publishSchoolWebsiteBlog",
   "unpublishSchoolWebsiteBlog",

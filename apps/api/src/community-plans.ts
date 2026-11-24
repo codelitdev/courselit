@@ -9,6 +9,7 @@ import {
 import type { MediaRef } from "@courselit/api-contract";
 import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { queuePlanIncludedProductsSync } from "./plan-included-products.js";
 import { productFeaturedImageFor } from "./products.js";
 import {
   amountMinorForPlan,
@@ -27,6 +28,7 @@ export type CommunityPlanDto = {
   communityId: string;
   name: string;
   description: string;
+  includesAllProducts: boolean;
   includedProducts: string[];
   providerProductId: string | null;
   type: "free" | "onetime" | "emi" | "subscription";
@@ -104,6 +106,7 @@ export function communityPlanToDto(
     communityId: communityPublicId,
     name: row.name,
     description: row.description,
+    includesAllProducts: row.includesAllProducts,
     includedProducts: row.includedProducts,
     providerProductId: row.providerProductId,
     type: sourceTypeForKind(row.kind),
@@ -146,6 +149,33 @@ async function loadSchool(db: AppDb, schoolId: string) {
     .where(eq(schema.schools.id, schoolId))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * What a plan stores for its included products. An all-products plan keeps no
+ * list: it covers every published product, so a list would only go stale.
+ */
+export function normalizeIncludedProducts(input: {
+  includesAllProducts?: boolean;
+  includedProducts?: string[];
+}): { includesAllProducts: boolean; includedProducts: string[] } {
+  if (input.includesAllProducts) return { includesAllProducts: true, includedProducts: [] };
+  return {
+    includesAllProducts: false,
+    includedProducts: [...new Set(input.includedProducts ?? [])],
+  };
+}
+
+/** Whether an edit changes which products the plan includes. */
+export function includedProductsChanged(
+  before: { includesAllProducts: boolean; includedProducts: string[] },
+  after: { includesAllProducts: boolean; includedProducts: string[] },
+): boolean {
+  if (before.includesAllProducts !== after.includesAllProducts) return true;
+  if (after.includesAllProducts) return false;
+  const a = new Set(before.includedProducts);
+  const b = new Set(after.includedProducts);
+  return a.size !== b.size || [...a].some((id) => !b.has(id));
 }
 
 async function validateIncludedProducts(
@@ -224,15 +254,17 @@ export async function listPublicCommunityPlans(
       ),
     )
     .orderBy(asc(schema.storefrontPlans.createdAt));
+  // An all-products plan lists no products: it has `includesAllProducts`.
   const summaries = await publishedIncludedProducts(
     db,
     school.schoolId,
-    rows.flatMap((row) => row.includedProducts),
+    rows.flatMap((row) => (row.includesAllProducts ? [] : row.includedProducts)),
   );
   return {
     ok: true,
     value: rows.map((row) => {
-      const includedProductSummaries = [...new Set(row.includedProducts)]
+      const listed = row.includesAllProducts ? [] : row.includedProducts;
+      const includedProductSummaries = [...new Set(listed)]
         .map((id) => summaries.get(id))
         .filter((product): product is PublicIncludedProductDto => Boolean(product));
       return {
@@ -297,8 +329,9 @@ export async function createCommunityPlan(
     allowIncludedProducts: true,
   });
   if (!checked.ok) return checked;
+  const included = normalizeIncludedProducts(input);
   if (
-    !(await validateIncludedProducts(db, context.tenantId!, input.includedProducts))
+    !(await validateIncludedProducts(db, context.tenantId!, included.includedProducts))
   ) {
     return invalidPlan("invalid_included_products");
   }
@@ -323,7 +356,7 @@ export async function createCommunityPlan(
         entityId: community.publicId,
         name: input.name.trim(),
         description: input.description ?? "",
-        includedProducts: input.includedProducts ?? [],
+        ...included,
         providerProductId: input.providerProductId?.trim() || null,
         kind: checked.value.kind,
         oneTimeAmount: checked.value.oneTimeAmount,
@@ -421,6 +454,7 @@ export async function updateCommunityPlan(
       name: input.name?.trim() ?? existing.name,
       description: input.description ?? existing.description,
       includedProducts: input.includedProducts ?? existing.includedProducts,
+      includesAllProducts: input.includesAllProducts ?? existing.includesAllProducts,
       providerProductId: nextProviderProductId,
       type: nextType,
       kind: input.kind ?? (input.type ? kindForSourceType(input.type) : existing.kind),
@@ -453,12 +487,17 @@ export async function updateCommunityPlan(
     { currency, allowIncludedProducts: true },
   );
   if (!checked.ok) return checked;
+  const included = normalizeIncludedProducts({
+    includesAllProducts: input.includesAllProducts ?? existing.includesAllProducts,
+    // Switching back to a list starts from the list sent, or an empty one.
+    includedProducts:
+      input.includedProducts ??
+      (input.includesAllProducts === false && existing.includesAllProducts
+        ? []
+        : existing.includedProducts),
+  });
   if (
-    !(await validateIncludedProducts(
-      db,
-      context.tenantId!,
-      input.includedProducts ?? existing.includedProducts,
-    ))
+    !(await validateIncludedProducts(db, context.tenantId!, included.includedProducts))
   ) {
     return invalidPlan("invalid_included_products");
   }
@@ -466,7 +505,7 @@ export async function updateCommunityPlan(
   const next = {
     name: input.name?.trim() ?? existing.name,
     description: input.description ?? existing.description,
-    includedProducts: input.includedProducts ?? existing.includedProducts,
+    ...included,
     providerProductId: nextProviderProductId?.trim() || null,
     kind: checked.value.kind,
     oneTimeAmount: checked.value.oneTimeAmount,
@@ -495,6 +534,16 @@ export async function updateCommunityPlan(
         requestId: context.requestId,
         createdAt: now,
       });
+      // Members already on the plan get (or lose) the products in the
+      // background, so the edit never waits on the whole membership.
+      if (includedProductsChanged(existing, included)) {
+        await queuePlanIncludedProductsSync(
+          tx as unknown as AppDb,
+          context.tenantId!,
+          { planId: existing.publicId },
+          clock,
+        );
+      }
     });
   } catch (error) {
     const errorText = `${error} ${(error as any)?.cause?.message ?? ""} ${(error as any)?.cause?.constraint ?? ""} ${(error as any)?.constraint ?? ""}`;

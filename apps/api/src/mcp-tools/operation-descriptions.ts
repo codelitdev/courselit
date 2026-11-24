@@ -108,10 +108,12 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   setDefaultPlan: "Makes a plan the one shown first on a product's checkout.",
   archivePlan:
     "Stops selling a product plan. Existing customers keep access. Confirm with the user first.",
-  listCommunityPlans: "Lists a community's pricing plans, including archived ones.",
+  listCommunityPlans:
+    "Lists a community's pricing plans, including archived ones. A plan with includesAllProducts true gives members every published product, including ones published later; otherwise includedProducts lists the product IDs it gives.",
   createCommunityPlan:
-    "Creates a pricing plan for a community: free, one-time or subscription.",
-  updateCommunityPlan: "Changes a community plan's name, price or terms.",
+    "Creates a pricing plan for a community: free, one-time or subscription. Set includesAllProducts to give members every published product, now and later, or pass the product IDs in includedProducts to give only those (empty gives none). includedProducts is ignored when includesAllProducts is true.",
+  updateCommunityPlan:
+    "Changes a community plan's name, price, terms or included products (includesAllProducts, or the includedProducts list). Changing the included products grants or removes those products for the plan's current members. Confirm with the user first.",
   setDefaultCommunityPlan:
     "Makes a plan the one shown first on a community's checkout.",
   archiveCommunityPlan:

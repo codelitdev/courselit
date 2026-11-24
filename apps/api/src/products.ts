@@ -10,6 +10,7 @@ import {
 import type { MediaRef } from "@courselit/api-contract";
 import {
   and,
+  arrayContains,
   asc,
   count,
   desc,
@@ -34,10 +35,8 @@ import { removeSchoolTeamMember } from "./team.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { resourceSlugTaken } from "./resource-slugs.js";
 import { amountMinorForPlan, validatePlan } from "./storefront.js";
-import {
-  enableProductDiscussionSpace,
-  syncIncludedProductMemberships,
-} from "./spaces.js";
+import { enableProductDiscussionSpace } from "./spaces.js";
+import { queuePlanIncludedProductsSync } from "./plan-included-products.js";
 import type { AppDb } from "./types.js";
 import { ensureSalesPage } from "./website.js";
 
@@ -54,7 +53,6 @@ export type ProductDto = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
-  includedWithCommunity: boolean;
   discussionSpaceId: string | null;
   publishedAt: string | null;
   createdAt: string;
@@ -119,7 +117,6 @@ async function toDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: row.discussionSpaceId
       ? ((
           await db
@@ -453,7 +450,6 @@ export async function createProduct(
     leadMagnet: input.leadMagnet ?? false,
     certificate: input.certificate ?? false,
     discussions: false,
-    includedWithCommunity: false,
     discussionSpaceId: null,
     publishedAt: null,
     createdBy: ctx.principalId,
@@ -567,6 +563,30 @@ export async function createProduct(
   return { ok: true, value: await toDto(db, row, publicSchoolId, null) };
 }
 
+/** Whether an active community plan includes the product (all products, or listed). */
+async function includedInActiveCommunityPlan(
+  db: AppDb,
+  schoolId: string,
+  productPublicId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: schema.storefrontPlans.id })
+    .from(schema.storefrontPlans)
+    .where(
+      and(
+        eq(schema.storefrontPlans.schoolId, schoolId),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.status, "active"),
+        or(
+          eq(schema.storefrontPlans.includesAllProducts, true),
+          arrayContains(schema.storefrontPlans.includedProducts, [productPublicId]),
+        ),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
 export async function updateProduct(
   db: AppDb,
   ctx: Ctx,
@@ -582,7 +602,6 @@ export async function updateProduct(
     leadMagnet?: boolean;
     certificate?: boolean;
     discussions?: boolean;
-    includedWithCommunity?: boolean;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: ProductDto } | { ok: false; error: PlatformError }> {
@@ -647,8 +666,11 @@ export async function updateProduct(
           ),
         )
         .limit(1);
-      const included = input.includedWithCommunity ?? row.includedWithCommunity;
-      if (activePlans.length === 0 && !included) {
+      // A product sold only through a community plan needs no plan of its own.
+      const included =
+        activePlans.length > 0 ||
+        (await includedInActiveCommunityPlan(tx as AppDb, ctx.tenantId!, row.publicId));
+      if (!included) {
         return {
           ok: false as const,
           error: createPlatformError("validation_failed", {
@@ -769,7 +791,6 @@ export async function updateProduct(
       leadMagnet,
       certificate,
       discussions: input.discussions ?? row.discussions,
-      includedWithCommunity: input.includedWithCommunity ?? row.includedWithCommunity,
       ...(input.featuredImage !== undefined ? { featuredImage } : {}),
       // Kept when going back to draft: it records that the product was live once.
       publishedAt: status === "published" ? (row.publishedAt ?? now) : row.publishedAt,
@@ -794,8 +815,14 @@ export async function updateProduct(
       .update(schema.products)
       .set({ ...next, discussionSpaceId })
       .where(eq(schema.products.id, row.id));
-    if (input.includedWithCommunity !== undefined || status === "published") {
-      await syncIncludedProductMemberships(tx as AppDb, ctx.tenantId!, clock);
+    if (status === "published" && row.status !== "published") {
+      // Members of all-products community plans get it in the background.
+      await queuePlanIncludedProductsSync(
+        tx as AppDb,
+        ctx.tenantId!,
+        { productId: row.publicId },
+        clock,
+      );
     }
     if (input.slug !== undefined || input.title !== undefined) {
       const updated = { ...row, ...next };

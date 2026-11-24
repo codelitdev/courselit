@@ -18,6 +18,7 @@ import {
   upsertLearnerMembership,
 } from "./learner-memberships.js";
 import { createSchoolAdminNotifications } from "./notifications.js";
+import { grantPlanIncludedProduct, planIncludedProductIds } from "./plan-included-products.js";
 import { notifyCheckoutRefused, notifyPaymentSucceeded } from "./purchase-notifications.js";
 import {
   getPaymentProvider,
@@ -270,19 +271,6 @@ async function loadCheckout(
   return rows[0] ?? null;
 }
 
-async function includedProducts(db: AppDb, schoolId: string, publicIds: string[]) {
-  if (publicIds.length === 0) return [];
-  return db
-    .select()
-    .from(schema.products)
-    .where(
-      and(
-        eq(schema.products.schoolId, schoolId),
-        inArray(schema.products.publicId, publicIds),
-      ),
-    );
-}
-
 export async function activateCommunityPlan(
   tx: AppDb,
   context: CommunityCheckoutContext,
@@ -367,32 +355,30 @@ export async function activateCommunityPlan(
 }
 
 /**
- * Gives an active community member the products bundled into their plan. Runs
- * whenever a membership becomes active: on joining, and when staff approve a
- * request, so approval-only communities hand out the bundle too.
+ * Gives an active community member the products bundled into their plan: every
+ * published product for an all-products plan, or the plan's list. Runs
+ * whenever a membership becomes active: on joining (or rejoining, which reuses
+ * the community membership and so reactivates its included rows), and when
+ * staff approve a request, so approval-only communities hand out the bundle
+ * too. These are the learner's own actions, so mailing events are queued.
  */
 export async function grantIncludedProducts(
   tx: AppDb,
   member: { schoolId: string; schoolAccountId: string },
-  plan: { publicId: string; includedProducts: string[] },
+  plan: { publicId: string; includesAllProducts: boolean; includedProducts: string[] },
   parent: { id: string; sessionId: string | null },
   clock: Clock,
 ) {
-  if (plan.includedProducts.length === 0) return;
-  const products = await includedProducts(tx, member.schoolId, plan.includedProducts);
-  for (const product of products) {
-    await upsertLearnerMembership(
+  const productIds = await planIncludedProductIds(tx, member.schoolId, plan);
+  for (const productPublicId of productIds) {
+    await grantPlanIncludedProduct(
       tx,
       {
         schoolId: member.schoolId,
         schoolAccountId: member.schoolAccountId,
-        entityType: "product",
-        entityId: product.publicId,
-        paymentPlanId: plan.publicId,
-        status: "active",
-        sessionId: parent.sessionId,
-        isIncludedInPlan: true,
-        parentMembershipId: parent.id,
+        productPublicId,
+        planPublicId: plan.publicId,
+        parent,
       },
       clock,
     );
@@ -992,7 +978,8 @@ async function revokeIncludedProductAccess(
   status: "expired" | "payment_failed",
   options?: { cancelSubscription?: boolean; paymentProvider?: PaymentProvider | null },
 ) {
-  if (plan.includedProducts.length === 0) return;
+  // Queried by plan, not by the plan's list, so all-products plans (whose list
+  // is empty) and products removed from the list since are revoked too.
   const memberships = await tx
     .select({ id: schema.learnerMemberships.id })
     .from(schema.learnerMemberships)

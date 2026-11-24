@@ -32,7 +32,7 @@ Paid plans are only available once a payment provider is connected. Until then, 
    | One-time Amount | For **One time**. Must be above zero. |
    | Subscription Type and Monthly Amount or Yearly Amount | For **Subscription**. Choose **Monthly** or **Yearly**, then the amount. |
    | Monthly Payments | For **EMI / installments**. Enter the number of payments (2 to 60) and the amount of each. The dialog shows the **Total**. |
-   | Included Products | Optional. Courses and downloads that members get with this plan. See [Grant access to additional products](/docs/communities/included-products). |
+   | Included Products | **All products**, every published product including ones you publish later, or **Selected products**, the courses and downloads you choose. See [Grant access to additional products](/docs/communities/included-products). |
 
 3. Click **Save**.
 

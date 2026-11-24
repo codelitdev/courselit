@@ -82,10 +82,13 @@ type Product = CourseViewerProduct & {
   certificate: boolean;
   featuredImage: MediaRef | null;
   plans: Plan[];
-  includedWithCommunity?: boolean;
 };
 
-type CommunityPlanSummary = { name: string; includedProducts?: string[] };
+type CommunityPlanSummary = {
+  name: string;
+  includesAllProducts?: boolean;
+  includedProducts?: string[];
+};
 
 /** Tells a visitor who doesn't have the course that a community plan also
  * unlocks it, with the way in. */
@@ -109,8 +112,8 @@ function CommunityAccessNote({ product }: { product: Product }) {
       setNote(
         communityAccessNote(
           community.name,
-          product,
-          communityPlansIncludingProduct(product, items),
+          communityPlansIncludingProduct(product.id, items),
+          items,
         ),
       );
     })().catch(() => {

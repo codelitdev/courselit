@@ -90,8 +90,6 @@ export const productSchema = z.object({
   leadMagnet: z.boolean(),
   certificate: z.boolean(),
   discussions: z.boolean(),
-  /** Status a new lesson gets when it is created without one. */
-  includedWithCommunity: z.boolean(),
   discussionSpaceId: z.string().nullable(),
   /**
    * When the product first went live. Kept when it goes back to draft, so
@@ -196,7 +194,6 @@ export const updateProductBodySchema = z.object({
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
-  includedWithCommunity: z.boolean().optional(),
 });
 
 export const productCertificateTemplateSchema = z.object({
@@ -226,6 +223,13 @@ export const storefrontPlanSchema = z.object({
   productId: z.string(),
   name: z.string(),
   description: z.string(),
+  /**
+   * Community plans only. When true the plan includes every published product
+   * of the school, including ones published later, and `includedProducts` is
+   * empty. Always false for product plans.
+   */
+  includesAllProducts: z.boolean(),
+  /** Community plans only: the products the plan includes when it doesn't include all. */
   includedProducts: z.array(z.string()),
   providerProductId: z.string().nullable(),
   // `type` and the amount fields mirror CourseLit's production PaymentPlan
@@ -369,6 +373,9 @@ const storefrontPlanInputFields = {
   // Retained for the shared plan shape; product-owned plans reject non-empty
   // values because included products belong to community plans in main.
   includedProducts: z.array(z.string()).default([]),
+  // Community plans only: include every published product, now and later.
+  // When true, `includedProducts` is ignored and stored empty.
+  includesAllProducts: z.boolean().default(false),
   // `type` and the amount fields preserve the production payment-plan model;
   // `kind`/minor-unit fields are the API's derived checkout representation.
   kind: z.enum(["free", "one_time", "subscription", "installment"]).optional(),
@@ -398,6 +405,7 @@ export const updateStorefrontPlanBodySchema = z
     name: z.string().trim().min(1).max(200).optional(),
     description: z.string().max(2_000).optional(),
     includedProducts: z.array(z.string()).optional(),
+    includesAllProducts: z.boolean().optional(),
     kind: z.enum(["free", "one_time", "subscription", "installment"]).optional(),
     type: z.enum(["free", "onetime", "emi", "subscription"]).optional(),
     oneTimeAmount: z.number().nonnegative().nullable().optional(),

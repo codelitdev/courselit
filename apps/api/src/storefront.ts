@@ -28,6 +28,7 @@ export type StorefrontPlanDto = {
   productId: string;
   name: string;
   description: string;
+  includesAllProducts: boolean;
   includedProducts: string[];
   providerProductId: string | null;
   type: SourcePlanType;
@@ -51,6 +52,8 @@ export type PlanInput = {
   name: string;
   description?: string;
   includedProducts?: string[];
+  /** Community plans only: every published product, now and later. */
+  includesAllProducts?: boolean;
   type?: SourcePlanType;
   kind?: TargetPlanKind;
   oneTimeAmount?: number | null;
@@ -214,6 +217,7 @@ function planToDto(
     productId: publicProductId,
     name: row.name,
     description: row.description,
+    includesAllProducts: row.includesAllProducts,
     includedProducts: row.includedProducts,
     providerProductId: row.providerProductId,
     type: sourceType,
@@ -407,7 +411,10 @@ export function validatePlan(
   if (input.description !== undefined && input.description.length > 2_000) {
     return invalidPlan("invalid_plan_description");
   }
-  if (!options.allowIncludedProducts && input.includedProducts?.length) {
+  if (
+    !options.allowIncludedProducts &&
+    (input.includedProducts?.length || input.includesAllProducts)
+  ) {
     return invalidPlan("included_products_not_allowed");
   }
   if (
@@ -598,6 +605,7 @@ export async function createPlan(
         name: input.name.trim(),
         description: input.description ?? "",
         includedProducts: input.includedProducts ?? [],
+        includesAllProducts: false,
         kind: checked.value.kind,
         oneTimeAmount: checked.value.oneTimeAmount,
         emiAmount: checked.value.emiAmount,
@@ -655,6 +663,7 @@ export async function updatePlan(
     name?: string;
     description?: string;
     includedProducts?: string[];
+    includesAllProducts?: boolean;
     type?: SourcePlanType;
     kind?: TargetPlanKind;
     oneTimeAmount?: number | null;
@@ -718,6 +727,7 @@ export async function updatePlan(
       name: input.name?.trim() ?? row.plan.name,
       description: input.description ?? row.plan.description,
       includedProducts: input.includedProducts ?? row.plan.includedProducts,
+      includesAllProducts: input.includesAllProducts ?? row.plan.includesAllProducts,
       type: nextType,
       kind: nextKind,
       oneTimeAmount:

@@ -78,6 +78,8 @@ type Plan = {
   billingInterval: "month" | "year" | null;
   installmentCount: number | null;
   isDefault?: boolean;
+  /** Community plans: every published product comes with the plan. */
+  includesAllProducts?: boolean;
   includedProductSummaries?: IncludedProduct[];
 };
 
@@ -220,8 +222,24 @@ function CheckoutStatusView({
   );
 }
 
-function IncludedProducts({ products }: { products?: IncludedProduct[] }) {
+function IncludedProducts({
+  products,
+  all,
+}: {
+  products?: IncludedProduct[];
+  all?: boolean;
+}) {
   const theme = useSchoolThemeStyle();
+  if (all) {
+    return (
+      <span className="mt-2 flex items-center gap-2">
+        <Package aria-hidden className="size-4 text-muted-foreground" />
+        <Text2 theme={theme} component="span">
+          Every product included
+        </Text2>
+      </span>
+    );
+  }
   if (!products?.length) return null;
   return (
     <span className="mt-2 flex flex-col gap-2">
@@ -692,7 +710,10 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
                       <Text2 theme={theme} component="span" className="font-semibold">
                         {formatPlanPrice(plan)}
                       </Text2>
-                      <IncludedProducts products={plan.includedProductSummaries} />
+                      <IncludedProducts
+                        products={plan.includedProductSummaries}
+                        all={plan.includesAllProducts}
+                      />
                     </LearnerOptionLabel>
                   </div>
                 );

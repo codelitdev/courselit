@@ -44,7 +44,11 @@ export function buyOptionCopy(
     return {
       price: free ? "Free" : price,
       unit: unitFor(plan),
-      detail: plan.description || "Comes with the community",
+      detail:
+        plan.description ||
+        (plan.includesAllProducts
+          ? "Comes with the community and every product"
+          : "Comes with the community"),
       cta: "Join community",
       finePrint: free ? "Free to join" : `${paymentTerms(plan, price)} · Secure checkout`,
     };

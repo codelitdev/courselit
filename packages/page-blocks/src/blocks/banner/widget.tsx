@@ -52,7 +52,6 @@ function resourceForBanner(
     membersCount: null,
     featuredImage: data.product.featuredImage,
     plans: data.product.plans,
-    includedWithCommunity: data.product.includedWithCommunity,
     community: data.product.community,
   };
 }

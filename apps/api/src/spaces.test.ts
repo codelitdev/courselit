@@ -109,21 +109,23 @@ describe.serial("school spaces and included products", () => {
       details: { reason: "payment_plan_required" },
     });
 
+    // A product a community plan includes needs no plan of its own.
+    await runtime.db
+      .update(schema.storefrontPlans)
+      .set({ includesAllProducts: true })
+      .where(eq(schema.storefrontPlans.publicId, "pln_test_community"));
     const published = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
       body: {
-        includedWithCommunity: true,
         discussions: true,
         status: "published",
       },
     });
     expect(published.status).toBe(200);
-    expect(published.body).toMatchObject({
-      includedWithCommunity: true,
-      status: "published",
-    });
+    expect(published.body).toMatchObject({ status: "published" });
+    expect(published.body).not.toHaveProperty("includedWithCommunity");
 
     const productPlan = await dispatch(runtime, {
       method: "POST",
@@ -204,7 +206,12 @@ describe.serial("school spaces and included products", () => {
     const [joinedMembership] = await runtime.db
       .select()
       .from(schema.learnerMemberships)
-      .where(eq(schema.learnerMemberships.schoolAccountId, account[0]!.id));
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolAccountId, account[0]!.id),
+          eq(schema.learnerMemberships.entityType, "community"),
+        ),
+      );
     expect(joinedMembership).toMatchObject({
       entityType: "community",
       entityId: community.publicId,
@@ -212,21 +219,21 @@ describe.serial("school spaces and included products", () => {
       status: "active",
       role: "post",
     });
-    await runtime.db.insert(schema.learnerMemberships).values({
-      id: "44444444-4444-4444-8444-444444444444",
-      publicId: "lrm_test_included",
-      schoolId: world.schoolA.id,
-      schoolAccountId: account[0]!.id,
-      entityType: "product",
-      entityId: productId,
-      paymentPlanId: "complan_fake",
+    // The all-products plan gave the joiner the published product.
+    const [includedRow] = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(
+        and(
+          eq(schema.learnerMemberships.schoolAccountId, account[0]!.id),
+          eq(schema.learnerMemberships.entityId, productId),
+        ),
+      );
+    expect(includedRow).toMatchObject({
+      paymentPlanId: "pln_test_community",
       status: "active",
-      role: null,
       isIncludedInPlan: true,
       parentMembershipId: joinedMembership!.id,
-      joiningReason: "",
-      createdAt: clock.now(),
-      updatedAt: clock.now(),
     });
 
     const learnerProduct = await dispatch(runtime, {

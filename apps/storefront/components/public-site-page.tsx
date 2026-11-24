@@ -108,7 +108,8 @@ export async function PublicSitePage({
         : [];
   const siteCommunity =
     salesCommunity ??
-    (salesProduct?.includedWithCommunity
+    // A product page checks whether a community plan also includes it.
+    (salesProduct
       ? await getPublicCommunity(schoolId, "community")
       : pageSlug && systemRoute !== "products" && systemRoute !== "blog"
         ? await getPublicCommunity(schoolId, "community")
@@ -116,11 +117,11 @@ export async function PublicSitePage({
   const siteCommunityPlans = siteCommunity
     ? await getPublicCommunityPlans(schoolId, siteCommunity.id)
     : [];
-  // Community plans that unlock this product: every plan when the product
-  // comes with the community, else the plans that list it.
+  // Community plans that unlock this product: the plans that include every
+  // product, and the plans that list it.
   const productCommunityPlans =
     salesProduct && siteCommunity
-      ? communityPlansIncludingProduct(salesProduct, siteCommunityPlans)
+      ? communityPlansIncludingProduct(salesProduct.id, siteCommunityPlans)
       : [];
 
   const pageData: PageData = {
@@ -139,7 +140,6 @@ export async function PublicSitePage({
             product: {
               ...salesProduct,
               plans: salesPlans,
-              includedWithCommunity: salesProduct.includedWithCommunity,
               community: productCommunityPlans.length
                 ? { id: siteCommunity!.id, plans: productCommunityPlans }
                 : null,
