@@ -54,7 +54,6 @@ import {
   deriveSiteDomain,
   detectLocaleDefaults,
   emptyWizardData,
-  ERROR_COPY,
   type FieldErrors,
   hasUploadsInFlight,
   isPaidOffer,
@@ -412,13 +411,7 @@ export function SetupWizard({
           if (!active) return;
           setSuggestions(result.suggestions ?? []);
           setAvailability(
-            result.available
-              ? "ok"
-              : result.reason === "invalid" ||
-                  result.reason === "reserved" ||
-                  result.reason === "unavailable"
-                ? result.reason
-                : "taken",
+            result.available ? "ok" : result.reason === "invalid" ? "invalid" : "taken",
           );
         })
         .catch(() => {
@@ -641,19 +634,7 @@ export function SetupWizard({
       if (error instanceof ApiError && error.reason === "subdomain_taken") {
         setCreating(false);
         setAvailability("taken");
-        setErrors({ subdomain: ERROR_COPY.subdomainTaken });
-        return;
-      }
-      if (error instanceof ApiError && error.reason === "subdomain_reserved") {
-        setCreating(false);
-        setAvailability("reserved");
-        setErrors({ subdomain: ERROR_COPY.subdomainReserved });
-        return;
-      }
-      if (error instanceof ApiError && error.reason === "legacy_check_unavailable") {
-        setCreating(false);
-        setAvailability("unavailable");
-        setErrors({ subdomain: ERROR_COPY.subdomainUnchecked });
+        setErrors({ subdomain: "That address is taken. Pick another." });
         return;
       }
       if (!created) {

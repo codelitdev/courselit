@@ -8,10 +8,8 @@ import {
 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import type { LegacySchoolChecker } from "./legacy-schools.js";
-import { isPlatformHostname, normalizeCustomHostname } from "./school-host.js";
+import { normalizeCustomHostname } from "./school-host.js";
 import type { AppDb } from "./types.js";
-import { isUniqueViolation } from "./utils/db-errors.js";
 
 export type CustomDomainVerificationRecords = {
   cnameTarget: string;
@@ -202,8 +200,6 @@ export async function createSchoolCustomHost(
     actorId: string;
     hostname: string;
     requestId: string;
-    /** Refuses domains a classic-app school uses (`LEGACY_SCHOOL_CHECK_URL`). */
-    legacySchools?: LegacySchoolChecker;
   },
   clock: Clock,
   config: CustomDomainConfig = customDomainConfig(),
@@ -213,14 +209,6 @@ export async function createSchoolCustomHost(
   const hostname = normalizeCustomHostname(input.hostname);
   if (!hostname) {
     return { ok: false, error: createPlatformError("validation_failed") };
-  }
-  if (isPlatformHostname(hostname)) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "hostname_reserved" },
-      }),
-    };
   }
 
   const [claimed] = await db
@@ -255,78 +243,47 @@ export async function createSchoolCustomHost(
       }),
     };
   }
-  if (!currentCustom && input.legacySchools) {
-    // Fail closed: a domain the classic app can't vouch for isn't attached.
-    const legacy = await input.legacySchools.checkHostname(hostname);
-    if (legacy === "owned") {
-      return {
-        ok: false,
-        error: createPlatformError("conflict", {
-          safeDetails: { reason: "hostname_taken" },
-        }),
-      };
-    }
-    if (legacy === "unavailable") {
-      return {
-        ok: false,
-        error: createPlatformError("internal_error", {
-          safeDetails: { reason: "legacy_check_unavailable" },
-        }),
-      };
-    }
-  }
 
   const now = clock.now();
-  let row: typeof schema.schoolHosts.$inferSelect;
-  try {
-    row = await db.transaction(async (tx) => {
-      let host = currentCustom;
-      if (!host) {
-        [host] = await tx
-          .insert(schema.schoolHosts)
-          .values({
-            id: uuidv7(clock),
-            schoolId: input.schoolId,
-            hostname,
-            kind: "custom",
-            verificationStatus: "unverified",
-            verificationToken: randomBytes(16).toString("hex"),
-            txtSatisfied: null,
-            routingSatisfied: null,
-            verifiedAt: null,
-            isPrimary: false,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      } else if (!host.verificationToken) {
-        [host] = await tx
-          .update(schema.schoolHosts)
-          .set({ verificationToken: randomBytes(16).toString("hex"), updatedAt: now })
-          .where(eq(schema.schoolHosts.id, host.id))
-          .returning();
-      }
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: input.schoolId,
-        actorId: input.actorId,
-        action: "school.host_added",
-        resourceType: "school_host",
-        resourceId: hostname,
-        requestId: input.requestId,
-        createdAt: now,
-      });
-      return host!;
+  const row = await db.transaction(async (tx) => {
+    let host = currentCustom;
+    if (!host) {
+      [host] = await tx
+        .insert(schema.schoolHosts)
+        .values({
+          id: uuidv7(clock),
+          schoolId: input.schoolId,
+          hostname,
+          kind: "custom",
+          verificationStatus: "unverified",
+          verificationToken: randomBytes(16).toString("hex"),
+          txtSatisfied: null,
+          routingSatisfied: null,
+          verifiedAt: null,
+          isPrimary: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+    } else if (!host.verificationToken) {
+      [host] = await tx
+        .update(schema.schoolHosts)
+        .set({ verificationToken: randomBytes(16).toString("hex"), updatedAt: now })
+        .where(eq(schema.schoolHosts.id, host.id))
+        .returning();
+    }
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: input.schoolId,
+      actorId: input.actorId,
+      action: "school.host_added",
+      resourceType: "school_host",
+      resourceId: hostname,
+      requestId: input.requestId,
+      createdAt: now,
     });
-  } catch (error) {
-    if (!isUniqueViolation(error, ["school_hosts_hostname_unique"])) throw error;
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "hostname_taken" },
-      }),
-    };
-  }
+    return host!;
+  });
 
   const records = verificationRecords(row, config)!;
   return {

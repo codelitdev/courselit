@@ -27,10 +27,6 @@ import * as billingSchema from "./db/schema/billing.generated.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { createGifClientFromEnv, DisabledGifClient, type GifClient } from "./gifs.js";
-import {
-  createLegacySchoolCheckerFromEnv,
-  type LegacySchoolChecker,
-} from "./legacy-schools.js";
 import { type MediaLitClient, MemoryMediaLitClient } from "./media.js";
 import { createMediaLitClientFromEnv } from "./media-lit-client.js";
 import type { PaymentProvider } from "./payments.js";
@@ -94,8 +90,6 @@ export async function createPgliteRuntime(options: {
   unsplash?: UnsplashClient;
   gifs?: GifClient;
   paymentProvider?: PaymentProvider;
-  /** Classic-app school check; tests pass a stub. Unset skips the check. */
-  legacySchools?: LegacySchoolChecker;
 }): Promise<Runtime> {
   const { PGlite } = await import("@electric-sql/pglite");
   const client = new PGlite({ loadDataDir: await migratedPgliteDataDir() });
@@ -190,7 +184,6 @@ export async function createPgliteRuntime(options: {
     observability,
     paymentProvider: options.paymentProvider,
     sendLit: sendLitConfig(),
-    legacySchools: options.legacySchools,
     auth,
     authServer,
     async close() {
@@ -222,7 +215,6 @@ export async function createPostgresRuntime(options: {
   unsplash?: UnsplashClient;
   gifs?: GifClient;
   paymentProvider?: PaymentProvider;
-  legacySchools?: LegacySchoolChecker;
 }): Promise<Runtime> {
   const client = new Pool({ connectionString: options.databaseUrl });
   await client.query("select 1");
@@ -292,7 +284,6 @@ export async function createPostgresRuntime(options: {
     observability,
     paymentProvider: options.paymentProvider,
     sendLit: sendLitConfig(),
-    legacySchools: options.legacySchools ?? createLegacySchoolCheckerFromEnv(),
     auth,
     authServer: null,
     async close() {

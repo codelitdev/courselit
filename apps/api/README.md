@@ -131,20 +131,6 @@ before serving traffic when the schema cannot be upgraded. The API development
 command runs the same migration runner before starting the watcher, so local
 schema changes are applied automatically.
 
-## Reserved subdomains
-
-New schools can't take product and infrastructure hostnames (`RESERVED_SUBDOMAINS`
-in `@courselit/api-contract/school-subdomain`). On courselit.app they also can't
-take an address a school on the classic CourseLit app still uses. Set
-`LEGACY_SCHOOL_CHECK_URL` to the classic app's school check endpoint; the API
-calls `GET <url>?host=<hostname>` (1.5 s timeout) for a new subdomain
-(`<label>.<PLATFORM_SITE_DOMAIN>`) or custom domain. `200` means a classic
-school owns it, `404` means it is free; any other answer, a network error or a
-timeout counts as "couldn't check", and the API refuses the address for now
-(`500` with reason `legacy_check_unavailable` on create, `reason: "unavailable"`
-from the availability check). Staff school imports skip it, since they move
-such a school over. Leave it unset on self-hosted installs to skip the check.
-
 ## Legacy domain import
 
 `migrate:domains` imports a JSON export of the legacy `Domain` collection. It is

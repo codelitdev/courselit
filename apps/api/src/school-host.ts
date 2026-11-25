@@ -12,33 +12,6 @@ export function normalizeRequestHostname(value: string): string | null {
   return hostname.length > 0 && hostname.length <= 253 ? hostname : null;
 }
 
-export function normalizePlatformDomain(platformDomain: string): string {
-  return platformDomain
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/[:/].*$/, "")
-    .replace(/^\./, "");
-}
-
-/**
- * Whether a hostname belongs to the platform: `PLATFORM_SITE_DOMAIN` itself or
- * any name under it (`www.`, product hosts, school subdomains), or a
- * `.localhost` name, which routing always treats as a platform subdomain.
- * No school may claim one as a custom domain.
- */
-export function isPlatformHostname(
-  hostname: string,
-  platformDomain = process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app",
-): boolean {
-  const host = hostname.trim().toLowerCase().replace(/\.$/, "");
-  if (!host) return false;
-  const platform = normalizePlatformDomain(platformDomain);
-  return [platform, "localhost"].some(
-    (suffix) => Boolean(suffix) && (host === suffix || host.endsWith(`.${suffix}`)),
-  );
-}
-
 /**
  * The school label of a single-label platform subdomain:
  * `<label>.<PLATFORM_SITE_DOMAIN>` or `<label>.localhost`. Any other host
@@ -50,7 +23,12 @@ export function platformSubdomainFromHost(
 ): string | null {
   const host = hostname.trim().toLowerCase();
   if (!host) return null;
-  const platform = normalizePlatformDomain(platformDomain);
+  const platform = platformDomain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/[:/].*$/, "")
+    .replace(/^\./, "");
   for (const suffix of [platform, "localhost"]) {
     if (!suffix || !host.endsWith(`.${suffix}`)) continue;
     const label = host.slice(0, -(suffix.length + 1));

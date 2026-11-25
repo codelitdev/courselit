@@ -86674,9 +86674,7 @@
                       "type": "string",
                       "enum": [
                         "invalid",
-                        "taken",
-                        "reserved",
-                        "unavailable"
+                        "taken"
                       ],
                       "nullable": true
                     },

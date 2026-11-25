@@ -385,6 +385,7 @@ import {
   updateSchoolPaymentSettings,
 } from "./schools.js";
 import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
+import { legacySubdomainsAmong } from "./legacy-schools.js";
 import { startLearnerSsoSignIn } from "./learner-sso-sign-in.js";
 import { usableLearnerMethods } from "./login-methods.js";
 import { handleSsoAdminRequest } from "./sso-admin-routes.js";
@@ -2366,6 +2367,15 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      // A classic-app school's subdomain is taken. Checked here, not in
+      // createSchool, so staff imports of classic schools still work.
+      if ((await legacySubdomainsAmong([parsed.data.subdomain])).size > 0) {
+        return errorResponse(
+          createPlatformError("conflict", {
+            safeDetails: { reason: "subdomain_taken" },
+          }),
+        );
+      }
       const requestId = requestIdFrom(request, deps);
       const result = await createSchool(
         deps.db,
@@ -2377,7 +2387,6 @@ export async function dispatch(
           principalId: auth.principalId,
           requestId,
           billingMode: deps.billingMode,
-          legacySchools: deps.legacySchools,
         },
         deps.clock,
       );
@@ -2421,11 +2430,7 @@ export async function dispatch(
       }
       return {
         status: 200,
-        body: await checkSchoolSubdomain(
-          deps.db,
-          parsed.data.subdomain,
-          deps.legacySchools,
-        ),
+        body: await checkSchoolSubdomain(deps.db, parsed.data.subdomain),
       };
     }
     if (request.method === "GET" && path === "/v1/ai-connections") {
@@ -5010,7 +5015,6 @@ export async function dispatch(
           actorId: context.principalId,
           hostname: parsed.data.hostname,
           requestId: context.requestId,
-          legacySchools: deps.legacySchools,
         },
         deps.clock,
       );

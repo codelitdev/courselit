@@ -1,83 +1,98 @@
-import { describe, expect, it } from "bun:test";
-import {
-  createLegacySchoolChecker,
-  createLegacySchoolCheckerFromEnv,
-  LEGACY_SCHOOL_CHECK_TIMEOUT_MS,
-} from "./legacy-schools.js";
+import { afterEach, describe, expect, it, spyOn } from "bun:test";
+import { dispatch } from "./dispatch.js";
+import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
+import { seedWorld } from "./seed.js";
 
-function checkerAnswering(
-  respond: (url: URL, init?: RequestInit) => Promise<Response>,
-) {
-  const urls: string[] = [];
-  const checker = createLegacySchoolChecker({
-    url: "https://classic.test/api/school-check?token=abc",
-    platformDomain: "https://Courselit.app/",
-    timeoutMs: 50,
-    fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = new URL(String(input));
-      urls.push(url.toString());
-      return respond(url, init);
-    }) as typeof fetch,
-  });
-  return { checker, urls };
+const CHECK_URL = "http://classic.test/school/exists";
+const CLASSIC = new Set(["oldschool.courselit.app", "oldschool-studio.courselit.app"]);
+const realFetch = globalThis.fetch;
+
+function stubClassicApp(status?: number) {
+  return spyOn(globalThis, "fetch").mockImplementation((async (input, init) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.origin + url.pathname !== CHECK_URL) return realFetch(input, init);
+    const host = url.searchParams.get("host") ?? "";
+    return new Response(null, { status: status ?? (CLASSIC.has(host) ? 200 : 404) });
+  }) as typeof fetch);
 }
 
-describe("classic school check", () => {
-  it("asks about a hostname and reads only the status", async () => {
-    const { checker, urls } = checkerAnswering(async (url) =>
-      url.searchParams.get("host") === "maya.courselit.app"
-        ? new Response("anything", { status: 200 })
-        : new Response('{"owned":true}', { status: 404 }),
-    );
-    expect(await checker.checkSubdomain("Maya")).toBe("owned");
-    expect(await checker.checkHostname("Learn.Example.com.")).toBe("free");
-    expect(urls).toEqual([
-      "https://classic.test/api/school-check?token=abc&host=maya.courselit.app",
-      "https://classic.test/api/school-check?token=abc&host=learn.example.com",
-    ]);
-  });
-
-  it("reports anything but 200 or 404 as unavailable", async () => {
-    for (const status of [400, 301, 429, 500, 503]) {
-      const { checker } = checkerAnswering(async () => new Response(null, { status }));
-      expect(await checker.checkHostname("learn.example.com")).toBe("unavailable");
-    }
-    const { checker } = checkerAnswering(async () => {
-      throw new TypeError("fetch failed");
+async function setup() {
+  process.env.LEGACY_SCHOOL_CHECK_URL = CHECK_URL;
+  process.env.PLATFORM_SITE_DOMAIN = "courselit.app";
+  const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+  const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+  const world = await seedWorld(runtime, clock);
+  const headers = { cookie: world.owner.sessionCookie };
+  const check = async (subdomain: string) =>
+    (
+      await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/schools/subdomain-availability?subdomain=${subdomain}`,
+        headers,
+      })
+    ).body as { available: boolean; reason: string | null; suggestions: string[] };
+  const create = (subdomain: string) =>
+    dispatch(runtime, {
+      method: "POST",
+      path: "/v1/schools",
+      headers,
+      body: { name: "School", subdomain },
     });
-    expect(await checker.checkHostname("learn.example.com")).toBe("unavailable");
+  return { runtime, check, create };
+}
+
+describe("classic app school subdomains", () => {
+  const originalUrl = process.env.LEGACY_SCHOOL_CHECK_URL;
+  const originalDomain = process.env.PLATFORM_SITE_DOMAIN;
+  afterEach(() => {
+    if (originalUrl === undefined) delete process.env.LEGACY_SCHOOL_CHECK_URL;
+    else process.env.LEGACY_SCHOOL_CHECK_URL = originalUrl;
+    if (originalDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
+    else process.env.PLATFORM_SITE_DOMAIN = originalDomain;
   });
 
-  it("gives up after the timeout", async () => {
-    let aborted = false;
-    const { checker } = checkerAnswering(
-      (_url, init) =>
-        new Promise<Response>((_, reject) => {
-          init?.signal?.addEventListener("abort", () => {
-            aborted = true;
-            reject(new Error("aborted"));
-          });
-        }),
-    );
-    const started = Date.now();
-    expect(await checker.checkHostname("learn.example.com")).toBe("unavailable");
-    expect(aborted).toBe(true);
-    expect(Date.now() - started).toBeLessThan(1000);
-    expect(LEGACY_SCHOOL_CHECK_TIMEOUT_MS).toBe(1500);
+  it("read as taken, skip classic names in suggestions and can't be created", async () => {
+    const fetchSpy = stubClassicApp();
+    const { runtime, check, create } = await setup();
+    try {
+      const checked = await check("oldschool");
+      expect(checked).toMatchObject({ available: false, reason: "taken" });
+      expect(checked.suggestions).toEqual([
+        "oldschool-art",
+        "oldschool-school",
+        "oldschool2",
+      ]);
+      const created = await create("oldschool");
+      expect(created.status).toBe(409);
+      expect(JSON.stringify(created.body)).toContain("subdomain_taken");
+      expect(await check("newschool")).toMatchObject({ available: true, reason: null });
+      expect((await create("newschool")).status).toBe(201);
+    } finally {
+      fetchSpy.mockRestore();
+      await runtime.close();
+    }
   });
 
-  it("is off unless LEGACY_SCHOOL_CHECK_URL is set", () => {
-    expect(createLegacySchoolCheckerFromEnv({})).toBeUndefined();
-    expect(
-      createLegacySchoolCheckerFromEnv({ LEGACY_SCHOOL_CHECK_URL: "  " }),
-    ).toBeUndefined();
-    expect(
-      createLegacySchoolCheckerFromEnv({
-        LEGACY_SCHOOL_CHECK_URL: "https://classic.test/api/school-check",
-      }),
-    ).toBeDefined();
-    expect(() =>
-      createLegacySchoolCheckerFromEnv({ LEGACY_SCHOOL_CHECK_URL: "not a url" }),
-    ).toThrow();
+  it("refuses to create when the classic app can't answer", async () => {
+    const fetchSpy = stubClassicApp(503);
+    const { runtime, create } = await setup();
+    try {
+      expect((await create("newschool")).status).toBe(500);
+    } finally {
+      fetchSpy.mockRestore();
+      await runtime.close();
+    }
+  });
+
+  it("isn't consulted when LEGACY_SCHOOL_CHECK_URL is unset", async () => {
+    const fetchSpy = stubClassicApp();
+    const { runtime, create } = await setup();
+    delete process.env.LEGACY_SCHOOL_CHECK_URL;
+    try {
+      expect((await create("oldschool")).status).toBe(201);
+    } finally {
+      fetchSpy.mockRestore();
+      await runtime.close();
+    }
   });
 });

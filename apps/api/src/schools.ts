@@ -10,7 +10,6 @@ import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SchoolStatus } from "./db/schema/schools.js";
 import { normalizeEmail } from "./invitations.js";
-import type { LegacySchoolChecker } from "./legacy-schools.js";
 import { insertSchoolOnboarding } from "./onboarding.js";
 import {
   PAYMENT_WEBHOOK_PROVIDERS,
@@ -34,10 +33,6 @@ import {
   CONTACT_PUBLIC_ID_PREFIX,
   SCHOOL_PUBLIC_ID_PREFIX,
 } from "./public-id-prefixes.js";
-import {
-  isReservedProductSubdomain,
-  subdomainReservation,
-} from "./reserved-subdomains.js";
 import { schoolHasPaidPayments } from "./revenue.js";
 import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
 import {
@@ -48,10 +43,10 @@ import {
 import { sendLitConfig } from "./sendlit-client.js";
 import { provisionSchoolCommunity } from "./spaces.js";
 import type { AppDb } from "./types.js";
-import { isUniqueViolation } from "./utils/db-errors.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionWebsite } from "./website.js";
 import { LEARNER_UPLOAD_LIMIT_DEFAULT } from "./storage.js";
+import { isReservedSubdomain } from "@courselit/api-contract/school-subdomain";
 
 export type SchoolDto = {
   id: string;
@@ -139,12 +134,6 @@ export async function createSchool(
      * callers (imports, tests) leave it unset and get an active school.
      */
     billingMode?: "cloud" | "oss";
-    /**
-     * Refuses subdomains a classic-app school owns. The public route passes
-     * it when `LEGACY_SCHOOL_CHECK_URL` is set; staff imports leave it out,
-     * since they move exactly such a school over.
-     */
-    legacySchools?: LegacySchoolChecker;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolDto } | { ok: false; error: PlatformError }> {
@@ -155,34 +144,17 @@ export async function createSchool(
   ) {
     return { ok: false, error: createPlatformError("rate_limited") };
   }
-  const reserved = {
-    ok: false as const,
-    error: createPlatformError("conflict", {
-      safeDetails: { reason: "subdomain_reserved" },
-    }),
-  };
-  if (isReservedProductSubdomain(input.subdomain)) return reserved;
   const duplicate = await db
     .select()
     .from(schema.schools)
     .where(eq(schema.schools.subdomain, input.subdomain))
     .limit(1);
-  if (duplicate[0]) {
+  // A reserved subdomain is refused like a taken one (S19), also for staff imports.
+  if (duplicate[0] || isReservedSubdomain(input.subdomain)) {
     return {
       ok: false,
       error: createPlatformError("conflict", {
         safeDetails: { reason: "subdomain_taken" },
-      }),
-    };
-  }
-  // Fail closed: an address the classic app can't vouch for isn't handed out.
-  const reservation = await subdomainReservation(input.subdomain, input.legacySchools);
-  if (reservation === "reserved") return reserved;
-  if (reservation === "unavailable") {
-    return {
-      ok: false,
-      error: createPlatformError("internal_error", {
-        safeDetails: { reason: "legacy_check_unavailable" },
       }),
     };
   }
@@ -216,154 +188,140 @@ export async function createSchool(
   const sendLit = sendLitConfig();
   const sendLitConfigured = Boolean(sendLit.server && sendLit.provisioningApiKey);
 
-  try {
-    await db.transaction(async (tx) => {
-      await tx.insert(schema.schools).values(row);
-      await insertSchoolOnboarding(tx as AppDb, schoolId, now);
-      await tx.insert(schema.schoolHosts).values({
-        id: uuidv7(clock),
-        schoolId,
-        hostname: input.subdomain,
-        kind: "subdomain",
-        verificationStatus: "verified",
-        verifiedAt: now,
-        isPrimary: true,
-        createdAt: now,
-        updatedAt: now,
-      });
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.schools).values(row);
+    await insertSchoolOnboarding(tx as AppDb, schoolId, now);
+    await tx.insert(schema.schoolHosts).values({
+      id: uuidv7(clock),
+      schoolId,
+      hostname: input.subdomain,
+      kind: "subdomain",
+      verificationStatus: "verified",
+      verifiedAt: now,
+      isPrimary: true,
+      createdAt: now,
+      updatedAt: now,
+    });
 
-      const [owner] = await tx
-        .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
-        .from(schema.user)
-        .where(eq(schema.user.id, input.principalId))
-        .limit(1);
-      const ownerEmail = owner?.email ?? "";
-      const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
-      const schoolAccountId = uuidv7(clock);
-      const ownerAccountPublicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock);
+    const [owner] = await tx
+      .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
+      .from(schema.user)
+      .where(eq(schema.user.id, input.principalId))
+      .limit(1);
+    const ownerEmail = owner?.email ?? "";
+    const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
+    const schoolAccountId = uuidv7(clock);
+    const ownerAccountPublicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock);
 
-      await tx.insert(schema.schoolAccounts).values({
-        id: schoolAccountId,
-        publicId: ownerAccountPublicId,
-        schoolId,
-        userId: input.principalId,
-        email: normalizeEmail(ownerEmail),
-        displayName: ownerName,
-        bio: "",
-        avatar: owner?.image ? { url: owner.image } : null,
-        status: "active",
-        createdAt: now,
-        updatedAt: now,
-      });
+    await tx.insert(schema.schoolAccounts).values({
+      id: schoolAccountId,
+      publicId: ownerAccountPublicId,
+      schoolId,
+      userId: input.principalId,
+      email: normalizeEmail(ownerEmail),
+      displayName: ownerName,
+      bio: "",
+      avatar: owner?.image ? { url: owner.image } : null,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    });
 
-      const membershipId = uuidv7(clock);
-      const membershipPublicId = createPublicId("mem", clock);
-      await tx.insert(schema.memberships).values({
-        id: membershipId,
-        publicId: membershipPublicId,
+    const membershipId = uuidv7(clock);
+    const membershipPublicId = createPublicId("mem", clock);
+    await tx.insert(schema.memberships).values({
+      id: membershipId,
+      publicId: membershipPublicId,
+      schoolId,
+      schoolAccountId,
+      isOwner: true,
+      permissions: [],
+      presetId: "full_access",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId,
+      actorId: input.principalId,
+      action: "school.created",
+      resourceType: "school",
+      resourceId: publicId,
+      requestId: input.requestId ?? "",
+      createdAt: now,
+    });
+    await tx
+      .delete(schema.selectedSchools)
+      .where(eq(schema.selectedSchools.userId, input.principalId));
+    await tx
+      .insert(schema.selectedSchools)
+      .values({ userId: input.principalId, schoolId });
+
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId,
+      actorId: input.principalId,
+      action: "learner.owner_profile_provisioned",
+      resourceType: "learner",
+      resourceId: ownerAccountPublicId,
+      requestId: input.requestId ?? "",
+      createdAt: now,
+    });
+    await provisionWebsite(tx as AppDb, { schoolId }, clock);
+    await provisionSchoolCommunity(
+      tx as AppDb,
+      {
         schoolId,
+        schoolName: input.name,
+        principalId: input.principalId,
         schoolAccountId,
-        isOwner: true,
-        permissions: [],
-        presetId: "full_access",
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
-      });
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId,
-        actorId: input.principalId,
-        action: "school.created",
-        resourceType: "school",
-        resourceId: publicId,
-        requestId: input.requestId ?? "",
-        createdAt: now,
-      });
-      await tx
-        .delete(schema.selectedSchools)
-        .where(eq(schema.selectedSchools.userId, input.principalId));
-      await tx
-        .insert(schema.selectedSchools)
-        .values({ userId: input.principalId, schoolId });
+        schoolAccountPublicId: ownerAccountPublicId,
+      },
+      clock,
+    );
 
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId,
-        actorId: input.principalId,
-        action: "learner.owner_profile_provisioned",
-        resourceType: "learner",
-        resourceId: ownerAccountPublicId,
-        requestId: input.requestId ?? "",
-        createdAt: now,
-      });
-      await provisionWebsite(tx as AppDb, { schoolId }, clock);
-      await provisionSchoolCommunity(
+    await tx.insert(schema.schoolIntegrations).values({
+      id: uuidv7(clock),
+      schoolId,
+      provider: "sendlit",
+      server: sendLit.server ?? "",
+      externalId: publicId,
+      status: sendLitConfigured ? "pending" : "action_required",
+      lastError: sendLitConfigured ? null : "SENDLIT_CONFIGURATION_MISSING",
+      createdAt: now,
+      updatedAt: now,
+    });
+    await tx.insert(schema.integrationOutboxJobs).values({
+      id: uuidv7(clock),
+      schoolId,
+      provider: "sendlit",
+      type: "provision_sendlit",
+      payload: {
+        externalId: publicId,
+        name: input.name,
+      },
+      nextAttemptAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (input.billingMode === "cloud") {
+      const trial = await startTrial(
         tx as AppDb,
-        {
-          schoolId,
-          schoolName: input.name,
-          principalId: input.principalId,
-          schoolAccountId,
-          schoolAccountPublicId: ownerAccountPublicId,
-        },
+        { userId: input.principalId, email: ownerEmail, schoolId },
         clock,
       );
-
-      await tx.insert(schema.schoolIntegrations).values({
-        id: uuidv7(clock),
-        schoolId,
-        provider: "sendlit",
-        server: sendLit.server ?? "",
-        externalId: publicId,
-        status: sendLitConfigured ? "pending" : "action_required",
-        lastError: sendLitConfigured ? null : "SENDLIT_CONFIGURATION_MISSING",
-        createdAt: now,
-        updatedAt: now,
-      });
-      await tx.insert(schema.integrationOutboxJobs).values({
-        id: uuidv7(clock),
-        schoolId,
-        provider: "sendlit",
-        type: "provision_sendlit",
-        payload: {
-          externalId: publicId,
-          name: input.name,
-        },
-        nextAttemptAt: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      if (input.billingMode === "cloud") {
-        const trial = await startTrial(
-          tx as AppDb,
-          { userId: input.principalId, email: ownerEmail, schoolId },
-          clock,
-        );
-        if (!trial.started) {
-          // One trial per account: this school waits for its owner's checkout.
-          row.status = "pending_checkout";
-          await tx
-            .update(schema.schools)
-            .set({ status: "pending_checkout" })
-            .where(eq(schema.schools.id, schoolId));
-        }
+      if (!trial.started) {
+        // One trial per account: this school waits for its owner's checkout.
+        row.status = "pending_checkout";
+        await tx
+          .update(schema.schools)
+          .set({ status: "pending_checkout" })
+          .where(eq(schema.schools.id, schoolId));
       }
-    });
-  } catch (error) {
-    if (
-      !isUniqueViolation(error, ["schools_subdomain_unique", "school_hosts_hostname_unique"])
-    ) {
-      throw error;
     }
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "subdomain_taken" },
-      }),
-    };
-  }
+  });
   return { ok: true, value: toSchoolDto(row, true) };
 }
 

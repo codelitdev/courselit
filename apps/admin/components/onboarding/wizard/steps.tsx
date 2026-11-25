@@ -54,7 +54,6 @@ import {
   COUNTRIES,
   CURRENCIES,
   domainExample,
-  ERROR_COPY,
   type FieldErrors,
   formatBytes,
   isPaidOffer,
@@ -161,10 +160,7 @@ export function SchoolStep({
   const { data, patch, errors, disabled } = ctx;
   const fullUrl = `${data.subdomain || "your-school"}.${siteDomain}`;
   const badAddress =
-    Boolean(errors.subdomain) ||
-    availability === "taken" ||
-    availability === "reserved" ||
-    availability === "invalid";
+    Boolean(errors.subdomain) || availability === "taken" || availability === "invalid";
   if (creating) {
     return (
       <>
@@ -247,14 +243,11 @@ export function SchoolStep({
                 <span className="font-mono">{fullUrl}</span> is yours to take
               </p>
             ) : null}
-            {availability === "taken" || availability === "reserved" ? (
+            {availability === "taken" ? (
               <div className="flex flex-col gap-2">
                 <p className="flex items-center gap-1.5 text-destructive">
                   <CircleX aria-hidden className="size-3.5" />
-                  {availability === "taken"
-                    ? `${fullUrl} is taken.`
-                    : "This address isn't available."}
-                  {suggestions.length ? " Try one of these:" : ""}
+                  {fullUrl} is taken.{suggestions.length ? " Try one of these:" : ""}
                 </p>
                 {suggestions.length ? (
                   <div className="flex flex-wrap gap-1.5">
@@ -272,16 +265,8 @@ export function SchoolStep({
                 ) : null}
               </div>
             ) : null}
-            {availability === "unavailable" ? (
-              <p className="flex items-center gap-1.5 text-destructive">
-                <CircleX aria-hidden className="size-3.5" />
-                {ERROR_COPY.subdomainUnchecked}
-              </p>
-            ) : null}
             {availability === "invalid" || errors.subdomain ? (
-              availability !== "taken" &&
-              availability !== "reserved" &&
-              availability !== "unavailable" ? (
+              availability !== "taken" ? (
                 <p className="text-destructive">
                   Use 3 to 63 lowercase letters, numbers and single hyphens.
                 </p>

@@ -2,16 +2,11 @@ import type { Clock } from "@codelitdev/platform";
 import { createPlatformError, type PlatformError } from "@codelitdev/platform";
 import { and, desc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import type { LegacySchoolChecker } from "./legacy-schools.js";
+import { legacySubdomainsAmong } from "./legacy-schools.js";
 import { getPaymentProvider } from "./payments.js";
-import {
-  isReservedProductSubdomain,
-  isValidSubdomain,
-  reservationsAmong,
-  subdomainReservation,
-} from "./reserved-subdomains.js";
 import { getMailingSettings } from "./sendlit-service.js";
 import type { AppDb } from "./types.js";
+import { isReservedSubdomain } from "@courselit/api-contract/school-subdomain";
 
 export const ONBOARDING_CHECKLIST_KEYS = [
   "pay",
@@ -344,6 +339,12 @@ export async function updateSchoolOnboarding(
 // School address availability
 // ---------------------------------------------------------------------------
 
+const SUBDOMAIN_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isValidSubdomain(value: string): boolean {
+  return value.length >= 3 && value.length <= 63 && SUBDOMAIN_PATTERN.test(value);
+}
+
 async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>> {
   if (candidates.length === 0) return new Set();
   const [schools, hosts] = await Promise.all([
@@ -356,62 +357,43 @@ async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>>
       .from(schema.schoolHosts)
       .where(inArray(schema.schoolHosts.hostname, candidates)),
   ]);
-  return new Set([...schools, ...hosts].map((row) => row.value));
+  // Reserved subdomains read as taken, so the address checker suggests others (S19),
+  // and so do subdomains of schools on the classic app.
+  const taken = new Set([
+    ...[...schools, ...hosts].map((row) => row.value),
+    ...candidates.filter(isReservedSubdomain),
+  ]);
+  const legacy = await legacySubdomainsAmong(
+    candidates.filter((value) => !taken.has(value)),
+  );
+  return new Set([...taken, ...legacy]);
 }
 
-// Suggestions offered, and candidates asked about at most per check.
-const SUGGESTION_COUNT = 3;
-const SUGGESTION_LEGACY_CHECKS = 6;
-
-/**
- * Whether a school address is free. With a classic-app checker
- * (`LEGACY_SCHOOL_CHECK_URL`), an address a classic school owns reads as
- * `reserved`, and one it couldn't check reads as `unavailable` (try again).
- */
 export async function checkSchoolSubdomain(
   db: AppDb,
   rawSubdomain: string,
-  legacy?: LegacySchoolChecker,
 ): Promise<{
   subdomain: string;
   available: boolean;
-  reason: "invalid" | "taken" | "reserved" | "unavailable" | null;
+  reason: "invalid" | "taken" | null;
   suggestions: string[];
 }> {
   const subdomain = rawSubdomain.trim();
   if (!isValidSubdomain(subdomain)) {
     return { subdomain, available: false, reason: "invalid", suggestions: [] };
   }
-  let reason: "taken" | "reserved";
-  if (isReservedProductSubdomain(subdomain)) reason = "reserved";
-  else if ((await takenAmong(db, [subdomain])).size > 0) reason = "taken";
-  else {
-    const reservation = await subdomainReservation(subdomain, legacy);
-    if (reservation === "free") {
-      return { subdomain, available: true, reason: null, suggestions: [] };
-    }
-    if (reservation === "unavailable") {
-      return { subdomain, available: false, reason: "unavailable", suggestions: [] };
-    }
-    reason = "reserved";
+  if ((await takenAmong(db, [subdomain])).size === 0) {
+    return { subdomain, available: true, reason: null, suggestions: [] };
   }
   const ideas = [`${subdomain}-studio`, `${subdomain}-art`, `${subdomain}-school`];
   for (let i = 2; i <= 9; i++) ideas.push(`${subdomain}${i}`);
   const candidates = ideas.filter(isValidSubdomain);
   const taken = await takenAmong(db, candidates);
-  // Ask the classic app about a few free-looking candidates at once; one it
-  // owns or couldn't check is left out.
-  const unclaimed = candidates
-    .filter((value) => !taken.has(value) && !isReservedProductSubdomain(value))
-    .slice(0, legacy ? SUGGESTION_LEGACY_CHECKS : SUGGESTION_COUNT);
-  const reservations = await reservationsAmong(unclaimed, legacy);
   return {
     subdomain,
     available: false,
-    reason,
-    suggestions: unclaimed
-      .filter((value) => reservations.get(value) === "free")
-      .slice(0, SUGGESTION_COUNT),
+    reason: "taken",
+    suggestions: candidates.filter((value) => !taken.has(value)).slice(0, 3),
   };
 }
 
