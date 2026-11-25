@@ -2,18 +2,22 @@ import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
-import { checkSchoolSubdomain } from "./onboarding.js";
 import {
-  importReservedSubdomains,
-  parseReservedSubdomainList,
-} from "./reserved-subdomains.js";
+  createLegacySchoolChecker,
+  type LegacySchoolChecker,
+} from "./legacy-schools.js";
+import { checkSchoolSubdomain } from "./onboarding.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { createSchool } from "./schools.js";
 import { type SeededWorld, seedWorld } from "./seed.js";
 
-async function setup(billingMode?: "oss") {
+async function setup(billingMode?: "oss", legacySchools?: LegacySchoolChecker) {
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-  const runtime = await createPgliteRuntime({ clock, ...(billingMode ? { billingMode } : {}) });
+  const runtime = await createPgliteRuntime({
+    clock,
+    legacySchools,
+    ...(billingMode ? { billingMode } : {}),
+  });
   const world = await seedWorld(runtime, clock);
   return { runtime, world };
 }
@@ -287,12 +291,43 @@ describe("school subdomain availability", () => {
   });
 });
 
+type LegacyAnswer = number | "error" | "hang";
+
+/**
+ * A classic-app checker over a fake `fetch`: each hostname answers with a
+ * status, a network error, or never (until the timeout aborts it). Unlisted
+ * hostnames answer 404. `calls` records the hostnames asked about.
+ */
+function legacyChecker(answers: Record<string, LegacyAnswer>) {
+  const calls: string[] = [];
+  const fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(String(input));
+    expect(url.origin + url.pathname).toBe("https://classic.test/api/school-check");
+    const host = url.searchParams.get("host") ?? "";
+    calls.push(host);
+    const answer = answers[host] ?? 404;
+    if (answer === "error") throw new TypeError("fetch failed");
+    if (answer === "hang") {
+      return new Promise<Response>((_, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+      });
+    }
+    return new Response(null, { status: answer });
+  }) as typeof globalThis.fetch;
+  const checker = createLegacySchoolChecker({
+    url: "https://classic.test/api/school-check",
+    platformDomain: "courselit.app",
+    fetch,
+    timeoutMs: 50,
+  });
+  return { checker, calls };
+}
+
 describe("reserved school addresses", () => {
-  async function reservedSetup() {
+  async function reservedSetup(legacySchools?: LegacySchoolChecker) {
     // OSS mode: these tests create several schools and aren't about the cloud
     // per-day creation limit.
-    const { runtime, world } = await setup("oss");
-    await importReservedSubdomains(runtime.db, ["old-school", "taken-art"], "legacy");
+    const { runtime, world } = await setup("oss", legacySchools);
     const check = async (subdomain: string) =>
       (
         await dispatch(runtime, {
@@ -313,70 +348,116 @@ describe("reserved school addresses", () => {
         headers: { cookie: world.owner.sessionCookie },
         body: { name: "Reserved School", subdomain },
       });
-    return { runtime, check, create };
+    const schoolsWith = (subdomain: string) =>
+      runtime.db
+        .select()
+        .from(schema.schools)
+        .where(eq(schema.schools.subdomain, subdomain));
+    return { runtime, check, create, schoolsWith };
   }
 
   it("rejects product hostnames in the check and on create", async () => {
-    const { runtime, check, create } = await reservedSetup();
+    const { runtime, check, create, schoolsWith } = await reservedSetup();
     const result = await check("dash");
     expect(result).toMatchObject({ available: false, reason: "reserved" });
     expect(result.suggestions).toEqual(["dash-studio", "dash-art", "dash-school"]);
     // Fixed product names are refused by the contract schema (400) before the
-    // handler; names reserved in the database get a 409 from the handler.
+    // handler; names a classic school owns get a 409 from the handler.
     const created = await create("dash");
     expect(created.status).toBe(400);
     expect(JSON.stringify(created.body)).toContain("validation_failed");
-    expect(
-      await runtime.db
-        .select()
-        .from(schema.schools)
-        .where(eq(schema.schools.subdomain, "dash")),
-    ).toHaveLength(0);
+    expect(await schoolsWith("dash")).toHaveLength(0);
     await runtime.close();
   });
 
-  it("rejects subdomains reserved in the database in the check and on create", async () => {
-    const { runtime, check, create } = await reservedSetup();
-    expect(await check("old-school")).toMatchObject({
-      available: false,
-      reason: "reserved",
+  it("rejects addresses a classic school owns in the check and on create", async () => {
+    const { checker, calls } = legacyChecker({
+      "old-school.courselit.app": 200,
+      "old-school-art.courselit.app": 200,
     });
+    const { runtime, check, create, schoolsWith } = await reservedSetup(checker);
+    const result = await check("old-school");
+    expect(result).toMatchObject({ available: false, reason: "reserved" });
+    expect(result.suggestions).toEqual([
+      "old-school-studio",
+      "old-school-school",
+      "old-school2",
+    ]);
+    // The address itself, then six candidates at most.
+    expect(calls).toHaveLength(7);
     const created = await create("old-school");
     expect(created.status).toBe(409);
-    expect(JSON.stringify(created.body)).toContain("subdomain_reserved");
+    expect(created.body).toMatchObject({
+      code: "conflict",
+      details: { reason: "subdomain_reserved" },
+    });
+    expect(await schoolsWith("old-school")).toHaveLength(0);
     await runtime.close();
   });
 
-  it("leaves reserved names out of suggestions and still allows normal names", async () => {
-    const { runtime, check, create } = await reservedSetup();
+  it("allows addresses the classic app reports free", async () => {
+    const { checker, calls } = legacyChecker({});
+    const { runtime, check, create } = await reservedSetup(checker);
+    expect(await check("new-school")).toEqual({
+      subdomain: "new-school",
+      available: true,
+      reason: null,
+      suggestions: [],
+    });
+    expect((await create("new-school")).status).toBe(201);
+    expect(calls).toEqual(["new-school.courselit.app", "new-school.courselit.app"]);
+    // A name taken here is answered without asking the classic app.
+    calls.length = 0;
+    const taken = await check("new-school");
+    expect(taken.reason).toBe("taken");
+    expect(calls).not.toContain("new-school.courselit.app");
+    await runtime.close();
+  });
+
+  for (const [label, answer] of [
+    ["an error status", 500],
+    ["a bad request", 400],
+    ["a network error", "error"],
+    ["a timeout", "hang"],
+  ] as const) {
+    it(`fails closed when the classic app answers with ${label}`, async () => {
+      const { checker } = legacyChecker({ "maybe-school.courselit.app": answer });
+      const { runtime, check, create, schoolsWith } = await reservedSetup(checker);
+      expect(await check("maybe-school")).toEqual({
+        subdomain: "maybe-school",
+        available: false,
+        reason: "unavailable",
+        suggestions: [],
+      });
+      const created = await create("maybe-school");
+      expect(created.status).toBe(500);
+      expect(created.body).toMatchObject({
+        code: "internal_error",
+        details: { reason: "legacy_check_unavailable" },
+      });
+      expect(await schoolsWith("maybe-school")).toHaveLength(0);
+      await runtime.close();
+    });
+  }
+
+  it("leaves owned and unchecked names out of suggestions", async () => {
+    const { checker } = legacyChecker({
+      "taken-art.courselit.app": 200,
+      "taken-school.courselit.app": 503,
+      "taken2.courselit.app": "error",
+    });
+    const { runtime, check, create } = await reservedSetup(checker);
     expect((await create("taken")).status).toBe(201);
     const taken = await check("taken");
     expect(taken.reason).toBe("taken");
-    expect(taken.suggestions).toEqual(["taken-studio", "taken-school", "taken2"]);
-    expect(await check("new-school")).toMatchObject({ available: true, reason: null });
-    expect((await create("new-school")).status).toBe(201);
+    expect(taken.suggestions).toEqual(["taken-studio", "taken3", "taken4"]);
     await runtime.close();
   });
 
-  it("imports a list idempotently, normalising and skipping invalid labels", async () => {
-    const { runtime } = await setup();
-    const { valid, invalid } = parseReservedSubdomainList(
-      "# legacy\n  Old-School \nold-school\n\nbad_name\nab\nsecond\n",
-    );
-    expect(valid).toEqual(["old-school", "second"]);
-    expect(invalid).toEqual(["bad_name", "ab"]);
-    expect(parseReservedSubdomainList('["One-x", " two "]').valid).toEqual([
-      "one-x",
-      "two",
-    ]);
-    expect(await importReservedSubdomains(runtime.db, valid, "legacy")).toEqual({
-      inserted: 2,
-      existing: 0,
-    });
-    expect(
-      await importReservedSubdomains(runtime.db, [...valid, "third"], "legacy"),
-    ).toEqual({ inserted: 1, existing: 2 });
-    expect(await runtime.db.select().from(schema.reservedSubdomains)).toHaveLength(3);
+  it("skips the classic check when it isn't configured", async () => {
+    const { runtime, check, create } = await reservedSetup();
+    expect(await check("old-school")).toMatchObject({ available: true, reason: null });
+    expect((await create("old-school")).status).toBe(201);
     await runtime.close();
   });
 });

@@ -2282,8 +2282,11 @@ export const schoolSubdomainAvailabilityQuerySchema = z.object({
 export const schoolSubdomainAvailabilitySchema = z.object({
   subdomain: z.string(),
   available: z.boolean(),
-  /** Why it is unavailable: not a valid address, already in use, or reserved. */
-  reason: z.enum(["invalid", "taken", "reserved"]).nullable(),
+  /**
+   * Why it is unavailable: not a valid address, already in use, reserved, or
+   * couldn't be checked right now (try again).
+   */
+  reason: z.enum(["invalid", "taken", "reserved", "unavailable"]).nullable(),
   /** Free alternatives, only when `reason` is `taken` or `reserved`. */
   suggestions: z.array(z.string()),
 });

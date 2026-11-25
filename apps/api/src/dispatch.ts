@@ -2377,6 +2377,7 @@ export async function dispatch(
           principalId: auth.principalId,
           requestId,
           billingMode: deps.billingMode,
+          legacySchools: deps.legacySchools,
         },
         deps.clock,
       );
@@ -2420,7 +2421,11 @@ export async function dispatch(
       }
       return {
         status: 200,
-        body: await checkSchoolSubdomain(deps.db, parsed.data.subdomain),
+        body: await checkSchoolSubdomain(
+          deps.db,
+          parsed.data.subdomain,
+          deps.legacySchools,
+        ),
       };
     }
     if (request.method === "GET" && path === "/v1/ai-connections") {
@@ -5005,6 +5010,7 @@ export async function dispatch(
           actorId: context.principalId,
           hostname: parsed.data.hostname,
           requestId: context.requestId,
+          legacySchools: deps.legacySchools,
         },
         deps.clock,
       );

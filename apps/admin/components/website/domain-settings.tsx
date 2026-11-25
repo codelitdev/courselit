@@ -62,6 +62,12 @@ async function readError(response: Response): Promise<Error> {
   if (reason === "hostname_reserved") {
     return new Error("This domain isn't available.");
   }
+  if (reason === "hostname_taken") {
+    return new Error("This domain is already in use.");
+  }
+  if (reason === "legacy_check_unavailable") {
+    return new Error("We couldn't check this domain right now. Try again in a moment.");
+  }
   if (reason === "custom_domain_already_attached") {
     return new Error("Remove the current custom domain before adding another.");
   }

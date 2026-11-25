@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
+import { createLegacySchoolChecker } from "./legacy-schools.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import {
   createSchool,
@@ -392,7 +393,10 @@ describe.serial("school custom host lifecycle", () => {
 /** A unique violation as node-postgres reports it, wrapped like a Drizzle query error. */
 function uniqueViolation(constraint: string) {
   return Object.assign(new Error("Failed query"), {
-    cause: Object.assign(new Error("duplicate key value"), { code: "23505", constraint }),
+    cause: Object.assign(new Error("duplicate key value"), {
+      code: "23505",
+      constraint,
+    }),
   });
 }
 
@@ -447,12 +451,89 @@ describe.serial("reserved and contended hostnames", () => {
     }
   });
 
+  it("refuses custom domains a classic school uses, failing closed", async () => {
+    const asked: string[] = [];
+    const answers: Record<string, number | "error" | "hang"> = {
+      "classic.example.com": 200,
+      "flaky.example.com": 503,
+      "offline.example.com": "error",
+      "slow.example.com": "hang",
+    };
+    const legacySchools = createLegacySchoolChecker({
+      url: "https://classic.test/api/school-check",
+      platformDomain: "courselit.app",
+      timeoutMs: 50,
+      fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const host = new URL(String(input)).searchParams.get("host") ?? "";
+        asked.push(host);
+        const answer = answers[host] ?? 404;
+        if (answer === "error") throw new TypeError("fetch failed");
+        if (answer === "hang") {
+          return new Promise<Response>((_, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          });
+        }
+        return new Response(null, { status: answer });
+      }) as typeof fetch,
+    });
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, legacySchools });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const attach = (hostname: string) =>
+        dispatch(runtime, {
+          method: "POST",
+          path: "/v1/school/hosts",
+          headers: {
+            cookie: world.owner.sessionCookie,
+            "x-school-id": world.schoolA.publicId,
+          },
+          body: { hostname },
+        });
+      const owned = await attach("Classic.Example.com");
+      expect(owned.status).toBe(409);
+      expect(owned.body).toMatchObject({
+        code: "conflict",
+        details: { reason: "hostname_taken" },
+      });
+      for (const hostname of [
+        "flaky.example.com",
+        "offline.example.com",
+        "slow.example.com",
+      ]) {
+        const response = await attach(hostname);
+        expect(response.status).toBe(500);
+        expect(response.body).toMatchObject({
+          code: "internal_error",
+          details: { reason: "legacy_check_unavailable" },
+        });
+      }
+      const hosts = await runtime.db
+        .select()
+        .from(schema.schoolHosts)
+        .where(eq(schema.schoolHosts.schoolId, world.schoolA.id));
+      expect(hosts.filter((host) => host.kind === "custom")).toHaveLength(0);
+
+      expect((await attach("learn.example.com")).status).toBe(201);
+      // Re-attaching the school's own domain doesn't ask again.
+      asked.length = 0;
+      expect((await attach("learn.example.com")).status).toBe(201);
+      expect(asked).toEqual([]);
+    } finally {
+      await runtime.close();
+    }
+  });
+
   it("matches only the platform domain and its subdomains", () => {
     expect(isPlatformHostname("courselit.app", "courselit.app")).toBe(true);
     expect(isPlatformHostname("www.courselit.app", "courselit.app")).toBe(true);
-    expect(isPlatformHostname("api.courselit.app.", "https://courselit.app/")).toBe(true);
+    expect(isPlatformHostname("api.courselit.app.", "https://courselit.app/")).toBe(
+      true,
+    );
     expect(isPlatformHostname("mycourselit.app", "courselit.app")).toBe(false);
-    expect(isPlatformHostname("courselit.app.example.com", "courselit.app")).toBe(false);
+    expect(isPlatformHostname("courselit.app.example.com", "courselit.app")).toBe(
+      false,
+    );
     expect(isPlatformHostname("learn.example.com", "courselit.app")).toBe(false);
   });
 
@@ -462,7 +543,10 @@ describe.serial("reserved and contended hostnames", () => {
     try {
       const world = await seedWorld(runtime, clock);
       const host = await createSchoolCustomHost(
-        failingTransactions(runtime.db, uniqueViolation("school_hosts_hostname_unique")),
+        failingTransactions(
+          runtime.db,
+          uniqueViolation("school_hosts_hostname_unique"),
+        ),
         {
           schoolId: world.schoolA.id,
           actorId: world.owner.id,

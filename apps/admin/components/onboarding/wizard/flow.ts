@@ -142,6 +142,7 @@ export type SubdomainStatus =
   | "ok"
   | "taken"
   | "reserved"
+  | "unavailable"
   | "invalid";
 
 /** Whether a check result makes the school form submittable. */
@@ -434,6 +435,8 @@ export const ERROR_COPY = {
   subdomain: "Use 3 to 63 lowercase letters, numbers and single hyphens.",
   subdomainTaken: "That address is taken. Pick another.",
   subdomainReserved: "This address isn't available. Pick another.",
+  subdomainUnchecked:
+    "We couldn't check this address right now. Try again in a moment.",
 } as const;
 
 const blank = (value: string | null | undefined) => !String(value ?? "").trim();

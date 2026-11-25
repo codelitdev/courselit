@@ -2,8 +2,8 @@
  * Subdomains no school can take (docs/wip/plan-limits.md, S19). They name
  * CourseLit's own services or read as official, so a school using one could
  * pass for CourseLit (`login.courselit.app`, `billing.courselit.app`).
- * Subdomains reserved for other reasons (such as schools still on the classic
- * app) live in the API's `reserved_subdomains` table, never here.
+ * Addresses of schools still on the classic app are checked live against
+ * that app by the API (`LEGACY_SCHOOL_CHECK_URL`), never listed here.
  */
 export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
   "abuse",

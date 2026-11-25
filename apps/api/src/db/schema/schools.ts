@@ -89,17 +89,6 @@ export const schools = pgTable("schools", {
   ),
 ]);
 
-/**
- * Subdomains no new school may take, kept outside the code because the list is
- * operator data (for example the addresses of schools still served by the
- * classic CourseLit app). Fill it with `bun run migrate:reserved-subdomains`.
- */
-export const reservedSubdomains = pgTable("reserved_subdomains", {
-  subdomain: text("subdomain").primaryKey(),
-  reason: text("reason").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 /** Setup wizard progress and onboarding checklist state, one row per school. */
 export const schoolOnboarding = pgTable("school_onboarding", {
   schoolId: uuid("school_id")

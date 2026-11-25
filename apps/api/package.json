@@ -30,7 +30,6 @@
     "migrate:communities": "bun scripts/import-communities.mjs",
     "migrate:learners": "bun scripts/import-learners.mjs",
     "migrate:notifications": "bun scripts/import-notifications.mjs",
-    "migrate:reserved-subdomains": "bun scripts/import-reserved-subdomains.mjs",
     "pretest": "bun run check:auth-schema"
   },
   "dependencies": {

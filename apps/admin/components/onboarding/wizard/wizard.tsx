@@ -414,7 +414,9 @@ export function SetupWizard({
           setAvailability(
             result.available
               ? "ok"
-              : result.reason === "invalid" || result.reason === "reserved"
+              : result.reason === "invalid" ||
+                  result.reason === "reserved" ||
+                  result.reason === "unavailable"
                 ? result.reason
                 : "taken",
           );
@@ -646,6 +648,12 @@ export function SetupWizard({
         setCreating(false);
         setAvailability("reserved");
         setErrors({ subdomain: ERROR_COPY.subdomainReserved });
+        return;
+      }
+      if (error instanceof ApiError && error.reason === "legacy_check_unavailable") {
+        setCreating(false);
+        setAvailability("unavailable");
+        setErrors({ subdomain: ERROR_COPY.subdomainUnchecked });
         return;
       }
       if (!created) {

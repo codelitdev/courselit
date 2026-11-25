@@ -10,6 +10,7 @@ import { and, eq, inArray, ne } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { SchoolStatus } from "./db/schema/schools.js";
 import { normalizeEmail } from "./invitations.js";
+import type { LegacySchoolChecker } from "./legacy-schools.js";
 import { insertSchoolOnboarding } from "./onboarding.js";
 import {
   PAYMENT_WEBHOOK_PROVIDERS,
@@ -33,7 +34,10 @@ import {
   CONTACT_PUBLIC_ID_PREFIX,
   SCHOOL_PUBLIC_ID_PREFIX,
 } from "./public-id-prefixes.js";
-import { isReservedSubdomain } from "./reserved-subdomains.js";
+import {
+  isReservedProductSubdomain,
+  subdomainReservation,
+} from "./reserved-subdomains.js";
 import { schoolHasPaidPayments } from "./revenue.js";
 import { normalizeRequestHostname, platformSubdomainFromHost } from "./school-host.js";
 import {
@@ -135,6 +139,12 @@ export async function createSchool(
      * callers (imports, tests) leave it unset and get an active school.
      */
     billingMode?: "cloud" | "oss";
+    /**
+     * Refuses subdomains a classic-app school owns. The public route passes
+     * it when `LEGACY_SCHOOL_CHECK_URL` is set; staff imports leave it out,
+     * since they move exactly such a school over.
+     */
+    legacySchools?: LegacySchoolChecker;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: SchoolDto } | { ok: false; error: PlatformError }> {
@@ -145,14 +155,13 @@ export async function createSchool(
   ) {
     return { ok: false, error: createPlatformError("rate_limited") };
   }
-  if (await isReservedSubdomain(db, input.subdomain)) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "subdomain_reserved" },
-      }),
-    };
-  }
+  const reserved = {
+    ok: false as const,
+    error: createPlatformError("conflict", {
+      safeDetails: { reason: "subdomain_reserved" },
+    }),
+  };
+  if (isReservedProductSubdomain(input.subdomain)) return reserved;
   const duplicate = await db
     .select()
     .from(schema.schools)
@@ -163,6 +172,17 @@ export async function createSchool(
       ok: false,
       error: createPlatformError("conflict", {
         safeDetails: { reason: "subdomain_taken" },
+      }),
+    };
+  }
+  // Fail closed: an address the classic app can't vouch for isn't handed out.
+  const reservation = await subdomainReservation(input.subdomain, input.legacySchools);
+  if (reservation === "reserved") return reserved;
+  if (reservation === "unavailable") {
+    return {
+      ok: false,
+      error: createPlatformError("internal_error", {
+        safeDetails: { reason: "legacy_check_unavailable" },
       }),
     };
   }

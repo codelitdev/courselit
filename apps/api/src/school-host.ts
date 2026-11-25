@@ -12,7 +12,7 @@ export function normalizeRequestHostname(value: string): string | null {
   return hostname.length > 0 && hostname.length <= 253 ? hostname : null;
 }
 
-function normalizePlatformDomain(platformDomain: string): string {
+export function normalizePlatformDomain(platformDomain: string): string {
   return platformDomain
     .trim()
     .toLowerCase()

@@ -130,6 +130,7 @@ describe("subdomain rules", () => {
     expect(canSubmitSubdomain("checking", "inkwell")).toBe(false);
     expect(canSubmitSubdomain("taken", "inkwell")).toBe(false);
     expect(canSubmitSubdomain("reserved", "inkwell")).toBe(false);
+    expect(canSubmitSubdomain("unavailable", "inkwell")).toBe(false);
     expect(canSubmitSubdomain("ok", "no")).toBe(false);
   });
 });

@@ -134,19 +134,16 @@ schema changes are applied automatically.
 ## Reserved subdomains
 
 New schools can't take product and infrastructure hostnames (`RESERVED_SUBDOMAINS`
-in `src/reserved-subdomains.ts`) or any subdomain in the `reserved_subdomains`
-table. Fill the table, for example with the subdomains of schools still on the
-classic app, from a local file with one subdomain per line (or a JSON array of
-strings). Keep that file out of the repository:
-
-```sh
-DATABASE_URL=postgres://... bun --cwd apps/api run migrate:reserved-subdomains \
-  /absolute/path/to/legacy-subdomains.txt [--reason legacy]
-```
-
-Values are trimmed and lowercased, invalid labels are skipped with a warning,
-and rows that already exist are left alone, so the command can be re-run. It
-prints how many subdomains were read, inserted, already present and invalid.
+in `@courselit/api-contract/school-subdomain`). On courselit.app they also can't
+take an address a school on the classic CourseLit app still uses. Set
+`LEGACY_SCHOOL_CHECK_URL` to the classic app's school check endpoint; the API
+calls `GET <url>?host=<hostname>` (1.5 s timeout) for a new subdomain
+(`<label>.<PLATFORM_SITE_DOMAIN>`) or custom domain. `200` means a classic
+school owns it, `404` means it is free; any other answer, a network error or a
+timeout counts as "couldn't check", and the API refuses the address for now
+(`500` with reason `legacy_check_unavailable` on create, `reason: "unavailable"`
+from the availability check). Staff school imports skip it, since they move
+such a school over. Leave it unset on self-hosted installs to skip the check.
 
 ## Legacy domain import
 

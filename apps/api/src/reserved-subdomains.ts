@@ -1,7 +1,5 @@
 import { RESERVED_SUBDOMAINS } from "@courselit/api-contract/school-subdomain";
-import { inArray } from "drizzle-orm";
-import * as schema from "./db/schema/index.js";
-import type { AppDb } from "./types.js";
+import type { LegacySchoolChecker } from "./legacy-schools.js";
 
 const SUBDOMAIN_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -10,72 +8,40 @@ export function isValidSubdomain(value: string): boolean {
   return value.length >= 3 && value.length <= 63 && SUBDOMAIN_PATTERN.test(value);
 }
 
-/** The labels among `labels` that are reserved, by code or by the database. */
-export async function reservedAmong(db: AppDb, labels: string[]): Promise<Set<string>> {
-  const reserved = new Set(
-    labels.filter((label) => RESERVED_SUBDOMAINS.has(label.trim().toLowerCase())),
-  );
-  const rest = labels.filter((label) => !reserved.has(label));
-  if (rest.length === 0) return reserved;
-  const rows = await db
-    .select({ value: schema.reservedSubdomains.subdomain })
-    .from(schema.reservedSubdomains)
-    .where(inArray(schema.reservedSubdomains.subdomain, rest));
-  for (const row of rows) reserved.add(row.value);
-  return reserved;
-}
-
-export async function isReservedSubdomain(db: AppDb, label: string): Promise<boolean> {
-  return (await reservedAmong(db, [label])).size > 0;
-}
-
 /**
- * Reads a reserved-subdomain list: a JSON array of strings, or one subdomain
- * per line (blank lines and `#` comments are ignored). Values are trimmed and
- * lowercased; duplicates are dropped and malformed labels are returned apart.
+ * Whether a new school may take a label: `reserved` when it names a product
+ * or infrastructure host or a classic-app school owns
+ * `<label>.<platform domain>`, `unavailable` when the classic app couldn't be
+ * asked (treat it as not free), `free` otherwise. Without a checker
+ * (`LEGACY_SCHOOL_CHECK_URL` unset) only the fixed list applies.
  */
-export function parseReservedSubdomainList(text: string): {
-  valid: string[];
-  invalid: string[];
-} {
-  const trimmed = text.trim();
-  let raw: unknown[];
-  if (trimmed.startsWith("[")) {
-    const parsed: unknown = JSON.parse(trimmed);
-    if (!Array.isArray(parsed)) throw new Error("RESERVED_SUBDOMAINS_NOT_AN_ARRAY");
-    raw = parsed;
-  } else {
-    raw = trimmed.split(/\r?\n/).filter((line) => !line.trim().startsWith("#"));
-  }
-  const valid = new Set<string>();
-  const invalid: string[] = [];
-  for (const entry of raw) {
-    const value = String(entry ?? "")
-      .trim()
-      .toLowerCase();
-    if (!value) continue;
-    if (isValidSubdomain(value)) valid.add(value);
-    else invalid.push(value);
-  }
-  return { valid: [...valid], invalid };
+export type SubdomainReservation = "reserved" | "unavailable" | "free";
+
+/** Whether a label is on the fixed product and infrastructure list. */
+export function isReservedProductSubdomain(label: string): boolean {
+  return RESERVED_SUBDOMAINS.has(label.trim().toLowerCase());
 }
 
-/** Inserts subdomains into `reserved_subdomains`, leaving existing rows as they are. */
-export async function importReservedSubdomains(
-  db: AppDb,
-  subdomains: string[],
-  reason: string,
-): Promise<{ inserted: number; existing: number }> {
-  let inserted = 0;
-  const batchSize = 1000;
-  for (let i = 0; i < subdomains.length; i += batchSize) {
-    const batch = subdomains.slice(i, i + batchSize);
-    const rows = await db
-      .insert(schema.reservedSubdomains)
-      .values(batch.map((subdomain) => ({ subdomain, reason })))
-      .onConflictDoNothing({ target: schema.reservedSubdomains.subdomain })
-      .returning({ subdomain: schema.reservedSubdomains.subdomain });
-    inserted += rows.length;
-  }
-  return { inserted, existing: subdomains.length - inserted };
+/** The reservation of each label; classic-app checks run in parallel. */
+export async function reservationsAmong(
+  labels: string[],
+  legacy?: LegacySchoolChecker,
+): Promise<Map<string, SubdomainReservation>> {
+  const results = await Promise.all(
+    labels.map(async (label): Promise<[string, SubdomainReservation]> => {
+      if (isReservedProductSubdomain(label)) return [label, "reserved"];
+      if (!legacy) return [label, "free"];
+      const status = await legacy.checkSubdomain(label);
+      if (status === "owned") return [label, "reserved"];
+      return [label, status === "free" ? "free" : "unavailable"];
+    }),
+  );
+  return new Map(results);
+}
+
+export async function subdomainReservation(
+  label: string,
+  legacy?: LegacySchoolChecker,
+): Promise<SubdomainReservation> {
+  return (await reservationsAmong([label], legacy)).get(label) ?? "free";
 }
