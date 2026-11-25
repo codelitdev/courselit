@@ -1,9 +1,14 @@
+# The build runs on the build machine's own platform ($BUILDPLATFORM): its
+# output is JavaScript, the same for every target, and emulating arm64 on an
+# x86 builder (or the reverse) is several times slower. The runner, and its
+# production install, run as the target platform.
 FROM node:22-alpine AS base
 
 # Install pnpm in base image
 RUN corepack enable pnpm
 
-FROM base AS builder
+FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
+RUN corepack enable pnpm
 WORKDIR /app
 
 # copy pnpm specific files
