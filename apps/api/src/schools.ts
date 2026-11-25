@@ -33,6 +33,7 @@ import {
   registerPaymentWebhook,
   WebhookRegistrationError,
 } from "./payment-webhooks.js";
+import { isUniqueViolation } from "./utils/db-errors.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
 import { provisionSchoolCommunity } from "./spaces.js";
 import { provisionWebsite } from "./website.js";
@@ -153,124 +154,138 @@ export async function createSchool(
   const sendLit = sendLitConfig();
   const sendLitConfigured = Boolean(sendLit.server && sendLit.provisioningApiKey);
 
-  await db.transaction(async (tx) => {
-    await tx.insert(schema.schools).values(row);
-    await insertSchoolOnboarding(tx as AppDb, schoolId, now);
-    await tx.insert(schema.schoolHosts).values({
-      id: uuidv7(clock),
-      schoolId,
-      hostname: input.subdomain,
-      kind: "subdomain",
-      verificationStatus: "verified",
-      verifiedAt: now,
-      isPrimary: true,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const [owner] = await tx
-      .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
-      .from(schema.user)
-      .where(eq(schema.user.id, input.principalId))
-      .limit(1);
-    const ownerEmail = owner?.email ?? "";
-    const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
-    const schoolAccountId = uuidv7(clock);
-    const ownerAccountPublicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock);
-
-    await tx.insert(schema.schoolAccounts).values({
-      id: schoolAccountId,
-      publicId: ownerAccountPublicId,
-      schoolId,
-      userId: input.principalId,
-      email: normalizeEmail(ownerEmail),
-      displayName: ownerName,
-      bio: "",
-      avatar: owner?.image ? { url: owner.image } : null,
-      status: "active",
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const membershipId = uuidv7(clock);
-    const membershipPublicId = createPublicId("mem", clock);
-    await tx.insert(schema.memberships).values({
-      id: membershipId,
-      publicId: membershipPublicId,
-      schoolId,
-      schoolAccountId,
-      isOwner: true,
-      permissions: [],
-      presetId: "full_access",
-      version: 1,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId,
-      actorId: input.principalId,
-      action: "school.created",
-      resourceType: "school",
-      resourceId: publicId,
-      requestId: input.requestId ?? "",
-      createdAt: now,
-    });
-    await tx
-      .delete(schema.selectedSchools)
-      .where(eq(schema.selectedSchools.userId, input.principalId));
-    await tx
-      .insert(schema.selectedSchools)
-      .values({ userId: input.principalId, schoolId });
-
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId,
-      actorId: input.principalId,
-      action: "learner.owner_profile_provisioned",
-      resourceType: "learner",
-      resourceId: ownerAccountPublicId,
-      requestId: input.requestId ?? "",
-      createdAt: now,
-    });
-    await provisionWebsite(tx as AppDb, { schoolId }, clock);
-    await provisionSchoolCommunity(
-      tx as AppDb,
-      {
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(schema.schools).values(row);
+      await insertSchoolOnboarding(tx as AppDb, schoolId, now);
+      await tx.insert(schema.schoolHosts).values({
+        id: uuidv7(clock),
         schoolId,
-        schoolName: input.name,
-        principalId: input.principalId,
-        schoolAccountId,
-        schoolAccountPublicId: ownerAccountPublicId,
-      },
-      clock,
-    );
+        hostname: input.subdomain,
+        kind: "subdomain",
+        verificationStatus: "verified",
+        verifiedAt: now,
+        isPrimary: true,
+        createdAt: now,
+        updatedAt: now,
+      });
 
-    await tx.insert(schema.schoolIntegrations).values({
-      id: uuidv7(clock),
-      schoolId,
-      provider: "sendlit",
-      server: sendLit.server ?? "",
-      externalId: publicId,
-      status: sendLitConfigured ? "pending" : "action_required",
-      lastError: sendLitConfigured ? null : "SENDLIT_CONFIGURATION_MISSING",
-      createdAt: now,
-      updatedAt: now,
-    });
-    await tx.insert(schema.integrationOutboxJobs).values({
-      id: uuidv7(clock),
-      schoolId,
-      provider: "sendlit",
-      type: "provision_sendlit",
-      payload: {
+      const [owner] = await tx
+        .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
+        .from(schema.user)
+        .where(eq(schema.user.id, input.principalId))
+        .limit(1);
+      const ownerEmail = owner?.email ?? "";
+      const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
+      const schoolAccountId = uuidv7(clock);
+      const ownerAccountPublicId = createPublicId(CONTACT_PUBLIC_ID_PREFIX, clock);
+
+      await tx.insert(schema.schoolAccounts).values({
+        id: schoolAccountId,
+        publicId: ownerAccountPublicId,
+        schoolId,
+        userId: input.principalId,
+        email: normalizeEmail(ownerEmail),
+        displayName: ownerName,
+        bio: "",
+        avatar: owner?.image ? { url: owner.image } : null,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const membershipId = uuidv7(clock);
+      const membershipPublicId = createPublicId("mem", clock);
+      await tx.insert(schema.memberships).values({
+        id: membershipId,
+        publicId: membershipPublicId,
+        schoolId,
+        schoolAccountId,
+        isOwner: true,
+        permissions: [],
+        presetId: "full_access",
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId,
+        actorId: input.principalId,
+        action: "school.created",
+        resourceType: "school",
+        resourceId: publicId,
+        requestId: input.requestId ?? "",
+        createdAt: now,
+      });
+      await tx
+        .delete(schema.selectedSchools)
+        .where(eq(schema.selectedSchools.userId, input.principalId));
+      await tx
+        .insert(schema.selectedSchools)
+        .values({ userId: input.principalId, schoolId });
+
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId,
+        actorId: input.principalId,
+        action: "learner.owner_profile_provisioned",
+        resourceType: "learner",
+        resourceId: ownerAccountPublicId,
+        requestId: input.requestId ?? "",
+        createdAt: now,
+      });
+      await provisionWebsite(tx as AppDb, { schoolId }, clock);
+      await provisionSchoolCommunity(
+        tx as AppDb,
+        {
+          schoolId,
+          schoolName: input.name,
+          principalId: input.principalId,
+          schoolAccountId,
+          schoolAccountPublicId: ownerAccountPublicId,
+        },
+        clock,
+      );
+
+      await tx.insert(schema.schoolIntegrations).values({
+        id: uuidv7(clock),
+        schoolId,
+        provider: "sendlit",
+        server: sendLit.server ?? "",
         externalId: publicId,
-        name: input.name,
-      },
-      nextAttemptAt: now,
-      createdAt: now,
-      updatedAt: now,
+        status: sendLitConfigured ? "pending" : "action_required",
+        lastError: sendLitConfigured ? null : "SENDLIT_CONFIGURATION_MISSING",
+        createdAt: now,
+        updatedAt: now,
+      });
+      await tx.insert(schema.integrationOutboxJobs).values({
+        id: uuidv7(clock),
+        schoolId,
+        provider: "sendlit",
+        type: "provision_sendlit",
+        payload: {
+          externalId: publicId,
+          name: input.name,
+        },
+        nextAttemptAt: now,
+        createdAt: now,
+        updatedAt: now,
+      });
     });
-  });
+  } catch (error) {
+    if (
+      !isUniqueViolation(error, ["schools_subdomain_unique", "school_hosts_hostname_unique"])
+    ) {
+      throw error;
+    }
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "subdomain_taken" },
+      }),
+    };
+  }
   return { ok: true, value: toSchoolDto(row, true) };
 }
 

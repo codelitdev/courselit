@@ -3,9 +3,20 @@ import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
-import { listSchoolsForUser, resolveSchoolByHost, storefrontOriginForHost } from "./schools.js";
+import {
+  createSchool,
+  listSchoolsForUser,
+  resolveSchoolByHost,
+  storefrontOriginForHost,
+} from "./schools.js";
 import { seedWorld } from "./seed.js";
-import { customDomainConfig, type DnsResolver } from "./school-hosts.js";
+import { isPlatformHostname } from "./school-host.js";
+import {
+  createSchoolCustomHost,
+  customDomainConfig,
+  type DnsResolver,
+} from "./school-hosts.js";
+import type { AppDb } from "./types.js";
 
 type DnsRecords = {
   txt: Record<string, string[][]>;
@@ -375,5 +386,132 @@ describe.serial("school custom host lifecycle", () => {
     });
     expect(await resolveSchoolByHost(runtime.db, "not-a-real-school")).toBeNull();
     await runtime.close();
+  });
+});
+
+/** A unique violation as node-postgres reports it, wrapped like a Drizzle query error. */
+function uniqueViolation(constraint: string) {
+  return Object.assign(new Error("Failed query"), {
+    cause: Object.assign(new Error("duplicate key value"), { code: "23505", constraint }),
+  });
+}
+
+/** The runtime database, except that transactions fail with `error`. */
+function failingTransactions(db: AppDb, error: Error): AppDb {
+  return new Proxy(db, {
+    get(target, property, receiver) {
+      if (property === "transaction") return () => Promise.reject(error);
+      return Reflect.get(target, property, receiver);
+    },
+  });
+}
+
+describe.serial("reserved and contended hostnames", () => {
+  it("rejects the platform domain and names under it as custom domains", async () => {
+    const originalPlatformDomain = process.env.PLATFORM_SITE_DOMAIN;
+    process.env.PLATFORM_SITE_DOMAIN = "schools.example.test";
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const attach = (hostname: string) =>
+        dispatch(runtime, {
+          method: "POST",
+          path: "/v1/school/hosts",
+          headers: {
+            cookie: world.owner.sessionCookie,
+            "x-school-id": world.schoolA.publicId,
+          },
+          body: { hostname },
+        });
+      for (const hostname of [
+        "schools.example.test",
+        "www.schools.example.test",
+        "Dash.Schools.Example.Test",
+        "school-b.schools.example.test",
+        "deep.nested.schools.example.test",
+        "acme.localhost",
+      ]) {
+        const response = await attach(hostname);
+        expect(response.status).toBe(409);
+        expect(response.body).toMatchObject({
+          code: "conflict",
+          details: { reason: "hostname_reserved" },
+        });
+      }
+      expect((await attach("notschools.example.test")).status).toBe(201);
+    } finally {
+      await runtime.close();
+      if (originalPlatformDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
+      else process.env.PLATFORM_SITE_DOMAIN = originalPlatformDomain;
+    }
+  });
+
+  it("matches only the platform domain and its subdomains", () => {
+    expect(isPlatformHostname("courselit.app", "courselit.app")).toBe(true);
+    expect(isPlatformHostname("www.courselit.app", "courselit.app")).toBe(true);
+    expect(isPlatformHostname("api.courselit.app.", "https://courselit.app/")).toBe(true);
+    expect(isPlatformHostname("mycourselit.app", "courselit.app")).toBe(false);
+    expect(isPlatformHostname("courselit.app.example.com", "courselit.app")).toBe(false);
+    expect(isPlatformHostname("learn.example.com", "courselit.app")).toBe(false);
+  });
+
+  it("reports a unique violation on insert as a taken address", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const host = await createSchoolCustomHost(
+        failingTransactions(runtime.db, uniqueViolation("school_hosts_hostname_unique")),
+        {
+          schoolId: world.schoolA.id,
+          actorId: world.owner.id,
+          hostname: "race.example.com",
+          requestId: "req-race-host",
+        },
+        clock,
+      );
+      expect(host.ok).toBe(false);
+      if (!host.ok) {
+        expect(host.error.code).toBe("conflict");
+        expect(host.error.safeDetails).toEqual({ reason: "hostname_taken" });
+      }
+
+      const school = await createSchool(
+        failingTransactions(runtime.db, uniqueViolation("schools_subdomain_unique")),
+        {
+          name: "Race School",
+          subdomain: "race-school",
+          locale: "en",
+          currency: "USD",
+          principalId: world.owner.id,
+          requestId: "req-race-school",
+        },
+        clock,
+      );
+      expect(school.ok).toBe(false);
+      if (!school.ok) {
+        expect(school.error.code).toBe("conflict");
+        expect(school.error.safeDetails).toEqual({ reason: "subdomain_taken" });
+      }
+
+      // Other failures, including unrelated unique constraints, still throw.
+      await expect(
+        createSchool(
+          failingTransactions(runtime.db, uniqueViolation("schools_public_id_unique")),
+          {
+            name: "Race School",
+            subdomain: "race-school",
+            locale: "en",
+            currency: "USD",
+            principalId: world.owner.id,
+            requestId: "req-race-school-2",
+          },
+          clock,
+        ),
+      ).rejects.toThrow("Failed query");
+    } finally {
+      await runtime.close();
+    }
   });
 });

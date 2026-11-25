@@ -59,6 +59,9 @@ async function readError(response: Response): Promise<Error> {
   if (reason === "website_setup_pending") {
     return new Error("Website setup is still in progress. Try again shortly.");
   }
+  if (reason === "hostname_reserved") {
+    return new Error("This domain isn't available.");
+  }
   if (reason === "custom_domain_already_attached") {
     return new Error("Remove the current custom domain before adding another.");
   }

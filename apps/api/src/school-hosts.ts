@@ -8,8 +8,9 @@ import {
 } from "@codelitdev/platform";
 import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { normalizeCustomHostname } from "./school-host.js";
+import { isPlatformHostname, normalizeCustomHostname } from "./school-host.js";
 import type { AppDb } from "./types.js";
+import { isUniqueViolation } from "./utils/db-errors.js";
 
 export type CustomDomainVerificationRecords = {
   cnameTarget: string;
@@ -210,6 +211,14 @@ export async function createSchoolCustomHost(
   if (!hostname) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
+  if (isPlatformHostname(hostname)) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "hostname_reserved" },
+      }),
+    };
+  }
 
   const [claimed] = await db
     .select()
@@ -245,45 +254,56 @@ export async function createSchoolCustomHost(
   }
 
   const now = clock.now();
-  const row = await db.transaction(async (tx) => {
-    let host = currentCustom;
-    if (!host) {
-      [host] = await tx
-        .insert(schema.schoolHosts)
-        .values({
-          id: uuidv7(clock),
-          schoolId: input.schoolId,
-          hostname,
-          kind: "custom",
-          verificationStatus: "unverified",
-          verificationToken: randomBytes(16).toString("hex"),
-          txtSatisfied: null,
-          routingSatisfied: null,
-          verifiedAt: null,
-          isPrimary: false,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-    } else if (!host.verificationToken) {
-      [host] = await tx
-        .update(schema.schoolHosts)
-        .set({ verificationToken: randomBytes(16).toString("hex"), updatedAt: now })
-        .where(eq(schema.schoolHosts.id, host.id))
-        .returning();
-    }
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: input.schoolId,
-      actorId: input.actorId,
-      action: "school.host_added",
-      resourceType: "school_host",
-      resourceId: hostname,
-      requestId: input.requestId,
-      createdAt: now,
+  let row: typeof schema.schoolHosts.$inferSelect;
+  try {
+    row = await db.transaction(async (tx) => {
+      let host = currentCustom;
+      if (!host) {
+        [host] = await tx
+          .insert(schema.schoolHosts)
+          .values({
+            id: uuidv7(clock),
+            schoolId: input.schoolId,
+            hostname,
+            kind: "custom",
+            verificationStatus: "unverified",
+            verificationToken: randomBytes(16).toString("hex"),
+            txtSatisfied: null,
+            routingSatisfied: null,
+            verifiedAt: null,
+            isPrimary: false,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+      } else if (!host.verificationToken) {
+        [host] = await tx
+          .update(schema.schoolHosts)
+          .set({ verificationToken: randomBytes(16).toString("hex"), updatedAt: now })
+          .where(eq(schema.schoolHosts.id, host.id))
+          .returning();
+      }
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: input.schoolId,
+        actorId: input.actorId,
+        action: "school.host_added",
+        resourceType: "school_host",
+        resourceId: hostname,
+        requestId: input.requestId,
+        createdAt: now,
+      });
+      return host!;
     });
-    return host!;
-  });
+  } catch (error) {
+    if (!isUniqueViolation(error, ["school_hosts_hostname_unique"])) throw error;
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "hostname_taken" },
+      }),
+    };
+  }
 
   const records = verificationRecords(row, config)!;
   return {
