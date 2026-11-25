@@ -1144,7 +1144,11 @@ export function SetupWizard({
     (inGoingLive && !emailFailed && !liveFailed && !liveReady) ||
     (step === "offer" && !data.offer) ||
     ((step === "build" || step === "brand") && uploadsBusy) ||
-    (step === "school" && !inCreating && availability === "checking");
+    (step === "school" &&
+      !inCreating &&
+      (availability === "checking" ||
+        availability === "taken" ||
+        availability === "invalid"));
 
   function onNext() {
     if (inGoingLive && emailFailed) {
