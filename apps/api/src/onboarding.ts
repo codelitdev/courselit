@@ -363,10 +363,11 @@ async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>>
     ...[...schools, ...hosts].map((row) => row.value),
     ...candidates.filter(isReservedSubdomain),
   ]);
-  const legacy = await legacySubdomainsAmong(
-    candidates.filter((value) => !taken.has(value)),
-  );
-  return new Set([...taken, ...legacy]);
+  // Only the first few still-free candidates are asked of the classic app, in one
+  // round of parallel calls; the rest aren't offered. The wizard shows three.
+  const free = candidates.filter((value) => !taken.has(value));
+  const legacy = await legacySubdomainsAmong(free.slice(0, 4));
+  return new Set([...taken, ...legacy, ...free.slice(4)]);
 }
 
 export async function checkSchoolSubdomain(
