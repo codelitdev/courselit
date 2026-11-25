@@ -1,23 +1,24 @@
-import { afterEach, describe, expect, it, spyOn } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
-const CHECK_URL = "http://classic.test/school/exists";
 const CLASSIC = new Set(["oldschool.courselit.app", "oldschool-studio.courselit.app"]);
-const realFetch = globalThis.fetch;
 
-function stubClassicApp(status?: number) {
-  return spyOn(globalThis, "fetch").mockImplementation((async (input, init) => {
-    const url = new URL(input instanceof Request ? input.url : String(input));
-    if (url.origin + url.pathname !== CHECK_URL) return realFetch(input, init);
-    const host = url.searchParams.get("host") ?? "";
-    return new Response(null, { status: status ?? (CLASSIC.has(host) ? 200 : 404) });
-  }) as typeof fetch);
+/** A stand-in classic app on a random local port; `status` forces every answer. */
+function startClassicApp(status?: number) {
+  const server = Bun.serve({
+    port: 0,
+    fetch(request) {
+      const host = new URL(request.url).searchParams.get("host") ?? "";
+      return new Response(null, { status: status ?? (CLASSIC.has(host) ? 200 : 404) });
+    },
+  });
+  process.env.LEGACY_SCHOOL_CHECK_URL = `http://127.0.0.1:${server.port}/school/exists`;
+  return server;
 }
 
 async function setup() {
-  process.env.LEGACY_SCHOOL_CHECK_URL = CHECK_URL;
   process.env.PLATFORM_SITE_DOMAIN = "courselit.app";
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
   const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
@@ -52,7 +53,7 @@ describe("classic app school subdomains", () => {
   });
 
   it("read as taken, skip classic names in suggestions and can't be created", async () => {
-    const fetchSpy = stubClassicApp();
+    const classic = startClassicApp();
     const { runtime, check, create } = await setup();
     try {
       const checked = await check("oldschool");
@@ -68,30 +69,30 @@ describe("classic app school subdomains", () => {
       expect(await check("newschool")).toMatchObject({ available: true, reason: null });
       expect((await create("newschool")).status).toBe(201);
     } finally {
-      fetchSpy.mockRestore();
+      classic.stop(true);
       await runtime.close();
     }
   });
 
   it("refuses to create when the classic app can't answer", async () => {
-    const fetchSpy = stubClassicApp(503);
+    const classic = startClassicApp(503);
     const { runtime, create } = await setup();
     try {
       expect((await create("newschool")).status).toBe(500);
     } finally {
-      fetchSpy.mockRestore();
+      classic.stop(true);
       await runtime.close();
     }
   });
 
   it("isn't consulted when LEGACY_SCHOOL_CHECK_URL is unset", async () => {
-    const fetchSpy = stubClassicApp();
+    const classic = startClassicApp();
     const { runtime, create } = await setup();
     delete process.env.LEGACY_SCHOOL_CHECK_URL;
     try {
       expect((await create("oldschool")).status).toBe(201);
     } finally {
-      fetchSpy.mockRestore();
+      classic.stop(true);
       await runtime.close();
     }
   });
