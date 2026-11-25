@@ -3,7 +3,11 @@ import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
-const CLASSIC = new Set(["oldschool.courselit.app", "oldschool-studio.courselit.app"]);
+const CLASSIC = new Set([
+  "oldschool.courselit.app",
+  "oldschool-studio.courselit.app",
+  "elsewhere.classic.test",
+]);
 
 /** A stand-in classic app on a random local port; `status` forces every answer. */
 function startClassicApp(status?: number) {
@@ -45,7 +49,10 @@ async function setup() {
 describe("classic app school subdomains", () => {
   const originalUrl = process.env.LEGACY_SCHOOL_CHECK_URL;
   const originalDomain = process.env.PLATFORM_SITE_DOMAIN;
+  const originalLegacyDomain = process.env.LEGACY_SCHOOL_DOMAIN;
   afterEach(() => {
+    if (originalLegacyDomain === undefined) delete process.env.LEGACY_SCHOOL_DOMAIN;
+    else process.env.LEGACY_SCHOOL_DOMAIN = originalLegacyDomain;
     if (originalUrl === undefined) delete process.env.LEGACY_SCHOOL_CHECK_URL;
     else process.env.LEGACY_SCHOOL_CHECK_URL = originalUrl;
     if (originalDomain === undefined) delete process.env.PLATFORM_SITE_DOMAIN;
@@ -79,6 +86,22 @@ describe("classic app school subdomains", () => {
     const { runtime, create } = await setup();
     try {
       expect((await create("newschool")).status).toBe(500);
+    } finally {
+      classic.stop(true);
+      await runtime.close();
+    }
+  });
+
+  it("asks about LEGACY_SCHOOL_DOMAIN when the classic app is on another domain", async () => {
+    const classic = startClassicApp();
+    const { runtime, check } = await setup();
+    try {
+      expect(await check("elsewhere")).toMatchObject({ available: true });
+      process.env.LEGACY_SCHOOL_DOMAIN = "classic.test";
+      expect(await check("elsewhere")).toMatchObject({
+        available: false,
+        reason: "taken",
+      });
     } finally {
       classic.stop(true);
       await runtime.close();

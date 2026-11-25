@@ -4,13 +4,18 @@
  * <label>.<platform domain>`: 200 means a classic school owns it, 404 means it
  * doesn't. Any other answer throws, so a name is never handed out unchecked.
  * When the variable is unset (self-hosted installs), nothing is checked.
+ * `LEGACY_SCHOOL_DOMAIN` overrides the domain asked about, for environments
+ * where the classic app serves schools on a different domain (QA).
  */
 export async function legacySubdomainsAmong(
   candidates: string[],
 ): Promise<Set<string>> {
   const url = process.env.LEGACY_SCHOOL_CHECK_URL;
   if (!url || candidates.length === 0) return new Set();
-  const domain = process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app";
+  const domain =
+    process.env.LEGACY_SCHOOL_DOMAIN ||
+    process.env.PLATFORM_SITE_DOMAIN ||
+    "courselit.app";
   const owned = await Promise.all(
     candidates.map(async (label) => {
       const endpoint = new URL(url);
