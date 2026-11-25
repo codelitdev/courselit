@@ -1,4 +1,8 @@
-FROM node:22-alpine AS base
+# Install and build run on the build machine's own platform ($BUILDPLATFORM):
+# the output is JavaScript, the same for every target, and emulating arm64 on
+# an x86 builder (or the reverse) is several times slower. Only the runtime
+# stage below is the target platform, with sharp's native binaries for it.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS base
 
 # Install pnpm in base image
 RUN corepack enable pnpm
@@ -41,8 +45,21 @@ COPY --from=deps /app/ ./
 # Build all workspaces
 RUN pnpm run build
 
+# sharp (Next.js image optimization) is the one native module traced into the
+# standalone output. Fetch its binaries for the target platform, at the
+# version the lockfile resolved, without running anything for that platform.
+# The runner is Alpine, so fetch the musl builds.
+ARG TARGETARCH
+RUN version=$(sed -n 's/^ *sharp@\([0-9][0-9.]*\):.*/\1/p' pnpm-lock.yaml | head -n 1) \
+    && test -n "$version" \
+    && mkdir -p /target-sharp && cd /target-sharp \
+    && printf '{"dependencies":{"sharp":"%s"}}' "$version" > package.json \
+    && npm install --omit=dev --ignore-scripts --no-audit --no-fund \
+        --os=linux --libc=musl \
+        --cpu=$([ "$TARGETARCH" = amd64 ] && echo x64 || echo "$TARGETARCH")
+
 # Production image
-FROM base AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -60,6 +77,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/next.config.js ./apps/web
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/next.config.js ./
+# Put the target platform's sharp binaries (@img/sharp-linuxmusl-* and
+# @img/sharp-libvips-linuxmusl-*) beside each traced copy of sharp. Packages
+# already there (the build platform's) are left as is.
+COPY --from=builder /target-sharp/node_modules/@img /tmp/target-img
+RUN for dir in $(find node_modules -type d -path '*/node_modules/sharp'); do \
+        mkdir -p "$dir/../@img"; \
+        for pkg in /tmp/target-img/sharp-*linuxmusl-*; do \
+            [ -e "$dir/../@img/${pkg##*/}" ] || cp -R "$pkg" "$dir/../@img/"; \
+        done; \
+    done \
+    && rm -rf /tmp/target-img
 
 USER nextjs
 
