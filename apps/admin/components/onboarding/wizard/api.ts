@@ -1,6 +1,7 @@
 "use client";
 
 import type { MediaRef } from "@courselit/api-contract";
+import type { CourseLitPlanLimits } from "@courselit/api-contract/courselit-plans";
 import { COURSELIT_PERMISSIONS } from "@courselit/api-contract/team-permissions";
 import {
   type MediaUploadPurpose,
@@ -80,6 +81,8 @@ export type BillingCatalog = {
     amountMinor: number;
     trialDays: number;
   }>;
+  /** What each plan allows here; `null` values are unlimited. */
+  limits?: Record<PlanId, CourseLitPlanLimits> | null;
 };
 
 /** OSS = no catalog and no checkout. Everything else is the hosted service. */
@@ -95,7 +98,12 @@ export type SchoolOnboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: {
+    required: boolean;
+    entitled: boolean;
+    paid: boolean;
+    trialEndsAt: string | null;
+  };
   updatedAt: string;
 };
 
@@ -398,6 +406,25 @@ async function ensureSection(
   return section.id;
 }
 
+/**
+ * The first lesson's page: the text the creator wrote, or a Video block for
+ * the uploaded video. Every lesson is a page; `lessonKind` is only what the
+ * wizard asked for.
+ */
+export function courseLessonPage(
+  lessonKind: LessonKind,
+  lessonBody: string,
+  videoMediaId: string | null,
+): Record<string, unknown> {
+  if (lessonKind === "video") {
+    return {
+      type: "doc",
+      content: videoMediaId ? [{ type: "video", attrs: { media: videoMediaId } }] : [],
+    };
+  }
+  return textDoc(lessonBody);
+}
+
 async function saveCourseLesson(
   schoolId: string,
   productId: string,
@@ -417,6 +444,7 @@ async function saveCourseLesson(
     }).catch(() => undefined);
     refs.lessonId = undefined;
     refs.lessonType = undefined;
+    refs.lessonContentVersion = undefined;
     emit({ ...refs });
   }
   if (!wantsLesson && !lessonTitle.trim()) return;
@@ -428,28 +456,32 @@ async function saveCourseLesson(
     refs,
     emit,
   );
-  const content = lessonKind === "video" ? { value: "" } : textDoc(lessonBody);
   const body = {
     title,
-    content,
-    mediaId: lessonKind === "video" ? (video?.mediaId ?? null) : null,
+    content: courseLessonPage(lessonKind, lessonBody, video?.mediaId ?? null),
     sectionId,
     status: wantsLesson ? ("published" as const) : ("draft" as const),
   };
   if (refs.lessonId) {
-    await request(`/api/v1/lessons/${encodeURIComponent(refs.lessonId)}`, {
-      method: "PATCH",
-      schoolId,
-      body,
-    });
+    const updated = await request<{ contentVersion: number }>(
+      `/api/v1/lessons/${encodeURIComponent(refs.lessonId)}`,
+      {
+        method: "PATCH",
+        schoolId,
+        body: { ...body, expectedContentVersion: refs.lessonContentVersion ?? 1 },
+      },
+    );
+    refs.lessonContentVersion = updated.contentVersion;
+    emit({ ...refs });
     return;
   }
-  const lesson = await request<{ id: string }>(
+  const lesson = await request<{ id: string; contentVersion: number }>(
     `/api/v1/products/${encodeURIComponent(productId)}/lessons`,
-    { method: "POST", schoolId, body: { ...body, type: lessonKind as LessonKind } },
+    { method: "POST", schoolId, body: { ...body, type: "page" } },
   );
   refs.lessonId = lesson.id;
   refs.lessonType = lessonKind;
+  refs.lessonContentVersion = lesson.contentVersion;
   emit({ ...refs });
 }
 
@@ -486,9 +518,7 @@ async function saveDownloadFiles(
         body: {
           title: file.name,
           type: "file",
-          content: { value: "" },
           mediaId: file.mediaId,
-          downloadable: true,
           sectionId,
           status: "published",
         },

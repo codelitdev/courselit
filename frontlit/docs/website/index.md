@@ -10,9 +10,24 @@ The **Website** menu has three entries:
 
 - **Pages** lists the pages of your site and opens each one in the page editor.
 - **Blogs** lists your blog posts and opens each one in the blog editor.
-- **Settings** holds your **Branding**, **Code Injection** and **Domain** options.
+- **Settings** holds your **Branding**, **Code Injection**, **Domain** and **Search engines** options.
 
 Everything you change on a page or blog post is saved as a draft first. Visitors only see your changes after you publish them.
+
+## How quickly changes appear
+
+Your public website can take up to about a minute to show a change. This applies to anything you publish or edit, including:
+
+- Pages, blog posts and the shared header and footer.
+- Products and communities going live or offline.
+- Your site title, logo and other branding.
+- Links that appear on their own, such as **Products** and **Blog** in the header.
+
+**Why:** your site keeps a copy of each public page and serves that copy to visitors, then refreshes it in the background about once a minute. Visitors get pages instantly, even when many arrive at once, and search engines rank fast sites higher. The trade-off is a short delay before a change reaches everyone.
+
+If a change doesn't show yet, wait a minute and reload the page. It can take one more reload, because the visit that finds the copy out of date still shows the old version while the new one is prepared.
+
+The admin dashboard, the [page editor](/docs/website/page-editor) preview and the learner dashboard always show your latest changes straight away.
 
 ## Who can edit the website
 
@@ -23,7 +38,7 @@ Access to the Website menu depends on the permissions your role has. See [Permis
 | See pages, blogs and branding | `storefront:read` |
 | Create pages and blog posts, edit drafts, change branding and the theme | `storefront:write` |
 | Publish, unpublish or delete pages and blog posts | `storefront:publish` |
-| Change code injection or your domain | `school:write` |
+| Change code injection, your domain or search engine access | `school:write` |
 
 ## What to read next
 
@@ -68,6 +83,12 @@ Serve your site from your own domain.
 <Card title="Code injection" href="/docs/website/code-injection">
 
 Add tracking or other scripts to every page.
+
+</Card>
+
+<Card title="Search engines and AI crawlers" href="/docs/website/search-engines">
+
+Hide your site before launch and block AI training crawlers.
 
 </Card>
 

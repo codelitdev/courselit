@@ -4,65 +4,109 @@ import { Eye, Settings2, X } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
-import { contentStatusLabel, type WebsiteContentStatus } from "@/lib/website-content";
+import { type WritingSaveStatus, writingSaveStatusLabel } from "@/lib/writing-editor";
+
+export type WritingEditorPreview = {
+  /** Accessible name and tooltip, e.g. "View live blog post". */
+  label: string;
+  /** Opens in a new tab. */
+  href?: string | null;
+  /** Used instead of `href` when the link has to be made first (a preview token). */
+  onClick?: () => void;
+  busy?: boolean;
+  /** Tooltip while there is nothing to preview yet. */
+  unavailableLabel: string;
+};
 
 type WritingEditorShellProps = {
   backHref: string;
   backLabel: string;
   contextLabel: string;
   title: string;
-  status: WebsiteContentStatus;
-  updatedAt?: string | null;
-  saving: boolean;
-  publishing: boolean;
+  /** "Draft", "Published", "Live", ... */
+  statusLabel: string;
+  /** Said next to the status, e.g. "Unpublished changes". */
+  statusNote?: string | null;
+  saveStatus: WritingSaveStatus;
+  preview: WritingEditorPreview;
+  /** The document's own actions (publish, discard, make live), right of the save status. */
+  actions: ReactNode;
+  settingsTitle?: string;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
-  onPublish: () => void;
-  onDiscardDraft: () => void;
-  previewHref?: string | null;
   settings: ReactNode;
   children: ReactNode;
 };
 
-function savedAtLabel(updatedAt: string | null | undefined, now: number | null) {
-  if (!updatedAt || now === null) return "Saved";
-  const elapsedSeconds = Math.max(
-    0,
-    Math.floor((now - new Date(updatedAt).getTime()) / 1000),
+function PreviewButton({ preview }: { preview: WritingEditorPreview }) {
+  if (preview.href) {
+    return (
+      <Button asChild variant="ghost" size="sm" className="px-2">
+        <a
+          href={preview.href}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={preview.label}
+          title={preview.label}
+        >
+          <Eye className="size-4" />
+        </a>
+      </Button>
+    );
+  }
+  const available = Boolean(preview.onClick);
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="px-2"
+      aria-label={available ? preview.label : preview.unavailableLabel}
+      title={available ? preview.label : preview.unavailableLabel}
+      disabled={!available || preview.busy}
+      onClick={preview.onClick}
+    >
+      <Eye className="size-4" />
+    </Button>
   );
-  if (elapsedSeconds < 60) return "Saved just now";
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-  if (elapsedMinutes < 60) return `Saved ${elapsedMinutes}m ago`;
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-  if (elapsedHours < 24) return `Saved ${elapsedHours}h ago`;
-  return `Saved ${Math.floor(elapsedHours / 24)}d ago`;
 }
 
+/**
+ * The full-screen writing layout (blog posts, lesson pages): a top bar with
+ * the way back, the document's status and actions, a document area, and a
+ * settings panel on the right.
+ */
 export function WritingEditorShell({
   backHref,
   backLabel,
   contextLabel,
   title,
-  status,
-  updatedAt,
-  saving,
-  publishing,
+  statusLabel,
+  statusNote = null,
+  saveStatus,
+  preview,
+  actions,
+  settingsTitle = "Document settings",
   settingsOpen,
   onSettingsOpenChange,
-  onPublish,
-  onDiscardDraft,
-  previewHref,
   settings,
   children,
 }: WritingEditorShellProps) {
   const [now, setNow] = useState<number | null>(null);
-  const hasDraftChanges = status !== "published";
+  const closeSettingsLabel = `Close ${settingsTitle.toLowerCase()}`;
+  const openSettingsLabel = `Open ${settingsTitle.toLowerCase()}`;
 
   useEffect(() => {
     setNow(Date.now());
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(interval);
   }, []);
+
+  // Restart the clock on every save, so "Saved just now" is right away.
+  const savedAt = saveStatus.kind === "saved" ? saveStatus.at : null;
+  useEffect(() => {
+    if (savedAt !== null) setNow(Date.now());
+  }, [savedAt]);
 
   return (
     <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -75,7 +119,7 @@ export function WritingEditorShell({
             ← {backLabel}
           </Link>
           <span aria-hidden className="h-7 w-px bg-border" />
-          <span className="hidden shrink-0 text-sm text-muted-foreground sm:inline">
+          <span className="hidden max-w-48 shrink-0 truncate text-sm text-muted-foreground sm:inline">
             {contextLabel}
           </span>
           <span aria-hidden className="hidden text-sm text-muted-foreground sm:inline">
@@ -85,76 +129,36 @@ export function WritingEditorShell({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {previewHref ? (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="px-2"
-            >
-              <a
-                href={previewHref}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="View live blog post"
-                title="View live blog post"
-              >
-                <Eye className="size-4" />
-              </a>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="px-2"
-              aria-label="Publish this blog before viewing it"
-              title="Publish this blog before viewing it"
-              disabled
-            >
-              <Eye className="size-4" />
-            </Button>
-          )}
+          <PreviewButton preview={preview} />
           <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
-            {contentStatusLabel(status)}
+            {statusLabel}
           </span>
+          {statusNote ? (
+            <span className="hidden rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-800 md:inline dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              {statusNote}
+            </span>
+          ) : null}
           <span
-            className="hidden min-w-24 text-right text-xs text-muted-foreground lg:inline"
+            className={`hidden min-w-24 text-right text-xs lg:inline ${
+              saveStatus.kind === "error" ? "text-destructive" : "text-muted-foreground"
+            }`}
             aria-live="polite"
           >
-            {saving ? "Saving…" : savedAtLabel(updatedAt, now)}
+            {writingSaveStatusLabel(saveStatus, now)}
           </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onDiscardDraft}
-            disabled={publishing || saving || !hasDraftChanges}
-            className="hidden sm:inline-flex"
-          >
-            Discard draft
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={onPublish}
-            disabled={publishing || saving || !hasDraftChanges}
-          >
-            {publishing ? "Publishing…" : "Publish changes"}
-          </Button>
+          {actions}
           <span aria-hidden className="hidden h-7 w-px bg-border sm:block" />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="px-2"
-            aria-label={
-              settingsOpen ? "Close document settings" : "Open document settings"
-            }
-            title={settingsOpen ? "Close document settings" : "Open document settings"}
+            className={settingsOpen ? "bg-muted px-2" : "px-2"}
+            aria-pressed={settingsOpen}
+            aria-label={settingsOpen ? closeSettingsLabel : openSettingsLabel}
+            title={settingsOpen ? closeSettingsLabel : openSettingsLabel}
             onClick={() => onSettingsOpenChange(!settingsOpen)}
           >
-            {settingsOpen ? <X className="size-4" /> : <Settings2 className="size-4" />}
+            <Settings2 className="size-4" />
           </Button>
         </div>
       </header>
@@ -165,19 +169,19 @@ export function WritingEditorShell({
           <>
             <button
               type="button"
-              aria-label="Close document settings"
+              aria-label={closeSettingsLabel}
               className="absolute inset-0 z-20 bg-foreground/10 md:hidden"
               onClick={() => onSettingsOpenChange(false)}
             />
             <aside className="absolute inset-y-0 right-0 z-30 flex w-[min(20rem,calc(100vw-2rem))] flex-col border-l bg-card shadow-xl md:relative md:z-auto md:w-80 md:shadow-none">
               <div className="flex h-14 shrink-0 items-center justify-between border-b px-5">
-                <h2 className="font-semibold">Document settings</h2>
+                <h2 className="font-semibold">{settingsTitle}</h2>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="px-2"
-                  aria-label="Close document settings"
+                  aria-label={closeSettingsLabel}
                   onClick={() => onSettingsOpenChange(false)}
                 >
                   <X className="size-4" />

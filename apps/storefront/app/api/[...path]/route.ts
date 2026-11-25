@@ -56,6 +56,12 @@ async function proxy(
           { status: 404 },
         );
       }
+      if (resolution.status === "offline") {
+        return NextResponse.json(
+          { code: "forbidden", message: "This site isn't available." },
+          { status: 403 },
+        );
+      }
       headers.set("x-school-id", resolution.schoolId);
     }
     // Only this school's own cookies reach the API: the learner session, and

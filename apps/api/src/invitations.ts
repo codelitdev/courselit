@@ -19,6 +19,7 @@ import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { queueSendLitContactSync } from "./contacts.js";
 import { ensureSchoolAccount } from "./learners.js";
+import { findSsoBackedAccount } from "./shadow-users.js";
 import { parsePermissions } from "./permissions.js";
 import type { AppDb } from "./types.js";
 
@@ -120,6 +121,21 @@ export async function createInvitation(
         ok: false as const,
         error: createPlatformError("conflict", {
           safeDetails: { reason: "already_member" },
+        }),
+      };
+    }
+
+    // An account an identity provider can sign in as never joins the team.
+    if (
+      await findSsoBackedAccount(tx as unknown as AppDb, {
+        schoolId: ctx.tenantId!,
+        email: normalized,
+      })
+    ) {
+      return {
+        ok: false as const,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "sso_linked_account" },
         }),
       };
     }
@@ -237,6 +253,20 @@ export async function resendInvitation(
       if (invitationEffective.some((p) => !delegable.has(p))) {
         return { ok: false as const, error: createPlatformError("forbidden") };
       }
+    }
+
+    if (
+      await findSsoBackedAccount(tx as unknown as AppDb, {
+        schoolId: invitation.schoolId,
+        email: invitation.normalizedEmail,
+      })
+    ) {
+      return {
+        ok: false as const,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "sso_linked_account" },
+        }),
+      };
     }
 
     const token = randomBytes(32).toString("base64url");
@@ -482,6 +512,23 @@ export async function acceptTeamInvitation(
           };
         }
       }
+    }
+
+    // Checked before `ensureSchoolAccount`, which would move an SSO-backed
+    // account with this address onto the accepting user.
+    if (
+      await findSsoBackedAccount(tx as unknown as AppDb, {
+        schoolId: invitation.schoolId,
+        userId: ctx.principalId,
+        email: actor.email,
+      })
+    ) {
+      return {
+        ok: false as const,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "sso_linked_account" },
+        }),
+      };
     }
 
     // 3. Ensure actor's school account exists

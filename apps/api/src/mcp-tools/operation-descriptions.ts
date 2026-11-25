@@ -42,8 +42,7 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Adds the connected user's reaction to a post or comment, or removes it if it is already there.",
   toggleCommunityPostSubscription:
     "Subscribes the connected user to notifications for a post, or unsubscribes them if they already are.",
-  createCommunityReport:
-    "Reports a post or comment to the community's moderators.",
+  createCommunityReport: "Reports a post or comment to the community's moderators.",
   listCommunityReports: "Lists the reports moderators have received for a community.",
   listProductDiscussionReports:
     "Lists the reports learners have made about posts, comments and replies in a course's discussion.",
@@ -104,8 +103,7 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   createPlan:
     "Creates a pricing plan for a product: free, one-time, subscription or payment plan.",
   updatePlan: "Changes a product plan's name, price or terms.",
-  setDefaultPlan:
-    "Makes a plan the one shown first on a product's checkout.",
+  setDefaultPlan: "Makes a plan the one shown first on a product's checkout.",
   archivePlan:
     "Stops selling a product plan. Existing customers keep access. Confirm with the user first.",
   listCommunityPlans: "Lists a community's pricing plans, including archived ones.",
@@ -132,13 +130,21 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   listSections: "Lists a product's sections in order, with the lessons in each.",
   createSection: "Adds a section to a product.",
   updateSection: "Renames a section or changes its settings.",
-  deleteSection:
-    "Deletes a section and its lessons. Confirm with the user first.",
+  deleteSection: "Deletes a section and its lessons. Confirm with the user first.",
   reorderSections:
     "Sets the order of a product's sections. Pass every sectionId in the order wanted.",
+  getLessonContentFormat:
+    "Describes what a lesson page may hold, as Markdown: the text syntax, every block tag (<Video>, <Audio>, <PDF>, <File>, <Image>, <Embed>, <Callout>, <Quiz>) with its props and an example, and the size limits. Blocks this school may not add now are listed with the reason (for example trial). Read it before writing lesson Markdown.",
+  getLesson:
+    "Reads one lesson with its page as Markdown (markdown) and as JSON (content), plus contentVersion for the next update. For a page this is its draft when it has one (hasUnpublishedChanges is true), else what learners read. The Markdown includes the quiz's correct answers and IDs.",
   createLesson:
-    "Adds a lesson to a product, of any type: text, video, audio, PDF, file, embed, quiz or SCORM. For several text lessons at once, prefer apply_course_outline.",
-  updateLesson: "Changes a lesson's title, content, type settings or published state.",
+    'Adds a lesson to a product. Course lessons are pages (type page, the default) or SCORM; download products take file lessons only. Send a page as Markdown in markdown: headings ## to ####, lists, links, tables, and block tags such as <Video media="med_…" />, <Callout type="tip">…</Callout> and at most one <Quiz>; call get_lesson_content_format for every tag. Leave quiz, question and option IDs out; the saved lesson returns them. For several page lessons at once, prefer apply_course_outline.',
+  updateLesson:
+    "Changes a lesson's title, page, published state or other settings. Send the page as Markdown in markdown (or JSON in content, not both), and with it expectedContentVersion, the contentVersion you last read; if someone changed the lesson since, the call fails with a conflict, so read it again with get_lesson and reapply the change. Start from the Markdown get_lesson returns and keep the quiz, question and option IDs in it, so learners' attempts stay attached. A page change is saved as a draft that learners don't see until publish_lesson_content, or until status becomes published, which makes the lesson live with its draft.",
+  publishLessonContent:
+    "Publishes a lesson page's draft so learners see it. Fails if the draft has an incomplete quiz. Pass expectedContentVersion to publish only the version you read. Confirm with the user first.",
+  discardLessonDraft:
+    "Throws away a lesson page's unpublished draft and goes back to what learners read. Confirm with the user first.",
   deleteLesson: "Deletes a lesson. Confirm with the user first.",
   reorderLessons:
     "Sets the order of lessons within a product's sections. Pass the lessonIds in the order wanted.",
@@ -154,17 +160,32 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Reads the school's payment settings: the payment provider, its saved keys (secrets are not returned) and whether its payment webhook is connected.",
   updateSchoolPaymentSettings:
     "Changes the school's payment provider or its keys. Saving a provider's keys also registers the payment webhook on that account. This changes how customers pay. Confirm with the user first.",
+  getSchoolPlanFeatures:
+    "Lists the features the school's CourseLit plan includes (for example scorm or audit_log), to explain why an action is refused.",
+  listSchoolAuditEvents:
+    "Lists the school's audit log, newest first: who changed what and when. Needs the Business plan. Billing events are not included.",
   getSchoolCodeInjection:
     "Reads the custom code added to the head and body of every public page.",
   updateSchoolCodeInjection:
     "Changes the custom code added to every public page. It runs for all visitors. Confirm with the user first.",
-  updateSchool: "Changes the school's name or other profile details.",
-  listSchoolHosts: "Lists the custom domains attached to the school and their verification status.",
-  createSchoolHost: "Attaches a custom domain to the school and returns the DNS records to add.",
+  updateSchool:
+    "Changes school settings: currency, whether to hide the CourseLit badge, the learner upload limit, and search visibility (`hideFromSearch` keeps every crawler out before launch; `blockAiTraining`, on by default, blocks AI training crawlers while AI search stays allowed).",
+  listSchoolHosts:
+    "Lists the custom domains attached to the school and their verification status.",
+  createSchoolHost:
+    "Attaches a custom domain to the school and returns the DNS records to add.",
   verifySchoolHost:
     "Checks the DNS records for a custom domain and marks it verified when they are right.",
   deleteSchoolHost:
     "Detaches a custom domain from the school. Confirm with the user first.",
+  getSchoolLoginMethods:
+    "Reads which sign-in methods the school's learners can use (email codes, Google, single sign-on) and which are on right now.",
+  updateSchoolLoginMethods:
+    "Turns learner sign-in with email codes or Google on or off. Turning a method off signs out learners who used it. At least one method always stays on. This changes how learners sign in. Confirm with the user first.",
+  listSsoConnections:
+    "Lists the school's single sign-on connections with their status, verified email domains and the values to enter at the identity provider. Secrets are never returned.",
+  getSsoConnection:
+    "Reads one single sign-on connection: status, identity provider settings, domains and the DNS record to publish for each, and whether it was tested and the plan allows it. Secrets are never returned.",
 
   // Website
   listSchoolWebsitePages: "Lists the school website's pages with their publish status.",
@@ -185,10 +206,12 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Changes the website's title, tagline, logo or active theme.",
   listSchoolWebsiteBrandingThemes: "Lists the school's custom website themes.",
   createSchoolWebsiteBrandingTheme: "Creates a custom website theme.",
-  updateSchoolWebsiteBrandingTheme: "Changes a custom website theme's colours and styles.",
+  updateSchoolWebsiteBrandingTheme:
+    "Changes a custom website theme's colours and styles.",
   listSchoolWebsiteBlogs: "Lists the school's blog posts with their publish status.",
   createSchoolWebsiteBlog: "Creates a draft blog post.",
-  getSchoolWebsiteBlog: "Reads one blog post, including its draft and published content.",
+  getSchoolWebsiteBlog:
+    "Reads one blog post, including its draft and published content.",
   updateSchoolWebsiteBlog:
     "Changes a blog post's draft: title, slug, body or SEO. Nothing goes live until publish_school_website_blog.",
   deleteSchoolWebsiteBlog:
@@ -201,8 +224,10 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Throws away a blog post's unpublished draft and goes back to the published version. Confirm with the user first.",
 
   // Email
-  getMailingSettings: "Reads the school's email settings: sender name, reply-to and mailing address.",
-  updateMailingSettings: "Changes the school's email sender name, reply-to or mailing address.",
+  getMailingSettings:
+    "Reads the school's email settings: sender name, reply-to and mailing address.",
+  updateMailingSettings:
+    "Changes the school's email sender name, reply-to or mailing address.",
   getSchoolEmailDelivery:
     "Reads whether the school's email is set up to send, and what is still missing.",
   listMailSequences: "Lists the school's email sequences with their status.",

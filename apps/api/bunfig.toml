@@ -1,0 +1,3 @@
+[test]
+# Sets the deployment settings the tests run against (plan limits).
+preload = ["./src/test-env.ts"]

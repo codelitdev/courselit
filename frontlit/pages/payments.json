@@ -1,0 +1,150 @@
+{
+  "$schema": "https://frontlit.app/schema/page.v1.json",
+  "title": "Accept payments for courses with no fee on sales",
+  "description": "Connect your own Stripe, Lemon Squeezy or Razorpay account and sell with one-time, subscription or instalment plans. CourseLit takes no cut of your sales.",
+  "layout": [
+    {
+      "name": "hero",
+      "settings": {
+        "verticalPadding": "py-20",
+        "background": {
+          "type": "gradient",
+          "backgroundImage": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(198,91,76,.38) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(38,29,22,.075) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(207,123,38,.10), transparent 70%)",
+          "backgroundImageDark": "linear-gradient(90deg, transparent 0 calc(max(12px, 7% - 60px) - 1px), rgba(235,131,115,.35) calc(max(12px, 7% - 60px) - 1px) calc(max(12px, 7% - 60px) + 1px), transparent calc(max(12px, 7% - 60px) + 1px)), repeating-linear-gradient(180deg, transparent 0 35px, rgba(235,231,226,.06) 35px 36px), radial-gradient(60% 70% at 85% 0%, rgba(230,160,92,.08), transparent 70%)",
+          "gradientBackgroundSize": "100% 100%, 100% 36px, 100% 100%",
+          "gradientBackgroundRepeat": "repeat",
+          "gradientMaskImage": "linear-gradient(black 75%, transparent)"
+        },
+        "layout": "centered",
+        "preTitle": "Payments",
+        "title": "Get paid *directly*, with no fee on your sales",
+        "description": "Learners pay through your own payment provider account, so the money goes straight to you. CourseLit charges no transaction fee on any plan.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "Read the payments docs",
+        "secondaryButtonAction": "/docs/settings/payments",
+        "smallPrint": "Your provider's own fees still apply."
+      }
+    },
+    {
+      "name": "embed",
+      "settings": {
+        "cssId": "preview",
+        "verticalPadding": "py-16",
+        "contentType": "script",
+        "content": "<div class=\"clp-wrap\" id=\"clp-checkout\">\n<style>\n.clp-wrap{--clp-fg:var(--foreground,#261d16);--clp-muted:var(--muted-foreground,#5c544b);--clp-card:var(--card,#fefdfb);--clp-border:var(--border,#e2ddd5);--clp-soft:var(--muted,#eeebe5);--clp-accent:#b54c3d;--clp-tint:rgba(198,91,76,.10);--clp-ok:#2d8949;--clp-btn-fg:#fdfcf8;color:var(--clp-fg);font:inherit;font-family:\"fl-hanken-grotesk\",\"Hanken Grotesk\",ui-sans-serif,system-ui,sans-serif;container-type:inline-size;max-width:1000px;margin:0 auto}\n:host(.dark) .clp-wrap,.dark .clp-wrap{--clp-accent:#eb8373;--clp-tint:rgba(235,131,115,.14);--clp-ok:#5fb37a;--clp-btn-fg:#250e0b}\n.clp-wrap *,.clp-wrap *::before,.clp-wrap *::after{box-sizing:border-box}\n.clp-wrap svg{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}\n.clp-wrap .clp-card{background:var(--clp-card);border:1px solid var(--clp-border);border-radius:18px;box-shadow:0 24px 48px -24px rgba(38,29,22,.35)}\n.clp-wrap .clp-mono{font-family:\"fl-spline-sans-mono\",\"Spline Sans Mono\",ui-monospace,monospace}\n.clp-wrap .clp-badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--clp-soft);color:var(--clp-muted)}\n.clp-wrap .clp-ok{color:var(--clp-ok);background:color-mix(in srgb,var(--clp-ok) 12%,transparent)}\n.clp-wrap .clp-ok::before{content:\"\";width:6px;height:6px;border-radius:50%;background:var(--clp-ok)}\n.clp-wrap .clp-chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;border-radius:8px;padding:3px 8px;background:var(--clp-tint);color:var(--clp-accent);white-space:nowrap}\n.clp-wrap .clp-cap{margin:14px 0 0;text-align:center;font-size:.75rem;color:var(--clp-muted)}\n.clp-wrap .clp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;background:var(--clp-accent);color:var(--clp-btn-fg);font:inherit;font-size:.88rem;font-weight:600;padding:11px 18px;cursor:default;white-space:nowrap}\n\n.clp-wrap .clp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:0;overflow:hidden}\n.clp-wrap .clp-left{padding:26px;background:var(--clp-soft);display:flex;flex-direction:column;gap:16px}\n.clp-wrap .clp-thumb{aspect-ratio:16/10;border-radius:14px;position:relative;overflow:hidden;background:linear-gradient(135deg,#f3d9c4,#e7a98f 55%,#b8795f)}\n.clp-wrap .clp-thumb::before{content:\"\";position:absolute;left:-8%;bottom:-30%;width:70%;height:75%;border-radius:50%;background:rgba(255,255,255,.35)}\n.clp-wrap .clp-thumb::after{content:\"\";position:absolute;right:10%;top:16%;width:26%;aspect-ratio:1;border-radius:50%;background:rgba(255,248,235,.85)}\n.clp-wrap .clp-pn{margin:0;font-size:1.25rem;font-weight:600;letter-spacing:-.01em}\n.clp-wrap .clp-pd{margin:4px 0 0;font-size:.85rem;color:var(--clp-muted);line-height:1.5}\n.clp-wrap .clp-fee{display:flex;align-items:center;gap:10px;border:1px solid var(--clp-border);background:var(--clp-card);border-radius:12px;padding:10px 12px;font-size:.78rem;line-height:1.4}\n.clp-wrap .clp-fee .clp-ico{color:var(--clp-ok)}\n.clp-wrap .clp-fee b{display:block;font-size:.8rem}\n.clp-wrap .clp-fee span.clp-m{color:var(--clp-muted)}\n.clp-wrap .clp-right{padding:26px;display:flex;flex-direction:column;gap:12px}\n.clp-wrap .clp-k{margin:0;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clp-muted)}\n.clp-wrap .clp-plan{display:flex;align-items:center;gap:12px;border:1px solid var(--clp-border);border-radius:14px;padding:13px 14px;background:var(--clp-card)}\n.clp-wrap .clp-plan.clp-sel{border-color:var(--clp-accent);background:var(--clp-tint);box-shadow:0 0 0 1px var(--clp-accent)}\n.clp-wrap .clp-radio{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--clp-border);display:grid;place-items:center}\n.clp-wrap .clp-sel .clp-radio{border-color:var(--clp-accent)}\n.clp-wrap .clp-sel .clp-radio::after{content:\"\";width:8px;height:8px;border-radius:50%;background:var(--clp-accent)}\n.clp-wrap .clp-pt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}\n.clp-wrap .clp-pt b{font-size:.92rem}\n.clp-wrap .clp-pt small{font-size:.75rem;color:var(--clp-muted)}\n.clp-wrap .clp-pp{font-weight:600;font-size:.95rem;white-space:nowrap}\n.clp-wrap .clp-btn{width:100%;margin-top:6px;padding:13px 18px}\n.clp-wrap .clp-note{margin:0;text-align:center;font-size:.75rem;color:var(--clp-muted)}\n@container (max-width:760px){.clp-wrap .clp-grid{grid-template-columns:1fr}.clp-wrap .clp-left,.clp-wrap .clp-right{padding:18px}}\n</style>\n\n<div class=\"clp-card clp-grid\" aria-label=\"Example checkout\">\n  <div class=\"clp-left\">\n    <div class=\"clp-thumb\" aria-hidden=\"true\"></div>\n    <div><p class=\"clp-pn\">Watercolour basics</p><p class=\"clp-pd\">Four weeks of washes, colour mixing and layering, ending with your first landscape.</p></div>\n    <div class=\"clp-fee\"><span class=\"clp-ico\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z\"/><path d=\"m9 12 2 2 4-4\"/></svg></span><div><b>Your Stripe account</b><span class=\"clp-m\">Paid straight to the school. CourseLit fee $0.00</span></div></div>\n  </div>\n  <div class=\"clp-right\" role=\"radiogroup\" aria-label=\"Choose a plan\">\n    <p class=\"clp-k clp-mono\">Choose a plan</p>\n    <div class=\"clp-plan clp-sel\" role=\"radio\" aria-checked=\"true\"><span class=\"clp-radio\"></span><span class=\"clp-pt\"><b>One time</b><small>A single payment</small></span><span class=\"clp-pp\">$49</span></div>\n    <div class=\"clp-plan\" role=\"radio\" aria-checked=\"false\"><span class=\"clp-radio\"></span><span class=\"clp-pt\"><b>Subscription</b><small>Billed monthly</small></span><span class=\"clp-pp\">$9/month</span></div>\n    <div class=\"clp-plan\" role=\"radio\" aria-checked=\"false\"><span class=\"clp-radio\"></span><span class=\"clp-pt\"><b>Instalments</b><small>3 monthly payments</small></span><span class=\"clp-pp\">3 &times; $17</span></div>\n    <span class=\"clp-btn\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"4\" y=\"11\" width=\"16\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/></svg>Pay $49 with Stripe</span>\n    <p class=\"clp-note\">Learners pay through the school's own provider account.</p>\n  </div>\n</div>\n<p class=\"clp-cap\">Illustration with sample data.</p>\n</div>\n"
+      }
+    },
+    {
+      "name": "featured",
+      "settings": {
+        "cssId": "providers",
+        "layout": "grid",
+        "title": "Bring your own provider",
+        "description": "Choose one provider for your school and enter its keys.",
+        "items": [
+          {
+            "title": "Stripe",
+            "description": "Add your publishable key and secret key.",
+            "icon": "CreditCard"
+          },
+          {
+            "title": "Lemon Squeezy",
+            "description": "Add your key, store ID and variant IDs for one-time, monthly and yearly plans.",
+            "icon": "Citrus"
+          },
+          {
+            "title": "Razorpay",
+            "description": "Add your key and secret key.",
+            "icon": "Wallet"
+          }
+        ]
+      }
+    },
+    {
+      "name": "grid",
+      "settings": {
+        "cssId": "plans",
+        "title": "Flexible plans for every offer",
+        "description": "Add several plans to a course, download or community, and learners pick one at checkout.",
+        "buttonCaption": "",
+        "buttonAction": "",
+        "columns": 2,
+        "items": [
+          {
+            "title": "Free",
+            "description": "Learners get access straight away. Free plans need no payment setup.",
+            "icon": "Gift"
+          },
+          {
+            "title": "One time",
+            "description": "A single payment for access to the product.",
+            "icon": "Banknote"
+          },
+          {
+            "title": "Subscription",
+            "description": "A recurring payment, monthly or yearly, for as long as the learner stays.",
+            "icon": "RefreshCw"
+          },
+          {
+            "title": "Instalments",
+            "description": "A fixed number of monthly payments, from 2 to 60.",
+            "icon": "CalendarDays"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Bundle products into *a community plan*",
+        "body": "Include published courses and digital downloads in a community plan. Members get them automatically when their membership becomes active, with no extra checkout.\n\nYou choose which plan is shown first on the sales page. Archive an old plan to stop offering it, and the people already on it keep their access.\n\n[See communities](/communities)"
+      }
+    },
+    {
+      "name": "content",
+      "settings": {
+        "title": "Know *what you set up*",
+        "body": "Your school has one currency, set when you create it, and every price uses it. Once your school has taken a payment, the currency can't be changed.\n\nAfter you save your keys, CourseLit creates the payment confirmation webhook on your provider account for you, so learners get access straight after they pay.\n\n[Set up payments](/docs/settings/payments)",
+        "alignment": "right"
+      }
+    },
+    {
+      "name": "faq",
+      "settings": {
+        "cssId": "faq",
+        "title": "Payment questions",
+        "items": [
+          {
+            "question": "Does CourseLit take a percentage of my sales?",
+            "answer": "No. CourseLit charges no fee on your sales on any plan. Your payment provider's own fees still apply."
+          },
+          {
+            "question": "Can I sell before connecting a provider?",
+            "answer": "You can create products and use free plans without one. Paid plans need a connected provider."
+          },
+          {
+            "question": "Does the currency work with Lemon Squeezy?",
+            "answer": "The currency you choose in CourseLit is not applied at checkout for Lemon Squeezy. Set your currency in your Lemon Squeezy dashboard and match each subscription variant's price."
+          },
+          {
+            "question": "What if I reset my payment method?",
+            "answer": "Paid plans of every product fail at checkout until you choose a provider again. Free plans keep working and your saved keys are kept."
+          }
+        ]
+      }
+    },
+    {
+      "name": "banner",
+      "settings": {
+        "layout": "boxed",
+        "title": "Keep what you earn",
+        "description": "Start a free trial, connect your provider and set your first price.",
+        "buttonCaption": "Start free trial",
+        "buttonAction": "https://app.courselit.cluster.clqa.site",
+        "secondaryButtonCaption": "See pricing",
+        "secondaryButtonAction": "/pricing"
+      }
+    }
+  ]
+}

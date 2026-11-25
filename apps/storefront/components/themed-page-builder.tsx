@@ -37,6 +37,7 @@ import {
   Header2,
   Header3,
   Header4,
+  Image,
   Input,
   Label,
   Link,
@@ -73,6 +74,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@frontlit/page-builder/primitives";
+import NextLink from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
@@ -86,6 +88,8 @@ type ThemedLabelProps = WithoutTheme<ComponentProps<typeof Label>> & {
 };
 type ThemedCardImageProps = WithoutTheme<ComponentProps<typeof PageCardImage>> & {
   theme?: ThemeStyle;
+  /** Fills a card edge to edge; the card's own rounded, clipped edge shapes it. */
+  flush?: boolean;
 };
 type ThemedSurfaceProps = ComponentProps<"div"> & {
   theme?: ThemeStyle;
@@ -282,8 +286,63 @@ export function LearnerCaption(props: WithoutTheme<ComponentProps<typeof Caption
   return <Caption {...props} theme={useSchoolThemeStyle()} />;
 }
 
-export function LearnerLink(props: WithoutTheme<ComponentProps<typeof Link>>) {
-  return <Link {...props} theme={useSchoolThemeStyle()} />;
+/**
+ * A themed link that navigates. The page-builder `Link` primitive only styles
+ * its text (it renders a `span`), so the anchor wraps it: Next's `Link` for
+ * paths on this site, a plain `a` for anything else. The anchor carries the
+ * layout classes and the primitive keeps the theme's typography; the
+ * primitive's box is dropped (`contents`) so the caller's flex or truncation
+ * classes apply to the anchor's own children.
+ */
+export function LearnerLink({
+  href,
+  target,
+  rel,
+  title,
+  onClick,
+  className,
+  children,
+  ...props
+}: WithoutTheme<ComponentProps<typeof Link>>) {
+  const theme = useSchoolThemeStyle();
+  if (!href) {
+    return (
+      <Link
+        {...props}
+        className={className}
+        title={title}
+        onClick={onClick}
+        theme={theme}
+      >
+        {children}
+      </Link>
+    );
+  }
+  const content = (
+    <Link {...props} className="contents" theme={theme}>
+      {children}
+    </Link>
+  );
+  const anchor = { title, onClick, target, rel, className };
+  return isSitePath(href) && !target ? (
+    <NextLink href={href} {...anchor}>
+      {content}
+    </NextLink>
+  ) : (
+    <a href={href} {...anchor}>
+      {content}
+    </a>
+  );
+}
+
+/** A path on this site (`/join`), not a protocol-relative or absolute URL. */
+export function isSitePath(href: string): boolean {
+  return href.startsWith("/") && !href.startsWith("//");
+}
+
+/** A themed image: the theme's card radius, sized by the caller. */
+export function LearnerImage(props: WithoutTheme<ComponentProps<typeof Image>>) {
+  return <Image {...props} theme={useSchoolThemeStyle()} />;
 }
 
 export function LearnerBadge(props: WithoutTheme<ComponentProps<typeof Badge>>) {
@@ -309,6 +368,7 @@ export function LearnerCardHeader(
 export function LearnerCardImage({
   className,
   theme: providedTheme,
+  flush = false,
   ...props
 }: ThemedCardImageProps) {
   const contextTheme = useSchoolThemeStyle();
@@ -317,7 +377,7 @@ export function LearnerCardImage({
     <PageCardImage
       {...props}
       theme={theme}
-      className={cn(className, theme.interactives?.card?.border?.radius)}
+      className={cn(className, !flush && theme.interactives?.card?.border?.radius)}
     />
   );
 }

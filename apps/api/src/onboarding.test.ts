@@ -2,11 +2,13 @@ import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
+import { checkSchoolSubdomain } from "./onboarding.js";
 import {
   importReservedSubdomains,
   parseReservedSubdomainList,
 } from "./reserved-subdomains.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
+import { createSchool } from "./schools.js";
 import { type SeededWorld, seedWorld } from "./seed.js";
 
 async function setup(billingMode?: "oss") {
@@ -27,7 +29,7 @@ type Onboarding = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: string; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
 };
 
 const done = (state: Onboarding, key: string) =>
@@ -62,7 +64,9 @@ describe("school onboarding", () => {
       draft: {},
       checklistHidden: false,
       resumePromptHidden: false,
-      billing: { required: true, entitled: false },
+      // The account's first school starts a cardless trial: it can go live,
+      // but nothing has been paid.
+      billing: { required: true, entitled: true, paid: false, trialEndsAt: expect.any(String) },
     });
     expect(state.checklist.map((item) => item.key)).toEqual([
       "pay", "mail", "legal", "home", "domain", "ai", "learners", "welcome", "course", "team",
@@ -193,7 +197,7 @@ describe("school onboarding", () => {
         headers: owner(world),
       })
     ).body as Onboarding;
-    expect(state.billing).toEqual({ required: false, entitled: true });
+    expect(state.billing).toEqual({ required: false, entitled: true, paid: true, trialEndsAt: null });
     const checkout = await dispatch(runtime, {
       method: "POST",
       path: "/v1/school/billing/checkout",
@@ -285,7 +289,9 @@ describe("school subdomain availability", () => {
 
 describe("reserved school addresses", () => {
   async function reservedSetup() {
-    const { runtime, world } = await setup();
+    // OSS mode: these tests create several schools and aren't about the cloud
+    // per-day creation limit.
+    const { runtime, world } = await setup("oss");
     await importReservedSubdomains(runtime.db, ["old-school", "taken-art"], "legacy");
     const check = async (subdomain: string) =>
       (
@@ -315,9 +321,11 @@ describe("reserved school addresses", () => {
     const result = await check("dash");
     expect(result).toMatchObject({ available: false, reason: "reserved" });
     expect(result.suggestions).toEqual(["dash-studio", "dash-art", "dash-school"]);
+    // Fixed product names are refused by the contract schema (400) before the
+    // handler; names reserved in the database get a 409 from the handler.
     const created = await create("dash");
-    expect(created.status).toBe(409);
-    expect(JSON.stringify(created.body)).toContain("subdomain_reserved");
+    expect(created.status).toBe(400);
+    expect(JSON.stringify(created.body)).toContain("validation_failed");
     expect(
       await runtime.db
         .select()
@@ -448,5 +456,33 @@ describe("AI connections", () => {
     });
     expect(again.status).toBe(404);
     await runtime.close();
+  });
+});
+
+describe("reserved subdomains (S19)", () => {
+  it("read as reserved, with suggestions, and can't be created even internally", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    try {
+      const world = await seedWorld(runtime, clock);
+      const checked = await checkSchoolSubdomain(runtime.db, "billing");
+      expect(checked).toMatchObject({ available: false, reason: "reserved" });
+      expect(checked.suggestions.length).toBeGreaterThan(0);
+      const created = await createSchool(
+        runtime.db,
+        {
+          name: "Billing",
+          subdomain: "billing",
+          locale: "en",
+          currency: "USD",
+          principalId: world.owner.id,
+          requestId: "req_reserved",
+        },
+        clock,
+      );
+      expect(created.ok).toBe(false);
+    } finally {
+      await runtime.close();
+    }
   });
 });

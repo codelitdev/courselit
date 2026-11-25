@@ -435,7 +435,10 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
     }
   }
 
-  const hasDraftChanges = page?.status !== "published";
+  // The shared header/footer go live with any page's publish, so their
+  // pending edits make this page publishable too.
+  const hasDraftChanges =
+    page?.status !== "published" || Boolean(page?.sharedWidgetsHaveChanges);
 
   return (
     <AuthGate>
@@ -475,6 +478,15 @@ export function WebsitePageEditor({ pageId }: { pageId: string }) {
               <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
                 {contentStatusLabel(page.status)}
               </span>
+              {page.sharedWidgetsHaveChanges ? (
+                <span
+                  className="rounded-md bg-[var(--warning-soft)] px-2 py-1 text-xs text-[var(--warning)]"
+                  title="The header or footer has unpublished edits. They are shared by every page, so publishing any page takes them live."
+                  data-testid="shared-changes-badge"
+                >
+                  Header/footer changes
+                </span>
+              ) : null}
               <span className="text-xs text-muted-foreground" aria-live="polite">
                 {saving ? "Saving…" : (notice ?? "")}
               </span>

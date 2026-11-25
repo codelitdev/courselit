@@ -9,6 +9,10 @@ import { z } from "zod";
 import { useLearnerSession } from "@/components/communities/learner-community";
 import { LearnerCommunityMembershipBar } from "@/components/communities/learner-community-membership";
 import { LearnerPostGifs, withGif } from "@/components/communities/learner-gif-picker";
+import {
+  LearnerPostVideos,
+  withVideo,
+} from "@/components/communities/learner-youtube-picker";
 import { LearnerPostComposerDialog } from "@/components/communities/learner-post-composer-dialog";
 import { CourseLitLoading, CourseLitLoadingIcon } from "@/components/course-lit-loader";
 import {
@@ -29,6 +33,7 @@ import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
+import { editedNote } from "@/lib/community-edited";
 import { requestJson } from "@/lib/request-json";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { LearnerSpacePost } from "@/components/communities/learner-community";
@@ -91,12 +96,14 @@ const feedPostSchema = z.object({
     )
     .optional(),
   gifUrls: z.array(z.string()).optional(),
+  videoUrls: z.array(z.string()).optional(),
   reactions: z.array(reactionSchema).optional(),
   commentsCount: z.number().int().nonnegative().optional(),
   subscribed: z.boolean().optional(),
   pinned: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  editedAt: z.string().nullable().optional(),
   spaceId: z.string().nullable().optional(),
   space: z
     .object({
@@ -225,6 +232,7 @@ function PostMedia({ post }: { post: FeedPost }) {
     <>
       <PostAttachments post={post} />
       <LearnerPostGifs urls={post.gifUrls ?? []} />
+      <LearnerPostVideos urls={post.videoUrls ?? []} />
     </>
   );
 }
@@ -347,7 +355,8 @@ function FeedPostCard({
 }) {
   const postSpace = post.space ?? space;
   const authorName = post.author?.name || post.author?.email || "Learner";
-  const date = formatPostDate(post.updatedAt ?? post.createdAt);
+  const date = formatPostDate(post.createdAt ?? post.updatedAt);
+  const edited = editedNote(post.editedAt);
   const spaceName = postSpace?.name ?? post.category ?? "Space";
 
   return (
@@ -369,7 +378,14 @@ function FeedPostCard({
           <div className="min-w-0 flex-1">
             <LearnerText2 className="font-medium">{authorName}</LearnerText2>
             <LearnerText2 className="text-sm text-muted-foreground">
-              {date ? `${date} · ${spaceName}` : spaceName}
+              {date ? `${date} · ` : null}
+              {edited ? (
+                <>
+                  <span title={edited.title}>{edited.label}</span>
+                  {" · "}
+                </>
+              ) : null}
+              {spaceName}
             </LearnerText2>
           </div>
           {post.pinned ? (
@@ -472,6 +488,7 @@ export function LearnerFeed({
   const [postMedia, setPostMedia] = useState<LearnerCommunityMedia[]>([]);
   const postMediaRef = useRef<LearnerCommunityMedia[]>([]);
   const [postGifs, setPostGifs] = useState<string[]>([]);
+  const [postVideos, setPostVideos] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [feedRevision, setFeedRevision] = useState(0);
 
@@ -621,6 +638,7 @@ export function LearnerFeed({
             content: content.trim(),
             mediaIds: postMediaRef.current.map((media) => media.id),
             gifUrls: postGifs,
+            videoUrls: postVideos,
           }),
         },
       );
@@ -632,6 +650,7 @@ export function LearnerFeed({
       postMediaRef.current = [];
       setPostMedia([]);
       setPostGifs([]);
+      setPostVideos([]);
       setComposeOpen(false);
       toast.success("Post published.");
     } catch (caught) {
@@ -782,6 +801,7 @@ export function LearnerFeed({
             postMediaRef.current = [];
             setPostMedia([]);
             setPostGifs([]);
+            setPostVideos([]);
           }
         }}
         learnerName={learner?.name || learner?.email || "Learner"}
@@ -802,6 +822,11 @@ export function LearnerFeed({
         onGifSelect={(url) => setPostGifs((current) => withGif(current, url))}
         onGifRemove={(url) =>
           setPostGifs((current) => current.filter((item) => item !== url))
+        }
+        videoUrls={postVideos}
+        onVideoAdd={(url) => setPostVideos((current) => withVideo(current, url))}
+        onVideoRemove={(url) =>
+          setPostVideos((current) => current.filter((item) => item !== url))
         }
         canSubmit={Boolean(composeSpaceId && title.trim() && contentHasText(content))}
         submitting={publishing}

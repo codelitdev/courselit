@@ -240,14 +240,36 @@ describe("drip release", () => {
 
 describe("lesson rows and sections", () => {
   it("labels lesson types", () => {
-    expect(lessonShortLabel("video")).toBe("VID");
-    expect(lessonShortLabel("quiz")).toBe("QZ");
-    expect(lessonMeta({ type: "text", requiresEnrollment: false }, "course")).toBe(
-      "Text · Free preview",
+    expect(lessonShortLabel("page")).toBe("PG");
+    expect(lessonShortLabel("scorm")).toBe("SCO");
+    expect(lessonMeta({ type: "page", requiresEnrollment: false }, "course")).toBe(
+      "Page · Free preview",
+    );
+    expect(lessonMeta({ type: "page", requiresEnrollment: true }, "course")).toBe(
+      "Page",
     );
     expect(lessonMeta({ type: "file", requiresEnrollment: false }, "download")).toBe(
       "File",
     );
+  });
+
+  it("marks live lessons with unpublished changes", () => {
+    const page = { type: "page", requiresEnrollment: true };
+    expect(
+      lessonMeta(
+        { ...page, status: "published", hasUnpublishedChanges: true },
+        "course",
+      ),
+    ).toBe("Page · Unpublished changes");
+    expect(
+      lessonMeta({ ...page, status: "draft", hasUnpublishedChanges: true }, "course"),
+    ).toBe("Page");
+    expect(
+      lessonMeta(
+        { ...page, status: "published", hasUnpublishedChanges: false },
+        "course",
+      ),
+    ).toBe("Page");
   });
 
   it("names a new section after the next free number", () => {

@@ -1,6 +1,10 @@
 # Product-owned. Opens one grouped pull request when a CodeLit Platform
 # release is published; all @codelitdev packages release under one version.
 # The platform conformance workflow gates the pull request.
+#
+# The SAML libraries learner SSO signs people in with are pinned exactly and
+# have had signature-bypass vulnerabilities, so they get their own grouped
+# pull request to review and merge quickly.
 version: 2
 updates:
   - package-ecosystem: "bun"
@@ -9,7 +13,15 @@ updates:
       interval: "daily"
     allow:
       - dependency-name: "@codelitdev/*"
+      - dependency-name: "@node-saml/node-saml"
+      - dependency-name: "xml-crypto"
+      - dependency-name: "@xmldom/xmldom"
     groups:
       codelit-platform:
         patterns:
           - "@codelitdev/*"
+      saml:
+        patterns:
+          - "@node-saml/node-saml"
+          - "xml-crypto"
+          - "@xmldom/xmldom"

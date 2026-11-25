@@ -93,13 +93,12 @@ they do not inherit the Compose values. Set `SENDLIT_SERVER` and
 `SENDLIT_ORGANIZATION_API_KEY` in `apps/api/.env` explicitly. For local use,
 set the organization key to the same value as
 `BOOTSTRAP_TEAM_PROVISIONING_API_KEY` in the repository-root `.env`. The
-runtime key has only `organization:read`, `teams:provision`, and `teams:read`;
-do not give the delivery setup key to CourseLit runtime processes.
-Fresh provisioning returns a team key and works with these scopes. One
-recovery path is not covered yet: if CourseLit has lost a previously issued
-team key, its adapter calls `/provisioning/teams/:teamId/keys`, which requires
-SendLit’s separate `teams:keys` scope. That path will receive `403` until the
-runtime role or recovery flow is deliberately updated.
+runtime key has `organization:read`, `teams:provision`, `teams:read`,
+`teams:manage` (sending limits and sender details), `teams:keys` (recovering a
+lost team key) and `usage:read`; do not give the delivery setup key to
+CourseLit runtime processes. SendLit images older than the one that grants
+these scopes register the key with only the first three, so quota updates
+fail with `403` on them.
 
 Bootstrap validates the same configured secret against its existing key
 record on restarts. Keep both values stable while using the local database;

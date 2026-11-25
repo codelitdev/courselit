@@ -34,6 +34,8 @@ type WebsiteContent = {
   kind: "page" | "blog";
   slug: string;
   status: "draft" | "published" | "published_with_changes";
+  /** Pages only: the shared header/footer have unpublished edits. */
+  sharedWidgetsHaveChanges?: boolean;
   deletable: boolean;
   featuredImage?: MediaRef | null;
   excerpt?: string | null;
@@ -242,6 +244,20 @@ export function WebsitePageList({ onlyBlogs = false }: { onlyBlogs?: boolean }) 
               </Button>
             }
           />
+        ) : null}
+        {!loading &&
+        !error &&
+        !onlyBlogs &&
+        pages.some((page) => page.sharedWidgetsHaveChanges) ? (
+          <p
+            role="status"
+            data-testid="shared-changes-notice"
+            className="rounded-md bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]"
+          >
+            The header or footer has unpublished edits. They are shared by every page:
+            publishing any page takes them live, and discarding any page&apos;s changes
+            resets them.
+          </p>
         ) : null}
         {!loading && !error && visiblePages.length > 0 ? (
           <section

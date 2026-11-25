@@ -31,6 +31,8 @@ When there are waiting requests, a banner says how many people are waiting, with
 
 ## Invite someone
 
+Community invites share a limit with team and product invites: 50 a school in any rolling 24 hours. Past it, you see "You've sent 50 invites in the last 24 hours, the most a school can send. Try again tomorrow."
+
 Click **Invite** above the list. The button is disabled until the community is live and has at least one active plan.
 
 1. Enter their **Email**, an optional **Name** and choose a **Plan**.

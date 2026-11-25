@@ -7,11 +7,12 @@ import {
 } from "@/lib/community-plans";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
-import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import type { TextEditorContent } from "@frontlit/text-editor";
+import { TextRenderer } from "@frontlit/text-editor/renderer";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CourseViewerShell,
   courseViewerPath,
@@ -48,6 +49,9 @@ import { CourseLitLoading } from "@/components/course-lit-loader";
 import { DownloadProductAction } from "@/components/download-product-action";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
+import { lessonLockState } from "@/lib/lesson-lock";
+import { lessonPageHasQuiz } from "@/lib/lesson-page";
+import { requestLessonCompletion } from "@/lib/lesson-completion";
 
 type Learner = {
   id: string;
@@ -120,8 +124,7 @@ function CommunityAccessNote({ product }: { product: Product }) {
   if (!note) return null;
   return (
     <LearnerText2 className="text-muted-foreground">
-      {note}{" "}
-      <LearnerLink href="/join">Join the community</LearnerLink>
+      {note} <LearnerLink href="/join">Join the community</LearnerLink>
     </LearnerText2>
   );
 }
@@ -311,7 +314,9 @@ function CourseOverview({
           />
         </div>
       ) : null}
-      {!product.enrolled && !previewToken ? <CommunityAccessNote product={product} /> : null}
+      {!product.enrolled && !previewToken ? (
+        <CommunityAccessNote product={product} />
+      ) : null}
 
       {product.featuredImage ? (
         <div className="flex justify-center">
@@ -385,6 +390,8 @@ function LessonPage({
   onComplete,
   actionError,
   onError,
+  onQuizChanged,
+  onQuizPassed,
 }: {
   product: Product;
   productSlug: string;
@@ -396,16 +403,21 @@ function LessonPage({
   onComplete: () => void;
   actionError: string | null;
   onError: (message: string) => void;
+  onQuizChanged: () => void;
+  onQuizPassed: () => void;
 }) {
   const searchParams = useSearchParams();
   const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const hasContent = hasLessonContent(lesson);
-  const locked = Boolean(
-    !previewToken &&
-      (!hasContent ||
-        (!product.enrolled && lesson.requiresEnrollment) ||
-        (!product.enrolled && lesson.type === "quiz")),
-  );
+  const lockState = lessonLockState({
+    preview: Boolean(previewToken),
+    enrolled: product.enrolled,
+    requiresEnrollment: lesson.requiresEnrollment,
+    isQuiz: lessonPageHasQuiz(lesson.content),
+    hasContent,
+    availableAt: lesson.availableAt ?? null,
+  });
+  const locked = lockState !== "unlocked";
   const lessonIndex = product.lessons.findIndex((item) => item.id === lesson.id);
   const previousLesson = lessonIndex > 0 ? product.lessons[lessonIndex - 1] : null;
   const nextLesson =
@@ -423,12 +435,18 @@ function LessonPage({
           ) : null}
           {locked ? (
             <div className="flex flex-col items-start gap-4 py-12">
-              <LockKeyhole className="size-8 text-muted-foreground" />
-              <LearnerHeader2>Content Locked</LearnerHeader2>
+              {lockState === "empty" ? null : (
+                <LockKeyhole className="size-8 text-muted-foreground" />
+              )}
+              <LearnerHeader2>
+                {lockState === "empty" ? "Nothing here yet" : "Content Locked"}
+              </LearnerHeader2>
               <LearnerText2 className="text-muted-foreground">
-                {lesson.availableAt && !hasContent
+                {lockState === "dripped" && lesson.availableAt
                   ? `This lesson unlocks on ${new Date(lesson.availableAt).toLocaleString()}.`
-                  : "You are not enrolled in the course."}
+                  : lockState === "empty"
+                    ? "This lesson has no content yet. Check back later."
+                    : "You are not enrolled in the course."}
               </LearnerText2>
               {!product.enrolled && !previewToken ? (
                 <AccessActions
@@ -445,18 +463,14 @@ function LessonPage({
               previewToken={previewToken}
             />
           ) : lesson.content ? (
-            previewToken && lesson.type === "quiz" ? (
-              <LearnerText2 className="text-muted-foreground">
-                Quiz content is available after enrollment.
-              </LearnerText2>
-            ) : (
-              <LessonContent
-                content={lesson.content}
-                lessonId={lesson.id}
-                productId={product.id}
-                type={lesson.type}
-              />
-            )
+            <LessonContent
+              content={lesson.content}
+              lessonId={lesson.id}
+              productId={product.id}
+              previewToken={previewToken}
+              onQuizChanged={onQuizChanged}
+              onQuizPassed={onQuizPassed}
+            />
           ) : (
             <LearnerText2 className="text-muted-foreground">
               Enroll to view this lesson.
@@ -555,6 +569,10 @@ export function PublicCourseViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Bumped to load the product again, e.g. when a lesson's quiz changed.
+  const [reloads, setReloads] = useState(0);
+  const reloadProduct = useCallback(() => setReloads((count) => count + 1), []);
+  const clearActionError = useCallback(() => setActionError(null), []);
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -585,7 +603,8 @@ export function PublicCourseViewer({
   useEffect(() => {
     if (!previewChecked) return;
     let active = true;
-    setLoading(true);
+    // A reload keeps the lesson on screen; only the first load shows the loader.
+    if (reloads === 0) setLoading(true);
     setError(null);
     const endpoint = previewToken
       ? `/api/v1/preview/products/${encodeURIComponent(productId)}`
@@ -598,11 +617,14 @@ export function PublicCourseViewer({
           previewToken ? { "x-preview-token": previewToken } : undefined,
         ),
       }),
-      fetch(publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`), {
-        credentials: "include",
-        cache: "no-store",
-        headers: learnerHeaders(),
-      }),
+      fetch(
+        publicApiPath(schoolId, `/products/${encodeURIComponent(productId)}/plans`),
+        {
+          credentials: "include",
+          cache: "no-store",
+          headers: learnerHeaders(),
+        },
+      ),
     ])
       .then(async ([productResponse, plansResponse]) => {
         if (!active) return;
@@ -629,7 +651,7 @@ export function PublicCourseViewer({
     return () => {
       active = false;
     };
-  }, [previewChecked, previewToken, productId, productSlug, schoolId]);
+  }, [previewChecked, previewToken, productId, productSlug, reloads, schoolId]);
 
   useEffect(() => {
     if (!learner || previewToken) return;
@@ -690,31 +712,16 @@ export function PublicCourseViewer({
   async function completeLesson() {
     if (!lesson) return;
     setActionError(null);
-    const response = await fetch(
-      `/api/v1/learner/lessons/${encodeURIComponent(lesson.id)}/complete`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
-        body: JSON.stringify({}),
-      },
-    );
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as {
-        details?: { reason?: string };
-      } | null;
-      setActionError(
-        body?.details?.reason === "need_to_pass"
-          ? "Pass the quiz before marking this lesson complete."
-          : body?.details?.reason === "scorm_content_incomplete"
-            ? "Complete the SCORM activity before marking this lesson complete."
-            : "Unable to complete the lesson.",
-      );
+    const result = await requestLessonCompletion({
+      lessonId: lesson.id,
+      headers: learnerHeaders,
+    });
+    if (!result.ok) {
+      setActionError(result.message);
       return;
     }
-    const body = (await response.json()) as { certificateId?: string | null };
     setCompletedLessonIds((current) => new Set(current).add(lesson.id));
-    setCertificateId(body.certificateId ?? null);
+    setCertificateId(result.certificateId);
   }
 
   if (loading || !previewChecked) {
@@ -789,6 +796,8 @@ export function PublicCourseViewer({
           onComplete={() => void completeLesson()}
           actionError={actionError}
           onError={setActionError}
+          onQuizChanged={reloadProduct}
+          onQuizPassed={clearActionError}
         />
       ) : (
         <CourseOverview

@@ -15,6 +15,8 @@ import { escapeHtml, sendSystemMail } from "../system-mail.js";
 import { CAPTCHA_AUTH_ENDPOINTS, captchaSettings } from "../captcha.js";
 import { fetchClientMetadataResource } from "./cimd-fetch.js";
 import { CLIENT_IP_HEADER } from "./api-key-throttle.js";
+import { isShadowUser } from "../shadow-users.js";
+import { ProductEvent, signUpMethod, trackProductEvent } from "../product-events.js";
 
 export const AUTH_COOKIE_PREFIX = "courselit";
 
@@ -137,6 +139,32 @@ export function buildBetterAuthOptions(input: {
     },
     account: {
       modelName: "account",
+    },
+    // Shadow users own SSO-created school accounts and never get a
+    // CourseLit-wide session, whatever else goes wrong.
+    databaseHooks: {
+      // Staff accounts only: learners, contacts and shadow users are inserted
+      // directly, never through better-auth.
+      user: {
+        create: {
+          after: async (user: { id: string }, context?: { path?: string } | null) => {
+            trackProductEvent({
+              event: ProductEvent.SIGNED_UP,
+              userId: user.id,
+              properties: { method: signUpMethod(context?.path) },
+            });
+          },
+        },
+      },
+      session: {
+        create: {
+          before: async (session: { userId: string }) => {
+            if (input.db && (await isShadowUser(input.db, session.userId))) {
+              return false as const;
+            }
+          },
+        },
+      },
     },
     verification: {
       modelName: "verification",

@@ -33,7 +33,7 @@ Every product starts as a **draft**. Nobody can see a draft; you make it live wh
 
 ## Sections and lessons
 
-A course is organised into **sections**, like chapters or weeks. Each section holds **lessons**. A lesson has a type: Text, Video, Audio, PDF, File, Embed, Quiz or SCORM.
+A course is organised into **sections**, like chapters or weeks. Each section holds **lessons**. A lesson is a **Page**, built from blocks such as text, video, PDF and a quiz, or a **SCORM** package.
 
 Each lesson is either **Live** or **Draft**. Learners only see live lessons, and only once the course itself is live. You can also release a whole section later with a **drip schedule**. See [Sections and lessons](/docs/products/sections-and-lessons).
 

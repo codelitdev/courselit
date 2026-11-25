@@ -4,6 +4,8 @@
  * drip release reads and saves. Kept free of React so it can be unit tested.
  */
 
+import { lessonHasPendingChanges } from "./lesson-editor";
+
 export type ProductPhase = "draft" | "live" | "offline";
 
 type PhaseInput = {
@@ -306,24 +308,14 @@ export function dripLabel(section: DripSection, locale?: string): string | null 
 // Lesson rows
 
 const LESSON_SHORT: Record<string, string> = {
-  text: "TXT",
-  video: "VID",
-  audio: "AUD",
-  pdf: "PDF",
+  page: "PG",
   file: "FILE",
-  embed: "EMB",
-  quiz: "QZ",
   scorm: "SCO",
 };
 
 const LESSON_LABEL: Record<string, string> = {
-  text: "Text",
-  video: "Video",
-  audio: "Audio",
-  pdf: "PDF",
+  page: "Page",
   file: "File",
-  embed: "Embed",
-  quiz: "Quiz",
   scorm: "SCORM",
 };
 
@@ -333,12 +325,26 @@ export function lessonShortLabel(type: string): string {
 
 /** The muted line under a lesson title: its type, plus "Free preview". */
 export function lessonMeta(
-  lesson: { type: string; requiresEnrollment: boolean },
+  lesson: {
+    type: string;
+    requiresEnrollment: boolean;
+    status?: "draft" | "published";
+    hasUnpublishedChanges?: boolean;
+  },
   kind: "course" | "download",
 ): string {
   const parts = [LESSON_LABEL[lesson.type] ?? lesson.type];
-  if (kind === "course" && !lesson.requiresEnrollment && lesson.type !== "quiz") {
+  if (kind === "course" && !lesson.requiresEnrollment) {
     parts.push("Free preview");
+  }
+  if (
+    lesson.status &&
+    lessonHasPendingChanges({
+      status: lesson.status,
+      hasUnpublishedChanges: lesson.hasUnpublishedChanges ?? false,
+    })
+  ) {
+    parts.push("Unpublished changes");
   }
   return parts.join(" · ");
 }

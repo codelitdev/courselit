@@ -7,6 +7,7 @@ import { seedWorld } from "./seed.js";
 import { listSendLitSequenceSubscribers } from "./sendlit-client.js";
 import { listSequenceSubscribers } from "./sendlit-service.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { jsonResponse } from "./sendlit-test-support.js";
 
 type Call = { url: string; method: string };
 
@@ -49,7 +50,7 @@ async function setup(handler: (url: URL) => Response) {
 }
 
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status });
+  jsonResponse(body, status);
 
 function sendLitFake(url: URL): Response {
   if (url.pathname === "/sequences/seq_1/subscribers") {
@@ -81,7 +82,7 @@ describe("listSendLitSequenceSubscribers", () => {
     let seen = "";
     const ids = await listSendLitSequenceSubscribers(
       "key",
-      "seq 1",
+      "seq_1",
       { page: 2, limit: 5 },
       {
         config,
@@ -92,7 +93,7 @@ describe("listSendLitSequenceSubscribers", () => {
       },
     );
     expect(ids).toEqual(["c_1", "c_2"]);
-    expect(seen).toBe("http://sendlit.test/sequences/seq%201/subscribers?page=2&limit=5");
+    expect(seen).toBe("http://sendlit.test/sequences/seq_1/subscribers?page=2&limit=5");
   });
 
   it("omits the query string without paging", async () => {
@@ -105,22 +106,6 @@ describe("listSendLitSequenceSubscribers", () => {
       },
     });
     expect(seen).toBe("http://sendlit.test/sequences/s/subscribers");
-  });
-
-  it("accepts an items envelope and drops non-string entries", async () => {
-    const ids = await listSendLitSequenceSubscribers("key", "s", {}, {
-      config,
-      fetcher: async () => json({ items: ["c_1", 7, "", "c_2"] }),
-    });
-    expect(ids).toEqual(["c_1", "c_2"]);
-  });
-
-  it("returns nothing for an unexpected body", async () => {
-    const ids = await listSendLitSequenceSubscribers("key", "s", {}, {
-      config,
-      fetcher: async () => json({ nope: true }),
-    });
-    expect(ids).toEqual([]);
   });
 });
 

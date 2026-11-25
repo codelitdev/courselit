@@ -28,6 +28,12 @@ describe.serial("digital downloads", () => {
       finalizeUpload: async () => {
         throw new Error("not_used");
       },
+      inspectUpload: async () => {
+        throw new Error("not_used");
+      },
+      discardUpload: async () => {
+        throw new Error("not_used");
+      },
       getAsset: async ({ schoolId, mediaLitId }) => ({
         mediaLitId,
         group: schoolId,
@@ -91,7 +97,6 @@ describe.serial("digital downloads", () => {
       body: {
         title: "Handout",
         type: "file",
-        content: {},
         mediaId,
         status: "published",
       },

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 export const PERMISSION_DENIED_MESSAGE =
   "You do not have permission to perform that action.";
+const SELF_EXPLAINING_REASONS = new Set(["recent_authentication_required", "plan_required"]);
 const PERMISSION_DENIED_TOAST_ID = "courselit-permission-denied";
 
 export function showPermissionDeniedToast() {
@@ -38,7 +39,13 @@ export function PermissionDeniedFeedback() {
     ) => {
       const response = await originalFetch(input, init);
       if (response.status === 403 && isCourseLitAdminApiRequest(input)) {
-        showPermissionDeniedToast();
+        // Some 403s are not about permission; the screen explains those itself.
+        const reason = await response
+          .clone()
+          .json()
+          .then((body: { details?: { reason?: unknown } }) => body?.details?.reason)
+          .catch(() => null);
+        if (!SELF_EXPLAINING_REASONS.has(reason as string)) showPermissionDeniedToast();
       }
       return response;
     };

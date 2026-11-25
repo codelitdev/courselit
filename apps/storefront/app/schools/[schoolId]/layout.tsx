@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import { CodeInjector } from "../../../components/code-injector";
+import { CourseLitBadgeProvider } from "../../../components/courselit-badge";
 import { LegalPagesProvider, SchoolProvider } from "../../../components/school-context";
 import { SchoolThemeProvider } from "../../../components/school-theme-provider";
 import { LearnerTooltipProvider } from "../../../components/themed-page-builder";
@@ -91,11 +92,14 @@ async function ConfiguredStorefront({
         logoUrl={siteLogoUrl(settings)}
         logoAlt={siteLogoAlt(settings)}
       >
-        {children}
+        <CourseLitBadgeProvider url={settings?.courseLitBadgeUrl ?? null}>
+          {children}
+        </CourseLitBadgeProvider>
       </StorefrontProviders>
       <CodeInjector
         head={settings?.codeInjectionHead}
         body={settings?.codeInjectionBody}
+        ownerOnly={settings?.ownerOnlyCodeInjection === true}
       />
     </LegalPagesProvider>
   );

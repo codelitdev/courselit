@@ -1,22 +1,20 @@
 "use client";
 
-import { publicApiPath, useSchoolId } from "@/components/school-context";
-import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { EmbedViewer } from "@/components/embed-viewer";
-import { QuizViewer } from "@/components/quiz-viewer";
-import { ScormViewer } from "@/components/scorm-viewer";
 import { CourseLitLoading } from "@/components/course-lit-loader";
-import { LearnerText2 } from "@/components/themed-page-builder";
+import { LessonPageRenderer } from "@/components/lesson-page-renderer";
+import { publicApiPath, useSchoolId } from "@/components/school-context";
+import { ScormViewer } from "@/components/scorm-viewer";
+import { LearnerButton, LearnerText2 } from "@/components/themed-page-builder";
+import { readLessonPage } from "@/lib/lesson-page";
 import { learnerHeaders } from "@/lib/school";
-import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 export type LearnerLesson = {
   id: string;
   title: string;
-  type: "text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm";
+  type: "page" | "scorm" | "file";
   status: string;
-  downloadable: boolean;
   requiresEnrollment: boolean;
   sectionId: string | null;
   mediaId: string | null;
@@ -24,41 +22,45 @@ export type LearnerLesson = {
   availableAt: string | null;
 };
 
+/** A page lesson's content; SCORM and file lessons render through `LessonMediaContent`. */
 export function LessonContent({
   content,
   productId,
   lessonId,
-  type,
+  previewToken,
+  onQuizChanged,
+  onQuizPassed,
 }: {
   content: Record<string, unknown>;
   productId: string;
   lessonId: string;
-  type?: LearnerLesson["type"];
+  previewToken: string | null;
+  /** The author replaced the quiz since the lesson loaded: load it again. */
+  onQuizChanged?: () => void;
+  onQuizPassed?: () => void;
 }) {
-  const theme = useSchoolThemeStyle();
-  if (type === "embed" && typeof content.value === "string") {
-    return <EmbedViewer value={content.value} />;
-  }
-  if (Array.isArray(content.questions)) {
-    return <QuizViewer content={content} lessonId={lessonId} productId={productId} />;
-  }
-  if (content.type === "doc" && Array.isArray(content.content)) {
+  const document = readLessonPage(content);
+  if (!document) {
     return (
-      <TextRenderer
-        json={content as unknown as TextEditorContent}
-        theme={theme}
-        className="lesson-rich-text"
-      />
+      <LearnerText2 className="text-muted-foreground">
+        This lesson can't be shown.
+      </LearnerText2>
     );
   }
-  if (typeof content.value === "string") {
-    return <LearnerText2 className="lesson-body">{content.value}</LearnerText2>;
-  }
   return (
-    <LearnerText2 className="text-muted-foreground">
-      This lesson type is not available in this viewer yet.
-    </LearnerText2>
+    <LessonPageRenderer
+      document={document}
+      productId={productId}
+      lessonId={lessonId}
+      previewToken={previewToken}
+      onQuizChanged={onQuizChanged ?? reloadWindow}
+      onQuizPassed={onQuizPassed}
+    />
   );
+}
+
+function reloadWindow() {
+  window.location.reload();
 }
 
 export function LessonMediaContent({
@@ -136,42 +138,6 @@ export function LessonMediaContent({
         This media is unavailable.
       </LearnerText2>
     );
-  if (lesson.type === "video") {
-    return (
-      // MediaLit currently supplies no caption-track asset in this contract.
-      // biome-ignore lint/a11y/useMediaCaption: caption tracks are not available for this media reference yet
-      <video
-        className="w-full rounded-lg"
-        controls
-        controlsList="nodownload"
-        onContextMenu={(event) => event.preventDefault()}
-        poster={media.thumbnailUrl ?? undefined}
-        src={media.url}
-      />
-    );
-  }
-  if (lesson.type === "audio") {
-    return (
-      // MediaLit currently supplies no caption-track asset in this contract.
-      // biome-ignore lint/a11y/useMediaCaption: caption tracks are not available for this media reference yet
-      <audio
-        className="w-full"
-        controls
-        controlsList="nodownload"
-        onContextMenu={(event) => event.preventDefault()}
-        src={media.url}
-      />
-    );
-  }
-  if (lesson.type === "pdf") {
-    return (
-      <iframe
-        className="h-[500px] w-full rounded-lg border"
-        title={media.fileName}
-        src={`${media.url}#view=fit`}
-      />
-    );
-  }
   if (lesson.type === "scorm") {
     if (previewToken) {
       return (
@@ -189,16 +155,11 @@ export function LessonMediaContent({
     );
   }
   return (
-    <a
-      href={media.url}
-      download={lesson.downloadable ? media.fileName : undefined}
-      target="_blank"
-      rel="noreferrer"
-      className="font-medium text-primary hover:underline"
-    >
-      <LearnerText2 component="span" className="font-medium text-primary">
+    <LearnerButton asChild variant="outline" className="w-fit">
+      <a href={media.url} download={media.fileName} target="_blank" rel="noreferrer">
+        <Download aria-hidden className="size-4" />
         Open {media.fileName}
-      </LearnerText2>
-    </a>
+      </a>
+    </LearnerButton>
   );
 }

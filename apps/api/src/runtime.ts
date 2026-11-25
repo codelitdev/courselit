@@ -37,6 +37,11 @@ import {
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { createUnsplashClientFromEnv, type UnsplashClient } from "./unsplash.js";
+import {
+  configurePlanLimits,
+  type PlanLimitsConfig,
+  readPlanLimits,
+} from "./plan-limits-config.js";
 
 export type Runtime = DispatchDeps & {
   client: PGlite | Pool;
@@ -44,6 +49,30 @@ export type Runtime = DispatchDeps & {
   authServer: http.Server | null;
   close(): Promise<void>;
 };
+
+let migratedDataDir: Promise<Blob> | null = null;
+
+/**
+ * A PGlite data directory with every migration applied, built once per
+ * process. Migrating a fresh PGlite takes seconds, and the tests create one
+ * database per test, so each runtime starts from a copy of this instead.
+ */
+function migratedPgliteDataDir(): Promise<Blob> {
+  migratedDataDir ??= (async () => {
+    const { PGlite } = await import("@electric-sql/pglite");
+    const template = new PGlite();
+    try {
+      await migrate(drizzle(template), { migrationsFolder });
+      return await template.dumpDataDir("none");
+    } finally {
+      await template.close();
+    }
+  })().catch((error: unknown) => {
+    migratedDataDir = null;
+    throw error;
+  });
+  return migratedDataDir;
+}
 
 export async function createPgliteRuntime(options: {
   clock?: Clock;
@@ -55,17 +84,18 @@ export async function createPgliteRuntime(options: {
   observability?: Observability;
   authSecret?: string;
   billingMode?: "cloud" | "oss";
+  /** Plan limits to use instead of the `PLAN_*` environment variables. */
+  planLimits?: PlanLimitsConfig;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
   gifs?: GifClient;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const { PGlite } = await import("@electric-sql/pglite");
-  const client = new PGlite();
+  const client = new PGlite({ loadDataDir: await migratedPgliteDataDir() });
   const db = drizzle(client, {
     schema: { ...schema, ...billingSchema },
   }) as AppDb;
-  await migrate(db, { migrationsFolder });
   const clock = options.clock ?? systemClock;
   const billingMode = options.billingMode ?? "cloud";
   let handler: ReturnType<typeof toNodeHandler> | undefined;
@@ -90,7 +120,10 @@ export async function createPgliteRuntime(options: {
     publicApiUrl = `http://127.0.0.1:${address.port}`;
   }
   const webOrigin = options.webOrigin ?? publicApiUrl;
-  const billing = composeBilling(db, clock, {
+  if (billingMode === "cloud") {
+    configurePlanLimits(options.planLimits ?? readPlanLimits(process.env));
+  }
+  const billing = await composeBilling(db, clock, {
     mode: billingMode,
     webOrigin,
   });
@@ -210,7 +243,9 @@ export async function createPostgresRuntime(options: {
   }) as unknown as AppDb;
   const clock = options.clock ?? systemClock;
   const billingMode = process.env.BILLING_MODE === "oss" ? "oss" : ("cloud" as const);
-  const billing = composeBilling(db, clock, {
+  // Plan limits are the deployment's; on courselit.app a missing one fails here.
+  if (billingMode === "cloud") configurePlanLimits(readPlanLimits(process.env));
+  const billing = await composeBilling(db, clock, {
     mode: billingMode,
     webOrigin: options.webOrigin,
   });

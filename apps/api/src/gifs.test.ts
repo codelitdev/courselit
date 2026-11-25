@@ -52,6 +52,58 @@ async function setup(gifs?: GifClient) {
   return { clock, runtime, world, learnerHeaders };
 }
 
+/** A learner who joined School A's community, and the space they post in. */
+async function joinedSpace() {
+  const { clock, runtime, world, learnerHeaders } = await setup();
+    const [community] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    await runtime.db
+      .update(schema.communities)
+      .set({ enabled: true })
+      .where(eq(schema.communities.id, community!.id));
+    await runtime.db.insert(schema.storefrontPlans).values({
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      publicId: "pln_gif_community",
+      schoolId: world.schoolA.id,
+      entityType: "community",
+      entityId: community!.publicId,
+      name: "Community access",
+      description: "",
+      includedProducts: [],
+      providerProductId: null,
+      kind: "free",
+      oneTimeAmount: null,
+      emiAmount: null,
+      emiTotalInstallments: null,
+      subscriptionMonthlyAmount: null,
+      subscriptionYearlyAmount: null,
+      amountMinor: 0,
+      billingInterval: null,
+      installmentCount: null,
+      status: "active",
+      isDefault: true,
+      createdBy: world.owner.id,
+      createdAt: clock.now(),
+      updatedAt: clock.now(),
+    });
+    const joined = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/communities/${community!.publicId}/checkout`,
+      headers: { ...learnerHeaders, "idempotency-key": "gif-community-join" },
+      body: { planId: "pln_gif_community", joiningReason: "" },
+    });
+    expect(joined.status).toBe(201);
+    const spaces = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/spaces",
+      headers: learnerHeaders,
+    });
+    const spaceId = (spaces.body as { items: Array<{ id: string }> }).items[0]!.id;
+  return { clock, runtime, world, learnerHeaders, spaceId };
+}
+
 describe("GIPHY client", () => {
   it("lists trending GIFs without a query and searches with one", async () => {
     const requests: URL[] = [];
@@ -196,53 +248,7 @@ describe.serial("learner GIF search", () => {
   });
 
   it("stores picked GIFs on a post as external links, not media", async () => {
-    const { clock, runtime, world, learnerHeaders } = await setup();
-    const [community] = await runtime.db
-      .select()
-      .from(schema.communities)
-      .where(eq(schema.communities.schoolId, world.schoolA.id));
-    await runtime.db
-      .update(schema.communities)
-      .set({ enabled: true })
-      .where(eq(schema.communities.id, community!.id));
-    await runtime.db.insert(schema.storefrontPlans).values({
-      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-      publicId: "pln_gif_community",
-      schoolId: world.schoolA.id,
-      entityType: "community",
-      entityId: community!.publicId,
-      name: "Community access",
-      description: "",
-      includedProducts: [],
-      providerProductId: null,
-      kind: "free",
-      oneTimeAmount: null,
-      emiAmount: null,
-      emiTotalInstallments: null,
-      subscriptionMonthlyAmount: null,
-      subscriptionYearlyAmount: null,
-      amountMinor: 0,
-      billingInterval: null,
-      installmentCount: null,
-      status: "active",
-      isDefault: true,
-      createdBy: world.owner.id,
-      createdAt: clock.now(),
-      updatedAt: clock.now(),
-    });
-    const joined = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${community!.publicId}/checkout`,
-      headers: { ...learnerHeaders, "idempotency-key": "gif-community-join" },
-      body: { planId: "pln_gif_community", joiningReason: "" },
-    });
-    expect(joined.status).toBe(201);
-    const spaces = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/learner/spaces",
-      headers: learnerHeaders,
-    });
-    const spaceId = (spaces.body as { items: Array<{ id: string }> }).items[0]!.id;
+    const { runtime, world, learnerHeaders, spaceId } = await joinedSpace();
 
     const rejected = await dispatch(runtime, {
       method: "POST",
@@ -294,6 +300,51 @@ describe.serial("learner GIF search", () => {
     });
     expect(removed.status).toBe(200);
     expect(removed.body).toMatchObject({ gifUrls: [] });
+    await runtime.close();
+  });
+
+  it("stores YouTube links on a post as embed links, not media", async () => {
+    const { runtime, learnerHeaders, spaceId } = await joinedSpace();
+    const rejected = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${spaceId}/posts`,
+      headers: learnerHeaders,
+      body: {
+        title: "Not YouTube",
+        content: "Look",
+        videoUrls: ["https://vimeo.com/123456"],
+      },
+    });
+    expect(rejected.status).toBe(400);
+
+    const embed = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ";
+    const posted = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/spaces/${spaceId}/posts`,
+      headers: learnerHeaders,
+      body: {
+        title: "Watch this",
+        content: "Two links to one video",
+        videoUrls: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10", "youtu.be/dQw4w9WgXcQ"],
+      },
+    });
+    expect(posted.status).toBe(201);
+    const postId = (posted.body as { id: string }).id;
+    const detail = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/learner/spaces/${spaceId}/posts/${postId}`,
+      headers: learnerHeaders,
+    });
+    expect(detail.body).toMatchObject({ media: [], videoUrls: [embed] });
+
+    const removed = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/learner/community-posts/${postId}`,
+      headers: learnerHeaders,
+      body: { videoUrls: [] },
+    });
+    expect(removed.status).toBe(200);
+    expect(removed.body).toMatchObject({ videoUrls: [] });
     await runtime.close();
   });
 });

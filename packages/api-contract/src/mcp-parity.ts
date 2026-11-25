@@ -32,6 +32,7 @@ const communityParityExemptions = [
   ["getLearnerCommunityCheckout", "learner.communities.checkout.get"],
   ["getPublicSiteSettings", "public.site.settings.get"],
   ["getPublicSitePage", "public.site.pages.get"],
+  ["getPublicSiteSitemap", "public.site.sitemap.get"],
   ["listPublicSiteBlogs", "public.site.blogs.list"],
   ["getPublicSiteBlog", "public.site.blogs.get"],
   ["listLearnerSpaces", "learner.spaces.list"],
@@ -64,6 +65,17 @@ const mcpParityOverrides = [
   {
     capability: "public.lessonMedia.get",
     rest: { operationId: "getPublicLessonMedia" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Learner binary delivery is an access-filtered browser/media transport and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "public.lessonMediaItem.get",
+    rest: { operationId: "getPublicLessonMediaItem" },
     parity: "exempt",
     exemption: {
       reason:
@@ -229,6 +241,17 @@ const mcpParityOverrides = [
   {
     capability: "preview.lessonMedia.get",
     rest: { operationId: "getPreviewLessonMedia" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Preview binary delivery is an access-filtered browser/media transport and is not exposed as an MCP tool.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "preview.lessonMediaItem.get",
+    rest: { operationId: "getPreviewLessonMediaItem" },
     parity: "exempt",
     exemption: {
       reason:
@@ -440,6 +463,17 @@ const mcpParityOverrides = [
     exemption: {
       reason:
         "Starting a CourseLit plan checkout is a browser billing flow and stays off MCP.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.billing.usage.get",
+    rest: { operationId: "getSchoolBillingUsage" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Plan usage is billing information: owner-only in a browser session, off MCP (S9).",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -733,6 +767,137 @@ const mcpParityOverrides = [
     },
   },
   {
+    capability: "school.sso.create",
+    rest: { operationId: "createSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.update",
+    rest: { operationId: "updateSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.delete",
+    rest: { operationId: "deleteSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.add",
+    rest: { operationId: "addSsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.verify",
+    rest: { operationId: "verifySsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.domain.delete",
+    rest: { operationId: "deleteSsoDomain" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.test.start",
+    rest: { operationId: "startSsoConnectionTest" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.test.result",
+    rest: { operationId: "getSsoConnectionTestResult" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.activate",
+    rest: { operationId: "activateSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.disable",
+    rest: { operationId: "disableSsoConnection" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.sso.identity.unlink",
+    rest: { operationId: "unlinkSsoIdentity" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "changes who can sign in as every SSO learner; owner session with recent sign-in only",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.startSsoSignIn",
+    rest: { operationId: "learnerStartSsoSignIn" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "learner.startGoogleSignIn",
     rest: { operationId: "learnerStartGoogleSignIn" },
     parity: "exempt",
@@ -755,6 +920,16 @@ const mcpParityOverrides = [
   {
     capability: "learner.signOut",
     rest: { operationId: "learnerSignOut" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.siteCodeInjection",
+    rest: { operationId: "getLearnerSiteCodeInjection" },
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",
@@ -933,11 +1108,28 @@ export const MCP_HIGH_IMPACT_OPERATIONS: ReadonlySet<string> = new Set([
   "unpublishSchoolWebsiteBlog",
   "discardSchoolWebsitePage",
   "discardSchoolWebsiteBlog",
+  "publishLessonContent",
+  "discardLessonDraft",
   "startMailSequence",
   "renameContactTag",
   "deleteContactTag",
   "updateSchoolCodeInjection",
   "updateSchoolPaymentSettings",
+  "updateSchoolLoginMethods",
+]);
+
+/**
+ * Operations that reach outside the school's own workspace: they email real
+ * people (sequences, test emails, access grants, community invitations) or
+ * search an outside service. Their MCP tools advertise `openWorldHint: true`;
+ * every other tool advertises `false`.
+ */
+export const MCP_OPEN_WORLD_OPERATIONS: ReadonlySet<string> = new Set([
+  "startMailSequence",
+  "sendMailSequenceTestEmail",
+  "grantLearnerMembership",
+  "inviteCommunityMember",
+  "searchUnsplash",
 ]);
 
 /** `listWebsitePages` -> `list_website_pages`: one snake_case tool per operation. */

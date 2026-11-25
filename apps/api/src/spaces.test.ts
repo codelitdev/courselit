@@ -644,6 +644,19 @@ describe.serial("school spaces and included products", () => {
       .set({ enabled: true })
       .where(eq(schema.communities.id, community!.id));
     expect((await learnerSpaceIds()).sort()).toEqual([course.id, general.id].sort());
+    // Each space says which course it is the discussion of, if any.
+    const owners = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/spaces",
+      headers: learnerHeaders,
+    });
+    expect(
+      Object.fromEntries(
+        (owners.body as { items: Array<{ id: string; productId: string | null }> }).items.map(
+          (item) => [item.id, item.productId],
+        ),
+      ),
+    ).toEqual({ [course.id]: productId, [general.id]: null });
 
     // The course's space is not the Spaces screen's to read, edit or delete.
     for (const request of [
@@ -908,8 +921,14 @@ describe.serial("school spaces and included products", () => {
         body,
       });
     expect((await editPost(buyerHeaders, { pinned: true })).status).toBe(403);
+    // Saving without a change doesn't mark the post edited.
+    const unchanged = await editPost(buyerHeaders, { title: "Spam" });
+    expect(unchanged.status).toBe(200);
+    expect((unchanged.body as { editedAt: string | null }).editedAt).toBeNull();
     const edited = await editPost(buyerHeaders, { title: "Spam, edited" });
     expect(edited.status).toBe(200);
+    const postEditedAt = (edited.body as { editedAt: string | null }).editedAt;
+    expect(postEditedAt).toEqual(expect.any(String));
     // Back-date the post so a pin that touched the date would show.
     const editedAt = "2026-01-01T00:00:00.000Z";
     await runtime.db
@@ -925,6 +944,7 @@ describe.serial("school spaces and included products", () => {
     expect(pinned.body).toMatchObject({ pinned: true, title: "Spam, edited" });
     // Pinning isn't an edit, so the post keeps its date.
     expect((pinned.body as { updatedAt: string }).updatedAt).toBe(editedAt);
+    expect((pinned.body as { editedAt: string | null }).editedAt).toBe(postEditedAt);
     expect((await editPost(headers, { pinned: false })).body).toMatchObject({
       pinned: false,
     });
@@ -942,6 +962,7 @@ describe.serial("school spaces and included products", () => {
       body: { content: commentContent("First take") },
     });
     expect(commented.status).toBe(201);
+    expect((commented.body as { editedAt: string | null }).editedAt).toBeNull();
     const commentId = (commented.body as { id: string }).id;
     const editComment = (requestHeaders: Record<string, string>, text: string) =>
       dispatch(runtime, {
@@ -953,7 +974,52 @@ describe.serial("school spaces and included products", () => {
     const editedComment = await editComment(buyerHeaders, "Second take");
     expect(editedComment.status).toBe(200);
     expect((editedComment.body as { content: string }).content).toContain("Second take");
+    expect((editedComment.body as { editedAt: string | null }).editedAt).toEqual(
+      expect.any(String),
+    );
     expect((await editComment(headers, "Not yours")).status).toBe(403);
+
+    // A deleted comment stays as a placeholder only while live replies hang under it.
+    const comment = (text: string, parentCommentId?: string) =>
+      dispatch(runtime, {
+        method: "POST",
+        path: `/v1/learner/community-posts/${spamId}/comments`,
+        headers: buyerHeaders,
+        body: { content: commentContent(text), parentCommentId },
+      }).then((response) => (response.body as { id: string }).id);
+    const deleteComment = (id: string) =>
+      dispatch(runtime, {
+        method: "DELETE",
+        path: `/v1/learner/community-comments/${id}`,
+        headers: buyerHeaders,
+      });
+    // The test clock gives every comment the same timestamp, so compare as a set.
+    const thread = async () => {
+      const listed = await dispatch(runtime, {
+        method: "GET",
+        path: `/v1/learner/community-posts/${spamId}/comments`,
+        headers: buyerHeaders,
+      });
+      expect(listed.status).toBe(200);
+      const items = (listed.body as { items: { id: string; deletedAt: string | null }[] })
+        .items;
+      return Object.fromEntries(
+        items.map((item) => [item.id, item.deletedAt === null ? "live" : "deleted"]),
+      );
+    };
+    const leaf = await comment("Nobody answers this");
+    const reply = await comment("An answer", commentId);
+    const nested = await comment("A follow-up", reply);
+    expect((await deleteComment(leaf)).status).toBe(200);
+    expect((await deleteComment(commentId)).status).toBe(200);
+    expect((await deleteComment(reply)).status).toBe(200);
+    expect(await thread()).toEqual({
+      [commentId]: "deleted",
+      [reply]: "deleted",
+      [nested]: "live",
+    });
+    expect((await deleteComment(nested)).status).toBe(200);
+    expect(await thread()).toEqual({});
 
     const removed = await dispatch(runtime, {
       method: "DELETE",

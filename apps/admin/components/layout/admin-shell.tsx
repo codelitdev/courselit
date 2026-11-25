@@ -9,6 +9,7 @@ import { BreadcrumbProvider } from "@/components/layout/breadcrumb-context";
 import type { CurrentAccount } from "@/components/layout/nav-user";
 import type { School } from "@/components/layout/team-switcher";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { SchoolStateBanner } from "@/components/layout/school-state-banner";
 import { PermissionDeniedFeedback } from "@/components/permission-denied-feedback";
 import { CourseLitLoadingIcon } from "@/components/loading";
 import { Separator } from "@/components/ui/separator";
@@ -19,6 +20,7 @@ import {
   persistInvitationToken,
   readInvitationTokenFromHash,
 } from "@/lib/invitation-token";
+import { setObservedSchool } from "../browser-observability";
 
 const RESUME_PROMPTED_KEY = "courselit.onboarding.resume-prompted";
 
@@ -57,6 +59,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname.startsWith("/login");
   const isFullScreenPageEditor = /^\/pages\/[^/]+\/edit\/?$/.test(pathname);
   const isFullScreenBlogEditor = /^(?:\/website)?\/blogs\/[^/]+\/edit\/?$/.test(
+    pathname,
+  );
+  const isFullScreenLessonEditor = /^\/products\/[^/]+\/lessons\/[^/]+\/edit\/?$/.test(
     pathname,
   );
   const isFullScreenMailEditor =
@@ -115,6 +120,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isFullScreen =
     isFullScreenPageEditor ||
     isFullScreenBlogEditor ||
+    isFullScreenLessonEditor ||
     isFullScreenMailEditor ||
     isFullScreenSetupWizard ||
     isFullScreenTeamInvitation;
@@ -212,6 +218,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         // First load of a session: an owner with an unfinished setup is offered
         // the Resume dialog. Team members never see the wizard.
         const selectedSchool = items.find((item) => item.selected) ?? items[0];
+        setObservedSchool(selectedSchool?.id);
         const path = window.location.pathname;
         const exempt =
           path.startsWith("/onboarding") ||
@@ -320,6 +327,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     aria-hidden={showLoadingOverlay || undefined}
                     className={`h-full overflow-auto p-6 ${showLoadingOverlay ? "invisible" : ""}`}
                   >
+                    <SchoolStateBanner
+                      school={schools.find((school) => school.selected)}
+                    />
                     {children}
                   </div>
                 ) : null}

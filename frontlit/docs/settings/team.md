@@ -46,6 +46,12 @@ Click **Send invitation**. CourseLit emails the person a link and also shows an 
 
 You can only give permissions that you have yourself, unless you are the owner.
 
+<Callout type="note">
+
+Team, product and community invites share one limit of 50 a school in any rolling 24 hours. At most 200 team invitations can wait for an answer at once. If you hit the daily limit, you see "You've sent 50 invites in the last 24 hours, the most a school can send. Try again tomorrow." If too many wait, you see "200 team invitations are still waiting for an answer. Revoke some before inviting more."
+
+</Callout>
+
 ## What the invited person does
 
 The person opens the link and signs in with the email address you invited. They see the school name, who invited them and the access they will get, and choose **Accept** or **Reject**. After they accept, they join the school and it opens for them.

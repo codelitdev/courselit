@@ -62,12 +62,19 @@ export function ScormLessonUpload({
   school,
   lessonId,
   content,
+  contentVersion,
   onUploadComplete,
 }: {
   school: School;
   lessonId: string;
   content: LessonContent;
-  onUploadComplete: (content: LessonContent, mediaId: string) => void;
+  /** The version `content` is based on; see `expectedContentVersion`. */
+  contentVersion: number | null;
+  onUploadComplete: (
+    content: LessonContent,
+    mediaId: string,
+    contentVersion: number | null,
+  ) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +138,11 @@ export function ScormLessonUpload({
           method: "PATCH",
           credentials: "include",
           headers,
-          body: JSON.stringify({ content: nextContent, mediaId: media.id }),
+          body: JSON.stringify({
+            content: nextContent,
+            mediaId: media.id,
+            ...(contentVersion !== null ? { expectedContentVersion: contentVersion } : {}),
+          }),
         },
       );
       if (!lessonResponse.ok) {
@@ -142,7 +153,8 @@ export function ScormLessonUpload({
           ),
         );
       }
-      onUploadComplete(nextContent, media.id);
+      const saved = (await lessonResponse.json()) as { contentVersion?: number };
+      onUploadComplete(nextContent, media.id, saved.contentVersion ?? null);
     } catch (caught) {
       setError(
         caught instanceof Error

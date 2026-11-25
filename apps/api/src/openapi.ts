@@ -142,6 +142,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
     isPathOrChild(path, "/v1/products") ||
     isPathOrChild(path, "/v1/sections") ||
     isPathOrChild(path, "/v1/lessons") ||
+    isPathOrChild(path, "/v1/lesson-content-format") ||
     isPathOrChild(path, "/v1/plans") ||
     isPathOrChild(path, "/v1/preview")
   ) {
@@ -159,6 +160,7 @@ function tagForPath(path: string | undefined): OpenApiTag {
   if (
     isPathOrChild(path, "/api/school") ||
     isPathOrChild(path, "/v1/api-keys") ||
+    isPathOrChild(path, "/v1/sso") ||
     isPathOrChild(path, "/v1/ai-connections") ||
     isPathOrChild(path, "/v1/invitations") ||
     isPathOrChild(path, "/v1/team-invitations") ||
@@ -221,8 +223,13 @@ export function createOpenApiDocument(publicApiUrl: string) {
     {
       operationMapper: (operation, route) => {
         const security = securityFor(route);
+        const operationId = operationIdByRoute.get(route);
+        if (!operationId) throw new Error("OpenAPI route is missing from the contract");
         return {
           ...operation,
+          // The contract key, so tools such as the docs API reference get
+          // stable, readable operation URLs (and MCP tool names match).
+          operationId,
           tags: [tagForPath((route as { path?: string }).path)],
           ...(security ? { security } : {}),
         };

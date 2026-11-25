@@ -26,6 +26,7 @@ import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
 import { registerLearnerGoogleRoutes } from "./learner-google-routes.js";
+import { registerLearnerSsoRoutes } from "./learner-sso-routes.js";
 import { assertLearnerSchool, authenticateLearner, isSecureCookieUrl } from "./learners.js";
 import { createOpenApiDocument } from "./openapi.js";
 import { authenticateHttpRequest } from "./auth/authenticate.js";
@@ -118,6 +119,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
   );
   app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
   registerLearnerGoogleRoutes(app, deps);
+  registerLearnerSsoRoutes(app, deps);
   const captcha = captchaSettings();
   app.use(
     createOAuthPagesRouter({
@@ -200,14 +202,20 @@ export function createExpressApp(deps: DispatchDeps): Express {
     express.raw({ type: "application/json", limit: "256kb" }),
     async (req, res, next) => {
       try {
-        if (deps.billingMode !== "cloud" || req.params.provider !== "dodo") {
+        // Every connected provider: after a switch, the old one still has subscribers.
+        const provider = req.params.provider;
+        if (
+          deps.billingMode !== "cloud" ||
+          provider === "fake" ||
+          !deps.billing.providers.includes(provider)
+        ) {
           res.status(404).json({ error: "not_found" });
           return;
         }
         let failure: unknown;
         const response = await handleBillingWebhook({
           billing: deps.billing.billing,
-          provider: "dodo",
+          provider,
           rawBody: Buffer.isBuffer(req.body) && req.body.length > 0 ? req.body : undefined,
           headers: req.headers,
           workerId: `courselit-billing-webhook-${process.pid}`,
@@ -487,6 +495,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
     readPreviewProduct: forward,
     getPublicLessonMedia: forward,
     getPreviewLessonMedia: forward,
+    getPublicLessonMediaItem: forward,
+    getPreviewLessonMediaItem: forward,
     getLearnerScormRuntime: forward,
     updateLearnerScormRuntime: forward,
     processScormPackage: forward,
@@ -497,6 +507,8 @@ export function createExpressApp(deps: DispatchDeps): Express {
     reorderSections: forward,
     reorderLessons: forward,
     updateLesson: forward,
+    publishLessonContent: forward,
+    discardLessonDraft: forward,
     updateSection: forward,
     getSectionDripEmail: forward,
     updateSectionDripEmail: forward,
@@ -514,6 +526,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     learnerRequestEmailCode: forward,
     learnerVerifyEmailCode: forward,
     learnerStartGoogleSignIn: forward,
+    learnerStartSsoSignIn: forward,
     consumeSchoolAuthTicket: forward,
     learnerSignOut: forward,
     learnerMe: forward,
@@ -579,6 +592,21 @@ export function createExpressApp(deps: DispatchDeps): Express {
     createSchoolHost: forward,
     verifySchoolHost: forward,
     deleteSchoolHost: forward,
+    getSchoolLoginMethods: forward,
+    updateSchoolLoginMethods: forward,
+    listSsoConnections: forward,
+    createSsoConnection: forward,
+    getSsoConnection: forward,
+    updateSsoConnection: forward,
+    deleteSsoConnection: forward,
+    addSsoDomain: forward,
+    verifySsoDomain: forward,
+    deleteSsoDomain: forward,
+    startSsoConnectionTest: forward,
+    getSsoConnectionTestResult: forward,
+    activateSsoConnection: forward,
+    disableSsoConnection: forward,
+    unlinkSsoIdentity: forward,
     createSchool: forward,
     selectSchool: forward,
     listApiKeys: forward,
@@ -635,16 +663,20 @@ export function createExpressApp(deps: DispatchDeps): Express {
       res: express.Response,
       next: express.NextFunction,
     ) => {
-      deps.observability?.captureException({
-        error,
-        source: "express",
-        context: { method: req.method, path: req.path },
-      });
+      const isSyntax = error instanceof SyntaxError;
+      // A malformed request body is the client's mistake (answered with 400),
+      // not a server error worth tracking.
+      if (!isSyntax) {
+        deps.observability?.captureException({
+          error,
+          source: "express",
+          context: { method: req.method, path: req.path },
+        });
+      }
       if (res.headersSent) {
         next(error);
         return;
       }
-      const isSyntax = error instanceof SyntaxError;
       res.status(isSyntax ? 400 : 500).json({
         code: isSyntax ? "validation_failed" : "internal_error",
         message: isSyntax

@@ -175,9 +175,13 @@ describe("operation permissions", () => {
         headers: { "x-api-key": key.key },
         body: method === "GET" ? undefined : {},
       });
+      // A plan refusal (`plan_required`) isn't a permission refusal: the
+      // seeded school is on Pro, which leaves out some Business features.
+      const refusal = response.body as { code?: string; details?: { reason?: string } };
       if (
         response.status === 403 &&
-        (response.body as { code?: string }).code === "forbidden"
+        refusal.code === "forbidden" &&
+        refusal.details?.reason !== "plan_required"
       ) {
         refused.push(`${operationId} [${required.join(",")}]`);
       }

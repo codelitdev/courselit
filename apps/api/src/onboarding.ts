@@ -41,7 +41,7 @@ export type SchoolOnboardingDto = {
   checklistHidden: boolean;
   resumePromptHidden: boolean;
   checklist: Array<{ key: OnboardingChecklistKey; done: boolean }>;
-  billing: { required: boolean; entitled: boolean };
+  billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   updatedAt: string;
 };
 
@@ -254,7 +254,7 @@ export async function readSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -268,7 +268,7 @@ async function toDto(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -297,7 +297,7 @@ export async function updateSchoolOnboarding(
   input: {
     schoolId: string;
     principalId: string;
-    billing: { required: boolean; entitled: boolean };
+    billing: { required: boolean; entitled: boolean; paid: boolean; trialEndsAt: string | null };
     patch: {
       status?: "in_progress" | "complete";
       step?: OnboardingStep;
@@ -306,6 +306,11 @@ export async function updateSchoolOnboarding(
       resumePromptHidden?: boolean;
       markDone?: OnboardingChecklistKey[];
     };
+    /** Called after the update with the step and status before and after it. */
+    onTransition?: (
+      previous: { step: string; status: string },
+      next: { step: string; status: string },
+    ) => void;
   },
   clock: Clock,
 ): Promise<SchoolOnboardingDto> {
@@ -326,6 +331,10 @@ export async function updateSchoolOnboarding(
     })
     .where(eq(schema.schoolOnboarding.schoolId, input.schoolId))
     .returning();
+  input.onTransition?.(
+    { step: row.step, status: row.status },
+    { step: updated!.step, status: updated!.status },
+  );
   return toDto(db, updated!, input, clock);
 }
 

@@ -1,8 +1,12 @@
-import { createObservability } from "@codelitdev/observability";
 import { startBillingWorkers } from "@codelitdev/platform/billing";
 import { processDripEmails } from "./drip-emails.js";
 import { startIntegrationWorker } from "./integration-provisioning.js";
-import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
+import {
+  createCourseLitObservability,
+  setTelemetrySink,
+  telemetrySinkFrom,
+} from "./telemetry.js";
+import { startSsoJobs } from "./sso-jobs.js";
 import { createPostgresRuntime } from "./runtime.js";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -13,38 +17,12 @@ if (!databaseUrl || !authSecret || !apiKeyPepper) {
     "DATABASE_URL_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED",
   );
 }
-const observability = createObservability({
-  serviceName: "courselit-worker",
-  environment: process.env.NODE_ENV ?? "development",
-  logs: {
-    level: process.env.LOG_LEVEL ?? "info",
-    ...(process.env.OTLP_LOGS_ENDPOINT
-      ? {
-          otlp: {
-            endpoint: process.env.OTLP_LOGS_ENDPOINT,
-            ...(process.env.OTLP_LOGS_AUTHORIZATION
-              ? {
-                  headers: {
-                    authorization: process.env.OTLP_LOGS_AUTHORIZATION,
-                  },
-                }
-              : {}),
-          },
-        }
-      : {}),
-  },
-  ...(process.env.POSTHOG_API_KEY
-    ? {
-        posthog: {
-          apiKey: process.env.POSTHOG_API_KEY,
-          ...(process.env.POSTHOG_HOST ? { host: process.env.POSTHOG_HOST } : {}),
-        },
-      }
-    : {}),
-  contextPolicy: {
-    propertyAllowlist: TELEMETRY_PROPERTY_ALLOWLIST,
-  },
+const observability = createCourseLitObservability("courselit-worker");
+const productEvents = createCourseLitObservability("courselit-worker", process.env, {
+  purpose: "events",
 });
+// Billing projections, lifecycle sweeps and background jobs report events and errors.
+setTelemetrySink(telemetrySinkFrom(observability, productEvents));
 const runtime = await createPostgresRuntime({
   databaseUrl,
   authSecret,
@@ -78,6 +56,18 @@ try {
     runtime.clock,
     observability.logger,
   );
+  // Plan-feature syncs queued by the billing hook, the daily plan sync, the
+  // weekly SSO domain re-check and cleanup of expired SSO requests.
+  const stopSsoJobs = startSsoJobs({
+    db: runtime.db,
+    billing: runtime.billing.billing,
+    billingMode: runtime.billingMode,
+    mediaLit: runtime.mediaLit,
+    clock: runtime.clock,
+    logger: observability.logger,
+    onError: (task, error) =>
+      observability.captureException({ error, source: "worker.sso", context: { task } }),
+  });
   let dripRunning = false;
   const dripTimer = setInterval(async () => {
     if (dripRunning) return;
@@ -96,6 +86,7 @@ try {
     const stop = () => {
       clearInterval(dripTimer);
       stopIntegrationWorker();
+      stopSsoJobs();
       void (billingWorkers?.stop() ?? Promise.resolve()).finally(resolve);
     };
     process.once("SIGTERM", stop);
@@ -105,6 +96,6 @@ try {
   observability.captureException({ error, source: "worker.maintenance" });
   throw error;
 } finally {
-  await observability.shutdown(1_000);
+  await Promise.all([observability.shutdown(1_000), productEvents.shutdown(1_000)]);
   await runtime.close();
 }

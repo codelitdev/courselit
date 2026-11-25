@@ -24,6 +24,9 @@
   animation: cl-draw 1.8s ease-in-out infinite;
 }
 
+/* The media upload dialog ships Tailwind classes in its build; generate them
+ * here so it renders with the school theme. */
+@source "../node_modules/@frontlit/media-uploader/dist";
 @source "../../../packages/page-blocks/src";
 
 /* The text editor sets light fallback colors on its own root, which beats the
@@ -279,6 +282,14 @@ body {
     grid-template-columns: 1fr;
     gap: 28px;
     margin-bottom: 32px;
+  }
+}
+
+/* Unlayered, so it beats the layered `.flex` utility that page-builder's
+ * stylesheet emits after `print:hidden`. */
+@media print {
+  [data-courselit-strip] {
+    display: none;
   }
 }
 

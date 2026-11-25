@@ -1,64 +1,108 @@
 ---
 title: Lesson types
-description: Choose between text, video, audio, PDF, file, embed, quiz and SCORM lessons, and learn how to add content to each.
+description: Write lessons as pages built from blocks (text, video, audio, PDF, files, embeds, callouts and a quiz), or upload a SCORM package.
 nav_order: 50
 ---
 
-When you add a lesson to a course, you pick its **Type**. The type cannot be changed after the lesson is created, so create a new lesson if you picked the wrong one.
+A course lesson is one of two types:
 
-| Type | What the learner gets |
+| Type | What it is |
 | --- | --- |
-| Text | Rich text written in the editor. |
-| Video | A video file from your media library. |
-| Audio | An audio file from your media library. |
-| PDF | A PDF document from your media library. |
-| File | Any file from your media library. |
-| Embed | A YouTube video or other embedded content. |
-| Quiz | Questions the learner answers. See [Quizzes](/docs/products/quizzes). |
-| SCORM | A SCORM package. See [SCORM lessons](/docs/products/scorm). |
+| Page | A lesson you write in the full-screen editor, built from blocks: text, images, video, audio, PDF, files, embeds, callouts and one quiz, in any order. |
+| SCORM | A package made in a SCORM authoring tool. Needs the Business plan on hosted CourseLit. See [SCORM lessons](/docs/products/scorm). |
 
-Every lesson needs a **Title**. A new lesson defaults to **Text**.
+You pick the type when you create the lesson, and it can't change afterwards. Most lessons are pages.
 
-## Text lessons
+A [digital download](/docs/products/digital-downloads) doesn't have lessons. Its **Files** tab holds the files buyers download.
 
-Write in the **Content** editor. You can insert images of type JPEG, PNG, GIF or WebP from your media library. A text lesson cannot be saved empty: you see "Please enter the lesson content."
+## Create a lesson
 
-## Video, audio, PDF and file lessons
+On the product's **Content** tab, select **Add lesson** at the bottom of a section. The **Add a lesson** dialog asks you to choose the type.
 
-These lessons take a file from your media library. You attach it after the first save.
+![The Add a lesson dialog with the Page and SCORM types](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/add-a-lesson.png)
 
-<Steps>
+- **Page** creates a draft lesson called "Untitled lesson" and opens it in the lesson editor.
+- **SCORM** opens the lesson form, where you enter a title and upload the package.
 
-<Step>
+## The lesson editor
 
-### Save the lesson first
+A page lesson opens in a full-screen editor. The lesson title is the large heading at the top; type over it to rename the lesson. The page goes below it.
 
-Enter a **Title** and save. Under **Media**, you see "Save the lesson first, then select a reusable media library asset." After saving, CourseLit reopens the lesson so you can attach the file.
+![The full-screen lesson editor with lesson settings open](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/lesson-editor.png)
 
-</Step>
+The toolbar above the page formats text (paragraph style, bold, italic, code, links, lists and quotes). Its **Insert** button opens the list of blocks.
 
-<Step>
+### Add blocks
 
-### Select or upload the media
+Type `/` on an empty line to open the insert menu, or select **Insert** in the toolbar. Keep typing to filter the list, use the arrow keys to move and press Enter to add a block.
 
-Under **Media**, select **Select or upload media**, then pick an existing item or upload a new one. The picker only accepts files that match the lesson type: video files for Video, audio files for Audio, PDFs for PDF, and any file for File. Files for lessons are stored privately, so only people with access can open them.
+![The insert menu, opened by typing a slash, showing the media blocks](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/insert-menu.png)
 
-</Step>
+| Group | Blocks |
+| --- | --- |
+| Text | Text, Heading 2, Heading 3, Heading 4, Bullet list, Numbered list, Quote, Code block, Divider, Table |
+| Media | Image, Video, Audio, PDF, File, Embed |
+| Layout | Callout, plus Warning, Tip, Success and Danger callouts |
+| Interactive | Quiz |
 
-<Step>
+Drag the handle beside a block to move it. Each block has a settings icon and a trash icon in its header.
 
-### Change or remove it later
+### Media blocks
 
-Select **Change media** to swap the file, or **Remove** to detach it. The change saves right away.
+- **Image**: upload an image, pick one from your media library, or choose a photo from Unsplash. Add **Alt text** in the block's settings. Unsplash photos are not added to your media library.
+- **Video**: upload a video, or link a YouTube or Vimeo video.
+- **Audio**: upload an audio file.
+- **PDF**: show a PDF document in the page.
+- **File**: attach any file for learners to download.
+- **Embed**: your own HTML, CSS and JavaScript, such as a form or an interactive widget. It runs in a sandboxed frame.
 
-</Step>
+Each media block only takes files of its own kind: a Video block takes a video, a PDF block a PDF. Uploaded files are stored privately, so only people who can open the lesson can open them.
 
-</Steps>
+<Callout type="note" title="Embed and your plan">
 
-## Embed lessons
+The Embed block is not available during the free trial on hosted CourseLit. It shows greyed out in the insert menu as "Not available during the trial". It becomes available when you choose a paid plan. On a self-hosted install, Embed is always available. YouTube and Vimeo videos don't need Embed: use the Video block.
 
-Paste a YouTube link or embed code into **Embed code**, for example a YouTube URL or iframe code. CourseLit shows a preview underneath. A YouTube link is played in a YouTube player. Other code is shown in a sandboxed frame. An embed lesson cannot be saved empty: you see "Please enter a YouTube video ID."
+</Callout>
 
-## Learner experience
+### Quiz
 
-Learners open lessons in the course viewer and select **Mark complete** when they finish. A learner cannot mark a quiz complete until they pass it, or a SCORM lesson complete until they have used the package. Completing every live lesson is what finishes the course and, when [certificates](/docs/products/certificates) are on, issues the certificate.
+A page can hold one Quiz block. Learners must pass it before they can mark the lesson complete. See [Quizzes](/docs/products/quizzes).
+
+### Lesson settings
+
+The settings icon at the right of the top bar opens **Lesson settings**:
+
+- **Section**: move the lesson to another section.
+- **Free preview**: let visitors open the lesson from the sales page. See [Free preview lessons](/docs/products/free-preview-lessons).
+- **Visibility**: whether learners can see the lesson.
+- **Delete lesson**: delete it for good.
+
+## Saving, drafts and publishing
+
+The editor saves as you type. The top bar shows "Saving…" and then "Saved just now".
+
+Page edits are saved as a draft, so learners never see a half-finished change. They keep reading the published page until you publish. While a live lesson has edits learners don't see yet, the top bar shows **Unpublished changes** next to **Live**.
+
+| Button | What it does |
+| --- | --- |
+| **Publish changes** | Learners see the new page right away. |
+| **Discard changes** | After you confirm "Discard your unpublished changes?", the page goes back to the version learners see. Discarded edits can't be recovered. |
+| **Make live** | Makes a draft lesson visible to learners and publishes its page at the same time. |
+| **Move to drafts** | Hides a live lesson from learners. Your unpublished edits are kept. |
+
+**Publish changes** and **Discard changes** are only active when there are unpublished changes. Changes to the title, section and free preview apply right away and don't need publishing.
+
+If something on the page blocks publishing, such as a quiz question with no correct option, a message above the page lists what to fix. You can keep editing and saving; the page just can't be published or made live until it's complete.
+
+If someone else, or an AI assistant, changes the lesson while you have it open, the editor stops saving and asks you to **Reload**, so nobody's work is overwritten.
+
+## What learners see
+
+Learners open lessons in the course viewer. A page shows its blocks in order, styled with your school's theme. When they finish, they select **Mark complete**.
+
+![A page lesson in the course viewer](https://raw.githubusercontent.com/codelitdev/courselit/platform-based-rewrite/assets/docs/lessons/learner-lesson.png)
+
+- A page with a quiz can be marked complete only after the learner passes the quiz. Otherwise they see "Pass the quiz to complete this lesson."
+- A SCORM lesson can be marked complete only after the package has reported progress.
+
+Completing every live lesson finishes the course and, when [certificates](/docs/products/certificates) are on, issues the certificate.

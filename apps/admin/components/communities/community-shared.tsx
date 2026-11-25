@@ -101,6 +101,7 @@ export type Report = {
     content: string;
     media: CommunityMedia[];
     gifUrls?: string[];
+    videoUrls?: string[];
     author: CommunityActor | null;
   } | null;
   reason: string;
@@ -235,6 +236,28 @@ export function CommunityGifPreview({ urls }: { urls: readonly string[] | undefi
             height={192}
             unoptimized
             className="h-48 w-auto object-cover"
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** YouTube videos a learner added to a post, as embeds. */
+export function CommunityVideoPreview({ urls }: { urls: readonly string[] | undefined }) {
+  if (!urls?.length) return null;
+
+  return (
+    <ul className="mt-3 grid list-none gap-3 p-0" aria-label="Post YouTube videos">
+      {urls.map((url) => (
+        <li key={url} className="max-w-xl overflow-hidden rounded-md border">
+          <iframe
+            src={url}
+            title="YouTube video"
+            className="aspect-video w-full"
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            referrerPolicy="strict-origin-when-cross-origin"
+            loading="lazy"
           />
         </li>
       ))}

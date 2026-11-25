@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
+import { storefrontOriginForHost } from "./schools.js";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { MemoryMediaLitClient } from "./media.js";
@@ -20,6 +21,7 @@ type PageBody = {
   id: string;
   slug: string;
   status: string;
+  sharedWidgetsHaveChanges?: boolean;
   layout: Widget[];
   draftLayout: Widget[];
   draftTitle: string | null;
@@ -208,7 +210,10 @@ describe.serial("school website", () => {
         .body as PageBody;
       expect(home.draftLayout[0]!.settings?.logoText).toBe("Acme");
       expect(home.layout[0]!.settings?.logoText).toBeUndefined();
+      // The homepage itself is unchanged; the pending header is reported for
+      // the site, since publishing any page takes it live.
       expect(home.status).toBe("published");
+      expect(home.sharedWidgetsHaveChanges).toBe(true);
 
       const publishPermissionDenied = await dispatch(runtime, {
         method: "POST",
@@ -263,6 +268,73 @@ describe.serial("school website", () => {
         });
         expect(unavailable.status).toBe(400);
       }
+    } finally {
+      await runtime.close();
+    }
+  });
+
+  it("reports a header or footer only edit once for the site", async () => {
+    const { runtime, world, admin } = await setup();
+    try {
+      const homeId = await pageBySlug(runtime, world, "");
+      const homePath = `/v1/school/website/pages/${homeId}`;
+      const home = (await admin("GET", homePath)).body as PageBody;
+      expect(home).toMatchObject({ status: "published", sharedWidgetsHaveChanges: false });
+      const created = await admin("POST", "/v1/school/website/pages", {
+        name: "Unpublished",
+      });
+      const unpublishedId = (created.body as { id: string }).id;
+      const [header, ...rest] = home.draftLayout;
+      const body = rest.slice(0, -1);
+      const footer = rest.at(-1)!;
+      const withFooter = (settings: Record<string, unknown>) => ({
+        layout: [header, ...body, { ...footer, settings }],
+      });
+
+      // The builder fills in block defaults when the editor opens and saves
+      // them; that alone is not a change.
+      const opened = await admin(
+        "PATCH",
+        homePath,
+        withFooter({ showThemeSwitcher: true, ...footer.settings }),
+      );
+      expect(opened.body).toMatchObject({ sharedWidgetsHaveChanges: false });
+
+      const edited = await admin(
+        "PATCH",
+        homePath,
+        withFooter({ ...footer.settings, copyrightText: "© Acme" }),
+      );
+      // The page's own status is unchanged; the edit is a site-wide flag.
+      expect(edited.body).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: true,
+      });
+      const listed = (await admin("GET", "/v1/school/website/pages")).body as {
+        items: { id: string; status: string; sharedWidgetsHaveChanges?: boolean }[];
+      };
+      const listedItem = (id: string) => listed.items.find((item) => item.id === id);
+      expect(listedItem(homeId)).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: true,
+      });
+      expect(listedItem(unpublishedId)?.status).toBe("draft");
+
+      const discarded = await admin("POST", `${homePath}/discard-draft`);
+      expect(discarded.body).toMatchObject({ sharedWidgetsHaveChanges: false });
+      const discardedFooter = (discarded.body as PageBody).draftLayout.at(-1)!;
+      expect(discardedFooter.settings?.copyrightText).toBeUndefined();
+
+      await admin(
+        "PATCH",
+        homePath,
+        withFooter({ ...footer.settings, copyrightText: "© Acme" }),
+      );
+      const published = await admin("POST", `${homePath}/publish`);
+      expect(published.body).toMatchObject({
+        status: "published",
+        sharedWidgetsHaveChanges: false,
+      });
     } finally {
       await runtime.close();
     }
@@ -444,6 +516,8 @@ describe.serial("school website", () => {
         theme: { primary: "#112233" },
         codeInjectionHead: "",
         canonicalHost: "learn.example.com",
+        // Local setups add `STOREFRONT_PORT`.
+        siteOrigin: storefrontOriginForHost("learn.example.com"),
       });
 
       await admin("PATCH", "/v1/school/website/branding", { themeId: "classic" });
@@ -494,6 +568,71 @@ describe.serial("school website", () => {
       });
       expect(published.status).toBe(200);
       expect(await hasPublishedOffers()).toBe(true);
+    } finally {
+      await runtime.close();
+    }
+  });
+
+  it("serves the school's search settings and sitemap to the storefront", async () => {
+    const { runtime, world, admin, publicGet } = await setup();
+    const sitemap = async () =>
+      (await publicGet("/v1/public/site/sitemap")).body as Record<
+        "pages" | "products" | "communities" | "blogPosts",
+        Array<{ slug: string }>
+      >;
+    const slugs = (entries: Array<{ slug: string }>) => entries.map((entry) => entry.slug);
+    try {
+      // AI training crawlers are blocked by default; the site is searchable.
+      expect((await publicGet("/v1/public/site/settings")).body).toMatchObject({
+        hideFromSearch: false,
+        blockAiTraining: true,
+      });
+      const updated = await admin("PATCH", `/v1/schools/${world.schoolA.publicId}`, {
+        hideFromSearch: true,
+        blockAiTraining: false,
+      });
+      expect(updated.status).toBe(200);
+      expect(updated.body).toMatchObject({ hideFromSearch: true, blockAiTraining: false });
+      expect((await publicGet("/v1/public/site/settings")).body).toMatchObject({
+        hideFromSearch: true,
+        blockAiTraining: false,
+      });
+
+      // Only the published homepage, nothing unpublished or switched off.
+      expect(await sitemap()).toEqual({
+        pages: [expect.objectContaining({ slug: "" })],
+        products: [],
+        communities: [],
+        blogPosts: [],
+      });
+
+      // Published public products and live communities are listed; an
+      // unlisted product isn't, and neither is a sales page kept from search.
+      await runtime.db
+        .update(schema.products)
+        .set({ status: "published", privacy: "public" })
+        .where(eq(schema.products.publicId, world.noteA.publicId));
+      await runtime.db
+        .update(schema.communities)
+        .set({ enabled: true })
+        .where(eq(schema.communities.schoolId, world.schoolA.id));
+      let listed = await sitemap();
+      expect(slugs(listed.products)).toEqual(["seed-product"]);
+      expect(slugs(listed.communities)).toEqual(["community"]);
+      expect(listed.products[0]).toMatchObject({ title: expect.any(String) });
+      expect((await sitemap()).pages[0]).toMatchObject({ slug: "", title: "Homepage" });
+
+      await runtime.db
+        .update(schema.products)
+        .set({ privacy: "unlisted" })
+        .where(eq(schema.products.publicId, world.noteA.publicId));
+      await runtime.db
+        .update(schema.websitePages)
+        .set({ robotsAllowed: false })
+        .where(eq(schema.websitePages.slug, "community"));
+      listed = await sitemap();
+      expect(listed.products).toEqual([]);
+      expect(listed.communities).toEqual([]);
     } finally {
       await runtime.close();
     }

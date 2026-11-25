@@ -63,6 +63,12 @@ How hostnames reach the right service, and how custom domains work.
 
 </Card>
 
+<Card title="Single sign-on (SSO)" href="/docs/self-hosting/single-sign-on" icon="KeyRound">
+
+Let learners sign in with a school's identity provider over SAML.
+
+</Card>
+
 </Cards>
 
 If you only need to use CourseLit and not operate it, create a school on the hosted service instead, see [Getting started](/docs/getting-started).

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import type { CourseLitMedia } from "@/lib/course-media-uploader";
 import { getCourseLitMedia } from "@/lib/course-media-uploader";
+import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
 
 type WebsiteBrandingSettings = {
   title?: string | null;
@@ -36,9 +37,13 @@ export function BrandingSettings() {
   const [subtitle, setSubtitle] = useState("");
   const [savedSubtitle, setSavedSubtitle] = useState("");
   const [hideCourseLitBranding, setHideCourseLitBranding] = useState(false);
+  const [badgeSaving, setBadgeSaving] = useState(false);
   const [logo, setLogo] = useState<CourseLitMedia | null>(null);
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [logoSaving, setLogoSaving] = useState(false);
+
+  // Removing the badge comes with any paid plan; a trial keeps it.
+  const brandingRemovable = usePlanFeatures(schoolId).has("remove_branding");
 
   const brandingChanged =
     title.trim() !== savedTitle || subtitle.trim() !== savedSubtitle;
@@ -56,12 +61,45 @@ export function BrandingSettings() {
         setSchoolId(selected.id);
         setTitle(selected.name);
         setSavedTitle(selected.name.trim());
+        setHideCourseLitBranding(selected.hideCourseLitBranding === true);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
   }, []);
+
+  async function saveBadge(hide: boolean) {
+    if (!schoolId || badgeSaving) return;
+    setBadgeSaving(true);
+    setHideCourseLitBranding(hide);
+    try {
+      const response = await fetch(`/api/v1/schools/${encodeURIComponent(schoolId)}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "content-type": "application/json", "x-school-id": schoolId },
+        body: JSON.stringify({ hideCourseLitBranding: hide }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          details?: { reason?: string };
+        } | null;
+        throw new Error(
+          body?.details?.reason === "plan_required"
+            ? "Removing CourseLit branding comes with any paid plan."
+            : "Unable to save the setting.",
+        );
+      }
+      toast.success(hide ? "CourseLit branding removed." : "CourseLit branding shown.");
+    } catch (caught) {
+      setHideCourseLitBranding(!hide);
+      toast.error(
+        caught instanceof Error ? caught.message : "Unable to save the setting.",
+      );
+    } finally {
+      setBadgeSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (!school) return;
@@ -202,12 +240,19 @@ export function BrandingSettings() {
           <div className="space-y-1">
             <p className="text-sm font-medium">Remove CourseLit branding</p>
             <p className="text-sm text-muted-foreground">
-              Hide &quot;Powered by CourseLit&quot; on your CourseLit courses and site.
+              Hide &quot;Powered by CourseLit&quot; on your site, course viewer, learner
+              dashboard and the emails your learners get.
             </p>
+            {brandingRemovable ? null : (
+              <p className="text-sm text-muted-foreground">
+                {PLAN_FEATURE_COPY.remove_branding}
+              </p>
+            )}
           </div>
           <Checkbox
             checked={hideCourseLitBranding}
-            onCheckedChange={(value) => setHideCourseLitBranding(value === true)}
+            disabled={!schoolId || badgeSaving || !brandingRemovable}
+            onCheckedChange={(value) => void saveBadge(value === true)}
             aria-label="Remove CourseLit branding"
           />
         </div>

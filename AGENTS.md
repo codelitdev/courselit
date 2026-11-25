@@ -2,6 +2,7 @@
 
 > IMPORTANT: Before writing a feature from scratch, check if its implementation is already there in the production branch i.e. `main`. If it is there, copy over the logic and components from there instead of re-inventing the logic and design (unless it is totally off).
 - FrontLit, SendLit, MediaLit branding should not show up in anything user facing like API endpoints, routes, UI etc. These systems are parts of the infrastructure.
+- A lot of reusable code comes from the `@codelitdev/<package>` packages, so check whether those packages already provide the functionality you need. Always prefer adding generic fixes (ones that all other apps in our company can benefit from) to the CodeLit Platform packages instead of this repo. Fix those packages first, then use the upgraded packages in this repo.
 - REST and MCP have parity. Every contract operation that OAuth or API-key credentials can call over REST is reachable over MCP as a tool of its own, named `snake_case(operationId)` (`listSections` is `list_sections`), generated from the contract with no extra code. There are no generic `api.*` tools: clients such as ChatGPT want a named, typed tool per capability. Each generated tool needs a description in `apps/api/src/mcp-tools/operation-descriptions.ts` (a test enforces it). Deletions, and high-impact actions that are not deletions (publishing, emailing contacts, changing payment or access settings), are `destructive` tools that need `confirm: true`; add an operation to `MCP_HIGH_IMPACT_OPERATIONS` in `packages/api-contract/src/mcp-parity.ts` when it qualifies. Keeping an operation off MCP needs an exemption with a reason in `mcp-parity.ts` and an entry in `REACHABLE_BUT_EXEMPT` in `apps/api/src/mcp-api.test.ts`. Add a hand-written or workflow MCP tool only for a real agent task, and route it through `guardMcpTool` with the operations it performs.
 
 > This rewrite has no production deployment yet. We are building the very first version of the platform so don't waste time in maintaining backwards compatibililty. When you need to change something, go ahead and write its version 1 implementation. For database, instead of writing table altering migrations, rewrite the original migration to include the alteration, then reset the database and re-apply migrations.
@@ -41,3 +42,8 @@
 - Don't edit versions by hand.
 
 ## PR instructions
+
+# Definition of "done"
+A task is considered done when you have performed the following steps.
+1. Full e2e browser based smoke testing on local 
+2. Full e2e browser based smoke testing on QA. Perform this step at the very last so that you have to do it only once per task.

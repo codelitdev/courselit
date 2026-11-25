@@ -54,6 +54,12 @@ Click **Invite customer**. A confirmation says that the email address now has ac
 
 </Steps>
 
+<Callout type="note">
+
+Product invites share a limit with team and community invites: 50 a school in any rolling 24 hours. Past it, you see "You've sent 50 invites in the last 24 hours, the most a school can send. Try again tomorrow."
+
+</Callout>
+
 ## What happens next
 
 - If the person has never been in your school, an account is created for them. If they already have one, the new access is added to it.

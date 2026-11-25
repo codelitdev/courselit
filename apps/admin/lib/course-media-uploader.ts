@@ -104,12 +104,24 @@ async function throwResponseError(response: Response, fallback: string): Promise
   if (response.ok) return;
   const body = (await response.json().catch(() => null)) as {
     message?: unknown;
+    details?: { reason?: unknown };
   } | null;
-  const message =
-    body && typeof body.message === "string" && body.message.trim()
-      ? body.message
-      : fallback;
-  throw new Error(message);
+  throw new Error(uploadErrorMessage(body, fallback));
+}
+
+/** The message for a refused upload; a full plan points at the plan page. */
+export function uploadErrorMessage(
+  body: { message?: unknown; details?: { reason?: unknown } } | null,
+  fallback: string,
+): string {
+  const reason = body?.details?.reason;
+  if (reason === "plan_limit_reached") {
+    return "Your school is out of storage. Delete files you don't need, or move to a bigger plan.";
+  }
+  if (reason === "billing_unavailable") {
+    return "Uploads are paused for a moment. Try again shortly.";
+  }
+  return typeof body?.message === "string" && body.message.trim() ? body.message : fallback;
 }
 
 function requestHeaders(schoolId: string) {

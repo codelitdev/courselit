@@ -15,7 +15,7 @@ export const integrationProviders = ["sendlit", "medialit"] as const;
 export type IntegrationProvider = (typeof integrationProviders)[number];
 /** Outbox jobs also run for the platform's own sender ("system"), which
  * delivers school email when the school has no mailing team. */
-export type OutboxProvider = IntegrationProvider | "system";
+export type OutboxProvider = IntegrationProvider | "system" | "platform";
 
 export const integrationStatuses = [
   "pending",
@@ -40,6 +40,8 @@ export const integrationJobTypes = [
   "track_sendlit_event",
   "send_school_email",
   "send_system_email",
+  "sync_plan_features",
+  "evaluate_school_lifecycle",
 ] as const;
 export type IntegrationJobType = (typeof integrationJobTypes)[number];
 
@@ -77,6 +79,11 @@ export const schoolIntegrations = pgTable(
       withTimezone: true,
     }),
     lastError: text("last_error"),
+    /**
+     * Marketing sends (drip) wait until this time after SendLit refused one for
+     * quota; set from SendLit's `retryAfter`. Only used on the `sendlit` row.
+     */
+    marketingPausedUntil: timestamp("marketing_paused_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },

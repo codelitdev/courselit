@@ -61,7 +61,7 @@ You edit sales pages from **Edit sales page** on the product or community. See [
 
 Every page starts with a **Header** and ends with a **Footer**. They are shared by all pages, so you edit them once for the whole site. You can't move or delete them.
 
-- A new school's header shows your logo and site title, links to **Products** and **Blog**, and a **Join** button.
+- A new school's header shows your logo and site title, links to **Products** and **Blog**, and a **Join** button. The **Products** link only appears once you have a live product or community listed on your site, and **Blog** once you have a published post. A new link can take up to about a minute to appear, see [How quickly changes appear](/docs/website#how-quickly-changes-appear).
 - A new school's footer shows your site name, tagline and copyright, a **Resources** column with a link to the blog, and a **Legal** column linking to **Terms of use** and **Privacy policy**.
 
 Changes to the header and footer are part of the draft of the page you are editing and go live when you publish a page. See [Edit a page](/docs/website/page-editor#publish-your-changes).

@@ -1,6 +1,8 @@
 import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
+  bigint,
   boolean,
   check,
   index,
@@ -13,25 +15,79 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
+import { schoolSsoConnections } from "./school-sso.js";
+
+/**
+ * Where a school is in its life (docs/wip/plan-limits.md, section 3).
+ * `pending_checkout`, `imported` and `suspended` are offline; `read_only` is the
+ * grace period after a trial or subscription ends. Only the lifecycle job and
+ * the staff CLI change it.
+ */
+export const SCHOOL_STATUSES = [
+  "active",
+  "pending_checkout",
+  "imported",
+  "read_only",
+  "suspended",
+  "maintenance",
+  "migrating",
+  "deleted",
+] as const;
+export type SchoolStatus = (typeof SCHOOL_STATUSES)[number];
 
 export const schools = pgTable("schools", {
   id: uuid("id").primaryKey(),
   publicId: text("public_id").notNull().unique(),
   name: text("name").notNull(),
   subdomain: text("subdomain").notNull().unique(),
-  status: text("status")
-    .$type<"active" | "read_only" | "maintenance" | "migrating" | "deleted">()
-    .notNull()
-    .default("active"),
+  status: text("status").$type<SchoolStatus>().notNull().default("active"),
+  /** End of the read-only grace period after a lapse; null otherwise. */
+  graceEndsAt: timestamp("grace_ends_at", { withTimezone: true }),
+  /** Why staff suspended the school (staff CLI); null unless `suspended`. */
+  suspendedReason: text("suspended_reason"),
+  /**
+   * The last plan `schoolPlan` read from billing, used while billing can't be
+   * read (S23). Never written from a request body.
+   */
+  lastPlan: jsonb("last_plan"),
+  lastPlanAt: timestamp("last_plan_at", { withTimezone: true }),
   locale: text("locale").notNull().default("en"),
+  /**
+   * Sign-in methods the school has turned on. SSO isn't listed: it is on
+   * exactly when the school has an active connection.
+   */
+  loginMethods: text("login_methods")
+    .array()
+    .$type<("email" | "google")[]>()
+    .notNull()
+    .default(sql`'{email}'::text[]`),
   currency: text("currency").notNull().default("USD"),
   /** Encrypted provider credentials and the school's selected checkout gateway. */
   paymentSettingsEncrypted: text("payment_settings_encrypted"),
   codeInjectionHead: text("code_injection_head").notNull().default(""),
   codeInjectionBody: text("code_injection_body").notNull().default(""),
+  /** "Remove CourseLit branding". Honoured only with `remove_branding`. */
+  hideCourseLitBranding: boolean("hide_courselit_branding").notNull().default(false),
+  /** Pre-launch: robots.txt keeps every crawler out. */
+  hideFromSearch: boolean("hide_from_search").notNull().default(false),
+  /** robots.txt blocks AI training crawlers; AI search crawlers stay allowed. */
+  blockAiTraining: boolean("block_ai_training").notNull().default(true),
+  /** Each learner's upload budget (S2): 100 MB unless the school changes it, up to 1 GB. */
+  learnerUploadLimitBytes: bigint("learner_upload_limit_bytes", { mode: "number" })
+    .notNull()
+    .default(104857600),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-});
+}, (table) => [
+  check(
+    "schools_login_methods_check",
+    sql`${table.loginMethods} <@ ARRAY['email', 'google']::text[]`,
+  ),
+  check(
+    "schools_status_check",
+    sql`${table.status} IN ('active', 'pending_checkout', 'imported', 'read_only', 'suspended', 'maintenance', 'migrating', 'deleted')`,
+  ),
+]);
 
 /**
  * Subdomains no new school may take, kept outside the code because the list is
@@ -194,8 +250,13 @@ export const schoolSessions = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     tokenDigest: text("token_digest").notNull().unique(),
     authenticationMethod: text("authentication_method")
-      .$type<"email" | "google">()
+      .$type<"email" | "google" | "sso">()
       .notNull(),
+    /** Set for `sso` sessions: ending the connection ends the session. */
+    ssoConnectionId: uuid("sso_connection_id").references(
+      (): AnyPgColumn => schoolSsoConnections.id,
+      { onDelete: "cascade" },
+    ),
     authenticatedAt: timestamp("authenticated_at", { withTimezone: true }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -226,8 +287,15 @@ export const schoolAuthTickets = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     authenticationMethod: text("authentication_method")
-      .$type<"email" | "google">()
+      .$type<"email" | "google" | "sso">()
       .notNull(),
+    /** Set for `sso` tickets: the connection the session will belong to. */
+    ssoConnectionId: uuid("sso_connection_id").references(
+      (): AnyPgColumn => schoolSsoConnections.id,
+      { onDelete: "cascade" },
+    ),
+    /** Set for `sso` tickets: when the IdP session ends, if earlier than the default. */
+    sessionExpiresAt: timestamp("session_expires_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

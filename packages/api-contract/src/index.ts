@@ -1,15 +1,26 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
-
-import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 import { buildMcpParityManifest } from "./mcp-parity.js";
 import { UNAVAILABLE_PAGE_BLOCKS } from "./page-blocks.js";
+import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 
-export * from "./team-permissions.js";
 export * from "./learner-avatar.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";
+export * from "./youtube.js";
+export * from "./school-name.js";
+export * from "./school-subdomain.js";
+export * from "./team-permissions.js";
+
+import {
+  containsQuizAnswers,
+  evaluateQuizBodySchema,
+  quizEvaluationSchema,
+} from "./quiz.js";
+import { schoolNameSchema } from "./school-name.js";
+import { isReservedSubdomain } from "./school-subdomain.js";
+import { youtubeVideoId } from "./youtube.js";
 
 const c = initContract();
 
@@ -78,7 +89,6 @@ export const productSchema = z.object({
   certificate: z.boolean(),
   discussions: z.boolean(),
   /** Status a new lesson gets when it is created without one. */
-  newLessonStatus: z.enum(["draft", "published"]),
   includedWithCommunity: z.boolean(),
   discussionSpaceId: z.string().nullable(),
   /**
@@ -184,7 +194,6 @@ export const updateProductBodySchema = z.object({
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
-  newLessonStatus: z.enum(["draft", "published"]).optional(),
   includedWithCommunity: z.boolean().optional(),
 });
 
@@ -237,7 +246,14 @@ export const storefrontPlanSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export const productAnalyticsRangeSchema = z.enum(["1d", "7d", "30d", "90d", "1y", "lifetime"]);
+export const productAnalyticsRangeSchema = z.enum([
+  "1d",
+  "7d",
+  "30d",
+  "90d",
+  "1y",
+  "lifetime",
+]);
 export const activityRangeSchema = productAnalyticsRangeSchema;
 const productAnalyticsMetricSchema = z.object({
   count: z.number().int().nonnegative(),
@@ -536,9 +552,27 @@ export const schoolSchema = z.object({
   subdomain: z.string(),
   storefrontHost: z.string().nullable(),
   storefrontOrigin: z.string().nullable(),
-  status: z.enum(["active", "read_only", "maintenance", "migrating", "deleted"]),
+  status: z.enum([
+    "active",
+    "pending_checkout",
+    "imported",
+    "read_only",
+    "suspended",
+    "maintenance",
+    "migrating",
+    "deleted",
+  ]),
   locale: z.string(),
   currency: z.string(),
+  /** The owner asked to remove the "Powered by CourseLit" badge. */
+  hideCourseLitBranding: z.boolean(),
+  /** Pre-launch: the storefront's robots.txt keeps every crawler out. */
+  hideFromSearch: z.boolean(),
+  /** The storefront's robots.txt blocks AI training crawlers; AI search
+   * crawlers stay allowed. On by default. */
+  blockAiTraining: z.boolean(),
+  /** How much each learner may upload, in bytes. */
+  learnerUploadLimitBytes: z.number().int(),
   permissions: z.array(z.string()).optional(),
   isOwner: z.boolean().optional(),
   selected: z.boolean().optional(),
@@ -615,6 +649,11 @@ export const websiteContentSummarySchema = z.object({
   kind: z.enum(["page", "blog"]),
   slug: z.string(),
   status: z.enum(["draft", "published", "published_with_changes"]),
+  /** Pages only: the site's shared header/footer have unpublished edits.
+   * They are shared by every page, so publishing any page takes them live
+   * and discarding any page's draft resets them. Status covers only the
+   * page's own content. */
+  sharedWidgetsHaveChanges: z.boolean().optional(),
   /** False for the home page and other pages the website needs. */
   deletable: z.boolean(),
   featuredImage: mediaRefSchema.nullable().optional(),
@@ -717,10 +756,40 @@ export const publicSiteSettingsSchema = z.object({
   theme: z.record(z.string(), z.unknown()).nullable(),
   codeInjectionHead: z.string(),
   codeInjectionBody: z.string(),
+  /** The school has code to inject that only its owner sees for now (a
+   * trial): the storefront fetches it through the owner's session. */
+  ownerOnlyCodeInjection: z.boolean(),
+  /** Where the "Powered by CourseLit" badge links; null hides the badge. */
+  courseLitBadgeUrl: z.string().nullable(),
   canonicalHost: z.string().nullable(),
+  /** Where the storefront is reached, e.g. `https://learn.example.com`: the
+   * verified custom domain, else the school's subdomain. For absolute URLs
+   * in structured data and feeds. */
+  siteOrigin: z.string().nullable(),
   /** The school has a published product (public or hidden) or a live
    * community, so learners have something to sign in to. */
   hasPublishedOffers: z.boolean(),
+  /** Pre-launch: robots.txt keeps every crawler out. */
+  hideFromSearch: z.boolean(),
+  /** robots.txt blocks AI training crawlers. */
+  blockAiTraining: z.boolean(),
+});
+/** One entry in a school's audit log. */
+export const auditEventSchema = z.object({
+  id: z.string(),
+  action: z.string(),
+  resourceType: z.string(),
+  resourceId: z.string(),
+  actor: z.object({
+    kind: z.enum(["user", "system"]),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+  }),
+  createdAt: z.string(),
+});
+export const auditEventListQuerySchema = z.object({
+  cursor: z.string().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 export const schoolCodeInjectionSchema = z.object({
   codeInjectionHead: z.string(),
@@ -737,6 +806,18 @@ export const updateSchoolCodeInjectionBodySchema = z
     (value) =>
       value.codeInjectionHead !== undefined || value.codeInjectionBody !== undefined,
   );
+const publicSitemapEntrySchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  updatedAt: z.string(),
+});
+/** What the storefront's sitemap.xml lists; the storefront builds the URLs. */
+export const publicSiteSitemapSchema = z.object({
+  pages: z.array(publicSitemapEntrySchema),
+  products: z.array(publicSitemapEntrySchema),
+  communities: z.array(publicSitemapEntrySchema),
+  blogPosts: z.array(publicSitemapEntrySchema),
+});
 export const publicSitePageSchema = z.object({
   pageId: z.string(),
   name: z.string(),
@@ -796,9 +877,31 @@ export const updateSchoolBodySchema = z
       .trim()
       .length(3)
       .regex(/^[A-Za-z]{3}$/)
-      .transform((value) => value.toUpperCase()),
+      .transform((value) => value.toUpperCase())
+      .optional(),
+    /** Needs a paid plan (`remove_branding`) to turn on. */
+    hideCourseLitBranding: z.boolean().optional(),
+    /** Keep every crawler out of the storefront (pre-launch). */
+    hideFromSearch: z.boolean().optional(),
+    /** Block AI training crawlers; AI search crawlers stay allowed. */
+    blockAiTraining: z.boolean().optional(),
+    /** Each learner's upload budget: 1 MB to 1 GB. */
+    learnerUploadLimitBytes: z
+      .number()
+      .int()
+      .min(1024 * 1024)
+      .max(1024 * 1024 * 1024)
+      .optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) =>
+      value.currency !== undefined ||
+      value.hideCourseLitBranding !== undefined ||
+      value.hideFromSearch !== undefined ||
+      value.blockAiTraining !== undefined ||
+      value.learnerUploadLimitBytes !== undefined,
+  );
 export const schoolHostSchema = z.object({
   hostname: z.string(),
   kind: z.enum(["subdomain", "custom"]),
@@ -920,6 +1023,113 @@ export const updateMediaBodySchema = z.object({
   caption: z.string().max(2_000).optional(),
   accessPolicy: z.enum(["public", "private"]).optional(),
 });
+const ssoConnectionPathParams = z.object({ connectionId: z.string().min(1).max(64) });
+
+export const ssoConnectionStatusSchema = z.enum([
+  "draft",
+  "active",
+  "suspended",
+  "disabled",
+]);
+export const ssoEnforcementSchema = z.enum(["optional", "required_for_domains"]);
+export const ssoDomainSchema = z.object({
+  domain: z.string(),
+  verified: z.boolean(),
+  verifiedAt: z.string().nullable(),
+  /** The TXT record to publish; the value is the bare token. */
+  verificationRecord: z.object({
+    type: z.literal("TXT"),
+    name: z.string(),
+    value: z.string(),
+  }),
+  /** Weekly re-checks in a row that found no record. Three clear the verification. */
+  consecutiveCheckFailures: z.number().int(),
+  lastCheckedAt: z.string().nullable(),
+});
+/** An SSO connection. Never includes OIDC secrets or test-sign-in attributes. */
+export const ssoConnectionSchema = z.object({
+  id: z.string(),
+  protocol: z.enum(["saml", "oidc"]),
+  status: ssoConnectionStatusSchema,
+  displayName: z.string(),
+  enforcement: ssoEnforcementSchema,
+  maxSessionMinutes: z.number().int().nullable(),
+  idpEntityId: z.string().nullable(),
+  idpSsoUrl: z.string().nullable(),
+  idpCertificates: z.array(z.string()),
+  subjectAttribute: z.string().nullable(),
+  /** Values to enter at the identity provider. */
+  serviceProvider: z.object({
+    entityId: z.string(),
+    acsUrl: z.string(),
+    metadataUrl: z.string(),
+  }),
+  domains: z.array(ssoDomainSchema),
+  testedAt: z.string().nullable(),
+  /** True when the last successful test ran against the current settings. */
+  testedCurrentConfiguration: z.boolean(),
+  /** Whether the school's plan lets it activate the connection. */
+  planAvailable: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const ssoSettingsFields = {
+  displayName: z.string().trim().min(1).max(100),
+  /** IdP metadata XML, pasted; fills the entity ID, SSO URL and certificates. */
+  metadataXml: z.string().max(524_288),
+  idpEntityId: z.string().trim().min(1).max(2048),
+  idpSsoUrl: z.string().trim().min(1).max(2048),
+  idpCertificates: z.array(z.string().min(1).max(16_384)).max(5),
+  subjectAttribute: z.string().trim().min(1).max(512).nullable(),
+  enforcement: ssoEnforcementSchema,
+  maxSessionMinutes: z.number().int().min(5).max(525_600).nullable(),
+};
+export const createSsoConnectionBodySchema = z
+  .object({
+    ...ssoSettingsFields,
+    protocol: z.literal("saml").optional(),
+  })
+  .partial()
+  .required({ displayName: true })
+  .strict();
+export const updateSsoConnectionBodySchema = z
+  .object(ssoSettingsFields)
+  .partial()
+  .strict();
+export const addSsoDomainBodySchema = z
+  .object({ domain: z.string().trim().min(3).max(253) })
+  .strict();
+export const startSsoConnectionTestBodySchema = z
+  .object({ returnUrl: z.string().url().max(1000) })
+  .strict();
+export const ssoConnectionTestResultSchema = z.object({
+  ok: z.boolean(),
+  /** A reason code when the test sign-in failed. */
+  reason: z.string().nullable(),
+  issuer: z.string().nullable(),
+  subject: z.string().nullable(),
+  email: z.string().nullable(),
+  name: z.string().nullable(),
+  emailDomainVerified: z.boolean().nullable(),
+  attributes: z.record(z.array(z.string())),
+  expiresAt: z.string(),
+});
+export const schoolLoginMethodSchema = z.enum(["email", "google"]);
+export const schoolLoginMethodsSchema = z.object({
+  /** The methods the school turned on. SSO is on exactly when it has an active connection. */
+  loginMethods: z.array(schoolLoginMethodSchema),
+  googleAvailable: z.boolean(),
+  sso: z.object({
+    active: z.boolean(),
+    displayName: z.string().nullable(),
+    planAvailable: z.boolean(),
+  }),
+  /** What learners can use right now. */
+  usable: z.array(z.enum(["email", "google", "sso"])),
+});
+export const updateSchoolLoginMethodsBodySchema = z
+  .object({ loginMethods: z.array(schoolLoginMethodSchema).max(2) })
+  .strict();
 export const mediaReferenceSchema = z.object({
   resourceType: mediaResourceTypeSchema,
   resourceId: z.string().trim().min(1).max(255),
@@ -1002,22 +1212,118 @@ export const teamInvitationPreviewSchema = z.object({
   email: z.string(),
 });
 
-export const lessonSchema = z.object({
+/**
+ * Lesson types (docs/lesson-pages.md, section 7). Course products take
+ * `page` and `scorm`; download products take `file` only.
+ */
+export const LESSON_TYPES = ["page", "scorm", "file"] as const;
+export const lessonTypeSchema = z.enum(LESSON_TYPES);
+export type LessonType = z.infer<typeof lessonTypeSchema>;
+
+/** A lesson in a list: neither content form. */
+export const lessonSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
-  type: z.enum(["text", "video", "audio", "pdf", "file", "embed", "quiz", "scorm"]),
+  type: lessonTypeSchema,
+  /** The uploaded file of a `scorm` or `file` lesson; pages reference media in their blocks. */
   mediaId: z.string().nullable(),
   sectionId: z.string().nullable(),
   position: z.number().int(),
   status: z.enum(["draft", "published"]),
-  downloadable: z.boolean(),
   requiresEnrollment: z.boolean(),
-  content: z.record(z.string(), z.unknown()).nullable(),
+  /**
+   * Increases with every change to the content authors edit (the draft, or
+   * the published content without one); send it back as `expectedContentVersion`.
+   */
+  contentVersion: z.number().int().positive(),
+  /**
+   * A page has saved edits learners don't see yet. Content writes go to a
+   * draft; `publishLessonContent` (or making the lesson live) publishes it.
+   */
+  hasUnpublishedChanges: z.boolean(),
+  /** When the content learners read was last replaced (created or published). */
+  contentPublishedAt: z.string().nullable(),
   dripDelaySeconds: z.number().int().nonnegative().nullable(),
   dripAt: z.string().nullable(),
   availableAt: z.string().nullable(),
   publishedAt: z.string().nullable(),
 });
+
+/**
+ * One lesson as its authors read and write it: the page as Tiptap JSON
+ * (`content`) and as Markdown (`markdown`, null for SCORM and file lessons).
+ * For a page this is its draft when it has one, else the published content.
+ * Both hold the quiz's correct answers, so they never reach learners.
+ */
+export const lessonSchema = lessonSummarySchema.extend({
+  content: z.record(z.string(), z.unknown()),
+  markdown: z.string().nullable(),
+});
+
+/**
+ * Lesson content as learners, the public and previews receive it: a page
+ * whose Quiz blocks were rebuilt without answers. No object in it may carry
+ * a `correct` key, so a missed strip fails response validation instead of
+ * leaking answers (L1). There is no Markdown form for learners.
+ */
+export const learnerLessonContentSchema = z
+  .record(z.string(), z.unknown())
+  .refine((content) => !containsQuizAnswers(content), {
+    message: "learner lesson content must not contain answers",
+  });
+
+export const learnerLessonSchema = lessonSummarySchema
+  .omit({ contentVersion: true, hasUnpublishedChanges: true, contentPublishedAt: true })
+  .extend({ content: learnerLessonContentSchema.nullable() });
+
+const formatAttributeSchema = z.object({
+  name: z.string(),
+  prop: z.string().optional(),
+  type: z.string().optional(),
+  default: z.unknown(),
+  required: z.boolean(),
+  description: z.string(),
+});
+type FormatBlock = {
+  name: string;
+  tag?: string;
+  summary: string;
+  example: string;
+  content?: string;
+  attributes: z.infer<typeof formatAttributeSchema>[];
+  children?: FormatBlock[];
+  unavailable?: string;
+};
+const formatBlockSchema: z.ZodType<FormatBlock> = z.lazy(() =>
+  z.object({
+    name: z.string(),
+    tag: z.string().optional(),
+    summary: z.string(),
+    example: z.string(),
+    content: z.string().optional(),
+    attributes: z.array(formatAttributeSchema),
+    children: z.array(formatBlockSchema).optional(),
+    /** Why the block may not be added now (`trial`, `plan_required`); absent when it may. */
+    unavailable: z.string().optional(),
+  }),
+);
+
+/** What a lesson page may hold, for API and MCP clients writing Markdown. */
+export const lessonContentFormatSchema = z.object({
+  markdown: z.object({
+    syntax: z.string(),
+    marks: z.array(z.string()),
+    nodes: z.array(z.string()),
+    headingLevels: z.array(z.number().int()),
+  }),
+  blocks: z.array(formatBlockSchema),
+  limits: z.object({
+    bytes: z.number().int(),
+    nodes: z.number().int(),
+    depth: z.number().int(),
+  }),
+});
+export type LessonContentFormat = z.infer<typeof lessonContentFormatSchema>;
 
 export const sectionSchema = z.object({
   id: z.string(),
@@ -1032,7 +1338,14 @@ export const sectionSchema = z.object({
 export const productDetailSchema = productSchema.extend({
   enrolled: z.boolean(),
   sections: z.array(sectionSchema),
-  lessons: z.array(lessonSchema),
+  lessons: z.array(lessonSummarySchema),
+});
+
+/** The product as learners, the public and previews read it. */
+export const learnerProductDetailSchema = productSchema.extend({
+  enrolled: z.boolean(),
+  sections: z.array(sectionSchema),
+  lessons: z.array(learnerLessonSchema),
 });
 
 export const learnerLessonMediaSchema = z.object({
@@ -1069,15 +1382,7 @@ export const scormPackageInfoSchema = z.object({
 export const processScormPackageBodySchema = z.object({
   mediaId: z.string().min(1),
 });
-export const evaluateQuizBodySchema = z.object({
-  answers: z.array(z.array(z.number().int().nonnegative()).max(1000)).min(1).max(100),
-});
-export const quizEvaluationSchema = z.object({
-  pass: z.boolean(),
-  score: z.number(),
-  requiresPassingGrade: z.boolean(),
-  passingGrade: z.number(),
-});
+export { evaluateQuizBodySchema, quizEvaluationSchema };
 
 export const communityActorSchema = z.object({
   id: z.string(),
@@ -1226,6 +1531,15 @@ export const communityGifUrlSchema = z
   .refine(isAllowedGifUrl, { message: "Only GIPHY GIF links are allowed." });
 const communityGifUrlsSchema = z.array(communityGifUrlSchema).max(10).optional();
 
+/** A YouTube video link added to a post. Stored as its embed link, never as media. */
+export const communityVideoUrlSchema = z
+  .string()
+  .max(2_000)
+  .refine((value) => youtubeVideoId(value) !== null, {
+    message: "Only YouTube video links are allowed.",
+  });
+const communityVideoUrlsSchema = z.array(communityVideoUrlSchema).max(10).optional();
+
 export const learnerGifSearchQuerySchema = z.object({
   q: z.string().max(200).optional(),
 });
@@ -1260,10 +1574,14 @@ export const communityPostSchema = z.object({
   category: z.string(),
   media: z.array(communityMediaSchema),
   gifUrls: z.array(z.string().url()),
+  /** YouTube embed links. */
+  videoUrls: z.array(z.string().url()),
   reactions: z.array(communityReactionSchema),
   commentsCount: z.number().int().nonnegative(),
   subscribed: z.boolean(),
   pinned: z.boolean(),
+  /** When the author last changed it; null if never edited. */
+  editedAt: z.string().nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -1300,6 +1618,8 @@ export const communityCommentSchema = z.object({
   content: z.string(),
   media: z.array(communityMediaSchema),
   reactions: z.array(communityReactionSchema),
+  /** When the author last changed it; null if never edited. */
+  editedAt: z.string().nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -1342,6 +1662,8 @@ export const communityReportContentSchema = z.object({
   content: z.string(),
   media: z.array(communityMediaSchema),
   gifUrls: z.array(z.string().url()),
+  /** YouTube embed links; always empty for a comment. */
+  videoUrls: z.array(z.string().url()),
   authorId: z.string().nullable(),
   authorKind: z.enum(["learner", "admin"]).nullable(),
   author: communityActorSchema.nullable(),
@@ -1393,6 +1715,11 @@ export const spaceSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+/** A space as a learner sees it, with the course it is the discussion of. */
+export const learnerSpaceSchema = spaceSchema.extend({
+  /** The course whose discussion this space is, or null for a community space. */
+  productId: z.string().nullable(),
+});
 export const createSpaceBodySchema = z.object({
   name: z.string().trim().min(1).max(100),
   description: z.string().max(8000).optional(),
@@ -1414,6 +1741,7 @@ export const createSpacePostBodySchema = z.object({
   content: z.string().trim().min(1).max(20_000),
   mediaIds: z.array(z.string().min(1)).max(10).optional(),
   gifUrls: communityGifUrlsSchema,
+  videoUrls: communityVideoUrlsSchema,
 });
 
 export const communityMembershipListQuerySchema = communityListQuerySchema.extend({
@@ -1432,6 +1760,7 @@ export const createCommunityPostBodySchema = z.object({
   category: z.string().trim().min(1).max(100).default("General"),
   mediaIds: communityMediaIdsSchema,
   gifUrls: communityGifUrlsSchema,
+  videoUrls: communityVideoUrlsSchema,
 });
 
 export const updateCommunityPostBodySchema = createCommunityPostBodySchema
@@ -1500,31 +1829,53 @@ export const createPreviewGrantBodySchema = z.object({
   ttlSeconds: z.number().int().min(60).max(3600).default(900),
 });
 
-export const createLessonBodySchema = z.object({
-  title: z.string().min(1).max(200),
-  type: z
-    .enum(["text", "video", "audio", "pdf", "file", "embed", "quiz", "scorm"])
-    .default("text"),
-  content: z.record(z.string(), z.unknown()).default({}),
-  mediaId: z.string().min(1).nullable().optional(),
-  downloadable: z.boolean().optional(),
-  requiresEnrollment: z.boolean().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  sectionId: z.string().min(1).optional(),
-  dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
-  dripAt: z.string().datetime().nullable().optional(),
-});
+/** Lesson pages are written as Tiptap JSON (`content`) or Markdown (`markdown`), not both. */
+const lessonMarkdownSchema = z.string().max(1024 * 1024);
+const oneContentForm = (body: { content?: unknown; markdown?: unknown }) =>
+  body.content === undefined || body.markdown === undefined;
+const oneContentFormMessage = { message: "send content or markdown, not both" };
 
-export const updateLessonBodySchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.record(z.string(), z.unknown()).optional(),
-  mediaId: z.string().min(1).nullable().optional(),
-  downloadable: z.boolean().optional(),
-  requiresEnrollment: z.boolean().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  sectionId: z.string().min(1).nullable().optional(),
-  dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
-  dripAt: z.string().datetime().nullable().optional(),
+export const createLessonBodySchema = z
+  .object({
+    title: z.string().min(1).max(200),
+    type: lessonTypeSchema.default("page"),
+    content: z.record(z.string(), z.unknown()).optional(),
+    markdown: lessonMarkdownSchema.optional(),
+    mediaId: z.string().min(1).nullable().optional(),
+    requiresEnrollment: z.boolean().optional(),
+    status: z.enum(["draft", "published"]).optional(),
+    sectionId: z.string().min(1).optional(),
+    dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
+    dripAt: z.string().datetime().nullable().optional(),
+  })
+  .refine(oneContentForm, oneContentFormMessage);
+
+/**
+ * A page's `content` or `markdown` is saved as its draft: learners keep
+ * reading the published content until `publishLessonContent`, or until
+ * `status` changes to `published`, which publishes the draft too.
+ */
+export const updateLessonBodySchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    content: z.record(z.string(), z.unknown()).optional(),
+    markdown: lessonMarkdownSchema.optional(),
+    /** The lesson's `contentVersion` the change is based on. Required with `content` or `markdown`. */
+    expectedContentVersion: z.number().int().positive().optional(),
+    mediaId: z.string().min(1).nullable().optional(),
+    requiresEnrollment: z.boolean().optional(),
+    /** `published` makes the lesson live and publishes its draft content with it. */
+    status: z.enum(["draft", "published"]).optional(),
+    sectionId: z.string().min(1).nullable().optional(),
+    dripDelaySeconds: z.number().int().min(0).max(315_360_000).nullable().optional(),
+    dripAt: z.string().datetime().nullable().optional(),
+  })
+  .refine(oneContentForm, oneContentFormMessage);
+
+/** Publishing or discarding a lesson's draft content. */
+export const lessonDraftActionBodySchema = z.object({
+  /** The `contentVersion` the author last saw; a mismatch fails with `conflict`. */
+  expectedContentVersion: z.number().int().positive().optional(),
 });
 
 export const createSectionBodySchema = z.object({
@@ -1752,9 +2103,7 @@ export const contactTagReferencesSchema = z.object({
       title: z.string(),
       type: z.enum(["broadcast", "sequence"]),
       status: z.string(),
-      usages: z.array(
-        z.enum(["filter", "exclude_filter", "trigger", "email_action"]),
-      ),
+      usages: z.array(z.enum(["filter", "exclude_filter", "trigger", "email_action"])),
     }),
   ),
   signupForms: z.array(z.object({ formId: z.string(), name: z.string() })),
@@ -1774,18 +2123,14 @@ export const renameContactTagResultSchema = z.object({
   sequencesUpdated: z.number().int().nonnegative(),
   signupFormsUpdated: z.number().int().nonnegative(),
 });
-export type RenameContactTagResult = z.infer<
-  typeof renameContactTagResultSchema
->;
+export type RenameContactTagResult = z.infer<typeof renameContactTagResultSchema>;
 
 export const deleteContactTagResultSchema = z.object({
   tag: z.string(),
   contactsUpdated: z.number().int().nonnegative(),
   references: contactTagReferencesSchema,
 });
-export type DeleteContactTagResult = z.infer<
-  typeof deleteContactTagResultSchema
->;
+export type DeleteContactTagResult = z.infer<typeof deleteContactTagResultSchema>;
 
 export const newsletterSubscribeBodySchema = z.object({
   email: z.string().trim().email(),
@@ -1898,6 +2243,7 @@ export const learnerStartGoogleBodySchema = z.object({
   nonce: z.string().min(32).max(200),
   next: z.string().max(1000).optional(),
 });
+export const learnerStartSsoBodySchema = learnerStartGoogleBodySchema;
 export const consumeSchoolAuthTicketBodySchema = z.object({
   ticket: z.string().min(1).max(200),
 });
@@ -1912,13 +2258,14 @@ export const learnerDownloadLinkSchema = z.object({
 });
 
 export const createSchoolBodySchema = z.object({
-  name: z.string().trim().min(1).max(200),
+  name: schoolNameSchema,
   subdomain: z
     .string()
     .trim()
     .min(3)
     .max(63)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .refine((value) => !isReservedSubdomain(value), { message: "subdomain_reserved" }),
   locale: z.string().trim().min(2).max(35).default("en"),
   currency: z
     .string()
@@ -1953,6 +2300,8 @@ export const startSchoolBillingCheckoutResponseSchema = z.object({
 
 /** The school's CourseLit plan, for Settings > Plan. */
 export const schoolBillingPlanSchema = z.object({
+  /** A cardless CourseLit trial with Business features, not a paid plan. */
+  courseLitTrial: z.boolean(),
   /** False when this deployment has no hosted billing. */
   billingAvailable: z.boolean(),
   plan: z.enum(["pro", "business"]).nullable(),
@@ -2010,7 +2359,14 @@ export const schoolOnboardingSchema = z.object({
     z.object({ key: onboardingChecklistKeySchema, done: z.boolean() }),
   ),
   /** Hosted only: whether the school still needs a CourseLit plan to go live. */
-  billing: z.object({ required: z.boolean(), entitled: z.boolean() }),
+  billing: z.object({
+    required: z.boolean(),
+    /** A paid plan, a running trial, or self-hosted: the school can go live. */
+    entitled: z.boolean(),
+    /** An entitled paid plan: what a return from checkout confirms. */
+    paid: z.boolean(),
+    trialEndsAt: z.string().nullable(),
+  }),
   updatedAt: z.string(),
 });
 export const updateSchoolOnboardingBodySchema = z
@@ -2048,11 +2404,21 @@ export const billingOfferSchema = z.object({
   trialDays: z.number().int(),
 });
 
+const planLimitValuesSchema = z.object({
+  /** `null` is unlimited. */
+  marketing_emails_month: z.number().int().nullable(),
+  storage_bytes: z.number().int().nullable(),
+});
+
 export const billingCatalogSchema = z.object({
   catalogRevision: z.number().int().nullable(),
   currency: z.string().nullable(),
   checkoutAvailable: z.boolean(),
   offers: z.array(billingOfferSchema),
+  /** What each plan allows on this deployment; null when nothing is sold. */
+  limits: z
+    .object({ pro: planLimitValuesSchema, business: planLimitValuesSchema })
+    .nullable(),
 });
 
 export const createSchoolResponseSchema = schoolSchema.extend({
@@ -2083,7 +2449,8 @@ export const updateMailingSettingsBodySchema = z
   .object({ mailingAddress: z.string().trim().min(1).max(1000) })
   .passthrough();
 export const mailSequenceListQuerySchema = z.object({
-  type: z.enum(["broadcast", "sequence"]).optional(),
+  /** Broadcasts and sequences are listed separately. */
+  type: z.enum(["broadcast", "sequence"]),
   status: z.string().optional(),
   search: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
@@ -2585,7 +2952,7 @@ export const contract = c.router({
     method: "GET",
     path: "/v1/learner/spaces",
     responses: {
-      200: z.object({ items: z.array(spaceSchema) }),
+      200: z.object({ items: z.array(learnerSpaceSchema) }),
       401: platformErrorSchema,
     },
   },
@@ -3071,6 +3438,8 @@ export const contract = c.router({
         schoolId: z.string(),
         subdomain: z.string(),
         name: z.string(),
+        /** The site is not available: pending checkout, imported or suspended. */
+        offline: z.boolean(),
       }),
       404: platformErrorSchema,
     },
@@ -3152,6 +3521,16 @@ export const contract = c.router({
       200: publicSitePageSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      500: platformErrorSchema,
+    },
+  },
+  getPublicSiteSitemap: {
+    method: "GET",
+    path: "/v1/public/:schoolId/site/sitemap",
+    pathParams: publicSchoolPathParams,
+    responses: {
+      200: publicSiteSitemapSchema,
+      403: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
@@ -3641,7 +4020,7 @@ export const contract = c.router({
     path: "/v1/public/:schoolId/products/:productId",
     pathParams: publicSchoolPathParams.extend({ productId: z.string() }),
     responses: {
-      200: productDetailSchema,
+      200: learnerProductDetailSchema,
       404: platformErrorSchema,
     },
     summary:
@@ -3654,8 +4033,10 @@ export const contract = c.router({
     responses: {
       200: z.object({
         schoolId: z.string(),
-        loginMethods: z.array(z.enum(["email", "google"])),
+        loginMethods: z.array(z.enum(["email", "google", "sso"])),
         hasGoogle: z.boolean(),
+        hasSso: z.boolean(),
+        ssoDisplayName: z.string().nullable(),
       }),
       404: platformErrorSchema,
     },
@@ -3778,7 +4159,7 @@ export const contract = c.router({
     pathParams: z.object({ productId: z.string() }),
     headers: z.object({ "x-preview-token": z.string().min(1) }),
     responses: {
-      200: productDetailSchema,
+      200: learnerProductDetailSchema,
       401: platformErrorSchema,
       404: platformErrorSchema,
     },
@@ -3802,6 +4183,39 @@ export const contract = c.router({
     path: "/v1/preview/products/:productId/lessons/:lessonId/media",
     pathParams: z.object({ productId: z.string(), lessonId: z.string() }),
     headers: z.object({ "x-preview-token": z.string().min(1) }),
+    responses: {
+      200: learnerLessonMediaSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getPublicLessonMediaItem: {
+    method: "GET",
+    path: "/v1/public/:schoolId/products/:productId/lessons/:lessonId/media/:mediaId",
+    pathParams: publicSchoolPathParams.extend({
+      productId: z.string(),
+      lessonId: z.string(),
+      mediaId: z.string(),
+    }),
+    summary: "Read one media item a lesson uses, under the lesson's own access rules",
+    responses: {
+      200: learnerLessonMediaSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getPreviewLessonMediaItem: {
+    method: "GET",
+    path: "/v1/preview/products/:productId/lessons/:lessonId/media/:mediaId",
+    pathParams: z.object({
+      productId: z.string(),
+      lessonId: z.string(),
+      mediaId: z.string(),
+    }),
+    headers: z.object({ "x-preview-token": z.string().min(1) }),
+    summary: "Read one media item a lesson uses, with a product preview grant",
     responses: {
       200: learnerLessonMediaSchema,
       401: platformErrorSchema,
@@ -3860,6 +4274,8 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      409: platformErrorSchema,
+      429: platformErrorSchema,
     },
   },
   createLesson: {
@@ -3919,7 +4335,31 @@ export const contract = c.router({
     pathParams: z.object({ productId: z.string() }),
     body: reorderLessonsBodySchema,
     responses: {
-      200: z.object({ items: z.array(lessonSchema) }),
+      200: z.object({ items: z.array(lessonSummarySchema) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getLessonContentFormat: {
+    method: "GET",
+    path: "/v1/lesson-content-format",
+    summary:
+      "Describe the Markdown a lesson page may hold, including blocks this school may not add now",
+    responses: {
+      200: lessonContentFormatSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getLesson: {
+    method: "GET",
+    path: "/v1/lessons/:lessonId",
+    pathParams: z.object({ lessonId: z.string() }),
+    summary: "Read one lesson with its page content as JSON and Markdown",
+    responses: {
+      200: lessonSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3937,6 +4377,39 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  publishLessonContent: {
+    method: "POST",
+    path: "/v1/lessons/:lessonId/publish-content",
+    pathParams: z.object({ lessonId: z.string() }),
+    body: lessonDraftActionBodySchema,
+    summary:
+      "Publish a lesson page's draft content so learners see it; an incomplete quiz is refused",
+    responses: {
+      200: lessonSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  discardLessonDraft: {
+    method: "POST",
+    path: "/v1/lessons/:lessonId/discard-draft",
+    pathParams: z.object({ lessonId: z.string() }),
+    body: lessonDraftActionBodySchema,
+    summary:
+      "Throw away a lesson page's unpublished content and go back to the published version",
+    responses: {
+      200: lessonSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
     },
   },
   deleteLesson: {
@@ -4150,6 +4623,19 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
+  learnerStartSsoSignIn: {
+    method: "POST",
+    path: "/v1/learner/auth/sso",
+    summary: "Start single sign-on for a school website",
+    body: learnerStartSsoBodySchema,
+    responses: {
+      200: z.object({ url: z.string().url() }),
+      400: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      429: platformErrorSchema,
+    },
+  },
   consumeSchoolAuthTicket: {
     method: "POST",
     path: "/v1/auth/tickets/consume",
@@ -4178,6 +4664,17 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
     },
+  },
+  getLearnerSiteCodeInjection: {
+    method: "GET",
+    path: "/v1/learner/site/code-injection",
+    responses: {
+      200: schoolCodeInjectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary:
+      "The school's injected code for its owner while the plan keeps it private (a trial); refused for anyone else",
   },
   updateLearnerProfile: {
     method: "PATCH",
@@ -4533,6 +5030,32 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
+  getSchoolPlanFeatures: {
+    method: "GET",
+    path: "/v1/school/plan-features",
+    responses: {
+      200: z.object({ features: z.array(z.string()) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary:
+      "The features the school's CourseLit plan includes, such as scorm, audit_log and remove_branding",
+  },
+  listSchoolAuditEvents: {
+    method: "GET",
+    path: "/v1/school/audit-events",
+    query: auditEventListQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(auditEventSchema),
+        nextCursor: z.string().nullable(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: "The school's audit log, newest first (Business plan)",
+  },
   getSchoolCodeInjection: {
     method: "GET",
     path: "/v1/school/code-injection",
@@ -4886,6 +5409,197 @@ export const contract = c.router({
       409: platformErrorSchema,
     },
   },
+  listSsoConnections: {
+    method: "GET",
+    path: "/v1/sso/connections",
+    summary: "List the school's single sign-on connections",
+    responses: {
+      200: z.object({ items: z.array(ssoConnectionSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  createSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections",
+    summary: "Create a draft single sign-on connection",
+    body: createSsoConnectionBodySchema,
+    responses: {
+      201: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  getSsoConnection: {
+    method: "GET",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Read a single sign-on connection",
+    responses: {
+      200: ssoConnectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateSsoConnection: {
+    method: "PATCH",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Change a single sign-on connection",
+    body: updateSsoConnectionBodySchema,
+    responses: {
+      200: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  deleteSsoConnection: {
+    method: "DELETE",
+    path: "/v1/sso/connections/:connectionId",
+    pathParams: ssoConnectionPathParams,
+    summary: "Delete a single sign-on connection",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  addSsoDomain: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/domains",
+    pathParams: ssoConnectionPathParams,
+    summary: "Add an email domain to a single sign-on connection",
+    body: addSsoDomainBodySchema,
+    responses: {
+      201: ssoDomainSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  verifySsoDomain: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/domains/:domain/verify",
+    pathParams: ssoConnectionPathParams.extend({ domain: z.string().min(1) }),
+    summary: "Check the DNS record that proves the school owns an email domain",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoDomainSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      429: platformErrorSchema,
+    },
+  },
+  deleteSsoDomain: {
+    method: "DELETE",
+    path: "/v1/sso/connections/:connectionId/domains/:domain",
+    pathParams: ssoConnectionPathParams.extend({ domain: z.string().min(1) }),
+    summary: "Remove an email domain from a single sign-on connection",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  startSsoConnectionTest: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/test",
+    pathParams: ssoConnectionPathParams,
+    summary: "Start a test sign-in; returns the URL to open",
+    body: startSsoConnectionTestBodySchema,
+    responses: {
+      200: z.object({ url: z.string().url() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getSsoConnectionTestResult: {
+    method: "GET",
+    path: "/v1/sso/connections/:connectionId/test-results/:requestId",
+    pathParams: ssoConnectionPathParams.extend({ requestId: z.string().min(1) }),
+    summary: "Read the result of a test sign-in this admin started",
+    responses: {
+      200: ssoConnectionTestResultSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  activateSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/activate",
+    pathParams: ssoConnectionPathParams,
+    summary: "Turn a tested single sign-on connection on",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoConnectionSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  disableSsoConnection: {
+    method: "POST",
+    path: "/v1/sso/connections/:connectionId/disable",
+    pathParams: ssoConnectionPathParams,
+    summary: "Turn a single sign-on connection off and end its sessions",
+    body: z.object({}).strict(),
+    responses: {
+      200: ssoConnectionSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  unlinkSsoIdentity: {
+    method: "DELETE",
+    path: "/v1/sso/identities/:schoolAccountId",
+    pathParams: z.object({ schoolAccountId: z.string().min(1) }),
+    summary: "Remove a learner's single sign-on link and end their SSO sessions",
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getSchoolLoginMethods: {
+    method: "GET",
+    path: "/v1/school/login-methods",
+    summary: "Read which sign-in methods the school's learners can use",
+    responses: {
+      200: schoolLoginMethodsSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  updateSchoolLoginMethods: {
+    method: "PATCH",
+    path: "/v1/school/login-methods",
+    summary: "Turn learner sign-in methods on or off",
+    body: updateSchoolLoginMethodsBodySchema,
+    responses: {
+      200: schoolLoginMethodsSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
   createSchool: {
     method: "POST",
     path: "/v1/schools",
@@ -4926,6 +5640,27 @@ export const contract = c.router({
     summary: "Get the school's CourseLit plan",
     responses: {
       200: schoolBillingPlanSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getSchoolBillingUsage: {
+    method: "GET",
+    path: "/v1/school/billing/usage",
+    summary: "What the school has used against each limit of its CourseLit plan",
+    responses: {
+      200: z.object({
+        items: z.array(
+          z.object({
+            key: z.enum(["storage_bytes", "marketing_emails_month"]),
+            /** Null when it can't be read right now. */
+            used: z.number().nullable(),
+            /** Null for unlimited. */
+            allowed: z.number().nullable(),
+            resetsAt: z.string().nullable(),
+          }),
+        ),
+      }),
       401: platformErrorSchema,
       403: platformErrorSchema,
     },
@@ -5452,6 +6187,7 @@ export type Contract = typeof contract;
 export {
   buildMcpParityManifest,
   MCP_HIGH_IMPACT_OPERATIONS,
+  MCP_OPEN_WORLD_OPERATIONS,
   type McpParityManifestEntry,
   mcpOperationRisk,
   mcpToolName,

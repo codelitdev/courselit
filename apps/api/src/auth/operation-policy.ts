@@ -1,5 +1,5 @@
-import { type CourseLitPermission, contract } from "@courselit/api-contract";
 import { createPlatformError, type PlatformError } from "@codelitdev/platform";
+import { type CourseLitPermission, contract } from "@courselit/api-contract";
 
 export type Audience = "school" | "account" | "system" | "public" | "learner";
 
@@ -144,6 +144,8 @@ export const OPERATION_POLICIES = {
   getSchoolOverview: schoolOp(["analytics:read"]),
   updateSchool: schoolOp(["school:write"]),
   getSchoolCodeInjection: schoolOp(["school:read"]),
+  getSchoolPlanFeatures: schoolOp(["school:read"]),
+  listSchoolAuditEvents: schoolOp(["school:write"]),
   updateSchoolCodeInjection: schoolOp(["school:write"], ["session", "oauth"]),
   // Payment gateway credentials and storefront script injection are never
   // reachable with a long-lived API key: a leaked key must not be able to
@@ -154,6 +156,32 @@ export const OPERATION_POLICIES = {
   createSchoolHost: schoolOp(["school:write"]),
   deleteSchoolHost: schoolOp(["school:write"]),
   verifySchoolHost: schoolOp(["school:write"]),
+
+  // Learner sign-in methods. Turning a method off can't hand anyone's account
+  // to someone else, and the policy falls back to email codes, so API keys and
+  // MCP may change it.
+  getSchoolLoginMethods: schoolOp(["school:read"]),
+  updateSchoolLoginMethods: schoolOp(["school:write"]),
+
+  // Learner single sign-on. Whoever controls a connection's IdP settings can
+  // sign in as every learner linked to it, so writes are owner-only, a
+  // signed-in admin session only (no API key or OAuth client) and need a
+  // recent sign-in. Reads are open to every credential and never carry
+  // secrets or test attributes.
+  listSsoConnections: schoolOp(["school:read"]),
+  getSsoConnection: schoolOp(["school:read"]),
+  createSsoConnection: schoolOwnerOp(["session"], true),
+  updateSsoConnection: schoolOwnerOp(["session"], true),
+  deleteSsoConnection: schoolOwnerOp(["session"], true),
+  addSsoDomain: schoolOwnerOp(["session"], true),
+  verifySsoDomain: schoolOwnerOp(["session"], true),
+  deleteSsoDomain: schoolOwnerOp(["session"], true),
+  startSsoConnectionTest: schoolOwnerOp(["session"], true),
+  // Readable by the admin who started the test, within 15 minutes of it.
+  getSsoConnectionTestResult: schoolOwnerOp(["session"]),
+  activateSsoConnection: schoolOwnerOp(["session"], true),
+  disableSsoConnection: schoolOwnerOp(["session"], true),
+  unlinkSsoIdentity: schoolOwnerOp(["session"], true),
 
   // Mailing (broadcasts, sequences, templates). Sending is kept off API keys:
   // a leaked key must not be able to send email to the school's contacts.
@@ -199,8 +227,12 @@ export const OPERATION_POLICIES = {
   updateSectionDripEmail: schoolOp(["products:write"]),
   deleteSection: schoolOp(["products:write"]),
   reorderSections: schoolOp(["products:write"]),
+  getLesson: schoolOp(["products:read"]),
+  getLessonContentFormat: schoolOp(["products:read"]),
   createLesson: schoolOp(["products:write"]),
   updateLesson: schoolOp(["products:write"]),
+  publishLessonContent: schoolOp(["products:write"]),
+  discardLessonDraft: schoolOp(["products:write"]),
   deleteLesson: schoolOp(["products:write"]),
   reorderLessons: schoolOp(["products:write"]),
   processScormPackage: schoolOp(["products:write"]),
@@ -211,6 +243,7 @@ export const OPERATION_POLICIES = {
   setDefaultPlan: schoolOp(["products:write"]),
   readPreviewProduct: schoolOp(["products:read"]),
   getPreviewLessonMedia: schoolOp(["products:read"]),
+  getPreviewLessonMediaItem: schoolOp(["products:read"]),
   createPreviewGrant: schoolOp(["products:write"]),
 
   // Contacts admin
@@ -320,6 +353,7 @@ export const OPERATION_POLICIES = {
   // Starting the CourseLit plan checkout is a billing action, so also owner only.
   startSchoolBillingCheckout: schoolOwnerOp(["session"]),
   getSchoolBillingPlan: schoolOwnerOp(["session"]),
+  getSchoolBillingUsage: schoolOwnerOp(["session"]),
   cancelSchoolBillingPlan: schoolOwnerOp(["session"]),
   resumeSchoolBillingPlan: schoolOwnerOp(["session"]),
   getSchoolOnboarding: schoolOwnerOp(["session"]),
@@ -344,6 +378,7 @@ export const OPERATION_POLICIES = {
   getCaptchaConfig: publicOp(),
   getPublicProduct: publicOp(),
   getPublicLessonMedia: publicOp(),
+  getPublicLessonMediaItem: publicOp(),
   getPublicLoginMethods: publicOp(),
   signUpForLeadMagnet: publicOp(),
   createCheckoutSession: publicOp(),
@@ -355,6 +390,7 @@ export const OPERATION_POLICIES = {
   listPublicCommunityPlans: publicOp(),
   getPublicSiteSettings: publicOp(),
   getPublicSitePage: publicOp(),
+  getPublicSiteSitemap: publicOp(),
   listPublicSiteBlogs: publicOp(),
   getPublicSiteBlog: publicOp(),
   verifyCertificate: publicOp(),
@@ -365,9 +401,11 @@ export const OPERATION_POLICIES = {
   learnerRequestEmailCode: learnerOp(),
   learnerVerifyEmailCode: learnerOp(),
   learnerStartGoogleSignIn: learnerOp(),
+  learnerStartSsoSignIn: learnerOp(),
   consumeSchoolAuthTicket: learnerOp(),
   learnerSignOut: learnerOp(),
   learnerMe: learnerOp(),
+  getLearnerSiteCodeInjection: learnerOp(),
   learnerCheckout: learnerOp(),
   startLearnerCheckoutSession: learnerOp(),
   getLearnerCheckout: learnerOp(),
@@ -458,7 +496,8 @@ export function operationPermissionsAllow(
   return (
     (policy.requiredPermissions ?? []).every((permission) =>
       caller.permissions.has(permission),
-    ) && (any.length === 0 || any.some((permission) => caller.permissions.has(permission)))
+    ) &&
+    (any.length === 0 || any.some((permission) => caller.permissions.has(permission)))
   );
 }
 

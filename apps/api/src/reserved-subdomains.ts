@@ -1,3 +1,4 @@
+import { RESERVED_SUBDOMAINS } from "@courselit/api-contract/school-subdomain";
 import { inArray } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { AppDb } from "./types.js";
@@ -9,73 +10,11 @@ export function isValidSubdomain(value: string): boolean {
   return value.length >= 3 && value.length <= 63 && SUBDOMAIN_PATTERN.test(value);
 }
 
-/**
- * Product and infrastructure hostnames that no school may take. Subdomains
- * reserved for other reasons (such as schools on the classic app) live in the
- * `reserved_subdomains` table, never here.
- */
-export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
-  "account",
-  "accounts",
-  "admin",
-  "api",
-  "app",
-  "assets",
-  "auth",
-  "beta",
-  "billing",
-  "blog",
-  "cdn",
-  "classic",
-  "console",
-  "courselit",
-  "dash",
-  "dashboard",
-  "dev",
-  "docs",
-  "email",
-  "ftp",
-  "help",
-  "imap",
-  "internal",
-  "localhost",
-  "login",
-  "logout",
-  "mail",
-  "mcp",
-  "media",
-  "my",
-  "ns1",
-  "ns2",
-  "oauth",
-  "platform",
-  "pop",
-  "portal",
-  "prod",
-  "production",
-  "qa",
-  "queue",
-  "signin",
-  "signup",
-  "sites",
-  "smtp",
-  "sso",
-  "staging",
-  "static",
-  "status",
-  "storefront",
-  "studio",
-  "support",
-  "test",
-  "webhook",
-  "webhooks",
-  "webmail",
-  "www",
-]);
-
 /** The labels among `labels` that are reserved, by code or by the database. */
 export async function reservedAmong(db: AppDb, labels: string[]): Promise<Set<string>> {
-  const reserved = new Set(labels.filter((label) => RESERVED_SUBDOMAINS.has(label)));
+  const reserved = new Set(
+    labels.filter((label) => RESERVED_SUBDOMAINS.has(label.trim().toLowerCase())),
+  );
   const rest = labels.filter((label) => !reserved.has(label));
   if (rest.length === 0) return reserved;
   const rows = await db

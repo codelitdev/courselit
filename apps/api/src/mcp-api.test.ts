@@ -14,6 +14,7 @@ const REACHABLE_BUT_EXEMPT = new Set([
   // Authenticated by a short-lived preview token, not the caller's credential.
   "readPreviewProduct",
   "getPreviewLessonMedia",
+  "getPreviewLessonMediaItem",
   // Binary upload transport: an MCP client cannot send the file bytes.
   "authorizeMediaUpload",
   "finalizeMediaUpload",
@@ -185,7 +186,11 @@ describe.serial("one MCP tool per operation", () => {
           tools: Array<{
             name: string;
             description: string;
-            annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean };
+            annotations?: {
+              readOnlyHint?: boolean;
+              destructiveHint?: boolean;
+              openWorldHint?: boolean;
+            };
             inputSchema: { properties?: Record<string, unknown> };
           }>;
         };
@@ -217,7 +222,9 @@ describe.serial("one MCP tool per operation", () => {
   it("marks reads read-only and anything destructive or high-impact as needing confirmation", async () => {
     const { runtime, world } = await setup();
     const tools = new Map(
-      (await listTools(runtime, owner(world))).map((tool) => [tool.name, tool] as const),
+      (await listTools(runtime, owner(world))).map(
+        (tool) => [tool.name, tool] as const,
+      ),
     );
     expect(tools.get("list_sections")?.annotations?.readOnlyHint).toBe(true);
     expect(tools.get("create_section")?.annotations).toMatchObject({
@@ -232,6 +239,28 @@ describe.serial("one MCP tool per operation", () => {
     ]) {
       expect(tools.get(name)?.annotations?.destructiveHint).toBe(true);
       expect(tools.get(name)?.inputSchema.properties).toHaveProperty("confirm");
+    }
+    await runtime.close();
+  });
+
+  it("marks only tools that email people or search outside services as open-world", async () => {
+    const { runtime, world } = await setup();
+    const tools = new Map(
+      (await listTools(runtime, owner(world))).map(
+        (tool) => [tool.name, tool] as const,
+      ),
+    );
+    for (const name of [
+      "start_mail_sequence",
+      "send_mail_sequence_test_email",
+      "grant_learner_membership",
+      "invite_community_member",
+      "search_unsplash",
+    ]) {
+      expect(tools.get(name)?.annotations?.openWorldHint).toBe(true);
+    }
+    for (const name of ["list_sections", "create_section", "delete_section"]) {
+      expect(tools.get(name)?.annotations?.openWorldHint).toBe(false);
     }
     await runtime.close();
   });
@@ -285,9 +314,14 @@ describe.serial("one MCP tool per operation", () => {
       await call(runtime, owner(world), "list_school_website_pages"),
     ).items as Array<{ id: string }>;
     const pageId = pages[0]!.id;
-    const unconfirmed = await call(runtime, owner(world), "publish_school_website_page", {
-      pageId,
-    });
+    const unconfirmed = await call(
+      runtime,
+      owner(world),
+      "publish_school_website_page",
+      {
+        pageId,
+      },
+    );
     expect(errorCode(unconfirmed)).toBe("forbidden");
     expect(structured(unconfirmed).details).toMatchObject({ confirmation: "required" });
     const published = await call(runtime, owner(world), "publish_school_website_page", {
@@ -334,7 +368,11 @@ describe.serial("apply_course_outline", () => {
       {
         title: "Basics",
         lessons: [
-          { title: "Variables", markdown: "# Variables\n\nUse `let`.\n\n- one\n- two" },
+          {
+            title: "Variables",
+            markdown:
+              '## Variables\n\nUse `let`.\n\n- one\n- two\n\n<Callout type="tip">\n\nConst first.\n\n</Callout>',
+          },
           { title: "Functions" },
         ],
       },
@@ -381,6 +419,18 @@ describe.serial("apply_course_outline", () => {
       }
     ).lessons;
     expect(lessons.filter((lesson) => lesson.title === "Variables")).toHaveLength(1);
+    const variablesId = (
+      first.sections as Array<{ lessons: Array<{ id: string }> }>
+    )[0]!.lessons[0]!.id;
+    const variables = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/lessons/${variablesId}`,
+      headers: owner(world),
+    });
+    expect(variables.body).toMatchObject({ type: "page" });
+    expect((variables.body as { markdown: string }).markdown).toContain(
+      '<Callout type="tip">',
+    );
     await runtime.close();
   });
 
@@ -394,8 +444,11 @@ describe.serial("apply_course_outline", () => {
     });
     expect(errorCode(response)).toBe("validation_failed");
     expect(structured(response).details).toMatchObject({
-      reason: "unsupported_markdown",
+      reason: "lesson_content_invalid",
+      code: "unsupported_syntax",
       line: 1,
+      section: 0,
+      lesson: 0,
     });
     const sections = await call(runtime, owner(world), "list_sections", {
       productId: world.noteA.publicId,
@@ -405,6 +458,33 @@ describe.serial("apply_course_outline", () => {
         (item) => item.title === "New",
       ),
     ).toBe(false);
+    await runtime.close();
+  });
+});
+
+describe.serial("lesson page tools", () => {
+  it("describes the format and writes a page with a quiz from Markdown", async () => {
+    const { runtime, world } = await setup();
+    const format = structured(
+      await call(runtime, owner(world), "get_lesson_content_format", {}),
+    );
+    expect(
+      (format.blocks as Array<{ name: string }>).map((block) => block.name),
+    ).toContain("quiz");
+    const created = structured(
+      await call(runtime, owner(world), "create_lesson", {
+        productId: world.noteA.publicId,
+        title: "Check",
+        markdown:
+          '<Quiz passingGrade={50}>\n\n<Question text="Two plus two?">\n\n<Option text="Four" correct />\n\n<Option text="Five" />\n\n</Question>\n\n</Quiz>',
+      }),
+    );
+    expect(created).toMatchObject({ type: "page", contentVersion: 1 });
+    expect(created.markdown as string).toContain('text="Four" correct');
+    const read = structured(
+      await call(runtime, owner(world), "get_lesson", { lessonId: created.id }),
+    );
+    expect(read.markdown).toBe(created.markdown);
     await runtime.close();
   });
 });

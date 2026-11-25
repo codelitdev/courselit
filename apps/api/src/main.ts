@@ -1,47 +1,20 @@
-import { createObservability } from "@codelitdev/observability";
 import { createExpressApp } from "./express-app.js";
 import {
-  TELEMETRY_IDENTIFIER_KEYS,
-  TELEMETRY_PROPERTY_ALLOWLIST,
-} from "./permissions.js";
+  createCourseLitObservability,
+  setTelemetrySink,
+  telemetrySinkFrom,
+} from "./telemetry.js";
 import { createPostgresRuntime } from "./runtime.js";
+import { startTrial } from "./school-trials.js";
 import { hasSeededWorld, seedWorld } from "./seed.js";
 
 const port = Number(process.env.PORT ?? "4000");
-const posthogApiKey = process.env.POSTHOG_API_KEY;
-const posthogHost = process.env.POSTHOG_HOST;
-const otlpEndpoint = process.env.OTLP_LOGS_ENDPOINT;
-const otlpAuthorization = process.env.OTLP_LOGS_AUTHORIZATION;
-const observability = createObservability({
-  serviceName: "courselit-api",
-  environment: process.env.NODE_ENV ?? "development",
-  logs: {
-    level: process.env.LOG_LEVEL ?? "info",
-    ...(otlpEndpoint
-      ? {
-          otlp: {
-            endpoint: otlpEndpoint,
-            ...(otlpAuthorization
-              ? { headers: { authorization: otlpAuthorization } }
-              : {}),
-          },
-        }
-      : {}),
-  },
-  ...(posthogApiKey
-    ? {
-        posthog: {
-          apiKey: posthogApiKey,
-          ...(posthogHost ? { host: posthogHost } : {}),
-        },
-      }
-    : {}),
-  contextPolicy: {
-    propertyAllowlist: TELEMETRY_PROPERTY_ALLOWLIST,
-    identifierKeys: TELEMETRY_IDENTIFIER_KEYS,
-  },
+const observability = createCourseLitObservability("courselit-api");
+const productEvents = createCourseLitObservability("courselit-api", process.env, {
+  purpose: "events",
 });
 const logger = observability.logger;
+setTelemetrySink(telemetrySinkFrom(observability, productEvents));
 
 const publicApiUrl = process.env.PUBLIC_API_URL ?? `http://127.0.0.1:${port}`;
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
@@ -73,6 +46,20 @@ if (process.env.SEED === "1") {
     logger.info("seed world already present; skipping seed");
   } else {
     const world = await seedWorld(runtime, runtime.clock);
+    if (process.env.BILLING_MODE !== "oss") {
+      // Hosted mode: School A runs the owner's one trial, so it stays usable
+      // for 14 days. School B has no plan and goes read-only, like any school
+      // without one.
+      await startTrial(
+        runtime.db,
+        {
+          userId: world.owner.id,
+          email: world.owner.email,
+          schoolId: world.schoolA.id,
+        },
+        runtime.clock,
+      );
+    }
     logger.info(
       {
         schoolA: world.schoolA.publicId,
@@ -93,8 +80,7 @@ if (process.env.SEED === "1") {
 
 const shutdown = () => {
   server.close(() => {
-    void observability
-      .shutdown(1000)
+    void Promise.all([observability.shutdown(1000), productEvents.shutdown(1000)])
       .then(() => runtime.close())
       .finally(() => process.exit(0));
   });

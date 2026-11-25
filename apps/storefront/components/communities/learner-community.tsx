@@ -82,9 +82,28 @@ import {
 } from "./learner-gif-picker";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
+import {
+  LearnerPostVideos,
+  LearnerYoutubePicker,
+  MAX_POST_VIDEOS,
+  withVideo,
+} from "./learner-youtube-picker";
+import { editedNote } from "@/lib/community-edited";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
 type Learner = z.infer<typeof learnerSchema>;
+
+/** " · Edited", with when in its tooltip, after a post's or comment's date. */
+function EditedNote({ editedAt }: { editedAt: string | null | undefined }) {
+  const note = editedNote(editedAt);
+  if (!note) return null;
+  return (
+    <>
+      {" · "}
+      <span title={note.title}>{note.label}</span>
+    </>
+  );
+}
 type Community = z.infer<typeof communitySchema>;
 type CommunityPost = z.infer<typeof communityPostSchema>;
 type CommunityComment = z.infer<typeof communityCommentSchema>;
@@ -314,9 +333,10 @@ function MediaAttachments({
           <PageCard className="relative overflow-hidden">
             {item.type === "image" && item.url ? (
               <LearnerCardImage
-                src={item.thumbnailUrl ?? item.url}
+                src={item.url}
                 alt={item.title}
-                className="aspect-video w-full object-cover"
+                flush
+                className="block h-auto max-h-[28rem] w-full bg-muted object-contain"
               />
             ) : item.type === "video" && item.url ? (
               <a
@@ -329,6 +349,7 @@ function MediaAttachments({
                   <LearnerCardImage
                     src={item.thumbnailUrl}
                     alt={item.title}
+                    flush
                     className="size-full object-cover"
                   />
                 ) : (
@@ -651,8 +672,10 @@ export function LearnerCommunity({
   >({});
   const [postMedia, setPostMedia] = useState<LearnerCommunityMedia[]>([]);
   const [postGifs, setPostGifs] = useState<string[]>([]);
+  const [postVideos, setPostVideos] = useState<string[]>([]);
   const [postEditMedia, setPostEditMedia] = useState<MediaAttachment[]>([]);
   const [postEditGifs, setPostEditGifs] = useState<string[]>([]);
+  const [postEditVideos, setPostEditVideos] = useState<string[]>([]);
   const [commentMedia, setCommentMedia] = useState<
     Record<string, LearnerCommunityMedia[]>
   >({});
@@ -1041,6 +1064,7 @@ export function LearnerCommunity({
             ...draft,
             mediaIds: postMediaRef.current.map((media) => media.id),
             gifUrls: postGifs,
+            videoUrls: postVideos,
           }),
         },
       );
@@ -1048,6 +1072,7 @@ export function LearnerCommunity({
       setPostDraft(postDraftRef.current);
       updatePostMedia([]);
       setPostGifs([]);
+      setPostVideos([]);
       setPostDialogOpen(false);
       toast.success("Post published.");
       await load();
@@ -1449,6 +1474,7 @@ export function LearnerCommunity({
     postEditMediaIdsRef.current = post.media.map((media) => media.id);
     setPostEditMedia(post.media.map(communityMediaToAttachment));
     setPostEditGifs(post.gifUrls);
+    setPostEditVideos(post.videoUrls);
     setPostEditDraft(draft);
     setEditingPostId(post.id);
   }
@@ -1465,6 +1491,7 @@ export function LearnerCommunity({
             ...draft,
             mediaIds: postEditMediaIdsRef.current,
             gifUrls: postEditGifs,
+            videoUrls: postEditVideos,
           }),
         },
       );
@@ -1480,6 +1507,7 @@ export function LearnerCommunity({
       setEditingPostId(null);
       setPostEditMedia([]);
       setPostEditGifs([]);
+      setPostEditVideos([]);
       postEditMediaIdsRef.current = [];
     } catch (caught) {
       setError(
@@ -1714,6 +1742,15 @@ export function LearnerCommunity({
                       current.filter((item) => item !== url),
                     )
                   }
+                  videoUrls={postVideos}
+                  onVideoAdd={(url) =>
+                    setPostVideos((current) => withVideo(current, url))
+                  }
+                  onVideoRemove={(url) =>
+                    setPostVideos((current) =>
+                      current.filter((item) => item !== url),
+                    )
+                  }
                   canSubmit={Boolean(
                     postDraft.title.trim() &&
                       communityDescriptionHasContent(postDraft.content),
@@ -1827,10 +1864,10 @@ export function LearnerCommunity({
                                   : "Community member")}
                             </LearnerText2>
                             <LearnerText2 className="text-sm text-muted-foreground">
-                              <time dateTime={post.updatedAt}>
-                                {new Date(post.updatedAt).toLocaleDateString()}
-                              </time>{" "}
-                              · {post.category}
+                              <time dateTime={post.createdAt}>
+                                {new Date(post.createdAt).toLocaleDateString()}
+                              </time>
+                              <EditedNote editedAt={post.editedAt} /> · {post.category}
                             </LearnerText2>
                           </div>
                         </div>
@@ -1912,6 +1949,14 @@ export function LearnerCommunity({
                               )
                             }
                           />
+                          <LearnerPostVideos
+                            urls={postEditVideos}
+                            onRemove={(url) =>
+                              setPostEditVideos((current) =>
+                                current.filter((item) => item !== url),
+                              )
+                            }
+                          />
                           <MediaUploadDialog<LearnerCommunityMedia>
                             {...mediaAdapters}
                             title="Attach media"
@@ -1922,9 +1967,16 @@ export function LearnerCommunity({
                             onSelect={selectPostEditMedia}
                           >
                             <Button type="button" variant="outline" size="sm">
-                              <Paperclip className="size-4" /> Attach media
+                              <Paperclip className="size-4" /> Upload a file
                             </Button>
                           </MediaUploadDialog>
+                          <LearnerYoutubePicker
+                            label="Add YouTube video"
+                            disabled={postEditVideos.length >= MAX_POST_VIDEOS}
+                            onAdd={(url) =>
+                              setPostEditVideos((current) => withVideo(current, url))
+                            }
+                          />
                           <LearnerGifPicker
                             variant="outline"
                             label="Add GIF"
@@ -1958,6 +2010,7 @@ export function LearnerCommunity({
                             items={post.media.map(communityMediaToAttachment)}
                           />
                           <LearnerPostGifs urls={post.gifUrls} />
+                          <LearnerPostVideos urls={post.videoUrls} />
                         </>
                       )}
                       <div className="flex flex-wrap items-center gap-2 border-t pt-4">
@@ -2004,7 +2057,7 @@ export function LearnerCommunity({
                                       .toUpperCase()}
                                   </LearnerAvatarFallback>
                                 </LearnerAvatar>
-                                <div className="min-w-0 flex-1">
+                                <div className="grid min-w-0 flex-1 gap-2">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                                       <LearnerText2
@@ -2020,6 +2073,9 @@ export function LearnerCommunity({
                                         {new Date(
                                           comment.createdAt,
                                         ).toLocaleDateString()}
+                                        {!comment.deletedAt ? (
+                                          <EditedNote editedAt={comment.editedAt} />
+                                        ) : null}
                                       </span>
                                     </div>
                                     {!comment.deletedAt ? (
@@ -2066,6 +2122,7 @@ export function LearnerCommunity({
                                                 JSON.stringify(document);
                                             }}
                                             placeholder="Add a comment…"
+                                            showToolbar={false}
                                             className="rounded-md border bg-background"
                                             editorClassName="min-h-[80px]"
                                           />

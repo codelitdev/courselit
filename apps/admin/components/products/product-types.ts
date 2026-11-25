@@ -12,15 +12,8 @@ export type SalesPage = {
   pageId: string | null;
 };
 
-export type LessonType =
-  | "text"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "file"
-  | "embed"
-  | "quiz"
-  | "scorm";
+/** Course lessons are pages or SCORM; download products hold files. */
+export type LessonType = "page" | "scorm" | "file";
 
 export type LessonContent = Record<string, unknown>;
 
@@ -34,8 +27,6 @@ export type Product = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
-  /** Status a new lesson starts with. */
-  newLessonStatus?: ProductStatus;
   kind: ProductKind;
   status: ProductStatus;
   slug: string;
@@ -69,9 +60,17 @@ export type Lesson = {
   sectionId: string | null;
   position: number;
   status: ProductStatus;
-  downloadable: boolean;
   requiresEnrollment: boolean;
-  content: LessonContent | null;
+  /** Single-lesson reads and writes only; lists carry neither content form. */
+  content?: LessonContent | null;
+  /** The page as Markdown (single-lesson reads only); null for SCORM and files. */
+  markdown?: string | null;
+  /** Sent back as `expectedContentVersion` with content. */
+  contentVersion: number;
+  /** A page has saved edits learners don't see until they are published. */
+  hasUnpublishedChanges: boolean;
+  /** When the content learners read was last replaced. */
+  contentPublishedAt: string | null;
   dripDelaySeconds: number | null;
   dripAt: string | null;
   availableAt: string | null;
@@ -107,6 +106,7 @@ export type School = {
   storefrontHost?: string | null;
   storefrontOrigin?: string | null;
   currency: string;
+  hideCourseLitBranding?: boolean;
   permissions?: readonly CourseLitPermission[] | readonly string[];
   selected?: boolean;
 };

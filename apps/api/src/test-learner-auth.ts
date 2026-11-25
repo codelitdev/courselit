@@ -88,6 +88,7 @@ export async function signUpLearner(
     authenticationMethod: "email",
     clock,
   });
+  if (!issued.ok) return issued;
 
   await db.insert(schema.auditEvents).values({
     id: uuidv7(clock),
@@ -131,7 +132,7 @@ export async function signUpLearner(
     { ensureSubscribed: true, reason: "learner_signup" },
   );
 
-  return { ok: true, value: issued.dto, token: issued.token };
+  return { ok: true, value: issued.value.dto, token: issued.value.token };
 }
 
 /** Signs a learner in without proof of the email address. Tests only. */
@@ -191,6 +192,7 @@ export async function signInLearner(
     authenticationMethod: "email",
     clock,
   });
+  if (!issued.ok) return issued;
 
   const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
     lastActiveAt: now,
@@ -216,7 +218,7 @@ export async function signInLearner(
     { reason: "learner_login" },
   );
 
-  return { ok: true, value: issued.dto, token: issued.token };
+  return { ok: true, value: issued.value.dto, token: issued.value.token };
 }
 
 /**

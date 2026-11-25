@@ -33,7 +33,11 @@ export type WebsitePage = {
   name: string;
   slug: string;
   deletable: boolean;
+  /** The page's own content vs what's live. */
   status: WebsiteContentStatus;
+  /** The site's shared header/footer have unpublished edits; publishing any
+   * page takes them live and discarding any page's draft resets them. */
+  sharedWidgetsHaveChanges?: boolean;
   layout: WebsiteWidget[];
   draftLayout: WebsiteWidget[];
   title?: string | null;

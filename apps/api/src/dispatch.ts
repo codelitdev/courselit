@@ -14,6 +14,7 @@ import {
   contract,
   normalizeCourseLitPermissions,
   addCommunityCategoryBodySchema,
+  auditEventListQuerySchema,
   authorizeMediaUploadBodySchema,
   communityListQuerySchema,
   communityMembershipListQuerySchema,
@@ -55,12 +56,14 @@ import {
   learnerAvatarMediaAuthorizationBodySchema,
   learnerEmailCodeBodySchema,
   learnerStartGoogleBodySchema,
+  learnerStartSsoBodySchema,
   learnerVerifyEmailCodeBodySchema,
   learnerAvatarMediaFinalizeBodySchema,
   learnerCommunityMediaAuthorizationBodySchema,
   learnerCommunityMediaListQuerySchema,
   learnerGifSearchQuerySchema,
   leaveCommunityBodySchema,
+  lessonDraftActionBodySchema,
   listContactsQuerySchema,
   listProductsQuerySchema,
   mediaCategorySchema,
@@ -114,6 +117,7 @@ import {
   upsertProductCertificateTemplateBodySchema,
   verifySchoolHostBodySchema,
 } from "@courselit/api-contract";
+import { lessonContentFormat } from "@courselit/lesson-content";
 import { and, eq, isNull } from "drizzle-orm";
 import { getSchoolOverview } from "./activities.js";
 import {
@@ -135,6 +139,7 @@ import {
 import { hasRecentAuthentication } from "./auth/recent-authentication.js";
 import {
   createLesson,
+  getLesson,
   createSection,
   deleteLesson,
   deleteSection,
@@ -143,6 +148,8 @@ import {
   reorderLessons,
   reorderSections,
   updateLesson,
+  publishLessonContent,
+  discardLessonDraft,
   updateSection,
 } from "./catalog.js";
 import {
@@ -247,6 +254,7 @@ import {
   getWebsiteBranding,
   getWebsitePage,
   listBlogPosts,
+  getPublicSitemap,
   listPublishedBlogPosts,
   listWebsitePages,
   listWebsiteThemes,
@@ -348,6 +356,8 @@ import {
   startSchoolCheckout,
 } from "./school-billing.js";
 import { headerSchoolId, resolveSchoolContext } from "./school-context.js";
+import { schoolStateAllows, schoolStateError } from "./school-state.js";
+import { assertTriggeredMailAllowed } from "./mail-abuse-limits.js";
 import {
   checkSchoolSubdomain,
   disconnectAiConnection,
@@ -366,12 +376,18 @@ import {
   getSchoolCodeInjection,
   getSchoolPaymentSettings,
   listSchoolsForUser,
+  defaultStorefrontHost,
   loadSchoolByPublicId,
+  storefrontOriginForHost,
   resolveSchoolByHost,
   updateSchoolCodeInjection,
-  updateSchoolCurrency,
+  updateSchool,
   updateSchoolPaymentSettings,
 } from "./schools.js";
+import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
+import { startLearnerSsoSignIn } from "./learner-sso-sign-in.js";
+import { usableLearnerMethods } from "./login-methods.js";
+import { handleSsoAdminRequest } from "./sso-admin-routes.js";
 import {
   getScormRuntimeState,
   processScormPackage,
@@ -435,11 +451,74 @@ import {
 } from "./team.js";
 
 import type { DispatchResponse, IncomingRequest } from "./types.js";
+import { decryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { schoolHasFeature, schoolPlanFeatureList } from "./plan-features.js";
+import { listAuditEvents } from "./audit-log.js";
+import { lessonBlockAvailability } from "./lesson-pages.js";
+import { lessonType, scormPlanError } from "./scorm-plan.js";
+import { learnerMayUploadCommunityMedia, storageGate } from "./storage.js";
+import { schoolUsage } from "./usage.js";
+import { type InviteKind, inviteLimitError, recordInvite } from "./invite-limits.js";
 import {
-  decryptIntegrationSecret,
-} from "./utils/integration-secrets.js";
+  identifySchoolGroup,
+  onboardingTransitionEvents,
+  ProductEvent,
+  schoolSubject,
+  trackProductEvent,
+} from "./product-events.js";
+import {
+  AUDIT_LOG_FEATURE,
+  REMOVE_BRANDING_FEATURE,
+  schoolPlan,
+} from "./school-plan.js";
+import {
+  courseLitBadgeUrl,
+  isSchoolOwnerAccount,
+  storefrontPlanFlags,
+} from "./storefront-plan.js";
 
 export type { DispatchDeps };
+
+/** Invite limits apply on courselit.app only (S6); OSS sends its own mail. */
+async function inviteLimitCheck(
+  deps: DispatchDeps,
+  schoolId: string,
+  kind: InviteKind | "resend",
+) {
+  if (deps.billingMode !== "cloud") return null;
+  return inviteLimitError(
+    deps.db,
+    schoolId,
+    { newInvitation: kind === "team" },
+    deps.clock.now(),
+  );
+}
+
+async function inviteSent(
+  deps: DispatchDeps,
+  context: { tenantId?: string | null; principalId: string },
+  kind: InviteKind,
+) {
+  if (deps.billingMode !== "cloud" || !context.tenantId) return;
+  await recordInvite(
+    deps.db,
+    { schoolId: context.tenantId, userId: context.principalId, kind },
+    deps.clock,
+  );
+}
+
+const storageDeps = (deps: DispatchDeps) => ({
+  db: deps.db,
+  billing: deps.billing.billing,
+  mode: deps.billingMode,
+  clock: deps.clock,
+});
+
+const scormDeps = (deps: DispatchDeps) => ({
+  db: deps.db,
+  billing: deps.billing.billing,
+  now: deps.clock.now(),
+});
 
 const mcpKits = new WeakMap<DispatchDeps, ReturnType<typeof createCourseLitMcp>>();
 
@@ -477,12 +556,19 @@ function requestIdFrom(request: IncomingRequest, deps: DispatchDeps) {
 function emitSchoolTelemetry(
   deps: DispatchDeps,
   request: IncomingRequest,
-  input: { requestId: string; schoolId: string; principalId?: string },
+  input: {
+    requestId: string;
+    schoolId: string;
+    principalId?: string;
+    /** A school's learner: counted under the school's subject, never as a PostHog person. */
+    learner?: boolean;
+  },
 ) {
   deps.observability?.captureEvent({
     event: "request.context",
     source: "http.dispatch",
-    subjectId: input.principalId,
+    subjectId: input.learner ? schoolSubject(input.schoolId) : input.principalId,
+    ...(input.learner ? { groups: { school: input.schoolId } } : {}),
     properties: {
       path: request.path.split("?")[0] ?? request.path,
       method: request.method,
@@ -552,6 +638,12 @@ export async function dispatch(
               schoolId: school.publicId,
               subdomain: school.subdomain,
               name: school.name,
+              // Pending checkout, imported or suspended: the storefront shows a
+              // neutral "not available" page instead of the site (section 3).
+              offline:
+                school.status === "pending_checkout" ||
+                school.status === "imported" ||
+                school.status === "suspended",
             },
           }
         : errorResponse(createPlatformError("not_found"));
@@ -625,7 +717,9 @@ export async function dispatch(
     }
 
     const previewLessonMediaMatch =
-      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(path);
+      /^\/v1\/preview\/products\/([^/]+)\/lessons\/([^/]+)\/media(?:\/([^/]+))?$/.exec(
+        path,
+      );
     if (request.method === "GET" && previewLessonMediaMatch) {
       const rawToken =
         request.headers["x-preview-token"] ?? request.headers["X-Preview-Token"];
@@ -649,6 +743,10 @@ export async function dispatch(
           schoolId: school.id,
           productPublicId: previewProduct.value.id,
           lessonPublicId: decodeURIComponent(previewLessonMediaMatch[2]!),
+          mediaPublicId:
+            previewLessonMediaMatch[3] === undefined
+              ? undefined
+              : decodeURIComponent(previewLessonMediaMatch[3]),
           viewer: { kind: "preview" },
         },
         deps.clock.now(),
@@ -684,6 +782,37 @@ export async function dispatch(
       deps.clock,
       secureLearnerCookies,
     );
+    // Learner and public routes of a read-only or offline school are gated on
+    // the school's state before any handler runs (school-state.ts). The school
+    // is the one in the path, else the one the request names, else the
+    // learner's own.
+    {
+      const publicSchoolId = /^\/v1\/public\/([^/]+)\//.exec(path)?.[1];
+      const isLearnerRoute =
+        path.startsWith("/v1/learner/") || path === "/v1/auth/tickets/consume";
+      if (publicSchoolId || isLearnerRoute) {
+        const schoolPublicId = publicSchoolId
+          ? decodeURIComponent(publicSchoolId)
+          : (headerSchoolId(request.headers) ??
+            (learnerAuth.kind === "authenticated"
+              ? learnerAuth.value.school.publicId
+              : null));
+        const stateSchool = schoolPublicId
+          ? await loadSchoolByPublicId(deps.db, schoolPublicId)
+          : null;
+        if (
+          stateSchool &&
+          !schoolStateAllows({
+            status: stateSchool.status,
+            actor: isLearnerRoute ? "learner" : "public",
+            method: request.method,
+            operationId: resolveOperationId(request.method, path),
+          })
+        ) {
+          return errorResponse(schoolStateError(stateSchool.status));
+        }
+      }
+    }
     if (request.method === "POST" && path === "/v1/auth/tickets/consume") {
       const parsed = consumeSchoolAuthTicketBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
@@ -786,13 +915,34 @@ export async function dispatch(
               )
               .limit(1),
           ]);
+          const flags = await storefrontPlanFlags(
+            { db: deps.db, billing: deps.billing.billing, now: deps.clock.now() },
+            school.id,
+          );
+          const head = injection.ok ? injection.value.codeInjectionHead : "";
+          const body = injection.ok ? injection.value.codeInjectionBody : "";
+          // During a trial the code is the owner's alone (S25): it never goes
+          // out on this public, cacheable response.
           return ok({
             ...settings,
-            codeInjectionHead: injection.ok ? injection.value.codeInjectionHead : "",
-            codeInjectionBody: injection.ok ? injection.value.codeInjectionBody : "",
+            codeInjectionHead: flags.publicCodeInjection ? head : "",
+            codeInjectionBody: flags.publicCodeInjection ? body : "",
+            ownerOnlyCodeInjection:
+              !flags.publicCodeInjection && Boolean(head.trim() || body.trim()),
+            courseLitBadgeUrl: flags.showCourseLitBranding
+              ? courseLitBadgeUrl(school.subdomain)
+              : null,
             canonicalHost: verifiedCustomHost?.hostname ?? null,
+            siteOrigin: storefrontOriginForHost(
+              verifiedCustomHost?.hostname ?? defaultStorefrontHost(school.subdomain),
+            ),
             hasPublishedOffers: Boolean(publishedProduct || liveCommunity),
+            hideFromSearch: school.hideFromSearch,
+            blockAiTraining: school.blockAiTraining,
           });
+        }
+        if (route === "/site/sitemap") {
+          return ok(await getPublicSitemap(deps.db, school.id));
         }
         if (route === "/site/pages") {
           const slug = query.get("slug") ?? "";
@@ -848,7 +998,11 @@ export async function dispatch(
             (items) => ({ items }),
           );
         }
-        if ((routeMatch = /^\/products\/([^/]+)\/lessons\/([^/]+)\/media$/.exec(route))) {
+        if (
+          (routeMatch = /^\/products\/([^/]+)\/lessons\/([^/]+)\/media(?:\/([^/]+))?$/.exec(
+            route,
+          ))
+        ) {
           const result = await getLearnerLessonMedia(
             deps.db,
             deps.mediaLit,
@@ -856,6 +1010,7 @@ export async function dispatch(
               schoolId: school.id,
               productPublicId: segment(1),
               lessonPublicId: segment(2),
+              mediaPublicId: routeMatch[3] === undefined ? undefined : segment(3),
               viewer: learner
                 ? {
                     kind: "learner",
@@ -881,6 +1036,7 @@ export async function dispatch(
                 schoolPublicId: learner.school.publicId,
                 learnerId: learner.learner.id,
                 learnerPublicId: learner.learner.publicId,
+                authenticationMethod: learner.authenticationMethod,
               })
             : await getPublicCommunity(deps.db, publicSchool, segment(1));
           return respond(result);
@@ -892,13 +1048,15 @@ export async function dispatch(
           );
         }
         if (route === "/login-methods") {
-          const hasGoogle = Boolean(
-            process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-          );
+          // What the school's sign-in policy allows right now, including SSO
+          // when the school has an active connection and the plan for it.
+          const usable = await usableLearnerMethods(deps.db, deps.billing.billing, school);
           return ok({
             schoolId: school.publicId,
-            loginMethods: hasGoogle ? ["email", "google"] : ["email"],
-            hasGoogle,
+            loginMethods: usable.methods,
+            hasGoogle: usable.methods.includes("google"),
+            hasSso: usable.methods.includes("sso"),
+            ssoDisplayName: usable.ssoDisplayName,
           });
         }
         if ((routeMatch = /^\/checkout-sessions\/([^/]+)$/.exec(route))) {
@@ -923,6 +1081,19 @@ export async function dispatch(
           }
           const human = await verifyCaptcha(request.headers);
           if (!human.ok) return errorResponse(human.error);
+          // Anyone can type anyone's address here (S14, S28).
+          const leadIp = request.headers[CLIENT_IP_HEADER];
+          const allowed = await assertTriggeredMailAllowed(
+            deps.db,
+            {
+              schoolId: school.id,
+              kind: "lead_magnet",
+              email: parsed.data.email,
+              clientIp: (Array.isArray(leadIp) ? leadIp[0] : leadIp) ?? null,
+            },
+            deps.clock,
+          );
+          if (!allowed.ok) return errorResponse(allowed.error);
           const result = await signUpForLeadMagnet(
             deps.db,
             {
@@ -993,9 +1164,14 @@ export async function dispatch(
       if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
       const human = await verifyCaptcha(request.headers);
       if (!human.ok) return errorResponse(human.error);
+      const clientIp = request.headers[CLIENT_IP_HEADER];
       const result = await requestLearnerEmailCode(
         deps.db,
-        { schoolPublicId, email: parsed.data.email },
+        {
+          schoolPublicId,
+          email: parsed.data.email,
+          clientIp: (Array.isArray(clientIp) ? clientIp[0] : clientIp) ?? null,
+        },
         deps.clock,
       );
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
@@ -1018,6 +1194,7 @@ export async function dispatch(
         requestId,
         schoolId: result.value.dto.schoolId,
         principalId: result.value.dto.id,
+        learner: true,
       });
       return {
         status: 200,
@@ -1040,6 +1217,29 @@ export async function dispatch(
           nonce: parsed.data.nonce,
           next: parsed.data.next,
           publicApiUrl: deps.auth.publicApiUrl,
+        },
+        deps.clock,
+      );
+      return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
+    }
+    if (request.method === "POST" && path === "/v1/learner/auth/sso") {
+      const parsed = learnerStartSsoBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const schoolPublicId = headerSchoolId(request.headers);
+      if (!schoolPublicId) return errorResponse(createPlatformError("tenant_required"));
+      const clientIp = request.headers[CLIENT_IP_HEADER];
+      const result = await startLearnerSsoSignIn(
+        deps.db,
+        {
+          schoolPublicId,
+          host: parsed.data.host,
+          nonce: parsed.data.nonce,
+          next: parsed.data.next,
+          publicApiUrl: deps.auth.publicApiUrl,
+          billing: deps.billing.billing,
+          clientIp: Array.isArray(clientIp) ? clientIp[0] : clientIp,
         },
         deps.clock,
       );
@@ -1073,6 +1273,7 @@ export async function dispatch(
         requestId,
         schoolId: learnerAuth.value.school.publicId,
         principalId: learnerAuth.value.learner.publicId,
+        learner: true,
       });
       const learnerCommunityViewer = {
         kind: "learner" as const,
@@ -1080,6 +1281,7 @@ export async function dispatch(
         schoolPublicId: learnerAuth.value.school.publicId,
         learnerId: learnerAuth.value.learner.id,
         learnerPublicId: learnerAuth.value.learner.publicId,
+        authenticationMethod: learnerAuth.value.authenticationMethod,
       };
       const learnerCommunitySchool = {
         schoolId: learnerAuth.value.school.id,
@@ -1098,6 +1300,7 @@ export async function dispatch(
         const result = await authorizeLearnerAvatarUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1117,6 +1320,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -1135,9 +1339,21 @@ export async function dispatch(
         if (!parsed.success) {
           return errorResponse(createPlatformError("validation_failed"));
         }
+        // Only members who can post may upload community media (S24).
+        if (
+          !(await learnerMayUploadCommunityMedia(
+            deps.db,
+            learnerAuth.value.school.id,
+            learnerAuth.value.learner.id,
+            learnerAuth.value.authenticationMethod,
+          ))
+        ) {
+          return errorResponse(createPlatformError("forbidden"));
+        }
         const result = await authorizeLearnerCommunityMediaUpload(
           learnerCommunityViewer,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           parsed.data,
         );
@@ -1155,6 +1371,7 @@ export async function dispatch(
           learnerCommunityViewer,
           learnerAuth.value.school.publicId,
           deps.mediaLit,
+          storageGate(storageDeps(deps)),
           deps.clock,
           requestId,
           parsed.data,
@@ -1198,8 +1415,24 @@ export async function dispatch(
           };
         }
       }
+      if (request.method === "GET" && path === "/v1/learner/site/code-injection") {
+        // Only the owner's own session gets code the plan keeps private (S25).
+        const owner = await isSchoolOwnerAccount(
+          deps.db,
+          learnerAuth.value.school.id,
+          learnerAuth.value.schoolAccount.id,
+        );
+        if (!owner) return errorResponse(createPlatformError("forbidden"));
+        const injection = await getSchoolCodeInjection(
+          deps.db,
+          learnerAuth.value.school.id,
+        );
+        return injection.ok
+          ? { status: 200, body: injection.value }
+          : errorResponse(injection.error);
+      }
       if (request.method === "GET" && path === "/v1/learner/me") {
-        let profile = undefined;
+        let profile;
         try {
           profile = await readLearnerProfile(deps.db, deps.sendLit, {
             schoolId: learnerAuth.value.school.id,
@@ -1207,6 +1440,10 @@ export async function dispatch(
           });
         } catch (profileErr) {
           console.error("[readLearnerProfile error]", profileErr);
+          deps.observability?.captureException({
+            error: profileErr,
+            source: "learner.profile",
+          });
         }
         return {
           status: 200,
@@ -1508,7 +1745,7 @@ export async function dispatch(
             productPublicId: decodeURIComponent(learnerQuizEvaluationMatch[1]!),
             lessonPublicId: decodeURIComponent(learnerQuizEvaluationMatch[2]!),
           },
-          parsed.data.answers,
+          parsed.data,
           deps.clock,
         );
         return result.ok
@@ -2139,6 +2376,7 @@ export async function dispatch(
           currency: parsed.data.currency,
           principalId: auth.principalId,
           requestId,
+          billingMode: deps.billingMode,
         },
         deps.clock,
       );
@@ -2147,6 +2385,17 @@ export async function dispatch(
         requestId,
         schoolId: result.value.id,
         principalId: auth.principalId,
+      });
+      identifySchoolGroup(result.value.id, {
+        name: result.value.name,
+        status: result.value.status,
+        billing_mode: deps.billingMode,
+      });
+      trackProductEvent({
+        event: ProductEvent.SCHOOL_CREATED,
+        userId: auth.principalId,
+        schoolId: result.value.id,
+        properties: { status: result.value.status, billing_mode: deps.billingMode },
       });
       if (deps.observability) {
         void processNextIntegrationJob(
@@ -2304,6 +2553,19 @@ export async function dispatch(
       })
     ) {
       return errorResponse(createPlatformError("forbidden"));
+    }
+    // A read-only or offline school lets staff do only what its state allows
+    // (school-state.ts). Checked after permissions, so a refusal never tells
+    // someone without access what state the school is in.
+    if (
+      !schoolStateAllows({
+        status: school.value.status,
+        actor: school.value.isOwner ? "owner" : "team",
+        method: request.method,
+        operationId: policyOperationId,
+      })
+    ) {
+      return errorResponse(schoolStateError(school.value.status));
     }
 
     if (request.method === "GET" && path === "/v1/notification-preferences") {
@@ -2655,6 +2917,13 @@ export async function dispatch(
         decodeURIComponent(publishWebsitePageMatch[1]!),
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.WEBSITE_PAGE_PUBLISHED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok ? { status: 200, body: result.value } : errorResponse(result.error);
     }
     const publishWebsiteBlogMatch =
@@ -2682,12 +2951,33 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
-      const result = await updateSchoolCurrency(
+      // Removing the badge needs a paid plan (or OSS); a trial can't.
+      if (
+        parsed.data.hideCourseLitBranding === true &&
+        !(await schoolHasFeature(
+          deps.billing.billing,
+          context.tenantId!,
+          REMOVE_BRANDING_FEATURE,
+          deps.db,
+          deps.clock.now(),
+        ))
+      ) {
+        return errorResponse(
+          createPlatformError("forbidden", {
+            safeDetails: { reason: "plan_required" },
+          }),
+        );
+      }
+      const result = await updateSchool(
         deps.db,
         {
           schoolId: context.tenantId!,
           actorId: context.principalId,
           currency: parsed.data.currency,
+          hideCourseLitBranding: parsed.data.hideCourseLitBranding,
+          hideFromSearch: parsed.data.hideFromSearch,
+          blockAiTraining: parsed.data.blockAiTraining,
+          learnerUploadLimitBytes: parsed.data.learnerUploadLimitBytes,
           requestId: context.requestId,
         },
         deps.clock,
@@ -2723,12 +3013,66 @@ export async function dispatch(
           },
           deps.clock,
         );
+        if (result.ok && parsed.data.provider) {
+          trackProductEvent({
+            event: ProductEvent.PAYMENTS_CONNECTED,
+            userId: context.principalId,
+            schoolId: school.value.publicId,
+            properties: { provider: parsed.data.provider },
+          });
+        }
         return result.ok
           ? { status: 200, body: result.value }
           : errorResponse(result.error);
       }
     }
 
+    if (request.method === "GET" && path === "/v1/school/plan-features") {
+      return {
+        status: 200,
+        body: {
+          features: await schoolPlanFeatureList(
+            deps.billing.billing,
+            context.tenantId!,
+            deps.db,
+            deps.clock.now(),
+          ),
+        },
+      };
+    }
+    if (request.method === "GET" && path === "/v1/school/audit-events") {
+      const parsed = auditEventListQuerySchema.safeParse({
+        cursor: query.get("cursor") ?? undefined,
+        limit: query.get("limit") ?? undefined,
+      });
+      if (!parsed.success)
+        return errorResponse(createPlatformError("validation_failed"));
+      if (
+        !(await schoolHasFeature(
+          deps.billing.billing,
+          context.tenantId!,
+          AUDIT_LOG_FEATURE,
+          deps.db,
+          deps.clock.now(),
+        ))
+      ) {
+        return errorResponse(
+          createPlatformError("forbidden", {
+            safeDetails: { reason: "plan_required" },
+          }),
+        );
+      }
+      const result = await listAuditEvents(deps.db, {
+        schoolId: context.tenantId!,
+        cursor: parsed.data.cursor,
+        limit: parsed.data.limit,
+        // Billing events are the owner's, in a browser session only (S9, S30).
+        includeBilling: school.value.isOwner && context.credential.kind === "session",
+      });
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (path === "/v1/school/code-injection") {
       const requiredPerm = request.method === "PATCH" ? "school:write" : "school:read";
       if (!context.permissions.has(requiredPerm)) {
@@ -2817,8 +3161,16 @@ export async function dispatch(
         if (!context.permissions.has("contacts:read")) {
           return errorResponse(createPlatformError("forbidden"));
         }
+        const type = query.get("type");
+        if (type !== "broadcast" && type !== "sequence") {
+          return errorResponse(
+            createPlatformError("validation_failed", {
+              safeDetails: { reason: "type must be broadcast or sequence" },
+            }),
+          );
+        }
         const result = await listSequences(deps.db, context.tenantId!, deps.clock, {
-          type: query.get("type") ?? undefined,
+          type,
           status: query.get("status") ?? undefined,
           search: query.get("search") ?? undefined,
           cursor: query.get("cursor") ?? undefined,
@@ -3427,6 +3779,8 @@ export async function dispatch(
       const parsed = inviteCommunityMemberBodySchema.safeParse(request.body ?? {});
       if (!parsed.success)
         return errorResponse(createPlatformError("validation_failed"));
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "community");
+      if (limited) return errorResponse(limited);
       const result = await inviteCommunityMember(
         deps.db,
         context,
@@ -3435,6 +3789,7 @@ export async function dispatch(
         parsed.data,
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "community");
       return result.ok
         ? { status: 201, body: result.value }
         : errorResponse(result.error);
@@ -4502,6 +4857,7 @@ export async function dispatch(
       const result = await authorizeMediaUpload(
         context,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );
@@ -4519,6 +4875,7 @@ export async function dispatch(
         context,
         school.value.publicId,
         deps.mediaLit,
+        storageGate(storageDeps(deps)),
         deps.clock,
         parsed.data,
       );
@@ -4617,6 +4974,9 @@ export async function dispatch(
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
 
+    const ssoResponse = await handleSsoAdminRequest(deps, request, path, school.value);
+    if (ssoResponse) return ssoResponse;
+
     if (request.method === "GET" && path === "/v1/school/hosts") {
       if (!context.permissions.has("school:read")) {
         return errorResponse(createPlatformError("forbidden"));
@@ -4648,6 +5008,13 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_ADDED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok
         ? { status: 201, body: result.value }
         : errorResponse(result.error);
@@ -4671,6 +5038,13 @@ export async function dispatch(
         deps.clock,
         { resolver: deps.dnsResolver },
       );
+      if (result.ok && result.value.verificationStatus === "verified") {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_VERIFIED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok
         ? { status: 200, body: result.value }
         : errorResponse(result.error);
@@ -4690,6 +5064,13 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (result.ok) {
+        trackProductEvent({
+          event: ProductEvent.CUSTOM_DOMAIN_REMOVED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
+      }
       return result.ok ? { status: 204, body: undefined } : errorResponse(result.error);
     }
 
@@ -4874,12 +5255,15 @@ export async function dispatch(
     const resendInvitationMatch =
       /^\/v1\/school\/team\/invitations\/([^/]+)\/resend$/.exec(path);
     if (request.method === "POST" && resendInvitationMatch) {
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "resend");
+      if (limited) return errorResponse(limited);
       const result = await resendInvitation(
         deps.db,
         context,
         decodeURIComponent(resendInvitationMatch[1]!),
         deps.clock,
       );
+      if (result.ok) await inviteSent(deps, context, "team");
       return result.ok ? { status: 200, body: result } : errorResponse(result.error);
     }
     const teamInvitationMatch = /^\/v1\/school\/team\/invitations\/([^/]+)$/.exec(path);
@@ -4914,6 +5298,8 @@ export async function dispatch(
       ) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "team");
+      if (limited) return errorResponse(limited);
       const result = await createInvitation(
         deps.db,
         context,
@@ -4925,6 +5311,12 @@ export async function dispatch(
         deps.clock,
       );
       if (result.ok) {
+        await inviteSent(deps, context, "team");
+        trackProductEvent({
+          event: ProductEvent.TEAM_MEMBER_INVITED,
+          userId: context.principalId,
+          schoolId: school.value.publicId,
+        });
         const acceptUrl = new URL(
           `/team-invitations/${encodeURIComponent(result.id)}`,
           deps.auth.webOrigin,
@@ -5165,12 +5557,21 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+        kind: "create",
+        type: parsed.data.type,
+      });
+      if (scormRefused) return errorResponse(scormRefused);
       const result = await createLesson(
         deps.db,
         context,
         decodeURIComponent(createLessonMatch[1]!),
         {
           ...parsed.data,
+          unavailable:
+            parsed.data.content !== undefined || parsed.data.markdown !== undefined
+              ? await lessonBlockAvailability(scormDeps(deps), context.tenantId!)
+              : undefined,
           dripAt:
             parsed.data.dripAt === undefined
               ? undefined
@@ -5189,6 +5590,10 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+        kind: "process_package",
+      });
+      if (scormRefused) return errorResponse(scormRefused);
       const result = await processScormPackage(
         deps.db,
         context,
@@ -5201,7 +5606,24 @@ export async function dispatch(
         ? { status: 200, body: { success: true, packageInfo: result.value } }
         : errorResponse(result.error);
     }
+    if (request.method === "GET" && path === "/v1/lesson-content-format") {
+      if (!context.permissions.has("products:read")) {
+        return errorResponse(createPlatformError("forbidden"));
+      }
+      return {
+        status: 200,
+        body: lessonContentFormat(
+          await lessonBlockAvailability(scormDeps(deps), context.tenantId!),
+        ),
+      };
+    }
     const lessonMatch = /^\/v1\/lessons\/([^/]+)$/.exec(path);
+    if (request.method === "GET" && lessonMatch) {
+      const result = await getLesson(deps.db, context, decodeURIComponent(lessonMatch[1]!));
+      return result.ok
+        ? { status: 200, body: result.value }
+        : errorResponse(result.error);
+    }
     if (request.method === "DELETE" && lessonMatch) {
       const result = await deleteLesson(
         deps.db,
@@ -5217,12 +5639,37 @@ export async function dispatch(
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      if (
+        parsed.data.mediaId !== undefined ||
+        parsed.data.content !== undefined ||
+        parsed.data.markdown !== undefined
+      ) {
+        const scormRefused = await scormPlanError(scormDeps(deps), context.tenantId!, {
+          kind: "update",
+          lessonType: await lessonType(
+            deps.db,
+            context.tenantId!,
+            decodeURIComponent(lessonMatch[1]!),
+          ),
+          mediaId: parsed.data.mediaId,
+          content: parsed.data.content ?? parsed.data.markdown,
+        });
+        if (scormRefused) return errorResponse(scormRefused);
+      }
       const result = await updateLesson(
         deps.db,
         context,
         decodeURIComponent(lessonMatch[1]!),
         {
           ...parsed.data,
+          // Content writes and making a lesson live (which publishes its
+          // draft) both check the blocks the school may add now.
+          unavailable:
+            parsed.data.content !== undefined ||
+            parsed.data.markdown !== undefined ||
+            parsed.data.status === "published"
+              ? await lessonBlockAvailability(scormDeps(deps), context.tenantId!)
+              : undefined,
           dripAt:
             parsed.data.dripAt === undefined
               ? undefined
@@ -5232,6 +5679,39 @@ export async function dispatch(
         },
         deps.clock,
       );
+      if (!result.ok) return errorResponse(result.error);
+      return { status: 200, body: result.value };
+    }
+    const lessonDraftMatch =
+      /^\/v1\/lessons\/([^/]+)\/(publish-content|discard-draft)$/.exec(path);
+    if (request.method === "POST" && lessonDraftMatch) {
+      const parsed = lessonDraftActionBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return errorResponse(createPlatformError("validation_failed"));
+      }
+      const lessonPublicId = decodeURIComponent(lessonDraftMatch[1]!);
+      const result =
+        lessonDraftMatch[2] === "publish-content"
+          ? await publishLessonContent(
+              deps.db,
+              context,
+              lessonPublicId,
+              {
+                ...parsed.data,
+                unavailable: await lessonBlockAvailability(
+                  scormDeps(deps),
+                  context.tenantId!,
+                ),
+              },
+              deps.clock,
+            )
+          : await discardLessonDraft(
+              deps.db,
+              context,
+              lessonPublicId,
+              parsed.data,
+              deps.clock,
+            );
       if (!result.ok) return errorResponse(result.error);
       return { status: 200, body: result.value };
     }
@@ -5245,6 +5725,8 @@ export async function dispatch(
       if (typeof input?.productId !== "string" || typeof input.email !== "string") {
         return errorResponse(createPlatformError("validation_failed"));
       }
+      const limited = await inviteLimitCheck(deps, context.tenantId!, "product");
+      if (limited) return errorResponse(limited);
       const result = await grantLearnerMembership(
         deps.db,
         {
@@ -5259,6 +5741,7 @@ export async function dispatch(
         deps.clock,
       );
       if (!result.ok) return errorResponse(result.error);
+      await inviteSent(deps, context, "product");
       return { status: 201, body: result.value };
     }
 
@@ -5290,6 +5773,12 @@ export async function dispatch(
         ? { status: 200, body: { checkoutUrl: checkout.checkoutUrl } }
         : errorResponse(checkout.error);
     }
+    if (request.method === "GET" && path === "/v1/school/billing/usage") {
+      return {
+        status: 200,
+        body: { items: await schoolUsage(storageDeps(deps), context.tenantId!) },
+      };
+    }
     if (request.method === "GET" && path === "/v1/school/billing") {
       return {
         status: 200,
@@ -5297,6 +5786,8 @@ export async function dispatch(
           billing: deps.billing,
           billingMode: deps.billingMode,
           schoolInternalId: context.tenantId!,
+          db: deps.db,
+          now: deps.clock.now(),
         }),
       };
     }
@@ -5332,12 +5823,20 @@ export async function dispatch(
       };
     }
     if (path === "/v1/school/onboarding") {
+      const plan = await schoolPlan(
+        {
+          db: deps.db,
+          billing: deps.billing.billing,
+          mode: deps.billingMode,
+          clock: deps.clock,
+        },
+        context.tenantId!,
+      );
       const billing = {
         required: deps.billingMode === "cloud",
-        entitled:
-          deps.billingMode !== "cloud" ||
-          (await deps.billing.billing.commercialState(context.tenantId!))
-            .activePaidPlan !== null,
+        entitled: plan.kind === "oss" || plan.kind === "paid" || plan.kind === "trial",
+        paid: plan.kind === "oss" || plan.kind === "paid",
+        trialEndsAt: plan.kind === "trial" ? plan.endsAt.toISOString() : null,
       };
       if (request.method === "GET") {
         return {
@@ -5363,6 +5862,16 @@ export async function dispatch(
               principalId: auth.principalId,
               billing,
               patch: parsed.data,
+              onTransition: (previous, next) => {
+                for (const item of onboardingTransitionEvents(previous, next)) {
+                  trackProductEvent({
+                    event: item.event,
+                    userId: auth.principalId,
+                    schoolId: school.value.publicId,
+                    properties: { step: item.step },
+                  });
+                }
+              },
             },
             deps.clock,
           ),

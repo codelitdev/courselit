@@ -1,5 +1,6 @@
 "use client";
 
+import { courseLitPlanHighlights } from "@courselit/api-contract/courselit-plans";
 import { formatMoney } from "@courselit/api-contract/money";
 import {
   AlignLeft,
@@ -23,6 +24,21 @@ import {
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { Input } from "@/components/ui/codelit/input";
+import {
+  CopyRow,
+  DropZone,
+  FieldBlock,
+  FileRow,
+  Hint,
+  Note,
+  ProgressList,
+  type RowState,
+  Seg,
+  Spinner,
+  StepHeader,
+  Tile,
+  useCopy,
+} from "@/components/ui/codelit/onboarding-ui";
 import {
   Select,
   SelectContent,
@@ -56,21 +72,6 @@ import {
 } from "./flow";
 import { WizardImagePicker } from "./image-picker";
 import { THEME_PRESETS } from "./themes";
-import {
-  CopyRow,
-  DropZone,
-  FieldBlock,
-  FileRow,
-  Hint,
-  Note,
-  ProgressList,
-  type RowState,
-  Seg,
-  Spinner,
-  StepHeader,
-  Tile,
-  useCopy,
-} from "./ui";
 
 const COVER_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
@@ -102,7 +103,7 @@ export function AboutStep({
       <StepHeader
         eyebrow="Welcome to CourseLit"
         title="First, what should we call you?"
-        sub="Your name goes on your emails, your community posts and the certificates you issue."
+        sub="Your name goes on your community posts and the certificates you issue."
       />
       <FieldBlock
         label="Your name"
@@ -1278,6 +1279,19 @@ export function PlanStep({
                     ) : null}
                   </>
                 ) : null}
+                <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-muted-foreground">
+                  {courseLitPlanHighlights(plan, catalog?.limits?.[plan]).map(
+                    (line) => (
+                      <li key={line} className="flex items-start gap-2">
+                        <Check
+                          aria-hidden
+                          className="mt-0.5 size-3.5 shrink-0 text-primary"
+                        />
+                        <span>{line}</span>
+                      </li>
+                    ),
+                  )}
+                </ul>
               </Tile>
             );
           })}

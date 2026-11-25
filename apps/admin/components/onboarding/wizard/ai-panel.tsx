@@ -3,6 +3,14 @@
 import { Check, ChevronDown, ChevronLeft, CircleAlert, Key, Plug } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
+import {
+  CopyRow,
+  FieldBlock,
+  Hint,
+  StatusBadge,
+  StepHeader,
+  useCopy,
+} from "@/components/ui/codelit/onboarding-ui";
 import { cn } from "@/lib/utils";
 import {
   type AiConnection,
@@ -21,16 +29,6 @@ import {
   hasNewConnection,
   type WizardData,
 } from "./flow";
-import {
-  Badge,
-  CopyRow,
-  FieldBlock,
-  Hint,
-  OK_SOFT,
-  OK_TEXT,
-  StepHeader,
-  useCopy,
-} from "./ui";
 
 export type DetectedOffer = {
   id: string;
@@ -415,13 +413,13 @@ export function AiForm({
 export function aiBadge(status: AiStatus): React.ReactNode {
   if (status === "waiting")
     return (
-      <Badge tone="wait" pulse>
+      <StatusBadge tone="wait" pulse>
         Waiting
-      </Badge>
+      </StatusBadge>
     );
   if (status === "connected" || status === "detected")
-    return <Badge tone="ok">Connected</Badge>;
-  if (status === "failed") return <Badge tone="no">Not connected</Badge>;
+    return <StatusBadge tone="ok">Connected</StatusBadge>;
+  if (status === "failed") return <StatusBadge tone="no">Not connected</StatusBadge>;
   return null;
 }
 
@@ -448,7 +446,7 @@ export function AiStatusPane({
       className={cn(
         "grid size-16 place-items-center rounded-full bg-muted text-muted-foreground",
         tone === "wait" && "animate-pulse bg-[var(--primary-soft)] text-primary",
-        tone === "ok" && cn(OK_SOFT, OK_TEXT),
+        tone === "ok" && "bg-[var(--success-soft)] text-[var(--success)]",
         tone === "bad" && "bg-[var(--destructive-soft)] text-destructive",
       )}
     >
@@ -537,9 +535,9 @@ export function AiStatusPane({
                 {detected.sections} sections · {detected.lessons} lessons
               </span>
             </span>
-            <Badge tone={detected.published ? "ok" : "wait"}>
+            <StatusBadge tone={detected.published ? "ok" : "wait"}>
               {detected.published ? "Published" : "Draft"}
-            </Badge>
+            </StatusBadge>
           </div>
           <p className="max-w-[44ch] text-sm text-muted-foreground">
             It&apos;s saved as a draft in {schoolName}. Check it over in your admin, or

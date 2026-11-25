@@ -1,20 +1,9 @@
 "use client";
 
-import { type Editor, extractTextFromTextEditorContent } from "@frontlit/text-editor";
-import {
-  File,
-  FileImage,
-  FileText,
-  Headphones,
-  HelpCircle,
-  Package,
-  Trash2,
-  Tv,
-  Video,
-} from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ComponentProps, type FormEvent, useEffect, useId, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { CourseLitLoading } from "@/components/loading";
@@ -36,8 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/codelit/select";
-import { Switch } from "@/components/ui/codelit/switch";
-import { Textarea } from "@/components/ui/codelit/textarea";
+import { lessonEditorHref, lessonFormHref } from "@/lib/lesson-editor";
+import {
+  type LessonSaveErrorBody,
+  lessonSaveFailure,
+  lessonSaveFailureMessage,
+} from "@/lib/lesson-page";
+import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
 import { truncateText } from "@/lib/truncate";
 import { MediaPicker } from "./media-picker";
 import type {
@@ -48,290 +42,22 @@ import type {
   School,
   Section,
 } from "./product-types";
-import { QuizEditor } from "./quiz-editor";
-import { RichTextEditor } from "./rich-text-editor";
 import { ScormLessonUpload } from "./scorm-lesson-upload";
 
 type ProductDetail = Product & { sections: Section[]; lessons: Lesson[] };
 
-function editorContent(
-  value: LessonContent | null,
-): ComponentProps<typeof Editor>["initialContent"] {
-  if (value?.type === "doc") return value;
-  if (typeof value?.value === "string") return value.value;
-  return null;
-}
-
-const lessonTypes: Array<{
-  value: LessonType;
-  label: string;
-  icon: typeof FileText;
-}> = [
-  { value: "text", label: "Text", icon: FileText },
-  { value: "video", label: "Video", icon: Video },
-  { value: "audio", label: "Audio", icon: Headphones },
-  { value: "pdf", label: "PDF", icon: FileImage },
-  { value: "file", label: "File", icon: File },
-  { value: "embed", label: "Embed", icon: Tv },
-  { value: "quiz", label: "Quiz", icon: HelpCircle },
-  { value: "scorm", label: "SCORM", icon: Package },
-];
-
-function LessonTypeChips({
-  value: selectedValue,
-  onChange,
-  disabled = false,
-}: {
-  value: LessonType;
-  onChange: (value: LessonType) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div role="radiogroup" aria-label="Lesson type" className="flex flex-wrap gap-1.5">
-      {lessonTypes.map(({ value, label, icon: Icon }) => {
-        const selected = value === selectedValue;
-        return (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            disabled={disabled && !selected}
-            onClick={() => onChange(value)}
-            className={`inline-flex h-9 items-center gap-1.5 rounded-[var(--radius)] border px-3 text-[13.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-              selected
-                ? "border-primary bg-[var(--primary-soft)] font-semibold text-[var(--primary-ink)]"
-                : "bg-card font-medium hover:bg-muted"
-            } ${disabled ? "cursor-default disabled:opacity-50" : ""}`}
-          >
-            <Icon className="size-4" aria-hidden="true" />
-            {label}
-            {value === "scorm" ? (
-              <span className="rounded border px-1 text-[10px] font-medium text-muted-foreground">
-                Alpha
-              </span>
-            ) : null}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ToggleRow({
-  id,
-  label,
-  description,
-  checked,
-  onChange,
-  statusLabel,
-}: {
-  id: string;
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  statusLabel?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-6">
-      <div className="space-y-0.5">
-        <Label htmlFor={id} className="font-semibold">
-          {label}
-        </Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        {statusLabel ? (
-          <span className="text-sm text-muted-foreground">{statusLabel}</span>
-        ) : null}
-        <Switch id={id} checked={checked} onCheckedChange={onChange} />
-      </div>
-    </div>
-  );
-}
-
-function emptyContent(type: LessonType): LessonContent {
-  if (type === "text") return { type: "doc", content: [] };
-  if (type === "quiz") {
-    return {
-      questions: [
-        { text: "Question #1", options: [{ text: "", correctAnswer: false }] },
-      ],
-      requiresPassingGrade: false,
-      passingGrade: 70,
-    };
-  }
-  return { value: "" };
-}
-
-function validateLesson(
-  title: string,
-  type: LessonType,
-  content: LessonContent,
-): { title?: string; content?: string } {
-  const errors: { title?: string; content?: string } = {};
+function validateLesson(title: string): { title?: string } {
+  const errors: { title?: string } = {};
   if (!title.trim()) errors.title = "Please enter a lesson title.";
-
-  if (type === "text") {
-    if (
-      content.type !== "doc" ||
-      extractTextFromTextEditorContent(content).trim().length === 0
-    ) {
-      errors.content = "Please enter the lesson content.";
-    }
-  } else if (type === "embed") {
-    if (typeof content.value !== "string" || content.value.trim().length === 0) {
-      errors.content = "Please enter a YouTube video ID.";
-    }
-  } else if (type === "quiz") {
-    const questions = Array.isArray(content.questions) ? content.questions : [];
-    if (questions.length === 0) {
-      errors.content = "Please add at least one question to the quiz.";
-    } else {
-      for (const questionValue of questions) {
-        if (!questionValue || typeof questionValue !== "object") {
-          errors.content = "All questions must have text.";
-          break;
-        }
-        const question = questionValue as Record<string, unknown>;
-        if (typeof question.text !== "string" || !question.text.trim()) {
-          errors.content = "All questions must have text.";
-          break;
-        }
-        const options = Array.isArray(question.options) ? question.options : [];
-        if (options.length < 2) {
-          errors.content = "Each question must have at least two options.";
-          break;
-        }
-        if (
-          !options.some(
-            (option) =>
-              option &&
-              typeof option === "object" &&
-              (option as Record<string, unknown>).correctAnswer === true,
-          )
-        ) {
-          errors.content = "Each question must have at least one correct answer.";
-          break;
-        }
-      }
-    }
-  }
   return errors;
 }
 
-function youtubeVideoId(value: string): string | null {
-  const normalized = /^[a-z][a-z\d+\-.]*:\/\//i.test(value)
-    ? value
-    : `https://${value}`;
+async function readErrorBody(response: Response): Promise<LessonSaveErrorBody> {
   try {
-    const url = new URL(normalized);
-    const hostname = url.hostname.toLowerCase();
-    if (hostname === "youtu.be")
-      return url.pathname.split("/").filter(Boolean)[0] ?? null;
-    if (
-      [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "youtube-nocookie.com",
-        "www.youtube-nocookie.com",
-      ].includes(hostname)
-    ) {
-      if (url.pathname === "/watch") return url.searchParams.get("v");
-      const parts = url.pathname.split("/").filter(Boolean);
-      if (["embed", "v", "shorts", "live"].includes(parts[0] ?? ""))
-        return parts[1] ?? null;
-    }
+    return (await response.json()) as LessonSaveErrorBody;
   } catch {
     return null;
   }
-  return null;
-}
-
-function EmbedPreview({ value }: { value: string }) {
-  const iframeId = useId();
-  const [height, setHeight] = useState(100);
-  const trimmed = value.trim();
-
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (
-        event.data?.type !== "embed-resize" ||
-        event.data.id !== iframeId ||
-        typeof event.data.height !== "number" ||
-        !Number.isFinite(event.data.height)
-      ) {
-        return;
-      }
-      setHeight(Math.max(100, Math.ceil(event.data.height)));
-    }
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [iframeId]);
-
-  if (!trimmed) return null;
-  const videoId = youtubeVideoId(trimmed);
-  if (videoId) {
-    return (
-      <div className="aspect-video overflow-hidden rounded-md border">
-        <iframe
-          className="size-full"
-          src={`https://www.youtube.com/embed/${encodeURIComponent(videoId)}`}
-          title="YouTube video preview"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    );
-  }
-  const srcDoc = `<!doctype html>
-<html>
-  <head>
-    <style>
-      html, body { margin: 0; padding: 0; overflow: hidden; }
-      #content-wrapper { overflow: hidden; height: auto; }
-    </style>
-  </head>
-  <body>
-    <div id="content-wrapper">${trimmed}</div>
-    <script>
-      const iframeId = ${JSON.stringify(iframeId)};
-      const wrapper = document.getElementById("content-wrapper");
-      function sendHeight() {
-        const height = wrapper ? wrapper.scrollHeight : document.body.scrollHeight;
-        window.parent.postMessage({ type: "embed-resize", id: iframeId, height }, "*");
-      }
-      const resizeObserver = new ResizeObserver(sendHeight);
-      resizeObserver.observe(wrapper || document.body);
-      const mutationObserver = new MutationObserver(sendHeight);
-      mutationObserver.observe(wrapper || document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true
-      });
-      window.addEventListener("load", sendHeight);
-      window.addEventListener("resize", sendHeight);
-      const interval = setInterval(sendHeight, 500);
-      setTimeout(() => clearInterval(interval), 10000);
-      sendHeight();
-    </script>
-  </body>
-</html>`;
-  return (
-    <iframe
-      className="w-full border-0"
-      height={height}
-      title="Embedded content preview"
-      /* No allow-same-origin: a srcDoc frame inherits this page's origin, so
-          with scripts allowed the embed could reach the parent page and call
-          the API with the viewer's cookies. */
-      sandbox="allow-scripts allow-popups allow-forms"
-      srcDoc={srcDoc}
-    />
-  );
 }
 
 async function responseError(response: Response, fallback: string) {
@@ -343,6 +69,11 @@ async function responseError(response: Response, fallback: string) {
   }
 }
 
+/**
+ * The lesson form, for lessons that are packages rather than writing: SCORM
+ * lessons in a course and the files of a digital download. Page lessons are
+ * written in the full-screen editor (`PageLessonEditor`).
+ */
 export function LessonAuthoring({
   productId,
   sectionId,
@@ -355,23 +86,22 @@ export function LessonAuthoring({
   const router = useRouter();
   const editing = Boolean(lessonId);
   const [school, setSchool] = useState<School | null>(null);
+  const scormIncluded = usePlanFeatures(school?.id).has("scorm");
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<LessonType>("text");
-  const [content, setContent] = useState<LessonContent>({ type: "doc", content: [] });
+  const [type, setType] = useState<LessonType>("scorm");
+  const [content, setContent] = useState<LessonContent>({});
+  // The version the content is based on, sent back with a new package so a
+  // concurrent change (another person or an agent) isn't overwritten.
+  const [contentVersion, setContentVersion] = useState<number | null>(null);
   const [mediaId, setMediaId] = useState<string | null>(null);
-  const [downloadable, setDownloadable] = useState(false);
-  const [requiresEnrollment, setRequiresEnrollment] = useState(true);
   const [status, setStatus] = useState<Lesson["status"]>("draft");
   const [sectionChoice, setSectionChoice] = useState(sectionId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{
-    title?: string;
-    content?: string;
-  }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string }>({});
   const productRoot = `/products/${encodeURIComponent(productId)}`;
 
   useEffect(() => {
@@ -396,20 +126,31 @@ export function LessonAuthoring({
           throw new Error("This section no longer exists.");
         }
         if (lessonId) {
-          const lesson = detail.lessons.find((item) => item.id === lessonId);
-          if (!lesson) throw new Error("This lesson no longer exists.");
+          const lessonResponse = await fetch(
+            `/api/v1/lessons/${encodeURIComponent(lessonId)}`,
+            {
+              credentials: "include",
+              cache: "no-store",
+              headers: { "x-school-id": selected.id },
+            },
+          );
+          if (!lessonResponse.ok) throw new Error("This lesson no longer exists.");
+          const lesson = (await lessonResponse.json()) as Lesson;
+          if (!active) return;
+          if (lesson.type === "page") {
+            // Page lessons are written in the full-screen editor.
+            router.replace(lessonEditorHref(productId, lessonId));
+            return;
+          }
           setTitle(lesson.title);
           setType(lesson.type);
-          setContent(lesson.content ?? { type: "doc", content: [] });
+          setContent(lesson.content ?? {});
+          setContentVersion(lesson.contentVersion);
           setMediaId(lesson.mediaId);
-          setDownloadable(lesson.downloadable);
-          setRequiresEnrollment(lesson.requiresEnrollment);
           setStatus(lesson.status);
         } else {
-          const defaultType: LessonType = detail.kind === "download" ? "file" : "text";
-          setType(defaultType);
-          setContent(emptyContent(defaultType));
-          setStatus(detail.newLessonStatus ?? "draft");
+          setType(detail.kind === "download" ? "file" : "scorm");
+          setStatus("draft");
         }
         setSchool(selected);
         setProduct(detail);
@@ -424,7 +165,7 @@ export function LessonAuthoring({
     return () => {
       active = false;
     };
-  }, [lessonId, productId, sectionId]);
+  }, [lessonId, productId, router, sectionId]);
 
   async function save(
     event: FormEvent<HTMLFormElement>,
@@ -432,7 +173,7 @@ export function LessonAuthoring({
   ) {
     event.preventDefault();
     if (saving) return;
-    const nextFieldErrors = validateLesson(title, type, content);
+    const nextFieldErrors = validateLesson(title);
     setFieldErrors(nextFieldErrors);
     if (Object.keys(nextFieldErrors).length > 0) {
       setError(null);
@@ -453,37 +194,27 @@ export function LessonAuthoring({
           body: JSON.stringify({
             title: title.trim(),
             ...(editing ? {} : { type }),
-            content,
             mediaId,
-            downloadable,
-            requiresEnrollment,
             sectionId: sectionChoice,
             status: nextStatus,
           }),
         },
       );
       if (!response.ok) {
-        let message = "Unable to save the lesson.";
-        try {
-          const body = (await response.json()) as { message?: string };
-          if (body.message) message = body.message;
-        } catch {
-          // Keep the generic message when the API has no JSON error body.
-        }
-        throw new Error(message);
+        throw new Error(
+          lessonSaveFailureMessage(
+            lessonSaveFailure(response.status, await readErrorBody(response)),
+          ),
+        );
       }
       const saved = (await response.json()) as { id?: string };
-      const usesSeparateMediaSection = [
-        "video",
-        "audio",
-        "pdf",
-        "file",
-        "scorm",
-      ].includes(type);
-      if (!editing && usesSeparateMediaSection && saved.id) {
+      if (!editing && saved.id) {
+        // Its package or file is chosen once it exists.
         router.replace(
-          `${productRoot}/content/section/${encodeURIComponent(sectionChoice)}/lesson?id=${encodeURIComponent(saved.id)}`,
+          lessonFormHref(productId, sectionChoice, { lessonId: saved.id }),
         );
+        // The form stays mounted for the new lesson, so end the save here.
+        setSaving(false);
       } else {
         router.replace(`${productRoot}/content`);
       }
@@ -494,9 +225,9 @@ export function LessonAuthoring({
   }
 
   async function saveMedia(nextMediaId: string | null) {
+    if (!editing || !school || !lessonId || saving) return;
     const previousMediaId = mediaId;
     setMediaId(nextMediaId);
-    if (!editing || !school || !lessonId || saving) return;
     setSaving(true);
     setError(null);
     try {
@@ -547,7 +278,9 @@ export function LessonAuthoring({
   const itemLabel = isDownload ? "file" : "lesson";
   const heading = editing
     ? title.trim() || `Untitled ${itemLabel}`
-    : `New ${itemLabel}`;
+    : isDownload
+      ? "New file"
+      : "New SCORM lesson";
   const lessonLive = status === "published";
   const productLive = product?.status === "published";
   const contentHref = `${productRoot}/content`;
@@ -607,265 +340,171 @@ export function LessonAuthoring({
           </p>
         ) : null}
         {!loading && product ? (
-          <>
-            <form
-              id="lesson-form"
-              onSubmit={(event) => void save(event)}
-              className="space-y-4"
-            >
-              <section className="rounded-xl border bg-card shadow-sm">
-                <div className="px-5 pt-5">
-                  <h2 className="text-base font-bold">
-                    {isDownload ? "File" : "Lesson"}
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {lessonLive
-                      ? "Learners can see this lesson."
-                      : "Drafts are hidden from learners until you make them live."}
+          <form
+            id="lesson-form"
+            onSubmit={(event) => void save(event)}
+            className="space-y-4"
+          >
+            <section className="rounded-xl border bg-card shadow-sm">
+              <div className="px-5 pt-5">
+                <h2 className="text-base font-bold">
+                  {isDownload ? "File" : "SCORM lesson"}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {lessonLive
+                    ? "Learners can see this lesson."
+                    : "Drafts are hidden from learners until you make them live."}
+                </p>
+              </div>
+              <div className="space-y-5 px-5 pb-5 pt-4">
+                {!editing && type === "scorm" && !scormIncluded ? (
+                  <p className="text-sm text-muted-foreground">
+                    {PLAN_FEATURE_COPY.scorm}
                   </p>
-                </div>
-                <div className="space-y-5 px-5 pb-5 pt-4">
-                  {!isDownload ? (
-                    <div className="field">
-                      <span>Type</span>
-                      <LessonTypeChips
-                        value={type}
-                        onChange={(nextType) => {
-                          if (!editing) {
-                            setType(nextType);
-                            setContent(emptyContent(nextType));
-                            if (nextType === "quiz") setRequiresEnrollment(true);
-                            setError(null);
-                            setFieldErrors({});
-                          }
-                        }}
-                        disabled={editing}
-                      />
-                      {editing ? (
-                        <p className="text-xs text-muted-foreground">
-                          The type can&apos;t change after a lesson is created.
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
+                ) : null}
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="field">
-                      <Label htmlFor="lesson-title">Title</Label>
-                      <Input
-                        id="lesson-title"
-                        required
-                        autoFocus
-                        maxLength={200}
-                        value={title}
-                        aria-invalid={Boolean(fieldErrors.title)}
-                        className={fieldErrors.title ? "border-destructive" : undefined}
-                        onChange={(event) => {
-                          setTitle(event.target.value);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            title: undefined,
-                          }));
-                        }}
-                        placeholder={`Enter ${itemLabel} title`}
-                      />
-                      {fieldErrors.title ? (
-                        <p className="text-sm text-destructive">{fieldErrors.title}</p>
-                      ) : null}
-                    </div>
-                    <div className="field">
-                      <Label htmlFor="lesson-section">Section</Label>
-                      <Select value={sectionChoice} onValueChange={setSectionChoice}>
-                        <SelectTrigger id="lesson-section" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {product.sections.map((section) => (
-                            <SelectItem key={section.id} value={section.id}>
-                              {section.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {type === "text" && school ? (
-                    <div className="field">
-                      <span>Content</span>
-                      <RichTextEditor
-                        school={school}
-                        purpose="lesson_content"
-                        key={type}
-                        initialContent={editorContent(content)}
-                        onChange={(document) => {
-                          setContent(document as LessonContent);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
-                        }}
-                        placeholder="Write something…"
-                        className="rounded-md border bg-card"
-                        contentClassName="max-w-none"
-                        editorClassName="min-h-[260px]"
-                      />
-                    </div>
-                  ) : null}
-                  {type === "embed" ? (
-                    <div className="field">
-                      <Label htmlFor="lesson-embed">Embed code</Label>
-                      <Textarea
-                        id="lesson-embed"
-                        value={typeof content.value === "string" ? content.value : ""}
-                        onChange={(event) => {
-                          setContent({ value: event.target.value });
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
-                        }}
-                        placeholder="e.g. a YouTube URL or iframe code"
-                      />
-                      <EmbedPreview
-                        value={typeof content.value === "string" ? content.value : ""}
-                      />
-                    </div>
-                  ) : null}
-                  {type === "quiz" ? (
-                    <div className="field">
-                      <span>Content</span>
-                      <QuizEditor
-                        key={type}
-                        value={content}
-                        onChange={(next) => {
-                          setContent(next);
-                          setFieldErrors((current) => ({
-                            ...current,
-                            content: undefined,
-                          }));
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                  {fieldErrors.content ? (
-                    <p className="text-sm text-destructive">{fieldErrors.content}</p>
-                  ) : null}
-
-                  {type === "video" ||
-                  type === "audio" ||
-                  type === "pdf" ||
-                  type === "file" ? (
-                    <div className="field">
-                      <span>Media</span>
-                      {editing && school ? (
-                        <MediaPicker
-                          school={school}
-                          lessonType={type}
-                          value={mediaId}
-                          onChange={(nextMediaId) => void saveMedia(nextMediaId)}
-                        />
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Save the {itemLabel} first, then select a reusable media
-                          library asset.
-                        </p>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {type === "scorm" ? (
-                    <div className="field">
-                      <span>SCORM package</span>
-                      {editing && school && lessonId ? (
-                        <ScormLessonUpload
-                          school={school}
-                          lessonId={lessonId}
-                          content={content}
-                          onUploadComplete={(nextContent, nextMediaId) => {
-                            setContent(nextContent);
-                            setMediaId(nextMediaId);
-                          }}
-                        />
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Save the lesson first, then upload its SCORM package.
-                        </p>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {!isDownload && type !== "quiz" ? (
-                    <ToggleRow
-                      id="lesson-preview"
-                      label="Free preview"
-                      description="Anyone can open this lesson from the sales page without joining."
-                      checked={!requiresEnrollment}
-                      onChange={(checked) => setRequiresEnrollment(!checked)}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="field">
+                    <Label htmlFor="lesson-title">Title</Label>
+                    <Input
+                      id="lesson-title"
+                      required
+                      autoFocus
+                      maxLength={200}
+                      value={title}
+                      aria-invalid={Boolean(fieldErrors.title)}
+                      className={fieldErrors.title ? "border-destructive" : undefined}
+                      onChange={(event) => {
+                        setTitle(event.target.value);
+                        setFieldErrors({});
+                      }}
+                      placeholder={`Enter ${itemLabel} title`}
                     />
-                  ) : null}
+                    {fieldErrors.title ? (
+                      <p className="text-sm text-destructive">{fieldErrors.title}</p>
+                    ) : null}
+                  </div>
+                  <div className="field">
+                    <Label htmlFor="lesson-section">Section</Label>
+                    <Select value={sectionChoice} onValueChange={setSectionChoice}>
+                      <SelectTrigger id="lesson-section" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {product.sections.map((section) => (
+                          <SelectItem key={section.id} value={section.id}>
+                            {section.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </section>
 
-              <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3 shadow-[var(--shadow-popover)]">
-                {editing ? (
+                {type === "file" ? (
+                  <div className="field">
+                    <span>Media</span>
+                    {editing && school ? (
+                      <MediaPicker
+                        school={school}
+                        lessonType={type}
+                        value={mediaId}
+                        onChange={(nextMediaId) => void saveMedia(nextMediaId)}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Save the {itemLabel} first, then select a reusable media library
+                        asset.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                {type === "scorm" ? (
+                  <div className="field">
+                    <span>SCORM package</span>
+                    {editing && school && lessonId && !scormIncluded ? (
+                      <p className="text-sm text-muted-foreground">
+                        This lesson keeps playing. Replacing its package needs the
+                        Business plan.
+                      </p>
+                    ) : editing && school && lessonId ? (
+                      <ScormLessonUpload
+                        school={school}
+                        lessonId={lessonId}
+                        content={content}
+                        contentVersion={contentVersion}
+                        onUploadComplete={(nextContent, nextMediaId, nextVersion) => {
+                          setContent(nextContent);
+                          setMediaId(nextMediaId);
+                          setContentVersion(nextVersion);
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Save the lesson first, then upload its SCORM package.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+
+            <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3 shadow-[var(--shadow-popover)]">
+              {editing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  disabled={saving}
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="size-4" /> Delete
+                </Button>
+              ) : null}
+              <span className="min-w-0 flex-[1_1_220px] text-[13.5px] text-muted-foreground">
+                {footNote}
+              </span>
+              <Button asChild variant="ghost">
+                <Link href={contentHref}>Cancel</Link>
+              </Button>
+              {lessonLive ? (
+                <>
                   <Button
                     type="button"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
+                    variant="outline"
                     disabled={saving}
-                    onClick={() => setDeleteDialogOpen(true)}
+                    onClick={(event) =>
+                      void save(event as unknown as FormEvent<HTMLFormElement>, "draft")
+                    }
                   >
-                    <Trash2 className="size-4" /> Delete
+                    Move to drafts
                   </Button>
-                ) : null}
-                <span className="min-w-0 flex-[1_1_220px] text-[13.5px] text-muted-foreground">
-                  {footNote}
-                </span>
-                <Button asChild variant="ghost">
-                  <Link href={contentHref}>Cancel</Link>
-                </Button>
-                {lessonLive ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={saving}
-                      onClick={(event) =>
-                        void save(
-                          event as unknown as FormEvent<HTMLFormElement>,
-                          "draft",
-                        )
-                      }
-                    >
-                      Move to drafts
-                    </Button>
-                    <Button type="submit" disabled={saving}>
-                      {saving ? "Saving…" : "Save changes"}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button type="submit" variant="outline" disabled={saving}>
-                      {saving ? "Saving…" : "Save draft"}
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={saving}
-                      onClick={(event) =>
-                        void save(
-                          event as unknown as FormEvent<HTMLFormElement>,
-                          "published",
-                        )
-                      }
-                    >
-                      Save and make live
-                    </Button>
-                  </>
-                )}
-              </div>
-            </form>
-          </>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "Saving…" : "Save changes"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button type="submit" variant="outline" disabled={saving}>
+                    {saving ? "Saving…" : "Save draft"}
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={saving}
+                    onClick={(event) =>
+                      void save(
+                        event as unknown as FormEvent<HTMLFormElement>,
+                        "published",
+                      )
+                    }
+                  >
+                    Save and make live
+                  </Button>
+                </>
+              )}
+            </div>
+          </form>
         ) : null}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>

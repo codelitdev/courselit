@@ -4,7 +4,8 @@ import { formatPrice } from "@/lib/price";
 import { publicApiPath, useSchoolId } from "@/components/school-context";
 import type { MediaRef } from "@courselit/api-contract";
 // Course viewing is protected, except for explicit preview tokens.
-import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import type { TextEditorContent } from "@frontlit/text-editor";
+import { TextRenderer } from "@frontlit/text-editor/renderer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,6 +28,7 @@ import {
   LearnerCardContent as PageCardContent,
   LearnerCardImage as PageCardImage,
 } from "@/components/themed-page-builder";
+import { requestLessonCompletion } from "@/lib/lesson-completion";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
@@ -234,24 +236,15 @@ export default function CoursePage() {
 
   async function complete(lessonId: string) {
     setError(null);
-    const response = await fetch(`/api/v1/learner/lessons/${lessonId}/complete`, {
-      method: "POST",
-      credentials: "include",
-      headers: learnerHeaders({ "content-type": "application/json" }),
-      body: JSON.stringify({}),
-    });
-    if (!response.ok) {
-      if (response.status === 401) {
+    const progress = await requestLessonCompletion({ lessonId, headers: learnerHeaders });
+    if (!progress.ok) {
+      if (progress.status === 401) {
         window.location.assign("/login");
         return;
       }
-      setError("Unable to complete the lesson.");
+      setError(progress.message);
       return;
     }
-    const progress = (await response.json()) as {
-      courseCompleted: boolean;
-      certificateId: string | null;
-    };
     setCompleted((current) => new Set(current).add(lessonId));
     if (progress.courseCompleted && progress.certificateId) {
       const certificatesResponse = await fetch("/api/v1/learner/certificates", {
@@ -405,18 +398,12 @@ export default function CoursePage() {
                       previewToken={previewToken}
                     />
                   ) : lesson.content && Object.keys(lesson.content).length > 0 ? (
-                    previewToken && lesson.type === "quiz" ? (
-                      <LearnerText2 className="text-muted-foreground">
-                        Quiz content is available after enrollment.
-                      </LearnerText2>
-                    ) : (
-                      <LessonContent
+                    <LessonContent
                         content={lesson.content}
                         lessonId={lesson.id}
                         productId={productId}
-                        type={lesson.type}
+                        previewToken={previewToken}
                       />
-                    )
                   ) : (
                     <LearnerText2 className="text-muted-foreground">
                       {lesson.availableAt

@@ -142,7 +142,7 @@ Copy the section `id`.
 
 ### Add lessons
 
-Create a text lesson in the section. A lesson created without a `status` takes the product's `newLessonStatus`, which is `draft` for a new product. Send `"status": "published"` to make the lesson live right away.
+Create a page lesson in the section. Send the page as Markdown in `markdown`; `type` defaults to `page`. A lesson created without a `status` is a `draft`. Send `"status": "published"` to make the lesson live right away.
 
 ```bash
 curl -X POST "$COURSELIT_API_URL/v1/products/$PRODUCT_ID/lessons" \
@@ -150,34 +150,24 @@ curl -X POST "$COURSELIT_API_URL/v1/products/$PRODUCT_ID/lessons" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Welcome",
-    "type": "text",
     "sectionId": "sec_0190c0de0000700080000000000000a2",
     "status": "published",
-    "content": {
-      "type": "doc",
-      "content": [
-        {
-          "type": "paragraph",
-          "content": [{ "type": "text", "text": "Welcome to the course." }]
-        }
-      ]
-    }
+    "markdown": "Welcome to the course.\n\n<Video url=\"https://www.youtube.com/watch?v=aqz-KE-bpKQ\" />\n\n<Quiz passingGrade={70}>\n\n<Question text=\"Ready to start?\">\n\n<Option text=\"Yes\" correct />\n\n<Option text=\"Not yet\" />\n\n</Question>\n\n</Quiz>"
   }'
 ```
 
-The text of a lesson is a rich-text document, a JSON object whose root is `{ "type": "doc", "content": [...] }`. The response is `201` with the lesson, including its `id`, `position` and `status`.
+The response is `201` with the lesson, including its `id`, `position`, `status`, the page as `markdown` and as rich-text JSON in `content`, and a `contentVersion`. Leave quiz, question and option IDs out; the saved lesson returns them.
 
-Other lesson types need different input.
+A page is Markdown (headings, emphasis, lists, links, code blocks and tables) with block tags for images, video, audio, PDF, files, embeds, callouts and at most one quiz. Read the `getLessonContentFormat` operation (`GET /v1/lesson-content-format`) for every tag, its props and an example; blocks your school can't add right now, such as Embed during the trial, are listed with the reason. You can send the page as rich-text JSON in `content` instead of `markdown`, but not both.
 
 | `type` | What to send |
 | --- | --- |
-| `text` | `content` as a rich-text document |
-| `video`, `audio`, `pdf`, `file` | `mediaId` of a file in the media library whose type matches. See [Upload media for a lesson](/docs/developers/upload-media-for-a-lesson). |
-| `embed` | `content.value` with the embed code or address. An empty value fails with `embed_content_required`. |
-| `quiz` | `content.questions`, a list of questions. Each has `text` and an `options` list of at least two options, each with `text`, and at least one option with `correctAnswer` set to `true`. A quiz lesson cannot set `requiresEnrollment` to `false`. |
+| `page` | `markdown`, or `content` as a rich-text document. Media blocks take the `id` of a file in the media library, such as `<Video media="med_…" />`. See [Upload media for a lesson](/docs/developers/upload-media-for-a-lesson). |
 | `scorm` | `mediaId` of the uploaded package, then process it with the process-SCORM-package operation |
 
-Other useful lesson fields are `downloadable`, `requiresEnrollment`, which defaults to `true`, and the drip fields `dripDelaySeconds` and `dripAt` to unlock a lesson later. Use the reorder-lessons and reorder-sections operations to change the order.
+To change a page later, send `markdown` or `content` to the update-lesson operation with the `expectedContentVersion` you last read. Edits to an existing page are saved as a draft: learners see them after you call the publish-lesson-content operation (`POST /v1/lessons/:lessonId/publish-content`), or when the lesson is made live. A version that doesn't match fails with `conflict`, so two writers can't overwrite each other.
+
+Other useful lesson fields are `requiresEnrollment`, which defaults to `true` (a page with a quiz can't set it to `false`), and the drip fields `dripDelaySeconds` and `dripAt` to unlock a lesson later. Use the reorder-lessons and reorder-sections operations to change the order.
 
 </Step>
 

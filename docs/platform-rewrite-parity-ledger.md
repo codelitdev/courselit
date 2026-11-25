@@ -42,7 +42,7 @@ A quick view of what is already in the `platform-based-rewrite` branch. A ticked
 
 - [x] Courses and digital downloads (PRD-001)
 - [x] Sections and lessons, ordering (PRD-002)
-- [x] All lesson types: text, video, audio, PDF, file, embed, quiz, SCORM (PRD-003)
+- [x] Lesson content: block-based Page lessons (text, image, video, audio, PDF, file, embed, callout, quiz blocks) and SCORM, replacing main's eight fixed types (PRD-003, [lesson pages](lesson-pages.md))
 - [x] SCORM packages, private delivery, runtime state, quiz evaluation (PRD-004)
 - [x] Preview of unpublished products via short-lived grants (PRD-005)
 - [x] Certificates, templates, and public verification (PRD-006)
@@ -152,7 +152,7 @@ A quick view of what is already in the `platform-based-rewrite` branch. A ticked
 | ------- | ------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
 | PRD-001 | Courses and digital downloads share the product model                     | CourseLit API               | Migrate products, visibility, pricing links, authors, metadata, and slugs                | Evidence pending | `apps/api/src/migrations/products.test.ts` covers source-typed course import, school mapping, rich description preservation, and idempotency; `apps/api/src/migrations/payment-plans.test.ts` covers source payment-plan amount fields, default state, school currency isolation, rejection, and idempotency; public/admin read parity and production-shaped fixture evidence remain pending |
 | PRD-002 | Courses contain ordered groups/sections and lessons                       | CourseLit API               | Normalize sections and ordering without changing learner-visible order                   | Evidence pending | Section ordering, assignment, cross-school, and malformed-order tests |
-| PRD-003 | Lessons support multiple content types and visibility rules               | CourseLit API               | Migrate supported types; preserve opaque unsupported payloads for repair                 | Evidence pending | Lesson type enum/content JSON contract, rich-text authoring, dedicated learner lesson viewer, authorization tests, type-by-type renderer and malformed-data report still pending |
+| PRD-003 | Lessons support multiple content types and visibility rules               | CourseLit API               | Replace main's eight types with `page` (blocks) and `scorm`; the import maps each old type into a page and reports what it changed (`docs/lesson-pages.md`, section 8) | Evidence pending | Page content contract, validation, drafts, answer stripping and media access are covered by `apps/api/src/lesson-pages.test.ts`, `lesson-drafts.test.ts`, `lesson-content-version.test.ts`, `lesson-media.test.ts`, `quiz.test.ts`, `packages/lesson-content` and `apps/storefront/components/lesson-page-renderer.test.tsx`; MediaLit media import and production-shaped import fixtures still pending |
 | PRD-004 | SCORM packages, runtime state, evaluations, and size limits are supported | CourseLit API + storefront app | Migrate package references and learner state; preserve sandbox/private-delivery controls | In progress | SCORM package processing, private delivery, membership-scoped runtime state, quiz evaluations, completion guards, and focused tests are ported; migration/browser evidence remains pending |
 | PRD-005 | Admins can preview unpublished products as learners                       | CourseLit API + storefront app | Replace implicit privilege with short-lived, school/product-bound preview grants         | Evidence pending | Grant expiry, scope, replay, and no-membership-mutation tests |
 | PRD-006 | Certificates and templates are generated from course completion           | CourseLit API + storefront app | Migrate templates and issued certificates; retain verification identifiers               | Evidence pending | `certificates.test.ts` covers completion, idempotence, learner listing, public verification, template presentation fields, stable certificate-ID lookup, and school isolation; learner My Content exposes the active certificate ID and `/certificates/[verificationId]` renders a printable template-backed certificate; template import still pending |
@@ -294,8 +294,9 @@ evidence and the production regression cases are ported.
   download must remain. The rewrite now ports these through
   `apps/admin/components/products/product-workspace.tsx` and
   `apps/api/src/catalog.ts`; `apps/api/src/sections.test.ts` covers the invariant and
-  empty-section deletion. Lesson rows preserve the source Text, Video, and Quiz type
-  icons, and “Add Section” is rendered for courses only, matching the source board;
+  empty-section deletion. Lesson rows no longer show main's Text, Video and Quiz type
+  icons, since a course lesson is now a Page or SCORM (`docs/lesson-pages.md`), and
+  “Add Section” is rendered for courses only, matching the source board;
   digital downloads retain their automatically-created sole section.
   Browser evidence remains pending.
 - **Required evidence:** each section needs a target contract/model mapping, tenant and
@@ -317,8 +318,13 @@ evidence and the production regression cases are ported.
 
 ### M3-FPB-003 — Lesson authoring and content types
 
-- **Status:** In progress; the target authoring journey is being ported and Milestone 3
-  remains open.
+- **Status:** Authoring is done in its v1 form; browser side-by-side evidence is
+  pending. The rewrite deliberately changed the lesson model: main's eight fixed types
+  became one block-based **Page** type plus SCORM, written in the full-screen editor at
+  `apps/admin/components/products/page-lesson-editor.tsx` with drafts that are published
+  or discarded on purpose. `docs/lesson-pages.md` is the design and the source of truth;
+  the source behavior below is kept as the parity baseline, and the target notes that
+  follow it describe the per-type authoring that the Page lesson replaced.
 - **Production entry point and hierarchy:** `main` uses
   `/dashboard/product/[id]/content/section/[section]/lesson` for both new and edit
   flows. The screen contains the lesson-type cards, title, type-specific content area,
@@ -395,10 +401,13 @@ evidence and the production regression cases are ported.
   lessons, unsupported types, and MediaLit-backed records into the migration
   reconciliation ledger. Browser side-by-side evidence, production-shaped migration
   fixtures, and full public/admin read reconciliation remain pending.
-- **Disposition:** port existing authoring behavior; adapt only the API transport,
-  MediaLit reference lifecycle, admin/learner split, and the requested target UI
-  component conventions. Preserve validation, read-only editing of lesson type,
-  preview restrictions, media reuse, private SCORM storage, and redirect hierarchy.
+- **Disposition:** replace the per-type authoring with Page lessons
+  (`docs/lesson-pages.md`). Kept from main: server-side quiz validation and grading,
+  unlimited attempts, correct answers never sent to learners, no quiz in a free
+  preview, school-scoped media reuse, private SCORM storage, and SCORM as a separate
+  type. Changed on purpose: a lesson is a Page or SCORM, blocks go in any order, a Page
+  holds at most one Quiz, the lesson-level `downloadable` flag became a File block, and
+  Embed is unavailable during a school's trial.
   The target media picker also rehydrates the currently attached asset through the
   school-scoped single-media read when it falls outside the first catalog page, so
   existing media remains visible and removable without weakening tenant isolation.

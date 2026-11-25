@@ -206,3 +206,12 @@ deleteUser
 | Courses                      | Migrate   | `CourseModel.updateMany()`                                                                                                                               | [x] Preserved |
 | Templates                    | Migrate   | `EmailTemplateModel.updateMany()`                                                                                                                        | [x] Preserved |
 | Sequences                    | Migrate   | `SequenceModel.updateMany()`                                                                                                                             | [x] Preserved |
+
+## SSO shadow users (rewrite)
+
+Learners who only ever sign in through a school's SSO connection are owned by a
+shadow user (`sso_shadow_users`), because `school_accounts.user_id` must point at
+a `user`. Deleting a school account (the `erase_sendlit_contact` purge) also
+deletes its shadow user once it owns no school account, so no personal data is
+left behind. Shadow users are never touched by platform user deletion flows: they
+have no password, no Better Auth session and an unreachable `.invalid` address.

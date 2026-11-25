@@ -20,6 +20,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import { ProductEvent, trackProductEvent } from "./product-events.js";
 import * as schema from "./db/schema/index.js";
 import {
   deleteUnreferencedMedia,
@@ -53,7 +54,6 @@ export type ProductDto = {
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
-  newLessonStatus: "draft" | "published";
   includedWithCommunity: boolean;
   discussionSpaceId: string | null;
   publishedAt: string | null;
@@ -119,7 +119,6 @@ async function toDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    newLessonStatus: row.newLessonStatus,
     includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: row.discussionSpaceId
       ? ((
@@ -454,7 +453,6 @@ export async function createProduct(
     leadMagnet: input.leadMagnet ?? false,
     certificate: input.certificate ?? false,
     discussions: false,
-    newLessonStatus: "draft" as const,
     includedWithCommunity: false,
     discussionSpaceId: null,
     publishedAt: null,
@@ -560,6 +558,12 @@ export async function createProduct(
       });
     }
   });
+  trackProductEvent({
+    event: ProductEvent.PRODUCT_CREATED,
+    userId: ctx.principalId,
+    schoolId: publicSchoolId,
+    properties: { product_type: row.kind, product_id: row.publicId },
+  });
   return { ok: true, value: await toDto(db, row, publicSchoolId, null) };
 }
 
@@ -578,7 +582,6 @@ export async function updateProduct(
     leadMagnet?: boolean;
     certificate?: boolean;
     discussions?: boolean;
-    newLessonStatus?: "draft" | "published";
     includedWithCommunity?: boolean;
   },
   clock: Clock,
@@ -587,6 +590,8 @@ export async function updateProduct(
     return { ok: false, error: createPlatformError("forbidden") };
   }
   return db.transaction(async (tx) => {
+    // Locked, so concurrent updates run one after another: two publishes at
+    // once see the second one as already published.
     const existing = await tx
       .select()
       .from(schema.products)
@@ -596,7 +601,8 @@ export async function updateProduct(
           eq(schema.products.schoolId, ctx.tenantId!),
         ),
       )
-      .limit(1);
+      .limit(1)
+      .for("update");
     const row = existing[0];
     if (!row) {
       return { ok: false as const, error: createPlatformError("not_found") };
@@ -763,7 +769,6 @@ export async function updateProduct(
       leadMagnet,
       certificate,
       discussions: input.discussions ?? row.discussions,
-      newLessonStatus: input.newLessonStatus ?? row.newLessonStatus,
       includedWithCommunity: input.includedWithCommunity ?? row.includedWithCommunity,
       ...(input.featuredImage !== undefined ? { featuredImage } : {}),
       // Kept when going back to draft: it records that the product was live once.
@@ -839,6 +844,14 @@ export async function updateProduct(
       requestId: ctx.requestId,
       createdAt: now,
     });
+    if (status === "published" && row.status !== "published") {
+      trackProductEvent({
+        event: ProductEvent.PRODUCT_PUBLISHED,
+        userId: ctx.principalId,
+        schoolId: publicSchoolId,
+        properties: { product_type: row.kind, product_id: row.publicId },
+      });
+    }
     return {
       ok: true as const,
       value: await toDto(

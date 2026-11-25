@@ -1,0 +1,25 @@
+{
+  "name": "@courselit/lesson-content",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome lint ."
+  },
+  "dependencies": {
+    "@courselit/api-contract": "workspace:*",
+    "@frontlit/text-editor": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4",
+    "typescript": "5.9.3"
+  }
+}

@@ -41,6 +41,10 @@ Click **Save**. The button is enabled only after you change something. **Code in
 
 </Steps>
 
+## During a free trial
+
+During a trial, your code runs only for you, the owner, when you're signed in to your own site. The tab shows the note "During your free trial, this code runs only for you, the owner, when you're signed in to your site. It goes live for everyone with a paid plan." Use it to test your snippets before you pick a plan. See [Billing and plan](/docs/settings/billing-and-plan).
+
 ## Things to know
 
 <Callout type="warning" title="Only add code you trust">

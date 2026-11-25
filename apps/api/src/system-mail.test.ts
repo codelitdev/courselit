@@ -1,5 +1,5 @@
 import { describe, expect, it, spyOn } from "bun:test";
-import { sendSystemMail } from "./system-mail.js";
+import { sendSystemMail, smtpFrom } from "./system-mail.js";
 
 const message = {
   to: "teammate@example.com",
@@ -79,6 +79,41 @@ describe("system mail delivery", () => {
       text: message.text,
       html: message.html,
     });
+  });
+
+  it("sends a school's name as the From name through SendLit", async () => {
+    let body: Record<string, unknown> = {};
+    await sendSystemMail(
+      { ...message, fromName: "Yoga with Nalini", stream: "sign_in" },
+      {
+        env: {
+          SENDLIT_SERVER: "https://sendlit.example.test",
+          SENDLIT_PLATFORM_TEAM_API_KEY: "sl_platform_key",
+        },
+        fetcher: async (_input, init) => {
+          body = JSON.parse((init as RequestInit).body as string);
+          return new Response(JSON.stringify({ txeId: "txe_1" }), {
+            status: 202,
+            headers: { "content-type": "application/json" },
+          });
+        },
+      },
+    );
+    expect(body.fromName).toBe("Yoga with Nalini");
+  });
+
+  it("keeps the SMTP address and swaps in the From name", () => {
+    expect(smtpFrom("CourseLit <noreply@example.test>", "Yoga with Nalini")).toEqual({
+      name: "Yoga with Nalini",
+      address: "noreply@example.test",
+    });
+    expect(smtpFrom("noreply@example.test", "School")).toEqual({
+      name: "School",
+      address: "noreply@example.test",
+    });
+    expect(smtpFrom("CourseLit <noreply@example.test>", undefined)).toBe(
+      "CourseLit <noreply@example.test>",
+    );
   });
 
   it("dumps mail to the console in non-production when no provider is configured", async () => {

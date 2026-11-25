@@ -38,6 +38,24 @@ afterEach(() => {
 });
 
 describe("storefront proxy", () => {
+  it("shows a neutral offline page for a school that isn't live, without its site", async () => {
+    mockResolveHost(
+      () =>
+        new Response(
+          JSON.stringify({ schoolId: "sch_offline", subdomain: "acme", name: "Acme", offline: true }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    const response = await proxy(
+      new NextRequest("http://acme.courselit.app/products", {
+        headers: { host: "acme.courselit.app" },
+      }),
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(await response.text()).toContain("This site isn't available.");
+  });
+
   it("blocks direct requests to internal /schools routes with 404", async () => {
     const response = await proxy(new NextRequest("http://localhost:3002/schools/sch_123"));
     expect(response.status).toBe(404);
@@ -156,5 +174,44 @@ describe("storefront proxy", () => {
       new NextRequest("http://localhost:3002/", { headers: { host: "localhost:3002" } }),
     );
     expect(response.status).toBe(404);
+  });
+
+  describe("Markdown for AI agents", () => {
+    const request = (path: string, accept?: string) =>
+      proxy(
+        new NextRequest(`http://acme.courselit.app${path}`, {
+          headers: { host: "acme.courselit.app", ...(accept ? { accept } : {}) },
+        }),
+      );
+    const rewrite = (response: Response) =>
+      new URL(response.headers.get("x-middleware-rewrite") ?? "http://x/").pathname;
+
+    it("serves `<path>.md` from the Markdown route", async () => {
+      mockResolveHost(() => resolved("sch_md"));
+      expect(rewrite(await request("/p/react.md"))).toBe("/schools/sch_md/agent-markdown/p/react");
+      expect(rewrite(await request("/index.md"))).toBe("/schools/sch_md/agent-markdown");
+    });
+
+    it("serves Markdown to agents that ask for it, and HTML to browsers", async () => {
+      mockResolveHost(() => resolved("sch_md"));
+      const agent = await request("/blog/hello", "text/markdown");
+      expect(rewrite(agent)).toBe("/schools/sch_md/agent-markdown/blog/hello");
+      expect(agent.headers.get("vary")).toBe("Accept");
+      const browser = await request(
+        "/blog/hello",
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      );
+      expect(rewrite(browser)).toBe("/schools/sch_md/blog/hello");
+    });
+
+    it("keeps learner-only pages and files as they are", async () => {
+      mockResolveHost(() => resolved("sch_md"));
+      expect(rewrite(await request("/dashboard", "text/markdown"))).toBe(
+        "/schools/sch_md/dashboard",
+      );
+      expect(rewrite(await request("/llms.txt", "text/markdown"))).toBe(
+        "/schools/sch_md/llms.txt",
+      );
+    });
   });
 });

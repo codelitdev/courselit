@@ -8,12 +8,16 @@ import {
   CreditCard,
   ExternalLink,
   Globe,
+  Search,
   Info,
   Key,
+  LogIn,
   Mail,
   Palette,
   RotateCcw,
   Save,
+  HardDrive,
+  ScrollText,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -24,12 +28,16 @@ import { useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { AiAssistantSettings } from "@/components/settings/ai-assistant-settings";
 import { ApiKeySettings } from "@/components/settings/api-key-settings";
+import { AuditLogSettings } from "@/components/settings/audit-log-settings";
+import { StorageSettings } from "@/components/settings/storage-settings";
 import { BrandingSettings } from "@/components/settings/branding-settings";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
+import { LoginProviderSettings } from "@/components/settings/login-provider-settings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
 import { DomainSettings } from "@/components/website/domain-settings";
+import { SearchSettings } from "@/components/website/search-settings";
 import {
   Card,
   CardContent,
@@ -58,9 +66,9 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "api-keys", "ai-assistants"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "storage", "audit-log"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
-const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain"] as const;
+const WEBSITE_SETTINGS_TABS = ["branding", "code-injection", "domain", "search"] as const;
 type SettingsMode = "general" | "website" | "mails";
 type SettingsTab =
   | (typeof GENERAL_SETTINGS_TABS)[number]
@@ -109,6 +117,7 @@ type SchoolItem = {
   currency: string;
   isOwner?: boolean;
   selected?: boolean;
+  permissions?: string[];
 };
 
 
@@ -135,7 +144,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     mode === "website"
       ? {
           title: "Website settings",
-          description: "Manage your website branding, domain, and code injection.",
+          description: "Manage your website branding, domain, code injection, and search engine access.",
         }
         : mode === "mails"
           ? {
@@ -144,7 +153,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             }
           : {
               title: "Settings",
-              description: "Manage payments, team access, notifications, and API keys for this school.",
+              description: "Manage payments, team access, notifications, login providers, and API keys for this school.",
             };
 
   function selectWebsiteTab(tab: string) {
@@ -190,6 +199,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [canManageSchool, setCanManageSchool] = useState(false);
 
   const providerSettings = isPaymentProvider(paymentMethod)
     ? paymentSettings?.[paymentMethod]
@@ -206,6 +216,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
         if (!selected) return;
         setSchoolId(selected.id);
         setIsOwner(selected.isOwner === true);
+        setCanManageSchool(selected.permissions?.includes("school:write") === true);
         setCurrency(selected.currency || "USD");
         void fetch("/api/v1/school/payment-settings", {
           credentials: "include",
@@ -391,6 +402,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
               { value: "branding", label: "Branding", icon: <Palette className="size-4" /> },
               { value: "code-injection", label: "Code Injection", icon: <Code className="size-4" /> },
               { value: "domain", label: "Domain", icon: <Globe className="size-4" /> },
+              { value: "search", label: "Search engines", icon: <Search className="size-4" /> },
             ]}
           >
             <PlatformTabsContent value="branding" className="w-full pt-4">
@@ -401,6 +413,9 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             </PlatformTabsContent>
             <PlatformTabsContent value="domain" className="w-full pt-4">
               <DomainSettings />
+            </PlatformTabsContent>
+            <PlatformTabsContent value="search" className="w-full pt-4">
+              <SearchSettings />
             </PlatformTabsContent>
           </PlatformTabs>
         ) : null}
@@ -421,6 +436,11 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       label: "Notifications",
                       icon: <Bell className="size-4" />,
                     },
+                    {
+                      value: "login-providers",
+                      label: "Login providers",
+                      icon: <LogIn className="size-4" />,
+                    },
                     // API keys belong to the school; only its owner manages them.
                     ...(isOwner
                       ? [{ value: "api-keys", label: "API keys", icon: <Key className="size-4" /> }]
@@ -437,6 +457,21 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                       ),
                       icon: <Sparkles className="size-4" />,
                     },
+                    // Storage and the audit log are for people who manage the school's settings.
+                    ...(canManageSchool
+                      ? [
+                          {
+                            value: "storage",
+                            label: "Storage",
+                            icon: <HardDrive className="size-4" />,
+                          },
+                          {
+                            value: "audit-log",
+                            label: "Audit log",
+                            icon: <ScrollText className="size-4" />,
+                          },
+                        ]
+                      : []),
                   ]
             }
           >
@@ -486,7 +521,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                 ) : null}
               </div>
               <div className="flex items-end gap-2">
-                <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <Label htmlFor="settings-payment-method">Payment Method</Label>
                   <Select
                     value={paymentMethod || "none"}
@@ -734,6 +769,14 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           ) : null}
           </PlatformTabsContent>
 
+          <PlatformTabsContent value="login-providers" className="w-full">
+          {mode === "general" && selectedTab === "login-providers" ? (
+            <div className="w-full pt-4">
+              <LoginProviderSettings />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
           <PlatformTabsContent value="api-keys" className="w-full">
           {mode === "general" && selectedTab === "api-keys" && isOwner ? (
             <div className="w-full pt-4">
@@ -746,6 +789,22 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           {mode === "general" && selectedTab === "ai-assistants" ? (
             <div className="w-full pt-4">
               <AiAssistantSettings />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="storage" className="w-full">
+          {mode === "general" && selectedTab === "storage" && canManageSchool ? (
+            <div className="w-full pt-4">
+              <StorageSettings schoolId={schoolId} />
+            </div>
+          ) : null}
+          </PlatformTabsContent>
+
+          <PlatformTabsContent value="audit-log" className="w-full">
+          {mode === "general" && selectedTab === "audit-log" && canManageSchool ? (
+            <div className="w-full pt-4">
+              <AuditLogSettings schoolId={schoolId} />
             </div>
           ) : null}
           </PlatformTabsContent>

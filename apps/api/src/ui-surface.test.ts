@@ -38,6 +38,7 @@ describe("admin and learner surfaces", () => {
     const productOverview = read("admin/components/products/product-overview.tsx");
     const productSettings = read("admin/components/products/product-settings.tsx");
     const lessonAuthoring = read("admin/components/products/lesson-authoring.tsx");
+    const pageLessonEditor = read("admin/components/products/page-lesson-editor.tsx");
     const scormUpload = read("admin/components/products/scorm-lesson-upload.tsx");
     // Sections are released (dripped) from the product content page.
     const sectionAuthoring = read("admin/components/products/product-content.tsx");
@@ -90,7 +91,9 @@ describe("admin and learner surfaces", () => {
       "storefront/components/dashboard/learner-dashboard-layout.tsx",
     );
     const learnerFeed = read("storefront/components/dashboard/learner-feed.tsx");
-    const learnerProducts = read("storefront/components/dashboard/learner-products.tsx");
+    const learnerProducts = read(
+      "storefront/components/dashboard/learner-products.tsx",
+    );
     const learnerCommunityMembership = read(
       "storefront/components/communities/learner-community-membership.tsx",
     );
@@ -132,7 +135,7 @@ describe("admin and learner surfaces", () => {
       "$",
       "{encodeURIComponent(community.id)}",
     ].join("");
-        expect(home).not.toContain("Create a school to get started");
+    expect(home).not.toContain("Create a school to get started");
     expect(home).not.toContain("CreateSchoolDialog");
     expect(account).toContain("@frontlit/media-uploader");
     expect(account).toContain('purpose: "learner_avatar"');
@@ -181,9 +184,11 @@ describe("admin and learner surfaces", () => {
     expect(brandingSettings).toContain('"/api/v1/school/website/branding"');
     expect(codeInjectionSettings).toContain('"/api/v1/school/code-injection"');
     expect(settings).toContain('"branding",');
-    expect(settings).toContain('"payment", "team", "notifications", "api-keys", "ai-assistants"] as const');
+    expect(settings).toContain(
+      '"payment", "team", "notifications", "login-providers", "api-keys", "ai-assistants", "storage", "audit-log"] as const',
+    );
     expect(settings).toContain('value="notifications"');
-    expect(settings).toContain('"ai-assistants"] as const');
+    expect(settings).toContain('"audit-log"] as const');
     expect(settings).toContain('value="team"');
     expect(settings).toContain('value="api-keys"');
     expect(settings).toContain('value="payment"');
@@ -240,10 +245,24 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain("school?.storefrontOrigin");
     expect(productSettings).toContain("Type &quot;delete&quot; to confirm");
-    expect(lessonAuthoring).toContain("@frontlit/text-editor");
-    expect(lessonAuthoring).toContain("ResizeObserver");
-    expect(lessonAuthoring).toContain('type: "embed-resize"');
-    expect(lessonAuthoring).toContain("height={height}");
+    // Page lessons are written in the full-screen block editor and saved as content.
+    expect(pageLessonEditor).toContain("<LessonPageEditor");
+    expect(pageLessonEditor).toContain("<WritingEditorShell");
+    expect(pageLessonEditor).toContain("expectedContentVersion");
+    expect(pageLessonEditor).toContain("/api/v1/lessons/");
+    expect(pageLessonEditor).toContain('method: "DELETE"');
+    // Page edits save as a draft; live lessons publish or discard it.
+    expect(pageLessonEditor).toContain('"publish-content"');
+    expect(pageLessonEditor).toContain('"discard-draft"');
+    expect(pageLessonEditor).toContain("Publish changes");
+    expect(pageLessonEditor).toContain("Discard your unpublished changes?");
+    expect(pageLessonEditor).toContain("lessonStatusNote(lesson)");
+    expect(shell).toContain("isFullScreenLessonEditor");
+    expect(productContent).toContain("LessonTypeDialog");
+    expect(productContent).toContain("createPageLessonAndOpen");
+    // SCORM packages and download files keep the lesson form.
+    expect(lessonAuthoring).not.toContain("LessonPageEditor");
+    expect(lessonAuthoring).toContain("/api/v1/lessons/");
     expect(lessonAuthoring).toContain('method: "DELETE"');
     expect(lessonAuthoring).toContain("Save the lesson first");
     expect(scormUpload).toContain("scormResponseError");
@@ -340,6 +359,7 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).not.toContain("<ArrowLeft");
     expect(sectionAuthoring).not.toContain("<ArrowLeft");
     expect(lessonAuthoring).not.toContain("<ArrowLeft");
+    expect(pageLessonEditor).not.toContain("<ArrowLeft");
     expect(acceptInvitation).toContain("useSetBreadcrumb");
     expect(acceptInvitation).not.toContain("Back to dashboard");
     expect(communityWorkspace).toContain("CommunityMediaPreview");
@@ -501,7 +521,7 @@ describe("admin and learner surfaces", () => {
     expect(blogEditor).toContain("beforeContent");
     expect(writingEditorShell).toContain("Document settings");
     expect(writingEditorShell).toContain("h-dvh min-h-0 w-full");
-    expect(writingEditorShell).toContain("Publish changes");
+    expect(blogEditor).toContain("Publish changes");
     expect(writingEditorHeader).toContain("Add a short description");
     expect(blogEditor).toContain("/discard-draft");
     expect(blogEditor).toContain("/publish");
@@ -572,11 +592,15 @@ describe("admin and learner surfaces", () => {
     const course = read(
       "storefront/app/schools/[schoolId]/(loggedin)/dashboard/courses/[productId]/page.tsx",
     );
-    const embedViewer = read("storefront/components/embed-viewer.tsx");
+    const lessonPageRenderer = read("storefront/components/lesson-page-renderer.tsx");
+    const lessonCompletion = read("storefront/lib/lesson-completion.ts");
+    const quizAttempt = read("storefront/lib/quiz-attempt.ts");
     const lessonViewer = read("storefront/components/lesson-viewer.tsx");
-    const courseSpaceDiscussion = read("storefront/components/course-space-discussion.tsx");
+    const courseSpaceDiscussion = read(
+      "storefront/components/course-space-discussion.tsx",
+    );
     const proxy = read("storefront/app/api/[...path]/route.ts");
-    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${courseSpaceDiscussion}\n${proxy}`;
+    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${lessonCompletion}\n${quizAttempt}\n${courseSpaceDiscussion}\n${proxy}`;
     expect(publicPage).toContain("SitePageRenderer");
     expect(publicPage).toContain("SitePageSection");
     expect(publicPage).toContain("loadDataSlots");
@@ -589,7 +613,9 @@ describe("admin and learner surfaces", () => {
     expect(publicProductDetailPage).toContain('systemRoute="product"');
     expect(publicProductDetail).toContain("@frontlit/page-builder/primitives");
     expect(publicProductDetail).toContain("publicApiPath(schoolId, `/products/");
-    expect(publicProductDetail).toContain('publicApiPath(schoolId, "/checkout-sessions")');
+    expect(publicProductDetail).toContain(
+      'publicApiPath(schoolId, "/checkout-sessions")',
+    );
     expect(publicProductDetail).not.toContain("/api/v1/storefront/");
     expect(publicCheckout).toContain("/api/v1/learner/checkout-sessions/");
     expect(publicCheckout).toContain("Check status again");
@@ -666,9 +692,9 @@ describe("admin and learner surfaces", () => {
     expect(courseSpaceDiscussion).toContain("canonical space");
     expect(course).toContain("previewToken ?");
     expect(course).toContain("encodeURIComponent(previewToken)");
-    expect(embedViewer).toContain("SandboxedEmbed");
-    expect(embedViewer).toContain("youtube.com/embed");
-    expect(lessonViewer).toContain('type === "embed"');
+    // Pages render through the lesson profile; embeds use the package's sandboxed frame.
+    expect(lessonViewer).toContain("<LessonPageRenderer");
+    expect(lessonPageRenderer).toContain("profile={lessonProfile}");
     expect(surface).not.toContain("/api/auth/");
     expect(surface).not.toContain("/api/v1/schools");
     expect(surface).not.toContain("/v1/api-keys");

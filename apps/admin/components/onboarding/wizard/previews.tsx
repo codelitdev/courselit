@@ -18,9 +18,9 @@ import {
   Text2,
 } from "@frontlit/page-builder/primitives";
 import { generateThemeStyles } from "@frontlit/page-builder/renderer";
-import { Lock, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { createContext, type ReactNode, useContext, useId, useMemo } from "react";
-import { cn } from "@/lib/utils";
+import { PreviewBrowser } from "@/components/ui/codelit/onboarding-shell";
 import {
   addressPreview,
   buyCta,
@@ -31,29 +31,6 @@ import {
   offerTitleOr,
   type WizardData,
 } from "./flow";
-
-function Browser({
-  url,
-  path,
-  children,
-}: {
-  url: string;
-  path?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="flex h-10 items-center gap-2 border-b border-border bg-muted/50 px-3">
-        <span className="flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-0.5 text-xs text-muted-foreground">
-          <Lock aria-hidden className="size-3" />
-          <b className="truncate font-semibold text-foreground">{url}</b>
-          {path}
-        </span>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
-    </div>
-  );
-}
 
 /**
  * The preview is drawn with the real page-builder primitives and the selected
@@ -141,11 +118,11 @@ export function HomePreview({
   fullUrl: string;
 }) {
   return (
-    <Browser url={fullUrl}>
+    <PreviewBrowser url={fullUrl}>
       <ThemedSite themeId={data.brand.themeId}>
         <HomeBody data={data} schoolName={schoolName} />
       </ThemedSite>
-    </Browser>
+    </PreviewBrowser>
   );
 }
 
@@ -249,11 +226,11 @@ export function ProductPreview({
   fullUrl: string;
 }) {
   return (
-    <Browser url={fullUrl} path={offerSharePath(data)}>
+    <PreviewBrowser url={fullUrl} path={offerSharePath(data)}>
       <ThemedSite themeId={data.brand.themeId}>
         <ProductBody data={data} schoolName={schoolName} />
       </ThemedSite>
-    </Browser>
+    </PreviewBrowser>
   );
 }
 
@@ -358,7 +335,7 @@ export function WirePreview({ data, fullUrl }: { data: WizardData; fullUrl: stri
   }[data.offer ?? "course"];
   return (
     <>
-      <Browser url={fullUrl} path={wire.path}>
+      <PreviewBrowser url={fullUrl} path={wire.path}>
         <div className="flex flex-col gap-3 p-6">
           <span className="font-mono text-[11.5px] uppercase tracking-wide text-muted-foreground">
             {wire.cap}
@@ -379,7 +356,7 @@ export function WirePreview({ data, fullUrl }: { data: WizardData; fullUrl: stri
             </div>
           ))}
         </div>
-      </Browser>
+      </PreviewBrowser>
       <p className="text-[12.5px] text-muted-foreground">{wire.note}</p>
     </>
   );
@@ -399,19 +376,7 @@ export function UsesPreview({ name }: { name: string }) {
     </span>
   );
   return (
-    <div className="grid gap-4 xl:grid-cols-2 max-[1180px]:grid-cols-1">
-      <div className="flex flex-col gap-2">
-        <Label>In your emails</Label>
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>From {shown}</span>
-            <span>Today</span>
-          </div>
-          <div className="h-2.5 rounded-md bg-muted" />
-          <div className="h-2.5 w-[70%] rounded-md bg-muted" />
-          <div className="text-sm font-semibold">{shown}</div>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label>In your community</Label>
         <div className="flex gap-3 rounded-2xl border border-border bg-card p-4">
@@ -430,7 +395,7 @@ export function UsesPreview({ name }: { name: string }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 xl:col-span-2">
+      <div className="flex flex-col gap-2">
         <Label>On certificates</Label>
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-6 text-center">
           <b>Certificate of completion</b>
@@ -493,47 +458,5 @@ export function EmailPreview({
         Every marketing email gets this footer automatically.
       </p>
     </>
-  );
-}
-
-export function PreviewFrame({
-  title,
-  badge,
-  open,
-  onClose,
-  children,
-}: {
-  title: string;
-  badge?: ReactNode;
-  open: boolean;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <section
-      aria-label={title}
-      className={cn(
-        "flex min-h-0 flex-col gap-3 overflow-auto bg-muted/40 p-6",
-        open
-          ? "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-14 max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:border-border max-md:bg-background max-md:p-4 max-md:shadow-2xl"
-          : "max-md:hidden",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <b className="text-sm">{title}</b>
-        <span className="flex items-center gap-2">
-          {badge}
-          <button
-            type="button"
-            aria-label="Close preview"
-            onClick={onClose}
-            className="hidden size-9 place-items-center rounded-[var(--radius)] text-muted-foreground hover:bg-muted max-md:grid"
-          >
-            ×
-          </button>
-        </span>
-      </div>
-      {children}
-    </section>
   );
 }

@@ -7,6 +7,11 @@
       "order": 10
     },
     {
+      "folder": "migrate",
+      "name": "Migrate to CourseLit",
+      "order": 15
+    },
+    {
       "folder": "products",
       "name": "Courses and downloads",
       "order": 20
@@ -45,6 +50,11 @@
       "folder": "self-hosting",
       "name": "Self-hosting",
       "order": 90
+    },
+    {
+      "folder": "policies",
+      "name": "Policies",
+      "order": 95
     },
     {
       "folder": "legacy",

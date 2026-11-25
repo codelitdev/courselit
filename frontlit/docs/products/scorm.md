@@ -4,7 +4,13 @@ description: Add a SCORM 1.2 or 2004 package to a course as a lesson and learn h
 nav_order: 70
 ---
 
-A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it. The SCORM type is marked **Alpha** in the lesson editor.
+A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as an interactive module. CourseLit stores the package privately and remembers each learner's progress inside it.
+
+## Plan
+
+SCORM lessons come with the Business plan, and with a free trial. On a plan without them, such as Pro, the **SCORM** choice is disabled in the **Add a lesson** dialog. It carries a **Business** tag and the note "SCORM lessons come with the Business plan."
+
+SCORM lessons you already added keep playing. If you try to replace a package, you see "This lesson keeps playing. Replacing its package needs the Business plan." See [Billing and plan](/docs/settings/billing-and-plan).
 
 ## Before you begin
 
@@ -20,7 +26,7 @@ A **SCORM** lesson delivers a package created in a SCORM authoring tool, such as
 
 ### Create the lesson
 
-On the **Content** tab, select **Add lesson** in a section, choose the **SCORM** type, enter a **Title** and select **Save draft** or **Save and make live**. Under **SCORM package**, you see "Save the lesson first, then upload its SCORM package." CourseLit reopens the lesson after saving.
+On the **Content** tab, select **Add lesson** in a section, choose **SCORM** in the **Add a lesson** dialog, enter a **Title** and select **Save draft** or **Save and make live**. Under **SCORM package**, you see "Save the lesson first, then upload its SCORM package." CourseLit reopens the lesson after saving.
 
 </Step>
 
@@ -58,10 +64,10 @@ CourseLit tells you why the package was rejected:
 
 Learners see a **Enter SCORM content** button that opens the activity in a separate window. CourseLit saves their progress in the package, so they can leave and return.
 
-A learner cannot select **Mark complete** on a SCORM lesson until the package has reported progress, such as a completed status or recorded interaction. Learners see "Complete the SCORM activity before marking this lesson complete."
+A learner cannot select **Mark complete** on a SCORM lesson until the package has reported progress, such as a completed status or recorded interaction. Learners see "Finish the SCORM activity to complete this lesson."
 
 SCORM lessons count like any other lesson towards finishing a course. See [Certificates](/docs/products/certificates).
 
 ## Before you sell a SCORM course
 
-Because SCORM support is marked **Alpha**, test your package as a learner before you sell the course. [Invite yourself](/docs/products/customers) with a second email address and work through the lesson.
+Test your package as a learner before you sell the course. [Invite yourself](/docs/products/customers) with a second email address and work through the lesson.

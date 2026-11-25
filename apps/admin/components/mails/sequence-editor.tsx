@@ -17,7 +17,8 @@ import {
   type TriggerPickerChange,
 } from "@sendlit/email-blocks";
 import { marketingPreviewContext } from "@sendlit/email-blocks/footer";
-import { ArrowLeft, Pause, Pencil, Play, Save } from "lucide-react";
+import { PlatformTabs, PlatformTabsContent } from "@courselit/components-library";
+import { ArrowLeft, ChartColumn, Pause, Pencil, Play, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -61,6 +62,8 @@ import { isEmailNotReadyError, isMailingAddressRequiredError } from "@/lib/mail-
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { truncateText } from "@/lib/truncate";
 import { useContactFilterDefinitions } from "@/lib/use-contact-filter-definitions";
+
+type SequenceTab = "overview" | "edit";
 
 type School = {
   id: string;
@@ -333,6 +336,7 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   // Edits are kept until Save (or an action that needs them saved, like
   // Activate or Edit content); nothing is saved in the background.
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [tab, setTab] = useState<SequenceTab>("overview");
 
   const canWrite = hasSchoolPermission(school, "contacts:write");
   const mailingAddressMissing = useMailingAddressMissing(school?.id);
@@ -341,6 +345,11 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
   const unreadyReason = sequence ? sequenceReadinessMessage(sequence.emails) : null;
   const selectedEmail = sequence?.emails.find(
     (email) => email.emailId === selectedEmailId,
+  );
+  // Kept as one object so typing a subject doesn't re-render the preview.
+  const previewContext = useMemo(
+    () => marketingPreviewContext({ viewInBrowser: sequence?.viewInBrowser }),
+    [sequence?.viewInBrowser],
   );
 
   const triggers = useMemo<TriggerOption[]>(() => {
@@ -766,6 +775,8 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
           status: String(updated.status || (action === "start" ? "active" : "paused")),
         };
         replaceSequence(next);
+        // A sequence just activated has nothing to show yet; keep editing.
+        if (current.status === "draft") setTab("edit");
       }
     } catch (caught) {
       const message =
@@ -819,6 +830,325 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
       </div>
     );
   }
+
+  // Details, trigger and emails: the whole page for a draft, the Edit tab
+  // once the sequence has run.
+  const editor = (
+    <>
+      <section className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Details &amp; trigger</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose when the sequence starts.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => void saveChanges()}
+            disabled={!canWrite || saving || !hasUnsavedChanges}
+          >
+            <Save className="size-4" />
+            Save
+          </Button>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="sequence-title">Title</Label>
+              <span className="text-xs text-muted-foreground" aria-live="polite">
+                {sequence.title.length}/{MAX_SEQUENCE_TITLE_LENGTH}
+              </span>
+            </div>
+            <Input
+              id="sequence-title"
+              value={sequence.title}
+              maxLength={MAX_SEQUENCE_TITLE_LENGTH}
+              onChange={(event) => updateMetadata({ title: event.target.value })}
+              placeholder="Sequence name"
+              disabled={!canWrite}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <TriggerPicker
+              triggerType={sequence.triggerType}
+              triggerData={sequence.triggerData}
+              triggerFilter={sequence.triggerFilter ?? null}
+              triggers={triggers}
+              valueOptions={
+                sequence.triggerType === "event:custom" ||
+                sequence.triggerType === "contact:property_changed"
+                  ? {
+                      [sequence.triggerType]: sequence.triggerData
+                        ? [sequence.triggerData]
+                        : [],
+                    }
+                  : undefined
+              }
+              onChange={(value) =>
+                updateMetadata({
+                  triggerType: value.triggerType || null,
+                  triggerData: value.triggerData || null,
+                  triggerFilter: value.triggerFilter ?? null,
+                })
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Audience</Label>
+            <p className="text-xs text-muted-foreground">
+              Only subscribed contacts who match these filters enter the sequence.
+            </p>
+            <ContactFilterBuilder
+              value={sequence.filter}
+              filterDefinitions={filterDefinitions}
+              onChange={(filter) => updateMetadata({ filter })}
+              disabled={!canWrite}
+              defaultSegmentLabel="Everyone"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Exclude</Label>
+            <p className="text-xs text-muted-foreground">
+              Contacts who match these filters never enter, even if they match the
+              audience.
+            </p>
+            <ContactFilterBuilder
+              value={sequence.excludeFilter}
+              filterDefinitions={filterDefinitions}
+              onChange={(excludeFilter) => updateMetadata({ excludeFilter })}
+              disabled={!canWrite}
+              defaultSegmentLabel="Nobody"
+            />
+          </div>
+          {school ? (
+            <ViewInBrowserSetting
+              schoolId={school.id}
+              sequenceId={sequenceId}
+              checked={sequence.viewInBrowser}
+              disabled={!canWrite}
+              onSaved={(viewInBrowser) => {
+                // Saved on its own, so the sequence stays as clean or
+                // dirty as it was.
+                const current = sequenceRef.current;
+                if (current) replaceSequence({ ...current, viewInBrowser });
+              }}
+            />
+          ) : null}
+        </div>
+      </section>
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <section className="min-w-0 space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Emails</h2>
+          {canWrite ? (
+            <div className={saving ? "pointer-events-none opacity-60" : undefined}>
+              <SequenceEmailList
+                emails={sequence.emails}
+                emailsOrder={sequence.emailsOrder}
+                selectedEmailId={selectedEmailId}
+                onSelect={setSelectedEmailId}
+                onAdd={(templateId) => void addEmail(templateId)}
+                onDelete={(emailId) => void deleteEmail(emailId)}
+                onReorder={(emailsOrder) => updateMetadata({ emailsOrder })}
+                systemTemplates={systemTemplates}
+                templates={templates}
+                templatesLoading={loadingTemplates}
+                addButtonLabel="Add email"
+                dialogTitle="Choose an email template"
+                dialogDescription="Choose a template, then customize the email in the editor."
+                emptyMessage="Add an email to begin building this sequence."
+                formatDelay={formatDelay}
+                className="min-h-64"
+              />
+            </div>
+          ) : sequence.emails.length ? (
+            <div className="space-y-2">
+              {sequence.emails.map((email) => (
+                <button
+                  key={email.emailId}
+                  type="button"
+                  className="w-full rounded-lg border bg-card p-3 text-left"
+                  onClick={() => setSelectedEmailId(email.emailId)}
+                >
+                  <span className="block truncate text-sm font-medium">
+                    {email.subject}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {formatDelay(email.delayInMillis)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+              No emails.
+            </p>
+          )}
+        </section>
+
+        <section className="min-w-0 rounded-xl border bg-card shadow-sm">
+          {selectedEmail ? (
+            <>
+              <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                <h2 className="text-base font-semibold">Edit email</h2>
+                <div className="flex items-center gap-2">
+                  {school && canWrite ? (
+                    <SendTestEmailButton
+                      schoolId={school.id}
+                      sequenceId={sequenceId}
+                      emailId={selectedEmail.emailId}
+                      disabled={saving}
+                      beforeSend={saveChanges}
+                    />
+                  ) : null}
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => void saveChanges()}
+                    disabled={!canWrite || saving || !hasUnsavedChanges}
+                  >
+                    <Save className="size-4" />
+                    Save
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-5 p-4 sm:p-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sequence-email-subject">Subject</Label>
+                    <Input
+                      id="sequence-email-subject"
+                      value={selectedEmail.subject}
+                      onChange={(event) =>
+                        updateEmail(selectedEmail.emailId, {
+                          subject: event.target.value,
+                        })
+                      }
+                      placeholder="Your subject line"
+                      disabled={!canWrite}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 sm:justify-end">
+                    <Label htmlFor="sequence-email-published">Published</Label>
+                    <Switch
+                      id="sequence-email-published"
+                      checked={selectedEmail.published}
+                      onCheckedChange={(published) =>
+                        updateEmail(selectedEmail.emailId, { published })
+                      }
+                      disabled={!canWrite}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sequence-email-delay">Send after (days)</Label>
+                    <Input
+                      id="sequence-email-delay"
+                      type="number"
+                      min={0}
+                      step={0.25}
+                      value={Number(
+                        (selectedEmail.delayInMillis / 86_400_000).toFixed(2),
+                      )}
+                      onChange={(event) => {
+                        const days = Math.max(0, Number(event.target.value) || 0);
+                        updateEmail(selectedEmail.emailId, {
+                          delayInMillis: days * 86_400_000,
+                        });
+                      }}
+                      disabled={!canWrite}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>On send, tag contact</Label>
+                    <Select
+                      value={selectedEmail.actionType || "none"}
+                      onValueChange={(value) =>
+                        updateEmail(selectedEmail.emailId, {
+                          actionType:
+                            value === "none" ? null : (value as EmailActionType),
+                        })
+                      }
+                      disabled={!canWrite}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No action</SelectItem>
+                        <SelectItem value="tag:add">Add tag</SelectItem>
+                        <SelectItem value="tag:remove">Remove tag</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedEmail.actionType ? (
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>Tag name</Label>
+                      <TagEditor
+                        aria-label="Tag name"
+                        tags={
+                          typeof selectedEmail.actionData?.tag === "string"
+                            ? [selectedEmail.actionData.tag]
+                            : []
+                        }
+                        onAdd={(tag) =>
+                          updateEmail(selectedEmail.emailId, {
+                            actionData: { tag },
+                          })
+                        }
+                        onRemove={() =>
+                          updateEmail(selectedEmail.emailId, { actionData: {} })
+                        }
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2 border-t pt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label>Content</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void editEmailContent()}
+                      disabled={!canWrite || saving}
+                    >
+                      <Pencil className="size-4" />
+                      Edit content
+                    </Button>
+                  </div>
+                  <EmailPreview
+                    blocks={MARKETING_EMAIL_BLOCKS}
+                    renderContext={previewContext}
+                    content={selectedEmail.content}
+                    className="w-full"
+                    minHeight="420px"
+                    iframeTitle={`${selectedEmail.subject} preview`}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex min-h-72 items-center justify-center p-8 text-center">
+              <div className="max-w-sm space-y-2">
+                <h2 className="text-lg font-semibold">Build your sequence</h2>
+                <p className="text-sm text-muted-foreground">
+                  Add an email to the sequence, then select it here to edit its
+                  settings and content.
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex w-full min-w-0 flex-col bg-background">
@@ -889,329 +1219,34 @@ export function MailSequenceEditor({ sequenceId }: { sequenceId: string }) {
             </p>
           ) : null}
 
-          <section className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold">Details &amp; trigger</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose when the sequence starts.
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => void saveChanges()}
-                disabled={!canWrite || saving || !hasUnsavedChanges}
-              >
-                <Save className="size-4" />
-                Save
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <Label htmlFor="sequence-title">Title</Label>
-                  <span className="text-xs text-muted-foreground" aria-live="polite">
-                    {sequence.title.length}/{MAX_SEQUENCE_TITLE_LENGTH}
-                  </span>
-                </div>
-                <Input
-                  id="sequence-title"
-                  value={sequence.title}
-                  maxLength={MAX_SEQUENCE_TITLE_LENGTH}
-                  onChange={(event) => updateMetadata({ title: event.target.value })}
-                  placeholder="Sequence name"
-                  disabled={!canWrite}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <TriggerPicker
-                  triggerType={sequence.triggerType}
-                  triggerData={sequence.triggerData}
-                  triggerFilter={sequence.triggerFilter ?? null}
-                  triggers={triggers}
-                  valueOptions={
-                    sequence.triggerType === "event:custom" ||
-                    sequence.triggerType === "contact:property_changed"
-                      ? {
-                          [sequence.triggerType]: sequence.triggerData
-                            ? [sequence.triggerData]
-                            : [],
-                        }
-                      : undefined
-                  }
-                  onChange={(value) =>
-                    updateMetadata({
-                      triggerType: value.triggerType || null,
-                      triggerData: value.triggerData || null,
-                      triggerFilter: value.triggerFilter ?? null,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Audience</Label>
-                <p className="text-xs text-muted-foreground">
-                  Only subscribed contacts who match these filters enter the sequence.
-                </p>
-                <ContactFilterBuilder
-                  value={sequence.filter}
-                  filterDefinitions={filterDefinitions}
-                  onChange={(filter) => updateMetadata({ filter })}
-                  disabled={!canWrite}
-                  defaultSegmentLabel="Everyone"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Exclude</Label>
-                <p className="text-xs text-muted-foreground">
-                  Contacts who match these filters never enter, even if they match the
-                  audience.
-                </p>
-                <ContactFilterBuilder
-                  value={sequence.excludeFilter}
-                  filterDefinitions={filterDefinitions}
-                  onChange={(excludeFilter) => updateMetadata({ excludeFilter })}
-                  disabled={!canWrite}
-                  defaultSegmentLabel="Nobody"
-                />
-              </div>
-              {school ? (
-                <ViewInBrowserSetting
-                  schoolId={school.id}
-                  sequenceId={sequenceId}
-                  checked={sequence.viewInBrowser}
-                  disabled={!canWrite}
-                  onSaved={(viewInBrowser) => {
-                    // Saved on its own, so the sequence stays as clean or
-                    // dirty as it was.
-                    const current = sequenceRef.current;
-                    if (current) replaceSequence({ ...current, viewInBrowser });
-                  }}
-                />
-              ) : null}
-            </div>
-          </section>
-
-          {school && sequence.status !== "draft" ? (
-            <MailPerformance schoolId={school.id} sequenceId={sequenceId} />
-          ) : null}
-
-          {school && sequence.status !== "draft" ? (
-            <SequenceSubscribers schoolId={school.id} sequenceId={sequenceId} />
-          ) : null}
-
-          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-            <section className="min-w-0 space-y-2">
-              <h2 className="text-sm font-medium text-muted-foreground">Emails</h2>
-              {canWrite ? (
-                <div className={saving ? "pointer-events-none opacity-60" : undefined}>
-                  <SequenceEmailList
-                    emails={sequence.emails}
-                    emailsOrder={sequence.emailsOrder}
-                    selectedEmailId={selectedEmailId}
-                    onSelect={setSelectedEmailId}
-                    onAdd={(templateId) => void addEmail(templateId)}
-                    onDelete={(emailId) => void deleteEmail(emailId)}
-                    onReorder={(emailsOrder) => updateMetadata({ emailsOrder })}
-                    systemTemplates={systemTemplates}
-                    templates={templates}
-                    templatesLoading={loadingTemplates}
-                    addButtonLabel="Add email"
-                    dialogTitle="Choose an email template"
-                    dialogDescription="Choose a template, then customize the email in the editor."
-                    emptyMessage="Add an email to begin building this sequence."
-                    formatDelay={formatDelay}
-                    className="min-h-64"
-                  />
-                </div>
-              ) : sequence.emails.length ? (
-                <div className="space-y-2">
-                  {sequence.emails.map((email) => (
-                    <button
-                      key={email.emailId}
-                      type="button"
-                      className="w-full rounded-lg border bg-card p-3 text-left"
-                      onClick={() => setSelectedEmailId(email.emailId)}
-                    >
-                      <span className="block truncate text-sm font-medium">
-                        {email.subject}
-                      </span>
-                      <span className="mt-1 block text-xs text-muted-foreground">
-                        {formatDelay(email.delayInMillis)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
-                  No emails.
-                </p>
-              )}
-            </section>
-
-            <section className="min-w-0 rounded-xl border bg-card shadow-sm">
-              {selectedEmail ? (
-                <>
-                  <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                    <h2 className="text-base font-semibold">Edit email</h2>
-                    <div className="flex items-center gap-2">
-                      {school && canWrite ? (
-                        <SendTestEmailButton
-                          schoolId={school.id}
-                          sequenceId={sequenceId}
-                          emailId={selectedEmail.emailId}
-                          disabled={saving}
-                          beforeSend={saveChanges}
-                        />
-                      ) : null}
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => void saveChanges()}
-                        disabled={!canWrite || saving || !hasUnsavedChanges}
-                      >
-                        <Save className="size-4" />
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-5 p-4 sm:p-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="sequence-email-subject">Subject</Label>
-                        <Input
-                          id="sequence-email-subject"
-                          value={selectedEmail.subject}
-                          onChange={(event) =>
-                            updateEmail(selectedEmail.emailId, {
-                              subject: event.target.value,
-                            })
-                          }
-                          placeholder="Your subject line"
-                          disabled={!canWrite}
-                        />
-                      </div>
-                      <div className="flex items-center gap-3 sm:justify-end">
-                        <Label htmlFor="sequence-email-published">Published</Label>
-                        <Switch
-                          id="sequence-email-published"
-                          checked={selectedEmail.published}
-                          onCheckedChange={(published) =>
-                            updateEmail(selectedEmail.emailId, { published })
-                          }
-                          disabled={!canWrite}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="sequence-email-delay">Send after (days)</Label>
-                        <Input
-                          id="sequence-email-delay"
-                          type="number"
-                          min={0}
-                          step={0.25}
-                          value={Number(
-                            (selectedEmail.delayInMillis / 86_400_000).toFixed(2),
-                          )}
-                          onChange={(event) => {
-                            const days = Math.max(0, Number(event.target.value) || 0);
-                            updateEmail(selectedEmail.emailId, {
-                              delayInMillis: days * 86_400_000,
-                            });
-                          }}
-                          disabled={!canWrite}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label>On send, tag contact</Label>
-                        <Select
-                          value={selectedEmail.actionType || "none"}
-                          onValueChange={(value) =>
-                            updateEmail(selectedEmail.emailId, {
-                              actionType:
-                                value === "none" ? null : (value as EmailActionType),
-                            })
-                          }
-                          disabled={!canWrite}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No action</SelectItem>
-                            <SelectItem value="tag:add">Add tag</SelectItem>
-                            <SelectItem value="tag:remove">Remove tag</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {selectedEmail.actionType ? (
-                        <div className="space-y-1.5 sm:col-span-2">
-                          <Label>Tag name</Label>
-                          <TagEditor
-                            aria-label="Tag name"
-                            tags={
-                              typeof selectedEmail.actionData?.tag === "string"
-                                ? [selectedEmail.actionData.tag]
-                                : []
-                            }
-                            onAdd={(tag) =>
-                              updateEmail(selectedEmail.emailId, {
-                                actionData: { tag },
-                              })
-                            }
-                            onRemove={() =>
-                              updateEmail(selectedEmail.emailId, { actionData: {} })
-                            }
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2 border-t pt-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <Label>Content</Label>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void editEmailContent()}
-                          disabled={!canWrite || saving}
-                        >
-                          <Pencil className="size-4" />
-                          Edit content
-                        </Button>
-                      </div>
-                      <EmailPreview
-                        blocks={MARKETING_EMAIL_BLOCKS}
-                        renderContext={marketingPreviewContext({
-                          viewInBrowser: sequence.viewInBrowser,
-                        })}
-                        content={selectedEmail.content}
-                        className="w-full"
-                        minHeight="420px"
-                        iframeTitle={`${selectedEmail.subject} preview`}
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="flex min-h-72 items-center justify-center p-8 text-center">
-                  <div className="max-w-sm space-y-2">
-                    <h2 className="text-lg font-semibold">Build your sequence</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Add an email to the sequence, then select it here to edit its
-                      settings and content.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </section>
-          </div>
+          {sequence.status === "draft" ? (
+            editor
+          ) : (
+            // Once it has run, the sequence opens on how it is doing; editing
+            // sits on its own tab. Both stay mounted, so unsaved edits survive
+            // switching tabs.
+            <PlatformTabs
+              value={tab}
+              onValueChange={(value) => setTab(value as SequenceTab)}
+              ariaLabel="Sequence"
+              items={[
+                { value: "overview", label: "Overview", icon: <ChartColumn className="size-4" /> },
+                { value: "edit", label: "Edit", icon: <Pencil className="size-4" /> },
+              ]}
+            >
+              <PlatformTabsContent value="overview" className="space-y-6 pt-4">
+                {school ? (
+                  <>
+                    <MailPerformance schoolId={school.id} sequenceId={sequenceId} />
+                    <SequenceSubscribers schoolId={school.id} sequenceId={sequenceId} />
+                  </>
+                ) : null}
+              </PlatformTabsContent>
+              <PlatformTabsContent value="edit" className="space-y-6 pt-4">
+                {editor}
+              </PlatformTabsContent>
+            </PlatformTabs>
+          )}
         </div>
       </main>
 

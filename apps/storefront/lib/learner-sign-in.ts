@@ -1,4 +1,5 @@
 import { CAPTCHA_ERROR_MESSAGE, captchaHeaders } from "@courselit/page-blocks/captcha";
+import { SignInRefusedError, SSO_REQUIRED_MESSAGE } from "@/lib/login-methods";
 import { writeSignedInHint } from "@/lib/header-account";
 import { learnerHeaders } from "@/lib/school";
 
@@ -14,6 +15,15 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
   const reason = body?.details?.reason;
   if (reason === "captcha_required" || reason === "captcha_failed") {
     return CAPTCHA_ERROR_MESSAGE;
+  }
+  if (reason === "sso_required") {
+    throw new SignInRefusedError(reason, SSO_REQUIRED_MESSAGE);
+  }
+  if (reason === "sign_in_method_disabled") {
+    throw new SignInRefusedError(
+      reason,
+      "Email sign-in isn't available for this school.",
+    );
   }
   if (body?.code === "rate_limited") {
     return "Please wait a moment before asking for another code.";
@@ -71,6 +81,11 @@ export async function saveLearnerName(name: string): Promise<void> {
 /** Leave for Google sign-in; the learner comes back to `next` on this site. */
 export function signInWithGoogle(next: string) {
   window.location.assign(`/auth/google?next=${encodeURIComponent(next)}`);
+}
+
+/** Leave for single sign-on; the learner comes back to `next` on this site. */
+export function signInWithSso(next: string) {
+  window.location.assign(`/auth/sso?next=${encodeURIComponent(next)}`);
 }
 
 /** End the school session on this site. */

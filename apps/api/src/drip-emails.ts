@@ -13,10 +13,32 @@ import { sectionUnlockAt } from "./catalog.js";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
 import {
+  isSendLitQuotaExhausted,
   type SendLitConfig,
   sendLitConfig,
   sendSendLitTransactionalEmail,
 } from "./sendlit-client.js";
+
+/**
+ * How long drip waits after SendLit refuses a send for quota. SendLit gives no
+ * retry time, so drip checks back hourly; the quota sync clears the pause as
+ * soon as it raises the quota (an upgrade, or a new month's allowance).
+ */
+export const DRIP_QUOTA_PAUSE_MS = 60 * 60 * 1000;
+
+async function marketingPausedUntil(db: AppDb, schoolId: string): Promise<Date | null> {
+  const [row] = await db
+    .select({ until: schema.schoolIntegrations.marketingPausedUntil })
+    .from(schema.schoolIntegrations)
+    .where(
+      and(
+        eq(schema.schoolIntegrations.schoolId, schoolId),
+        eq(schema.schoolIntegrations.provider, "sendlit"),
+      ),
+    )
+    .limit(1);
+  return row?.until ?? null;
+}
 import { getSendLitAuthForSchool } from "./sendlit-service.js";
 import type { AppDb } from "./types.js";
 
@@ -155,7 +177,7 @@ export async function processDripEmails(
   db: AppDb,
   clock: Clock,
   options: {
-    logger?: Pick<Logger, "warn">;
+    logger?: Pick<Logger, "warn" | "info">;
     config?: SendLitConfig;
     limit?: number;
     sendEmail?: typeof sendSendLitTransactionalEmail;
@@ -250,6 +272,10 @@ export async function processDripEmails(
     });
     if (due.length === 0) continue;
 
+    // Out of marketing quota: wait quietly until the pause ends.
+    const pausedUntil = await marketingPausedUntil(db, section.schoolId);
+    if (pausedUntil && pausedUntil > now) continue;
+
     const auth = await getSendLitAuthForSchool(db, section.schoolId, clock, config);
     if (!auth.ok) {
       options.logger?.warn(
@@ -297,6 +323,24 @@ export async function processDripEmails(
         await db
           .delete(schema.sectionDripEmailDeliveries)
           .where(eq(schema.sectionDripEmailDeliveries.id, claimed[0]!.id));
+        if (isSendLitQuotaExhausted(error)) {
+          // The school is out of marketing quota (a trial's is 0). Pause it
+          // instead of failing every learner on every run.
+          await db
+            .update(schema.schoolIntegrations)
+            .set({ marketingPausedUntil: new Date(now.getTime() + DRIP_QUOTA_PAUSE_MS) })
+            .where(
+              and(
+                eq(schema.schoolIntegrations.schoolId, section.schoolId),
+                eq(schema.schoolIntegrations.provider, "sendlit"),
+              ),
+            );
+          options.logger?.info(
+            { schoolId: section.schoolId, sectionId: section.publicId },
+            "drip emails paused: marketing quota used up",
+          );
+          break;
+        }
         options.logger?.warn(
           {
             schoolId: section.schoolId,

@@ -151,6 +151,11 @@ describe.serial("legacy community migration", () => {
                 title: "GIF",
                 url: "https://media1.giphy.com/media/legacy/200.gif",
               },
+              {
+                type: "youtube",
+                title: "YouTube Video",
+                url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+              },
             ],
           },
         ],
@@ -231,6 +236,9 @@ describe.serial("legacy community migration", () => {
       .where(eq(schema.communityPosts.publicId, "legacy-community-post-2"));
     expect(questionPost?.gifUrls).toEqual([
       "https://media1.giphy.com/media/legacy/200.gif",
+    ]);
+    expect(questionPost?.videoUrls).toEqual([
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     ]);
     const comments = await runtime.db
       .select()

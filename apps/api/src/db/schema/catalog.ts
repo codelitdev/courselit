@@ -136,12 +136,23 @@ export const lessons = pgTable(
       onDelete: "set null",
     }),
     title: text("title").notNull(),
-    type: text("type")
-      .$type<"text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm">()
-      .notNull()
-      .default("text"),
+    type: text("type").$type<"page" | "scorm" | "file">().notNull().default("page"),
+    /** What learners read: the published page, or a SCORM lesson's package details. */
     content: jsonb("content").$type<Record<string, unknown>>().notNull().default({}),
-    downloadable: boolean("downloadable").notNull().default(false),
+    /**
+     * A page's unpublished edits. Author writes land here; publishing copies
+     * them to `content` and clears this. Null when there is nothing pending,
+     * and always null for SCORM and file lessons.
+     */
+    draftContent: jsonb("draft_content").$type<Record<string, unknown>>(),
+    /**
+     * Increases with every change to the content authors edit (the draft, or
+     * the published content without one); writes must name the one they are
+     * based on.
+     */
+    contentVersion: integer("content_version").notNull().default(1),
+    /** When `content` was last replaced: on create and on each content publish. */
+    contentPublishedAt: timestamp("content_published_at", { withTimezone: true }),
     requiresEnrollment: boolean("requires_enrollment").notNull().default(true),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
     position: integer("position").notNull().default(1),
@@ -248,9 +259,11 @@ export const lessonEvaluations = pgTable(
     lessonId: uuid("lesson_id")
       .notNull()
       .references(() => lessons.id, { onDelete: "cascade" }),
+    /** The quiz the attempt answered; a new quiz ID starts with no attempts. */
+    quizId: text("quiz_id").notNull(),
     pass: boolean("pass").notNull(),
     score: real("score"),
-    requiresPassingGrade: boolean("requires_passing_grade").notNull(),
+    /** The pass mark at the time of the attempt; null when there was none. */
     passingGrade: real("passing_grade"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },

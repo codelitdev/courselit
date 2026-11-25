@@ -1,6 +1,10 @@
 import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
+// CodeLit text input — mirrors `.cl-input`. Focus shows an accent-wash ring;
+// set `aria-invalid` for the destructive error state. Pair with `label` and a
+// helper/error line for a full field.
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

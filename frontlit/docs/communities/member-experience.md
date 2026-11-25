@@ -28,9 +28,27 @@ Members use the same dashboard as learners, see [The learner dashboard](/docs/le
 
 ## Posting
 
-Members who can post in a space see a **Write something…** box. It opens a dialog where they pick the space, add a title, write the post and optionally attach files, add an image or video, or insert a GIF. They click **Post** to publish. Posts use a rich text editor.
+Members who can post in a space see a **Write something…** box. It opens a dialog where they pick the space, add a title and write the post. Below the editor they can optionally:
+
+- **Upload a file** (paperclip): an image, video or PDF from their device or their media.
+- **Add a YouTube video**: paste a YouTube link. The video plays inside the post.
+- **Add a GIF**: pick one from GIF search, when it is turned on.
+
+Hovering over each button names it. They click **Post** to publish. Posts use a rich text editor.
 
 Spaces where **Who can post** is set to **Admin** show posts but no composer to members.
+
+## Uploading files
+
+Learners can upload files in your communities only if they are active members who can post. The rules are:
+
+- Images, video, audio and PDFs only.
+- Uploads are private.
+- At most 20 uploads an hour per learner.
+- An upload that no post uses is deleted after a day.
+- During a free trial, which has limited storage, learners together can use at most 25% of it, and none once the school is past 90%.
+
+When an upload is refused, the learner sees "This upload can't be added right now. Try a smaller file." Set the size limit for each learner in [Storage](/docs/settings/storage).
 
 ## Reacting and replying
 

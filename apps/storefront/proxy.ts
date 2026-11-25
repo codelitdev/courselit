@@ -1,5 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isNegotiablePath, markdownSourcePath, prefersMarkdown } from "@frontlit/site-seo";
 import { DEV_SCHOOL_COOKIE, resolveSchoolForRequest } from "./lib/school-resolution";
+
+/** Route segment, under `/schools/[schoolId]`, of the Markdown handler
+ * (lib/agent-markdown.ts). */
+const MARKDOWN_ROUTE = "agent-markdown";
+
+/** Learner-only and transactional pages: no Markdown version. */
+const NON_NEGOTIABLE_PATHS = [
+  "/dashboard",
+  "/checkout",
+  "/auth",
+  "/login",
+  "/join",
+  "/course",
+  "/certificates",
+  `/${MARKDOWN_ROUTE}`,
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,6 +36,18 @@ export async function proxy(request: NextRequest) {
     });
   }
 
+  if (resolution.status === "offline") {
+    // The school exists but isn't live: no plan yet, or suspended. Say nothing
+    // more about why.
+    return new NextResponse(
+      '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>This site isn\'t available</title></head><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#374151"><p>This site isn\'t available.</p></body></html>',
+      {
+        status: 503,
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+      },
+    );
+  }
+
   // Unknown hosts do not map to any school; refuse rather than falling through.
   if (resolution.status === "unknown") {
     return new NextResponse("School Not Found", { status: 404 });
@@ -28,12 +57,24 @@ export async function proxy(request: NextRequest) {
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname = `/schools/${schoolId}${pathname}`;
 
+  // Markdown for AI agents: `<path>.md`, or `Accept: text/markdown` on a
+  // page URL (which then varies on Accept).
+  const mdPath = markdownSourcePath(pathname);
+  const markdownByAccept =
+    isNegotiablePath(pathname, NON_NEGOTIABLE_PATHS) &&
+    prefersMarkdown(request.headers.get("accept"));
+  if (mdPath !== null || markdownByAccept) {
+    const source = mdPath ?? pathname;
+    rewriteUrl.pathname = `/schools/${schoolId}/${MARKDOWN_ROUTE}${source === "/" ? "" : source}`;
+  }
+
   const headers = new Headers(request.headers);
   headers.delete("x-tenant-id");
   headers.set("x-school-id", schoolId);
 
   const response = NextResponse.rewrite(rewriteUrl, { request: { headers } });
   response.headers.set("x-school-id", schoolId);
+  if (markdownByAccept) response.headers.set("Vary", "Accept");
   if (resolution.persistDevSchool) {
     // Local development only: remember `?school=` for later navigations on
     // the bare loopback host (the cookie is host-only).

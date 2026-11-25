@@ -7,7 +7,7 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import { and, eq, gt, isNull } from "drizzle-orm";
-import { getProduct, type ProductDetailDto } from "./catalog.js";
+import { getProduct, type LearnerProductDetailDto } from "./catalog.js";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
 import type { AppDb } from "./types.js";
@@ -103,7 +103,7 @@ export async function readPreviewProduct(
   input: { token: string; productPublicId: string },
   clock: Clock,
 ): Promise<
-  { ok: true; value: ProductDetailDto } | { ok: false; error: PlatformError }
+  { ok: true; value: LearnerProductDetailDto } | { ok: false; error: PlatformError }
 > {
   const token = input.token.trim();
   if (!token) return { ok: false, error: createPlatformError("unauthenticated") };

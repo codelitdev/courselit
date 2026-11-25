@@ -338,9 +338,16 @@ body:has([data-full-screen-editor]) {
   box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
-.tiptap-editor.blog-writing-editor:focus-within {
+.tiptap-editor.writing-editor:focus-within {
   border-color: transparent;
   box-shadow: none;
+}
+
+/* Full-screen writing editors: no frame, and the page text lines up with
+   the title heading above it (WritingEditorDocumentHeader's px-6 sm:px-10). */
+.tiptap-editor.writing-editor {
+  border: 0;
+  border-radius: 0;
 }
 
 .tiptap-editor .ProseMirror {
@@ -352,6 +359,16 @@ body:has([data-full-screen-editor]) {
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--foreground);
+}
+
+.tiptap-editor.writing-editor .ProseMirror {
+  padding: 0 1.5rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .tiptap-editor.writing-editor .ProseMirror {
+    padding-inline: 2.5rem;
+  }
 }
 
 .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before,

@@ -22,6 +22,7 @@ import {
 import { apiKeyFailureLimiterFor, clientKeyFromHeaders } from "./api-key-throttle.js";
 import type { AdminAuth } from "./better-auth.js";
 import { adminSessionCookieName } from "./options.js";
+import { isShadowUser } from "../shadow-users.js";
 
 export type AuthRuntime = {
   db: AppDb;
@@ -70,6 +71,11 @@ export async function authenticateHttpRequest(
         error: createPlatformError("unauthenticated"),
       };
     }
+    // Second layer behind Better Auth's session hook: a shadow user (made
+    // only to own an SSO school account) never acts as a platform user.
+    if (await isShadowUser(deps.db, resolved.identity.subject)) {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
+    }
     return {
       kind: "authenticated",
       principalId: resolved.identity.subject,
@@ -96,6 +102,9 @@ export async function authenticateHttpRequest(
         kind: "rejected",
         error: createPlatformError("unauthenticated"),
       };
+    }
+    if (await isShadowUser(deps.db, resolved.identity.subject)) {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
     }
     return {
       kind: "authenticated",
@@ -144,6 +153,9 @@ export async function authenticateMcpRequest(
         kind: "rejected",
         error: createPlatformError("unauthenticated"),
       };
+    }
+    if (await isShadowUser(deps.db, resolved.identity.subject)) {
+      return { kind: "rejected", error: createPlatformError("unauthenticated") };
     }
     return {
       kind: "authenticated",

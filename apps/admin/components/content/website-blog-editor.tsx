@@ -24,12 +24,13 @@ import {
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
+import { storefrontUrl } from "@/lib/storefront-url";
 import {
+  contentStatusLabel,
+  resolveEditorRedirect,
   type WebsiteBlog,
   websiteRequest,
-  resolveEditorRedirect,
 } from "@/lib/website-content";
-import { storefrontUrl } from "@/lib/storefront-url";
 
 type BlogDraft = {
   title: string;
@@ -292,15 +293,39 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
           backLabel="Blogs"
           contextLabel="Blog"
           title={draft.title || "Untitled blog"}
-          status={blog.status}
-          updatedAt={blog.updatedAt}
-          saving={saving}
-          publishing={publishing}
+          statusLabel={contentStatusLabel(blog.status)}
+          saveStatus={
+            saving ? { kind: "saving" } : { kind: "saved", at: blog.updatedAt ?? null }
+          }
+          preview={{
+            label: "View live blog post",
+            href: liveBlogUrl,
+            unavailableLabel: "Publish this blog before viewing it",
+          }}
+          actions={
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => void handleDiscard()}
+                disabled={publishing || saving || blog.status === "published"}
+                className="hidden sm:inline-flex"
+              >
+                Discard draft
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void handlePublish()}
+                disabled={publishing || saving || blog.status === "published"}
+              >
+                {publishing ? "Publishing…" : "Publish changes"}
+              </Button>
+            </>
+          }
           settingsOpen={settingsOpen}
           onSettingsOpenChange={setSettingsOpen}
-          onPublish={() => void handlePublish()}
-          onDiscardDraft={() => void handleDiscard()}
-          previewHref={liveBlogUrl}
           settings={
             <div className="space-y-7">
               <div>
@@ -458,7 +483,7 @@ export function WebsiteBlogEditor({ blogId }: { blogId: string }) {
                 initialContent={blog.draftContent}
                 onChange={(content) => void handleContentChange(content)}
                 placeholder="Start writing…"
-                className="blog-writing-editor h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
+                className="writing-editor h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
                 contentClassName="max-w-[46rem]"
                 editorClassName="writing-editor-content min-h-[420px]"
                 beforeContent={

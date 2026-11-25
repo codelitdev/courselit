@@ -22,7 +22,7 @@ On the **Content** tab, select the lesson's title. Or create a new lesson with *
 
 ### Switch on Free preview
 
-Turn on **Free preview**. Its description reads "Anyone can open this lesson from the sales page without joining." Then save the lesson.
+Open **Lesson settings** with the settings icon in the top bar and turn on **Free preview**. Its description reads "Anyone can open this lesson from the sales page without joining." The change saves right away.
 
 </Step>
 
@@ -38,6 +38,6 @@ A free preview lesson must still be a **live** lesson in a **live** course. A dr
 
 ## Limits
 
-- **Quiz** lessons cannot be free previews. The **Free preview** switch is not shown for quizzes.
+- A lesson with a [quiz](/docs/products/quizzes) can't be a free preview, because grading needs a learner with access. If you try to publish such a lesson, CourseLit asks you to turn off free preview or remove the quiz.
 - Digital downloads do not have free preview lessons.
 - A lesson inside a section with a [drip schedule](/docs/products/drip-schedules) stays locked, even when it is a free preview. Visitors cannot open it, and learners can open it once the section unlocks for them.

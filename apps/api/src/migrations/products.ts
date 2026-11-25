@@ -4,9 +4,11 @@ import {
   type Clock,
   uuidv7,
 } from "@codelitdev/platform";
+import { normalizeQuiz } from "@courselit/api-contract/quiz";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
+import { importMainLesson, type LessonImportWarning, type MainLessonType } from "./lesson-pages.js";
 
 const SOURCE_SYSTEM = "courselit-mongo";
 const COURSE_COLLECTION = "courses";
@@ -55,9 +57,50 @@ export type ProductImportRejection = {
     | "invalid_lesson"
     | "invalid_lesson_type"
     | "invalid_lesson_content"
+    | "invalid_quiz_content"
     | "lesson_group_missing"
     | "media_requires_medialit";
   details: Record<string, string | number | boolean | null>;
+};
+
+/**
+ * Main stores a quiz as `{ questions: [{ text, options: [{ text,
+ * correctAnswer }] }], requiresPassingGrade, passingGrade }`. The rewrite's
+ * quiz has IDs and a nullable pass mark, so main's ungraded quizzes (whose
+ * attempts always passed) import with no pass mark. IDs are generated.
+ */
+export function quizFromMainContent(content: JsonRecord) {
+  const questions = Array.isArray(content.questions)
+    ? content.questions.map((question) => {
+        const record = asRecord(question);
+        if (!record) return question;
+        return {
+          text: record.text,
+          options: Array.isArray(record.options)
+            ? record.options.map((option) => {
+                const optionRecord = asRecord(option);
+                return optionRecord
+                  ? { text: optionRecord.text, correct: optionRecord.correctAnswer === true }
+                  : option;
+              })
+            : record.options,
+        };
+      })
+    : content.questions;
+  return normalizeQuiz({
+    questions,
+    passingGrade:
+      content.requiresPassingGrade === true && typeof content.passingGrade === "number"
+        ? content.passingGrade
+        : null,
+  });
+}
+
+/** Something the import changed in a lesson it still imported (section 8). */
+export type ProductImportWarning = {
+  sourceId: string;
+  lessonId: string;
+  code: LessonImportWarning;
 };
 
 export type ProductImportResult = {
@@ -68,6 +111,7 @@ export type ProductImportResult = {
   counts: ProductImportCounts;
   rejectionByCode: Record<string, number>;
   rejections: ProductImportRejection[];
+  warnings: ProductImportWarning[];
 };
 
 export type LegacyProductExport = {
@@ -93,9 +137,9 @@ type NormalizedGroup = {
 type NormalizedLesson = {
   sourceId: string;
   title: string;
-  type: "text" | "video" | "audio" | "pdf" | "file" | "embed" | "quiz" | "scorm";
+  type: "page" | "scorm" | "file";
   content: Record<string, unknown>;
-  downloadable: boolean;
+  warnings: LessonImportWarning[];
   requiresEnrollment: boolean;
   status: "draft" | "published";
   groupId: string;
@@ -395,16 +439,44 @@ function normalizeProduct(
         error: rejection(sourceId, "invalid_lesson_type", { lessonId, value: type ?? null }),
       };
     }
-    const content =
+    const sourceContent =
       lesson.content === undefined || lesson.content === null ? {} : asRecord(lesson.content);
-    if (!content) {
+    if (!sourceContent) {
       return {
         ok: false,
         error: rejection(sourceId, "invalid_lesson_content", { lessonId }),
       };
     }
+    let quiz: Extract<ReturnType<typeof quizFromMainContent>, { ok: true }>["value"] | undefined;
+    if (type === "quiz") {
+      const result = quizFromMainContent(sourceContent);
+      if (!result.ok) {
+        return {
+          ok: false,
+          error: rejection(sourceId, "invalid_quiz_content", {
+            lessonId,
+            reason: result.reason,
+            path: result.path,
+          }),
+        };
+      }
+      quiz = result.value;
+    }
     if (lesson.media) {
       return { ok: false, error: rejection(sourceId, "media_requires_medialit", { lessonId }) };
+    }
+    const imported = importMainLesson({
+      type: type as MainLessonType,
+      content: sourceContent,
+      downloadable: booleanOrDefault(lesson.downloadable, false),
+      productKind: sourceType,
+      quiz,
+    });
+    if (!imported) {
+      return {
+        ok: false,
+        error: rejection(sourceId, "invalid_lesson_content", { lessonId }),
+      };
     }
     const groupId = stringValue(lesson.groupId);
     if (!groupId || (groups.length > 0 && !groupIds.has(groupId))) {
@@ -413,9 +485,9 @@ function normalizeProduct(
     normalizedLessons.push({
       sourceId: lessonId,
       title: stringValue(lesson.title) ?? "",
-      type: type as NormalizedLesson["type"],
-      content,
-      downloadable: booleanOrDefault(lesson.downloadable, false),
+      type: imported.type,
+      content: imported.content,
+      warnings: imported.warnings,
       requiresEnrollment: booleanOrDefault(lesson.requiresEnrollment, true),
       status: booleanOrDefault(lesson.published, false) ? "published" : "draft",
       groupId,
@@ -560,6 +632,7 @@ export async function importLegacyProducts(
   };
   const rejectionByCode: Record<string, number> = {};
   const rejections: ProductImportRejection[] = [];
+  const warnings: ProductImportWarning[] = [];
   const lessonsByCourse = lessonRecordsForCourse(input.lessons ?? []);
   const sourceIds = new Set<string>();
 
@@ -688,6 +761,11 @@ export async function importLegacyProducts(
         continue;
       }
       counts.ready += 1;
+      for (const lesson of product.lessons) {
+        for (const code of lesson.warnings) {
+          warnings.push({ sourceId: product.sourceId, lessonId: lesson.sourceId, code });
+        }
+      }
       if (mode === "dry_run") continue;
 
       await db.transaction(async (tx) => {
@@ -759,8 +837,9 @@ export async function importLegacyProducts(
             sectionId,
             title: lesson.title,
             type: lesson.type,
+            // Imported content is what learners read on main: published, no draft.
             content: lesson.content,
-            downloadable: lesson.downloadable,
+            contentPublishedAt: product.updatedAt,
             requiresEnrollment: lesson.requiresEnrollment,
             status: lesson.status,
             position: lesson.position,
@@ -851,5 +930,6 @@ export async function importLegacyProducts(
     counts,
     rejectionByCode,
     rejections,
+    warnings,
   };
 }
