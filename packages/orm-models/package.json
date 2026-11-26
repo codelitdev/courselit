@@ -47,6 +47,6 @@
         "@courselit/email-editor": "workspace:^",
         "@courselit/page-models": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "mongoose": "^8.22.1"
+        "mongoose": "^8.24.7"
     }
 }
