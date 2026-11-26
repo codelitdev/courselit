@@ -10,6 +10,7 @@ import { signInLearner } from "./test-learner-auth.js";
 import {
   LEARNER_UPLOADS_PER_HOUR,
   storageRefusal,
+  storageUsed,
   sweepUnusedLearnerUploads,
   UNUSED_LEARNER_UPLOAD_MS,
 } from "./storage.js";
@@ -65,9 +66,11 @@ describe("isLearnerCommunityMime", () => {
   });
 });
 
-async function setup() {
+type ConvertOnSeal = ConstructorParameters<typeof MemoryMediaLitClient>[1];
+
+async function setup(mediaLitOptions?: ConvertOnSeal) {
   const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-  const mediaLit = new MemoryMediaLitClient(() => clock.now());
+  const mediaLit = new MemoryMediaLitClient(() => clock.now(), mediaLitOptions);
   const runtime = await createPgliteRuntime({ clock, billingMode: "cloud", mediaLit });
   const world = await seedWorld(runtime, clock);
   // School B gets a trial, with the trial's storage (PLAN_TRIAL_STORAGE).
@@ -222,6 +225,145 @@ const learnerAuthorize = (
     headers,
     body: { fileName: "a.png", mimeType, byteSize, accessPolicy: "public" },
   });
+
+/** MediaLit v0.8.0 with WebP on: the seal turns a PNG into a WebP of `bytes(original)`. */
+const webpOnSeal = (bytes: (original: number) => number): ConvertOnSeal => ({
+  convertOnSeal: (original) =>
+    original.mimeType === "image/png"
+      ? { fileName: "main.webp", mimeType: "image/webp", byteSize: bytes(original.byteSize) }
+      : null,
+});
+
+const authorizePng = (t: Setup, headers: Record<string, string>, byteSize: number) =>
+  dispatch(t.runtime, {
+    method: "POST",
+    path: "/v1/media/upload-authorizations",
+    headers,
+    body: {
+      fileName: "photo.png",
+      mimeType: "image/png",
+      byteSize,
+      purpose: "product_content",
+      accessPolicy: "public",
+    },
+  });
+
+const fillSchoolB = (t: Setup, byteSize: number) =>
+  t.runtime.db.insert(schema.media).values({
+    id: uuidv7(t.clock),
+    publicId: "med_filler",
+    schoolId: t.world.schoolB.id,
+    mediaLitId: "asset_filler",
+    canonicalUrl: "https://media.test/assets/filler",
+    fileName: "filler.mp4",
+    mimeType: "video/mp4",
+    byteSize,
+    kind: "video",
+    createdAt: t.clock.now(),
+    updatedAt: t.clock.now(),
+  });
+
+const schoolBRows = (t: Setup) =>
+  t.runtime.db
+    .select({
+      mediaLitId: schema.media.mediaLitId,
+      fileName: schema.media.fileName,
+      mimeType: schema.media.mimeType,
+      byteSize: schema.media.byteSize,
+    })
+    .from(schema.media)
+    .where(eq(schema.media.schoolId, t.world.schoolB.id));
+
+describe("storage counts the sealed size (MediaLit converts to WebP at seal)", () => {
+  it("stores and counts the smaller WebP, not the original", async () => {
+    const t = await setup(webpOnSeal((bytes) => Math.round(bytes / 4)));
+    try {
+      const upload = await authorizePng(t, t.ownerB, 8 * MB);
+      expect(upload.status).toBe(201);
+      const saved = await finalize(t, t.ownerB, uploadIdOf(upload.body));
+      expect(saved.status).toBe(201);
+      expect(saved.body).toMatchObject({
+        fileName: "main.webp",
+        mimeType: "image/webp",
+        byteSize: 2 * MB,
+        kind: "image",
+      });
+      const rows = await schoolBRows(t);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        fileName: "main.webp",
+        mimeType: "image/webp",
+        byteSize: 2 * MB,
+      });
+      // The reservation and the finalize hold are gone; only the WebP counts.
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, t.clock.now())).total).toBe(
+        2 * MB,
+      );
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
+  it("keeps a WebP larger than the original when it still fits, and counts it", async () => {
+    const t = await setup(webpOnSeal((bytes) => bytes * 2));
+    try {
+      const upload = await authorizePng(t, t.ownerB, 4 * MB);
+      const saved = await finalize(t, t.ownerB, uploadIdOf(upload.body));
+      expect(saved.status).toBe(201);
+      expect(saved.body).toMatchObject({ mimeType: "image/webp", byteSize: 8 * MB });
+      expect((await schoolBRows(t))[0]?.byteSize).toBe(8 * MB);
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, t.clock.now())).total).toBe(
+        8 * MB,
+      );
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
+  it("refuses and deletes a sealed WebP that grew past the limit", async () => {
+    const t = await setup(webpOnSeal(() => trialShare(0.7)));
+    try {
+      await fillSchoolB(t, trialShare(0.4));
+      // The original fits (0.4 + 0.5), so it is admitted and sealed.
+      const upload = await authorizePng(t, t.ownerB, trialShare(0.5));
+      expect(upload.status).toBe(201);
+      const refused = await finalize(t, t.ownerB, uploadIdOf(upload.body));
+      expect(refused.status).toBe(403);
+      expect(reason(refused.body)).toBe("plan_limit_reached");
+      // No row for it, and MediaLit no longer has the sealed asset.
+      const rows = await schoolBRows(t);
+      expect(rows.map((row) => row.mediaLitId)).toEqual(["asset_filler"]);
+      expect(t.mediaLit.assetCount()).toBe(0);
+      // The hold is released: only the filler counts.
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, t.clock.now())).total).toBe(
+        trialShare(0.4),
+      );
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
+  it("holds learners to their budget against the sealed size", async () => {
+    const t = await setup(webpOnSeal((bytes) => bytes * 2));
+    try {
+      const member = await learnerWithCommunity(t, "webp-l@example.com");
+      // 60 MB fits the 100 MB learner budget; the 120 MB WebP doesn't.
+      const upload = await learnerAuthorize(t, member.headers, 60 * MB);
+      expect(upload.status).toBe(201);
+      const refused = await dispatch(t.runtime, {
+        method: "POST",
+        path: "/v1/learner/community-media",
+        headers: member.headers,
+        body: { uploadId: uploadIdOf(upload.body), altText: "", caption: "", accessPolicy: "public" },
+      });
+      expect(refused.status).toBe(403);
+      expect(reason(refused.body)).toBe("upload_not_allowed");
+      expect(t.mediaLit.assetCount()).toBe(0);
+    } finally {
+      await t.runtime.close();
+    }
+  });
+});
 
 describe("learner uploads (S2, S24)", () => {
   it("need a community membership that can post", async () => {
