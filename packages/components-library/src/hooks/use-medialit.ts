@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Upload as TUSUpload, UploadOptions } from "tus-js-client";
+import { pickMediaFields } from "./pick-media-fields";
 
 interface UseMediaLitProps {
     signatureEndpoint: string;
@@ -76,11 +77,10 @@ export function useMediaLit({
                         onSuccess: (payload) => {
                             const mediaString =
                                 payload.lastResponse.getHeader("Media");
-                            const media: Record<string, string> = mediaString
-                                ? JSON.parse(mediaString)
+                            const media = mediaString
+                                ? pickMediaFields(JSON.parse(mediaString))
                                 : null;
                             if (media) {
-                                delete media.group;
                                 onUploadComplete?.(media);
                                 resolve(media);
                             }
