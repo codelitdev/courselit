@@ -75,9 +75,19 @@ export function cacheDomainByName(domain: Domain): void {
         return;
     }
 
-    domainCacheByName.set(normalizeDomainName(domain.name), {
+    const normalizedDomainName = normalizeDomainName(domain.name);
+    const existing = domainCacheByName.get(normalizedDomainName);
+    const now = Date.now();
+
+    domainCacheByName.set(normalizedDomainName, {
         data: (domain as any).toObject ? (domain as any).toObject() : domain,
-        expiresAt: Date.now() + TTL,
+        // Keep the expiry of an unexpired entry. Callers often re-cache the
+        // copy they just read from this cache, and resetting the expiry then
+        // would stop the entry from ever reloading from the database.
+        expiresAt:
+            existing && existing.expiresAt > now
+                ? existing.expiresAt
+                : now + TTL,
     });
 }
 
