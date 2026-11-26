@@ -756,21 +756,21 @@ async function inspectAdmitSeal(
   }
   // The seal can change the size: MediaLit converts images to WebP then and
   // keeps the WebP even when it is larger than the original. The row stores
-  // the sealed size, so a larger asset must fit too, or it is deleted.
-  if (asset.byteSize > pending.byteSize) {
-    const resized = await gate.resize(
-      input.schoolId,
-      input.uploader,
-      admitted.holdId,
-      asset.byteSize,
-    );
-    if (!resized.ok) {
-      await client
-        .deleteAsset({ schoolId: input.schoolId, mediaLitId: asset.mediaLitId })
-        .catch(() => {});
-      await gate.release(admitted.holdId);
-      return resized;
-    }
+  // the sealed size, so the hold is resized to it and must still fit, or the
+  // asset is deleted. Resizing also renews the hold, which a slow seal can
+  // outlast.
+  const resized = await gate.resize(
+    input.schoolId,
+    input.uploader,
+    admitted.holdId,
+    asset.byteSize,
+  );
+  if (!resized.ok) {
+    await client
+      .deleteAsset({ schoolId: input.schoolId, mediaLitId: asset.mediaLitId })
+      .catch(() => {});
+    await gate.release(admitted.holdId);
+    return resized;
   }
   return { ok: true, asset, holdId: admitted.holdId };
 }

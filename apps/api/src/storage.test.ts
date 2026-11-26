@@ -9,6 +9,8 @@ import { seedWorld } from "./seed.js";
 import { signInLearner } from "./test-learner-auth.js";
 import {
   LEARNER_UPLOADS_PER_HOUR,
+  pruneReservations,
+  storageGate,
   storageRefusal,
   storageUsed,
   sweepUnusedLearnerUploads,
@@ -359,6 +361,80 @@ describe("storage counts the sealed size (MediaLit converts to WebP at seal)", (
       expect(refused.status).toBe(403);
       expect(reason(refused.body)).toBe("upload_not_allowed");
       expect(t.mediaLit.assetCount()).toBe(0);
+    } finally {
+      await t.runtime.close();
+    }
+  });
+});
+
+describe("resizing a finalize hold", () => {
+  const SEAL_OUTLASTS_HOLD_MS = 16 * 60 * 1000;
+  const gateFor = (t: Setup, clock = t.clock) =>
+    storageGate({
+      db: t.runtime.db,
+      billing: t.runtime.billing.billing,
+      mode: t.runtime.billingMode,
+      clock,
+    });
+  // The clock when a seal that outlasted the hold returns.
+  const afterSlowSeal = (t: Setup) =>
+    freezeRuntimeClock(new Date(t.clock.now().getTime() + SEAL_OUTLASTS_HOLD_MS));
+  const staff = { kind: "staff" as const };
+
+  it("renews a hold that a slow seal outlasted", async () => {
+    const t = await setup();
+    try {
+      const admitted = await gateFor(t).admit(t.world.schoolB.id, staff, 6 * MB);
+      if (!admitted.ok) throw new Error("not admitted");
+      const later = afterSlowSeal(t);
+      // The expired hold no longer counts.
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, later.now())).total).toBe(0);
+      expect(
+        await gateFor(t, later).resize(t.world.schoolB.id, staff, admitted.holdId, 5 * MB),
+      ).toEqual({ ok: true });
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, later.now())).total).toBe(
+        5 * MB,
+      );
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
+  it("recreates a hold the worker already pruned", async () => {
+    const t = await setup();
+    try {
+      const admitted = await gateFor(t).admit(t.world.schoolB.id, staff, 6 * MB);
+      if (!admitted.ok) throw new Error("not admitted");
+      const later = afterSlowSeal(t);
+      expect(await pruneReservations(t.runtime.db, later.now())).toBe(1);
+      const gate = gateFor(t, later);
+      expect(await gate.resize(t.world.schoolB.id, staff, admitted.holdId, 5 * MB)).toEqual({
+        ok: true,
+      });
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, later.now())).total).toBe(
+        5 * MB,
+      );
+      await gate.release(admitted.holdId);
+      expect((await storageUsed(t.runtime.db, t.world.schoolB.id, later.now())).total).toBe(0);
+    } finally {
+      await t.runtime.close();
+    }
+  });
+
+  it("refuses a renewal when other uploads took the space meanwhile", async () => {
+    const t = await setup();
+    try {
+      const admitted = await gateFor(t).admit(t.world.schoolB.id, staff, trialShare(0.5));
+      if (!admitted.ok) throw new Error("not admitted");
+      // Once the hold expired, another upload took the space it held.
+      await fillSchoolB(t, trialShare(0.7));
+      const resized = await gateFor(t, afterSlowSeal(t)).resize(
+        t.world.schoolB.id,
+        staff,
+        admitted.holdId,
+        trialShare(0.4),
+      );
+      expect(resized.ok).toBe(false);
     } finally {
       await t.runtime.close();
     }

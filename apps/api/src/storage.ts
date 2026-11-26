@@ -308,10 +308,17 @@ export async function resizeHold(
       usage: await usage(db, schoolId, account, now, holdId),
     });
     if (refused) return { ok: false as const, error: refused };
+    // Renew the hold as well as resizing it: a seal that ran past HOLD_MS
+    // leaves an expired hold that usage() no longer counts, or none at all
+    // once the worker prunes it, until the media row is saved.
+    const expiresAt = new Date(now.getTime() + HOLD_MS);
     await db
-      .update(schema.mediaUploadReservations)
-      .set({ bytes })
-      .where(eq(schema.mediaUploadReservations.id, holdId));
+      .insert(schema.mediaUploadReservations)
+      .values({ id: holdId, schoolId, schoolAccountId: account, bytes, expiresAt, createdAt: now })
+      .onConflictDoUpdate({
+        target: schema.mediaUploadReservations.id,
+        set: { bytes, expiresAt },
+      });
     return { ok: true as const };
   });
 }
