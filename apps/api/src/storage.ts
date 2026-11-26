@@ -276,6 +276,53 @@ export async function admitUpload(
   });
 }
 
+/**
+ * Called after the seal when the sealed asset is larger than the size that
+ * was admitted. MediaLit converts images to WebP at seal, and a WebP can be
+ * larger than the original. In one transaction that locks the school, checks
+ * the sealed size against the limit with this hold left out, and grows the
+ * hold to it if it fits.
+ */
+export async function resizeHold(
+  deps: StorageDeps,
+  schoolId: string,
+  uploader: Uploader,
+  holdId: string,
+  bytes: number,
+): Promise<{ ok: true } | { ok: false; error: PlatformError }> {
+  const limit = await readLimit(deps, schoolId);
+  if (!limit.ok) return limit;
+  const learnerBudget = await learnerLimit(deps.db, schoolId);
+  const account = uploader.kind === "learner" ? uploader.schoolAccountId : null;
+  const now = deps.clock.now();
+  return deps.db.transaction(async (tx) => {
+    const db = tx as unknown as AppDb;
+    await db.select({ id: schema.schools.id }).from(schema.schools)
+      .where(eq(schema.schools.id, schoolId))
+      .for("update");
+    const refused = storageRefusal({
+      uploader,
+      bytes,
+      limit: limit.limit,
+      learnerBudget,
+      usage: await usage(db, schoolId, account, now, holdId),
+    });
+    if (refused) return { ok: false as const, error: refused };
+    // Renew the hold as well as resizing it: a seal that ran past HOLD_MS
+    // leaves an expired hold that usage() no longer counts, or none at all
+    // once the worker prunes it, until the media row is saved.
+    const expiresAt = new Date(now.getTime() + HOLD_MS);
+    await db
+      .insert(schema.mediaUploadReservations)
+      .values({ id: holdId, schoolId, schoolAccountId: account, bytes, expiresAt, createdAt: now })
+      .onConflictDoUpdate({
+        target: schema.mediaUploadReservations.id,
+        set: { bytes, expiresAt },
+      });
+    return { ok: true as const };
+  });
+}
+
 /** Frees a finalize hold once the media row is saved, or when finalizing failed. */
 export async function releaseHold(db: AppDb, holdId: string): Promise<void> {
   await db
@@ -340,6 +387,12 @@ export type StorageGate = {
     uploader: Uploader,
     bytes: number,
   ): Promise<{ ok: true; holdId: string } | { ok: false; error: PlatformError }>;
+  resize(
+    schoolId: string,
+    uploader: Uploader,
+    holdId: string,
+    bytes: number,
+  ): Promise<{ ok: true } | { ok: false; error: PlatformError }>;
   release(holdId: string): Promise<void>;
 };
 
@@ -347,6 +400,8 @@ export function storageGate(deps: StorageDeps): StorageGate {
   return {
     reserve: (schoolId, uploader, bytes) => reserveUpload(deps, schoolId, uploader, bytes),
     admit: (schoolId, uploader, bytes) => admitUpload(deps, schoolId, uploader, bytes),
+    resize: (schoolId, uploader, holdId, bytes) =>
+      resizeHold(deps, schoolId, uploader, holdId, bytes),
     release: (holdId) => releaseHold(deps.db, holdId),
   };
 }

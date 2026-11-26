@@ -161,7 +161,21 @@ export type MediaLitClient = {
  * deployable without requiring a MediaLit service during development.
  */
 export class MemoryMediaLitClient implements MediaLitClient {
-  constructor(private readonly now: () => Date = () => new Date()) {}
+  constructor(
+    private readonly now: () => Date = () => new Date(),
+    private readonly options: {
+      /**
+       * Models MediaLit's seal-time conversion (v0.8.0 converts images to
+       * WebP when sealing): returns what the sealed asset becomes, or null
+       * to keep the original. By default nothing is converted.
+       */
+      convertOnSeal?: (original: {
+        fileName: string;
+        mimeType: string;
+        byteSize: number;
+      }) => { fileName: string; mimeType: string; byteSize: number } | null;
+    } = {},
+  ) {}
 
   private readonly uploads = new Map<
     string,
@@ -232,16 +246,20 @@ export class MemoryMediaLitClient implements MediaLitClient {
     }
     this.uploads.delete(input.uploadId);
     const mediaLitId = `asset_${randomBytes(18).toString("base64url")}`;
+    const converted = this.options.convertOnSeal?.(upload) ?? null;
+    const sealed = converted ?? upload;
     const asset = {
       mediaLitId,
       group: upload.schoolId,
-      canonicalUrl: `https://media.test/assets/${mediaLitId}`,
+      canonicalUrl: converted
+        ? `https://media.test/assets/${mediaLitId}/${converted.fileName}`
+        : `https://media.test/assets/${mediaLitId}`,
       thumbnailUrl: upload.mimeType.startsWith("image/")
         ? `https://media.test/assets/${mediaLitId}/thumbnail`
         : null,
-      fileName: upload.fileName,
-      mimeType: upload.mimeType,
-      byteSize: upload.byteSize,
+      fileName: sealed.fileName,
+      mimeType: sealed.mimeType,
+      byteSize: sealed.byteSize,
       width: null,
       height: null,
     };
@@ -260,6 +278,11 @@ export class MemoryMediaLitClient implements MediaLitClient {
   async deleteAsset(input: { schoolId: string; mediaLitId: string }) {
     void input.schoolId;
     this.assets.delete(input.mediaLitId);
+  }
+
+  /** How many sealed assets it holds, for tests. */
+  assetCount(): number {
+    return this.assets.size;
   }
 }
 
@@ -665,8 +688,11 @@ async function mediaForSchool(
  * Checks an upload, admits it into the school's storage, then seals it
  * (docs/wip/plan-limits.md, S1). Order matters: MediaLit's seal and delete
  * aren't scoped to a group, so the group is checked on the unsealed upload
- * before anything is sealed or deleted. The returned hold keeps the space
- * until the caller saves the media row and calls `gate.release`.
+ * before anything is sealed or deleted. The upload is admitted at its
+ * unsealed size, so nothing that can't fit is sealed; the seal may then
+ * change the size (WebP), and the returned asset carries the sealed size,
+ * which the caller stores. The returned hold keeps the space until the
+ * caller saves the media row and calls `gate.release`.
  */
 async function inspectAdmitSeal(
   client: MediaLitClient,
@@ -727,6 +753,24 @@ async function inspectAdmitSeal(
   if (sealedRejection) {
     await gate.release(admitted.holdId);
     return invalid(sealedRejection);
+  }
+  // The seal can change the size: MediaLit converts images to WebP then and
+  // keeps the WebP even when it is larger than the original. The row stores
+  // the sealed size, so the hold is resized to it and must still fit, or the
+  // asset is deleted. Resizing also renews the hold, which a slow seal can
+  // outlast.
+  const resized = await gate.resize(
+    input.schoolId,
+    input.uploader,
+    admitted.holdId,
+    asset.byteSize,
+  );
+  if (!resized.ok) {
+    await client
+      .deleteAsset({ schoolId: input.schoolId, mediaLitId: asset.mediaLitId })
+      .catch(() => {});
+    await gate.release(admitted.holdId);
+    return resized;
   }
   return { ok: true, asset, holdId: admitted.holdId };
 }
