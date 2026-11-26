@@ -2,6 +2,7 @@ import type { Clock } from "@codelitdev/platform";
 import { createPlatformError, type PlatformError } from "@codelitdev/platform";
 import { and, desc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
+import { legacySubdomainsAmong } from "./legacy-schools.js";
 import { getPaymentProvider } from "./payments.js";
 import { getMailingSettings } from "./sendlit-service.js";
 import type { AppDb } from "./types.js";
@@ -354,11 +355,17 @@ async function takenAmong(db: AppDb, candidates: string[]): Promise<Set<string>>
       .from(schema.schoolHosts)
       .where(inArray(schema.schoolHosts.hostname, candidates)),
   ]);
-  // Reserved subdomains read as taken, so the address checker suggests others (S19).
-  return new Set([
+  // Reserved subdomains read as taken, so the address checker suggests others (S19),
+  // and so do subdomains of schools on the classic app.
+  const taken = new Set([
     ...[...schools, ...hosts].map((row) => row.value),
     ...candidates.filter(isReservedSubdomain),
   ]);
+  // Only the first few still-free candidates are asked of the classic app, in one
+  // round of parallel calls; the rest aren't offered. The wizard shows three.
+  const free = candidates.filter((value) => !taken.has(value));
+  const legacy = await legacySubdomainsAmong(free.slice(0, 4));
+  return new Set([...taken, ...legacy, ...free.slice(4)]);
 }
 
 export async function checkSchoolSubdomain(

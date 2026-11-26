@@ -1068,7 +1068,11 @@ export function SetupWizard({
     (inGoingLive && !liveFailed && !liveReady) ||
     (step === "offer" && !data.offer) ||
     ((step === "build" || step === "brand") && uploadsBusy) ||
-    (step === "school" && !inCreating && availability === "checking");
+    (step === "school" &&
+      !inCreating &&
+      (availability === "checking" ||
+        availability === "taken" ||
+        availability === "invalid"));
 
   function onNext() {
     if (inGoingLive && liveReady) {

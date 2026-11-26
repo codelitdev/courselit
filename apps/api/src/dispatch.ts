@@ -385,6 +385,7 @@ import {
   updateSchoolPaymentSettings,
 } from "./schools.js";
 import { CLIENT_IP_HEADER } from "./auth/api-key-throttle.js";
+import { legacySubdomainsAmong } from "./legacy-schools.js";
 import { startLearnerSsoSignIn } from "./learner-sso-sign-in.js";
 import { usableLearnerMethods } from "./login-methods.js";
 import { handleSsoAdminRequest } from "./sso-admin-routes.js";
@@ -2365,6 +2366,15 @@ export async function dispatch(
       const parsed = createSchoolBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
         return errorResponse(createPlatformError("validation_failed"));
+      }
+      // A classic-app school's subdomain is taken. Checked here, not in
+      // createSchool, so staff imports of classic schools still work.
+      if ((await legacySubdomainsAmong([parsed.data.subdomain])).size > 0) {
+        return errorResponse(
+          createPlatformError("conflict", {
+            safeDetails: { reason: "subdomain_taken" },
+          }),
+        );
       }
       const requestId = requestIdFrom(request, deps);
       const result = await createSchool(
