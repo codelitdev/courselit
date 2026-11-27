@@ -33,6 +33,8 @@ export const storefrontPlans = pgTable(
     // Keep that field as text instead of treating it as rich document JSON.
     description: text("description").notNull().default(""),
     includedProducts: text("included_products").array().notNull().default([]),
+    /** Community plans only: every published product, including future ones. */
+    includesAllProducts: boolean("includes_all_products").notNull().default(false),
     providerProductId: text("provider_product_id"),
     kind: text("kind")
       .$type<"free" | "one_time" | "subscription" | "installment">()

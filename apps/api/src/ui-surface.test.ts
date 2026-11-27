@@ -288,7 +288,12 @@ describe("admin and learner surfaces", () => {
     expect(paymentPlanDialog).toContain(
       "Currency is managed centrally in School settings.",
     );
-    expect(paymentPlanList).toContain("includedProducts.length");
+    expect(paymentPlanList).toContain("includedProductsSummary(plan)");
+    expect(paymentPlanDialog).toContain("All products");
+    expect(paymentPlanDialog).toContain("Selected products");
+    expect(paymentPlanDialog).toContain(
+      "Every published product, including ones you publish later.",
+    );
     expect(productWorkspace).toContain("featuredImage");
     expect(featuredImage).toContain("Select featured image");
     expect(featuredImage).toContain("@frontlit/media-uploader");

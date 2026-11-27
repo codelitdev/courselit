@@ -4,6 +4,10 @@ import { and, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 import type { Logger } from "pino";
 import * as schema from "./db/schema/index.js";
 import { processNextPlatformJob } from "./integration-provisioning.js";
+import {
+  runPlanIncludedProductsJob,
+  SYNC_PLAN_INCLUDED_PRODUCTS_JOB,
+} from "./plan-included-products.js";
 import { cleanupSsoRequests } from "./learner-sso-sign-in.js";
 import { schoolsWithSendLitTeams, syncMarketingQuota } from "./marketing-quota.js";
 import { evaluateSchoolLifecycle, schoolsForLifecycleSweep } from "./school-lifecycle.js";
@@ -25,6 +29,8 @@ const DOMAIN_RECHECK_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
 /**
  * Drain the platform jobs the billing hook and SendLit provisioning queued
  * (`sync_plan_features`): SSO connections, then the SendLit marketing quota.
+ * Also runs `sync_plan_included_products`, the fan-out that keeps community
+ * plan members' included products in step with publishes and plan edits.
  */
 export async function processPlatformJobs(
   db: AppDb,
@@ -36,6 +42,10 @@ export async function processPlatformJobs(
   let processed = 0;
   while (
     await processNextPlatformJob(db, clock, logger, async (job) => {
+      if (job.type === SYNC_PLAN_INCLUDED_PRODUCTS_JOB) {
+        await runPlanIncludedProductsJob(db, job.schoolId, job.payload, clock);
+        return;
+      }
       if (job.type !== "sync_plan_features" && job.type !== "evaluate_school_lifecycle") {
         throw new Error(`Unknown platform job type: ${job.type}`);
       }

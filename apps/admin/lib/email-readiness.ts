@@ -128,9 +128,9 @@ export function sequenceReadinessMessage(
   return null;
 }
 
-/** True when the school's mail settings hold no usable postal address. */
+/** True when the school's mail settings hold no postal address. */
 export function isMailingAddressMissing(
-  settings: { mailingAddress?: string | null } | null | undefined,
+  settings: { postalAddress?: unknown } | null | undefined,
 ): boolean {
-  return !settings?.mailingAddress?.trim();
+  return !settings?.postalAddress;
 }

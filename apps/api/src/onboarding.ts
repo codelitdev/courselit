@@ -27,7 +27,6 @@ export type OnboardingStep =
   | "offer"
   | "build"
   | "brand"
-  | "email"
   | "plan"
   | "live";
 
@@ -104,8 +103,7 @@ async function mailDone(db: AppDb, schoolId: string, clock: Clock): Promise<bool
   try {
     const result = await getMailingSettings(db, schoolId, clock);
     if (!result.ok) return false;
-    const address = (result.value as { mailingAddress?: unknown }).mailingAddress;
-    return typeof address === "string" && address.trim().length > 0;
+    return Boolean(result.value.postalAddress);
   } catch {
     // The mail service being down must never break onboarding.
     return false;

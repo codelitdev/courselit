@@ -472,7 +472,6 @@ export async function listLearnerProducts(
         leadMagnet: product.leadMagnet,
         certificate: product.certificate,
         discussions: product.discussions,
-        includedWithCommunity: product.includedWithCommunity,
         discussionSpaceId: discussionSpaceRows[0]?.publicId ?? null,
         publishedAt: product.publishedAt ? serializeDate(product.publishedAt) : null,
         createdAt: serializeDate(product.createdAt),

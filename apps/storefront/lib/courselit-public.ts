@@ -139,7 +139,6 @@ export interface PublicProductSummary {
 export interface PublicProductDetail extends PublicProductSummary {
   enrolled: boolean;
   leadMagnet: boolean;
-  includedWithCommunity?: boolean;
   featuredImage: MediaRef | null;
   sections: Array<{ id: string; title: string }>;
   lessons: Array<{
@@ -191,7 +190,9 @@ export interface PublicCommunityPlan {
   billingInterval: "month" | "year" | null;
   installmentCount: number | null;
   isDefault: boolean;
-  /** Products this plan unlocks besides the community. */
+  /** Every published product comes with this plan, including later ones. */
+  includesAllProducts?: boolean;
+  /** Products this plan unlocks besides the community, when not all of them. */
   includedProducts?: string[];
 }
 

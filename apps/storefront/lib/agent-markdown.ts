@@ -129,7 +129,7 @@ async function salesMarkdown(
     // Like the page: community plans that unlock this product are offered too.
     const communityPlans = siteCommunity
       ? communityPlansIncludingProduct(
-          product,
+          product.id,
           await getPublicCommunityPlans(schoolId, siteCommunity.id),
         )
       : [];

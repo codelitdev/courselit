@@ -23286,9 +23286,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -23396,7 +23393,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -24065,6 +24061,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -24158,6 +24157,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -25237,9 +25237,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -25279,7 +25276,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -25633,9 +25629,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -25664,7 +25657,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -26009,9 +26001,6 @@
                           "discussions": {
                             "type": "boolean"
                           },
-                          "includedWithCommunity": {
-                            "type": "boolean"
-                          },
                           "discussionSpaceId": {
                             "type": "string",
                             "nullable": true
@@ -26048,7 +26037,6 @@
                           "leadMagnet",
                           "certificate",
                           "discussions",
-                          "includedWithCommunity",
                           "discussionSpaceId",
                           "publishedAt",
                           "createdAt",
@@ -27853,6 +27841,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -28029,6 +28020,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -38611,9 +38603,6 @@
                   },
                   "discussions": {
                     "type": "boolean"
-                  },
-                  "includedWithCommunity": {
-                    "type": "boolean"
                   }
                 }
               }
@@ -38725,9 +38714,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -38756,7 +38742,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -39388,9 +39373,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -39406,6 +39388,9 @@
                       "type": "string"
                     },
                     "enrolled": {
+                      "type": "boolean"
+                    },
+                    "includedInCommunityPlan": {
                       "type": "boolean"
                     },
                     "sections": {
@@ -39557,12 +39542,12 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
                     "updatedAt",
                     "enrolled",
+                    "includedInCommunityPlan",
                     "sections",
                     "lessons"
                   ]
@@ -40453,6 +40438,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -40544,6 +40532,7 @@
                           "productId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -40789,6 +40778,10 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "default": false,
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -40889,6 +40882,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -40980,6 +40976,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -41347,6 +41344,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -41438,6 +41438,7 @@
                           "productId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -41620,6 +41621,9 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -41717,6 +41721,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -41808,6 +41815,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -42172,6 +42180,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -42263,6 +42274,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -42571,6 +42583,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -42662,6 +42677,7 @@
                     "productId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -42904,6 +42920,9 @@
                           "description": {
                             "type": "string"
                           },
+                          "includesAllProducts": {
+                            "type": "boolean"
+                          },
                           "includedProducts": {
                             "type": "array",
                             "items": {
@@ -42997,6 +43016,7 @@
                           "schoolId",
                           "name",
                           "description",
+                          "includesAllProducts",
                           "includedProducts",
                           "providerProductId",
                           "type",
@@ -43243,6 +43263,10 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "default": false,
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -43340,6 +43364,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -43433,6 +43460,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -43785,6 +43813,9 @@
                       "type": "string"
                     }
                   },
+                  "includesAllProducts": {
+                    "type": "boolean"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -43879,6 +43910,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -43972,6 +44006,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -44334,6 +44369,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -44427,6 +44465,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -44733,6 +44772,9 @@
                     "description": {
                       "type": "string"
                     },
+                    "includesAllProducts": {
+                      "type": "boolean"
+                    },
                     "includedProducts": {
                       "type": "array",
                       "items": {
@@ -44826,6 +44868,7 @@
                     "schoolId",
                     "name",
                     "description",
+                    "includesAllProducts",
                     "includedProducts",
                     "providerProductId",
                     "type",
@@ -45216,9 +45259,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -45378,7 +45418,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -48728,9 +48767,6 @@
                     "discussions": {
                       "type": "boolean"
                     },
-                    "includedWithCommunity": {
-                      "type": "boolean"
-                    },
                     "discussionSpaceId": {
                       "type": "string",
                       "nullable": true
@@ -48890,7 +48926,6 @@
                     "leadMagnet",
                     "certificate",
                     "discussions",
-                    "includedWithCommunity",
                     "discussionSpaceId",
                     "publishedAt",
                     "createdAt",
@@ -88158,7 +88193,6 @@
                         "offer",
                         "build",
                         "brand",
-                        "email",
                         "plan",
                         "live"
                       ]
@@ -88390,7 +88424,6 @@
                       "offer",
                       "build",
                       "brand",
-                      "email",
                       "plan",
                       "live"
                     ]
@@ -88453,7 +88486,6 @@
                         "offer",
                         "build",
                         "brand",
-                        "email",
                         "plan",
                         "live"
                       ]
@@ -92522,8 +92554,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "mailingAddress": {
-                      "type": "string",
+                    "postalAddress": {
+                      "type": "object",
+                      "properties": {
+                        "line1": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "line2": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "city": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "region": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "country": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{2}$"
+                        }
+                      },
+                      "required": [
+                        "line1",
+                        "country"
+                      ],
                       "nullable": true
                     },
                     "updatedAt": {
@@ -92532,7 +92595,7 @@
                     }
                   },
                   "required": [
-                    "mailingAddress"
+                    "postalAddress"
                   ],
                   "additionalProperties": true
                 }
@@ -92675,16 +92738,45 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "mailingAddress": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 1000
+                  "postalAddress": {
+                    "type": "object",
+                    "properties": {
+                      "line1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "line2": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "city": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "region": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      "country": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{2}$"
+                      }
+                    },
+                    "required": [
+                      "line1",
+                      "country"
+                    ]
                   }
                 },
                 "required": [
-                  "mailingAddress"
+                  "postalAddress"
                 ],
-                "additionalProperties": true
+                "additionalProperties": false
               }
             }
           }
@@ -92697,8 +92789,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "mailingAddress": {
-                      "type": "string",
+                    "postalAddress": {
+                      "type": "object",
+                      "properties": {
+                        "line1": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "line2": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "city": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "region": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "country": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{2}$"
+                        }
+                      },
+                      "required": [
+                        "line1",
+                        "country"
+                      ],
                       "nullable": true
                     },
                     "updatedAt": {
@@ -92707,7 +92830,7 @@
                     }
                   },
                   "required": [
-                    "mailingAddress"
+                    "postalAddress"
                   ],
                   "additionalProperties": true
                 }

@@ -26,7 +26,7 @@ Each space shows:
    | --- | --- |
    | Name | Required. Shown in the sidebar and on posts. |
    | Description | A short line about the space. |
-   | Logo (Lucide icon name) | The name of an icon from the Lucide library, for example `MessagesSquare`. |
+   | Icon | Click the button to open a grid of icons and pick one, such as a megaphone for announcements or a light bulb for ideas. Members see it next to the space's name in the learner sidebar. It starts as speech bubbles. |
    | Who can post | **Members** lets every member who can access the space post. **Admin** limits posting to admins. |
    | Auto-follow on join | When on, members automatically follow the space when they get access to it. |
    | Access | **All community members**, or **Selected plans or products**. |

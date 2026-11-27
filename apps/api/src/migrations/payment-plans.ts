@@ -614,6 +614,8 @@ export async function importLegacyPaymentPlans(
             name: plan.name,
             description: plan.description,
             includedProducts: plan.includedProducts,
+            // Main has no "all products" plans.
+            includesAllProducts: false,
             providerProductId: null,
             kind: plan.kind,
             oneTimeAmount: plan.oneTimeAmount,

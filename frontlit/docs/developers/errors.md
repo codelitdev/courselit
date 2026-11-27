@@ -43,7 +43,7 @@ A few reasons you are likely to meet while following the guides.
 
 | `reason` | Status and code | When it happens |
 | --- | --- | --- |
-| `payment_plan_required` | 400 `validation_failed` | You tried to publish a product that has no active payment plan and is not included with a community. See [Create and publish a course](/docs/developers/create-and-publish-a-course). |
+| `payment_plan_required` | 400 `validation_failed` | You tried to publish a product that has no active payment plan and that no active community plan includes. See [Create and publish a course](/docs/developers/create-and-publish-a-course). |
 | `slug_taken` | 409 `conflict` | The slug is used by another product or page in the school. |
 | `invalid_slug` | 400 `validation_failed` | The slug contains nothing usable after it was cleaned up. |
 | `duplicate_payment_plan` | 409 `conflict` | The product already has an active plan of this type. A product can have one active free, one-time and installment plan, and one monthly and one yearly subscription. |

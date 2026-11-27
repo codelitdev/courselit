@@ -279,7 +279,7 @@ describe("mail operations", () => {
     expect(
       (
         await call(readKey.key, "PATCH", "/v1/school/mails/settings", {
-          mailingAddress: "x",
+          postalAddress: { line1: "x", country: "US" },
         })
       ).body,
     ).toMatchObject({ code: "forbidden" });

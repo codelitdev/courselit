@@ -9,7 +9,6 @@ import {
 } from "@/lib/course-media-uploader";
 import {
   type BillingInterval,
-  formatMailingAddress,
   isPaidOffer,
   type LessonKind,
   type OfferRefs,
@@ -194,13 +193,6 @@ export const updateBranding = (
     method: "PATCH",
     schoolId,
     body,
-  });
-
-export const updateMailingAddress = (schoolId: string, mailingAddress: string) =>
-  request<unknown>("/api/v1/school/mails/settings", {
-    method: "PATCH",
-    schoolId,
-    body: { mailingAddress },
   });
 
 export const listAiConnections = () =>
@@ -667,10 +659,6 @@ export async function applyBranding(
     themeId: data.brand.themeId,
     logo: data.brand.logo ? uploadedToMediaRef(data.brand.logo) : null,
   });
-}
-
-export async function applyEmail(schoolId: string, data: WizardData): Promise<void> {
-  await updateMailingAddress(schoolId, formatMailingAddress(data.email));
 }
 
 /** Adopts a product the creator's AI assistant made as the first offer. */

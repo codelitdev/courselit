@@ -5,7 +5,6 @@ import {
   ChevronsUpDown,
   Home,
   LogOut,
-  MessagesSquare,
   Package,
   Receipt,
   UserRound,
@@ -38,6 +37,7 @@ import {
 } from "@/components/ui/sidebar";
 import { signOutLearner } from "@/lib/learner-sign-in";
 import { requestJson } from "@/lib/request-json";
+import { spaceIconFor } from "@/lib/space-icons";
 import { LEARNER_ACCESS_CHANGED } from "@/lib/learner-access-events";
 import { useSchoolBrand, useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,8 @@ type LearnerSpace = {
   name: string;
   /** The course this space is the discussion of; null for a community space. */
   productId: string | null;
+  /** The space's icon name (see @courselit/api-contract/space-icons). */
+  logo?: string | null;
 };
 
 function displayNameFor(user: { email: string; name?: string | null }) {
@@ -110,7 +112,7 @@ export function LearnerSidebar({
   const toNav = (space: LearnerSpace): NavItem => ({
     href: `/dashboard/s/${encodeURIComponent(space.id)}`,
     label: space.name,
-    icon: MessagesSquare,
+    icon: spaceIconFor(space.logo),
   });
   // Course discussions get their own group, apart from the community's spaces.
   const spaceNav = spaces.filter((space) => !space.productId).map(toNav);
@@ -160,6 +162,8 @@ export function LearnerSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {/* Above the account menu, so the menu stays at the very bottom. */}
+        <CourseLitBadge className="group-data-[collapsible=icon]:hidden" />
         <SidebarMenu>
           <SidebarMenuItem>
             {user ? (
@@ -254,7 +258,6 @@ export function LearnerSidebar({
             )}
           </SidebarMenuItem>
         </SidebarMenu>
-        <CourseLitBadge className="group-data-[collapsible=icon]:hidden" />
       </SidebarFooter>
 
       <SidebarRail />

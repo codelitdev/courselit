@@ -51,9 +51,11 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
 
   // Spaces
   listSpaces: "Lists the school's spaces, in their display order.",
-  createSpace: "Creates a space.",
+  createSpace:
+    "Creates a space. Its logo is an icon name from the space icon list (for example MessagesSquare, Megaphone, Lightbulb); it defaults to MessagesSquare.",
   getSpace: "Reads one space by spaceId.",
-  updateSpace: "Changes a space's name, description or visibility.",
+  updateSpace:
+    "Changes a space's name, description, icon (logo, an icon name from the space icon list) or visibility.",
   orderSpaces:
     "Sets the display order of the school's spaces. Pass every spaceId in the order wanted.",
   deleteSpace:
@@ -106,10 +108,12 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
   setDefaultPlan: "Makes a plan the one shown first on a product's checkout.",
   archivePlan:
     "Stops selling a product plan. Existing customers keep access. Confirm with the user first.",
-  listCommunityPlans: "Lists a community's pricing plans, including archived ones.",
+  listCommunityPlans:
+    "Lists a community's pricing plans, including archived ones. A plan with includesAllProducts true gives members every published product, including ones published later; otherwise includedProducts lists the product IDs it gives.",
   createCommunityPlan:
-    "Creates a pricing plan for a community: free, one-time or subscription.",
-  updateCommunityPlan: "Changes a community plan's name, price or terms.",
+    "Creates a pricing plan for a community: free, one-time or subscription. Set includesAllProducts to give members every published product, now and later, or pass the product IDs in includedProducts to give only those (empty gives none). includedProducts is ignored when includesAllProducts is true.",
+  updateCommunityPlan:
+    "Changes a community plan's name, price, terms or included products (includesAllProducts, or the includedProducts list). Changing the included products grants or removes those products for the plan's current members. Confirm with the user first.",
   setDefaultCommunityPlan:
     "Makes a plan the one shown first on a community's checkout.",
   archiveCommunityPlan:
@@ -225,9 +229,9 @@ export const OPERATION_DESCRIPTIONS: Readonly<Record<string, string>> = {
 
   // Email
   getMailingSettings:
-    "Reads the school's email settings: sender name, reply-to and mailing address.",
+    "Reads the school's mailing address (postalAddress), the postal address printed in every marketing email's footer. It is null until it is set.",
   updateMailingSettings:
-    "Changes the school's email sender name, reply-to or mailing address.",
+    "Sets the school's mailing address, printed in every marketing email's footer and required before any marketing email goes out. Send postalAddress: line1, optional line2, city, region and postalCode, and an ISO 3166-1 alpha-2 country code.",
   getSchoolEmailDelivery:
     "Reads whether the school's email is set up to send, and what is still missing.",
   listMailSequences: "Lists the school's email sequences with their status.",

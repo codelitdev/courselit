@@ -1,7 +1,6 @@
 "use client";
 
 import { youtubeEmbedUrl } from "@courselit/api-contract/youtube";
-import { X } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import {
   LearnerButton as Button,
@@ -150,45 +149,6 @@ export function LearnerYoutubePicker({
         </form>
       </LearnerPopoverContent>
     </LearnerPopover>
-  );
-}
-
-/** YouTube videos in a post. With `onRemove`, each video gets a remove button. */
-export function LearnerPostVideos({
-  urls,
-  onRemove,
-}: {
-  urls: readonly string[];
-  onRemove?: (url: string) => void;
-}) {
-  if (urls.length === 0) return null;
-  return (
-    <ul className="grid list-none gap-3 p-0" aria-label="YouTube videos">
-      {urls.map((url) => (
-        <li key={url} className="relative">
-          <iframe
-            src={url}
-            title="YouTube video"
-            className="aspect-video w-full rounded-[var(--radius)] border-0"
-            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            referrerPolicy="strict-origin-when-cross-origin"
-            loading="lazy"
-          />
-          {onRemove ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="absolute top-2 right-2 size-7"
-              onClick={() => onRemove(url)}
-              aria-label="Remove YouTube video"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </Button>
-          ) : null}
-        </li>
-      ))}
-    </ul>
   );
 }
 

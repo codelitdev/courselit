@@ -1,5 +1,11 @@
 # PRD: One community per school
 
+> **Superseded in part:** the product-level `includedWithCommunity` flag
+> described below was removed. A community plan now has `includesAllProducts`
+> ("All products", every published product including later ones) or its
+> `includedProducts` list ("Selected products"). See
+> `apps/api/src/plan-included-products.ts`.
+
 **Status:** Ready for implementation  
 **Scope:** Community management, school-level spaces, product discussions,
 pricing, learner access, community commerce, public sales experience, admin

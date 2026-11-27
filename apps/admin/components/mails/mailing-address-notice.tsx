@@ -18,7 +18,7 @@ export function useMailingAddressMissing(schoolId?: string | null): boolean | nu
       headers: schoolId ? { "x-school-id": schoolId } : undefined,
     })
       .then((response) => (response.ok ? response.json() : null))
-      .then((body: { mailingAddress?: string | null } | null) => {
+      .then((body: { postalAddress?: unknown } | null) => {
         // Stay silent when the settings can't be read; the API still checks.
         if (active) setMissing(body ? isMailingAddressMissing(body) : null);
       })

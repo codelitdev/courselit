@@ -9,4 +9,17 @@ describe("uploadErrorMessage", () => {
     expect(uploadErrorMessage({ message: "Nope" }, "x")).toBe("Nope");
     expect(uploadErrorMessage(null, "Unable.")).toBe("Unable.");
   });
+
+  it("names the branding image limit when a logo is refused", () => {
+    for (const reason of ["file_too_large", "logo_too_large"]) {
+      expect(uploadErrorMessage({ details: { reason } }, "x")).toBe(
+        "Choose an image under 2 MB.",
+      );
+    }
+    for (const reason of ["unsupported_branding_type", "logo_not_image"]) {
+      expect(uploadErrorMessage({ details: { reason } }, "x")).toBe(
+        "Choose an image file.",
+      );
+    }
+  });
 });

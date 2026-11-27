@@ -28,7 +28,11 @@ import {
 } from "./lesson-pages.js";
 import { reconcileMediaReferencesInTransaction } from "./media.js";
 import type { CourseLitPermission } from "./permissions.js";
-import { type ProductDto, productFeaturedImageFor } from "./products.js";
+import {
+  includedInActiveCommunityPlan,
+  type ProductDto,
+  productFeaturedImageFor,
+} from "./products.js";
 import type { AppDb } from "./types.js";
 
 type Ctx = PlatformRequestContext<string, string, CourseLitPermission>;
@@ -88,6 +92,8 @@ export type SectionDto = {
 
 export type ProductDetailDto = ProductDto & {
   enrolled: boolean;
+  /** An active community plan includes it, so it needs no plan of its own. */
+  includedInCommunityPlan: boolean;
   sections: SectionDto[];
   lessons: LessonSummaryDto[];
 };
@@ -134,7 +140,6 @@ async function productToDto(
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
-    includedWithCommunity: row.includedWithCommunity,
     discussionSpaceId: discussionSpace?.publicId ?? null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),
@@ -733,6 +738,11 @@ export async function getProduct(
       ok: true,
       value: {
         ...base,
+        includedInCommunityPlan: await includedInActiveCommunityPlan(
+          db,
+          school.schoolId,
+          product.publicId,
+        ),
         lessons: lessons.map((lesson) =>
           lessonToDto(
             lesson.row,

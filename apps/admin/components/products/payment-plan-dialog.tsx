@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, Info, Package, Save, X } from "lucide-react";
+import { DollarSign, Info, Package, Save } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import { CourseLitLoadingIcon } from "@/components/loading";
@@ -34,6 +34,12 @@ import {
   minorToMajor,
   priceDecimals,
 } from "@courselit/api-contract/money";
+import {
+  type IncludedProductsMode,
+  includedProductsBody,
+  includedProductsMode,
+} from "./included-products";
+import { type IncludableProduct, IncludedProductsPicker } from "./included-products-picker";
 import type { School, StorefrontPlan } from "./product-types";
 
 export type PlanRequest = <T>(path: string, init?: RequestInit) => Promise<T>;
@@ -54,13 +60,6 @@ type PaymentPlanDialogProps = {
 
 type PlanKind = StorefrontPlan["kind"];
 type PaymentProvider = "stripe" | "lemonsqueezy" | "razorpay";
-
-type IncludableProduct = {
-  id: string;
-  title: string;
-  kind: string;
-  status: string;
-};
 
 export type PaymentSettings = {
   provider?: PaymentProvider | null;
@@ -197,6 +196,7 @@ export function PaymentPlanDialog({
   const [paymentSettingsLoading, setPaymentSettingsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [includedProducts, setIncludedProducts] = useState<string[]>([]);
+  const [includedMode, setIncludedMode] = useState<IncludedProductsMode>("selected");
   const [products, setProducts] = useState<IncludableProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const showIncludedProducts = entityLabel === "community";
@@ -205,6 +205,7 @@ export function PaymentPlanDialog({
     if (!open) return;
     setName(plan?.name ?? "");
     setIncludedProducts(plan?.includedProducts ?? []);
+    setIncludedMode(includedProductsMode(plan));
     setDescription(plan?.description ?? "");
     setKind(plan?.kind ?? initialKind);
     setAmount(initialAmount(plan, school.currency || "USD"));
@@ -330,7 +331,9 @@ export function PaymentPlanDialog({
         // adapter default internally, while subscriptions expose frequency.
         kind === "subscription" ? interval : null,
       installmentCount: kind === "installment" ? parsedInstallments : null,
-      ...(showIncludedProducts ? { includedProducts } : {}),
+      ...(showIncludedProducts
+        ? includedProductsBody(includedMode, includedProducts)
+        : {}),
     };
 
     try {
@@ -356,9 +359,6 @@ export function PaymentPlanDialog({
 
   const currency = school.currency || "USD";
   const symbol = getCurrencySymbol(currency);
-  const addableProducts = products.filter(
-    (product) => product.status === "published" && !includedProducts.includes(product.id),
-  );
   const paidPlanTypesDisabled = paymentSettingsLoading || !paymentProviderConfigured;
 
   return (
@@ -547,93 +547,70 @@ export function PaymentPlanDialog({
                   <Package className="size-4 text-primary" /> Included Products
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Specify which products are included with this payment plan
+                  Products members on this plan get. Changing this updates current
+                  members too.
                 </p>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="payment-plan-product">Add Product</Label>
-                <Select
-                  value=""
-                  onValueChange={(value) =>
-                    setIncludedProducts((current) =>
-                      current.includes(value) ? current : [...current, value],
-                    )
-                  }
-                >
-                  <SelectTrigger id="payment-plan-product">
-                    <SelectValue placeholder="Select a product to add" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {productsLoading ? (
-                      <div className="p-2 text-center text-sm text-muted-foreground">
-                        Loading products...
-                      </div>
-                    ) : addableProducts.length === 0 ? (
-                      <div className="p-2 text-center text-sm text-muted-foreground">
-                        {products.length === 0
-                          ? "No products available"
-                          : "All products already added"}
-                      </div>
-                    ) : (
-                      addableProducts.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          <span>{product.title}</span>
-                          <span className="ml-2 text-sm capitalize text-muted-foreground">
-                            {product.kind}
-                          </span>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+              <div
+                role="radiogroup"
+                aria-label="Included products"
+                className="grid gap-2.5 sm:grid-cols-2"
+              >
+                {(
+                  [
+                    {
+                      value: "all",
+                      title: "All products",
+                      description:
+                        "Every published product, including ones you publish later.",
+                    },
+                    {
+                      value: "selected",
+                      title: "Selected products",
+                      description: "Only the products you choose.",
+                    },
+                  ] as const
+                ).map((option) => {
+                  const on = includedMode === option.value;
+                  return (
+                    <label
+                      key={option.value}
+                      className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius)] border px-4 py-3.5 transition-colors ${
+                        on ? "border-primary bg-[var(--primary-soft)]" : "hover:border-input"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment-plan-included-products"
+                        className="mt-1 accent-[var(--primary)]"
+                        checked={on}
+                        onChange={() => setIncludedMode(option.value)}
+                      />
+                      <span className="flex flex-col gap-0.5">
+                        <b className="text-[14.5px] font-semibold">{option.title}</b>
+                        <span className="text-[13px] text-muted-foreground">
+                          {option.description}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
-              {includedProducts.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Label>Selected Products</Label>
-                    <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                      {includedProducts.length} selected
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {includedProducts.map((productId) => {
-                      const product = products.find((item) => item.id === productId);
-                      return (
-                        <div
-                          key={productId}
-                          className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2"
-                        >
-                          <div className="flex flex-col gap-0.5">
-                            <span className="line-clamp-1 text-sm font-medium">
-                              {product?.title ?? productId}
-                            </span>
-                            <span className="flex items-center gap-2 text-xs capitalize text-muted-foreground">
-                              {product?.kind ?? "Product"}
-                              {product && product.status !== "published" ? (
-                                <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 normal-case text-destructive">
-                                  Unpublished
-                                </span>
-                              ) : null}
-                            </span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Remove ${product?.title ?? "product"}`}
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                            onClick={() =>
-                              setIncludedProducts((current) =>
-                                current.filter((id) => id !== productId),
-                              )
-                            }
-                          >
-                            <X className="size-3" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
+              {includedMode === "selected" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="payment-plan-products">Products</Label>
+                  <IncludedProductsPicker
+                    id="payment-plan-products"
+                    products={products}
+                    selected={includedProducts}
+                    loading={productsLoading}
+                    onChange={setIncludedProducts}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {includedProducts.length === 0
+                      ? "No products are included with this plan."
+                      : "Members on this plan get these products."}
+                  </p>
                 </div>
               ) : null}
             </section>

@@ -30,6 +30,8 @@ export type Product = {
   kind: ProductKind;
   status: ProductStatus;
   slug: string;
+  /** An active community plan includes it, so it needs no plan of its own. */
+  includedInCommunityPlan?: boolean;
   publishedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -81,6 +83,8 @@ export type StorefrontPlan = {
   id: string;
   name: string;
   description: string;
+  /** Community plans: every published product, including later ones. */
+  includesAllProducts?: boolean;
   includedProducts: string[];
   providerProductId: string | null;
   type: "free" | "onetime" | "emi" | "subscription";

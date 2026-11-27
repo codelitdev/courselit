@@ -41,6 +41,17 @@ describe("product plan wording", () => {
     );
   });
 
+  it("says when a community plan includes every product", () => {
+    expect(copy(plan({}), "community").detail).toBe("Comes with the community");
+    expect(copy(plan({ includesAllProducts: true }), "community").detail).toBe(
+      "Comes with the community and every product",
+    );
+    expect(
+      copy(plan({ includesAllProducts: true, description: "Our best plan" }), "community")
+        .detail,
+    ).toBe("Our best plan");
+  });
+
   it("spells out what each paid plan charges", () => {
     expect(copy(plan({ type: "onetime", amountMinor: 1000 }))).toMatchObject({
       price: "$10",

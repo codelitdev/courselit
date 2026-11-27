@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/codelit/button";
 import { Checkbox } from "@/components/ui/codelit/checkbox";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
+import {
+  BRANDING_IMAGE_TOO_LARGE,
+  brandingImageErrorMessage,
+  SCHOOL_BRANDING_IMAGE_MAX_BYTES,
+} from "@/lib/branding-image";
 import type { CourseLitMedia } from "@/lib/course-media-uploader";
 import { getCourseLitMedia } from "@/lib/course-media-uploader";
 import { PLAN_FEATURE_COPY, usePlanFeatures } from "@/lib/plan-features";
@@ -200,9 +205,14 @@ export function BrandingSettings() {
       });
       const body = (await response.json().catch(() => null)) as {
         message?: string;
+        details?: { reason?: unknown };
       } | null;
       if (!response.ok) {
-        throw new Error(body?.message ?? "Unable to save the logo.");
+        throw new Error(
+          brandingImageErrorMessage(body?.details?.reason) ??
+            body?.message ??
+            "Unable to save the logo.",
+        );
       }
       setLogo(nextLogo);
       toast.success(nextLogo ? "Logo saved." : "Logo removed.");
@@ -275,6 +285,8 @@ export function BrandingSettings() {
             accept="image/*"
             accessPolicy="public"
             allowUnsplash={false}
+            maxUploadBytes={SCHOOL_BRANDING_IMAGE_MAX_BYTES}
+            tooLargeMessage={BRANDING_IMAGE_TOO_LARGE}
             disabled={logoSaving}
           />
         ) : (

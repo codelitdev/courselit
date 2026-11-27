@@ -92,8 +92,11 @@ describe("mailing address helpers", () => {
   it("treats blank or absent addresses as missing", () => {
     expect(isMailingAddressMissing(null)).toBe(true);
     expect(isMailingAddressMissing({})).toBe(true);
-    expect(isMailingAddressMissing({ mailingAddress: "  " })).toBe(true);
-    expect(isMailingAddressMissing({ mailingAddress: "1 Main St" })).toBe(false);
+    expect(isMailingAddressMissing({ postalAddress: null })).toBe(true);
+    expect(isMailingAddressMissing(null)).toBe(true);
+    expect(
+      isMailingAddressMissing({ postalAddress: { line1: "1 Main St", country: "US" } }),
+    ).toBe(false);
   });
   it("recognises the API's mailing address conflict", () => {
     expect(

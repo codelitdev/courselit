@@ -53,6 +53,7 @@ import {
   type SendLitContact,
   type SendLitEmailTestResult,
   type SendLitGeneralSettings,
+  type SendLitGeneralSettingsInput,
   type SendLitCreateSequenceInput,
   type SendLitCustomFields,
   type SendLitUpdateSequenceEmailInput,
@@ -411,7 +412,7 @@ export async function updateMailingSettings(
   db: AppDb,
   schoolId: string,
   clock: Clock,
-  input: { mailingAddress: string },
+  input: SendLitGeneralSettingsInput,
   config?: SendLitConfig,
 ): Promise<Result<SendLitGeneralSettings, PlatformError>> {
   return withSendLitAuth(
@@ -973,7 +974,7 @@ export async function startSequence(
       const settings = await getSendLitGeneralSettings(auth.teamApiKey, {
         config: cfg,
       });
-      if (!settings.mailingAddress?.trim()) throw new MailingAddressRequiredError();
+      if (!settings.postalAddress) throw new MailingAddressRequiredError();
       assertSequenceEmailsReady(
         await getSendLitSequence(auth.teamApiKey, sequenceId, { config: cfg }),
       );

@@ -10,6 +10,8 @@ export type CourseLitPlan = {
   billingInterval?: "month" | "year" | null;
   installmentCount?: number | null;
   isDefault?: boolean;
+  /** Community plans only: every published product comes with the plan. */
+  includesAllProducts?: boolean;
 };
 
 export type CourseLitProductPreview = {
@@ -29,7 +31,7 @@ export type CourseLitProductPreview = {
     requiresEnrollment: boolean;
   }>;
   plans: CourseLitPlan[];
-  includedWithCommunity?: boolean;
+  /** The community plans that also include this product. */
   community?: { id: string; plans: CourseLitPlan[] } | null;
 };
 
@@ -61,7 +63,6 @@ export type BannerResource = {
   membersCount: number | null;
   featuredImage: CourseLitCommunityPreview["featuredImage"];
   plans: CourseLitPlan[];
-  includedWithCommunity?: boolean;
   community?: { id: string; plans: CourseLitPlan[] } | null;
 };
 

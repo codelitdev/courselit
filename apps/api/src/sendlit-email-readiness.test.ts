@@ -143,7 +143,7 @@ describe("sending through the service", () => {
       const url = String(input);
       const method = init?.method ?? "GET";
       if (url.includes("/settings/general")) {
-        return jsonResponse({ mailingAddress: "12 Sprite Lane" });
+        return jsonResponse({ postalAddress: { line1: "12 Sprite Lane", country: "US" } });
       }
       if (url.endsWith("/sequences/seq_1") && method === "GET") {
         return jsonResponse(state.sequence);

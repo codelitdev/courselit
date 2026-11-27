@@ -156,7 +156,9 @@ describe.serial("legacy payment-plan migration", () => {
       amountMinor: 1000,
       billingInterval: "month",
       isDefault: true,
+      includesAllProducts: false,
     });
+    expect(rows.every((row) => row.includesAllProducts === false)).toBe(true);
     expect(rows.find((row) => row.publicId === "legacy-plan-emi")).toMatchObject({
       kind: "installment",
       emiAmount: 12.25,

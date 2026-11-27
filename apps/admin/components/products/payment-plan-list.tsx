@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PaymentPlanDialog, type PlanRequest } from "./payment-plan-dialog";
 import { formatMoney } from "@courselit/api-contract/money";
+import { includedProductsSummary } from "./included-products";
 import type { School, StorefrontPlan } from "./product-types";
 
 /**
@@ -200,10 +201,9 @@ export function PaymentPlanList({
                         Shown first
                       </span>
                     ) : null}
-                    {plan.includedProducts.length > 0 ? (
+                    {includedProductsSummary(plan) ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                        <Package className="size-3" /> +{plan.includedProducts.length}{" "}
-                        products
+                        <Package className="size-3" /> {includedProductsSummary(plan)}
                       </span>
                     ) : null}
                   </span>

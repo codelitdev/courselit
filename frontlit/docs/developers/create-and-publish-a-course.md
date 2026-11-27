@@ -47,7 +47,7 @@ The response is `201` with the product in the `draft` status. Copy its `id` into
 
 ### Add a payment plan
 
-A product needs at least one active payment plan before it can be published, unless it is included with a community. Choose the type that fits.
+A product needs at least one active payment plan before it can be published, unless an active community plan includes it (a plan that includes all products, or one that lists it). Choose the type that fits.
 
 <Tabs items={["Free", "One time", "Subscription", "Installments"]}>
 

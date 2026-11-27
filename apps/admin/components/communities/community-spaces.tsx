@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/codelit/switch";
 import { formatMoney } from "@courselit/api-contract/money";
 import { hasSchoolPermission } from "@/lib/school-permissions";
 import { cn } from "@/lib/utils";
+import { SpaceIconPicker, spaceIconFor } from "./space-icon-picker";
 
 type SpaceUnlock = {
   entityType: "community" | "product";
@@ -591,40 +592,48 @@ export function CommunitySpaces() {
         />
       ) : (
         <ul className="grid gap-3">
-          {spaces.map((space) => (
-            <li
-              key={space.id}
-              className="flex items-center justify-between rounded-xl border bg-card px-4 py-3"
-            >
-              <div>
-                <p className="font-medium">{space.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {space.whoCanPost === "admin" ? "Admins post" : "Members post"}
-                  {space.follow ? " · Auto-follow" : ""}
-                  {accessSummary(space)}
-                </p>
-              </div>
-              {canWrite ? (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => startEdit(space)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => startDelete(space)}
-                    disabled={saving || spaces.length < 2}
-                  >
-                    Delete
-                  </Button>
+          {spaces.map((space) => {
+            const SpaceIcon = spaceIconFor(space.logo);
+            return (
+              <li
+                key={space.id}
+                className="flex items-center justify-between rounded-xl border bg-card px-4 py-3"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                    <SpaceIcon className="size-4" aria-hidden />
+                  </span>
+                  <div>
+                    <p className="font-medium">{space.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {space.whoCanPost === "admin" ? "Admins post" : "Members post"}
+                      {space.follow ? " · Auto-follow" : ""}
+                      {accessSummary(space)}
+                    </p>
+                  </div>
                 </div>
-              ) : null}
-            </li>
-          ))}
+                {canWrite ? (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => startEdit(space)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => startDelete(space)}
+                      disabled={saving || spaces.length < 2}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
       <Dialog
@@ -667,12 +676,10 @@ export function CommunitySpaces() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="space-logo">Logo (Lucide icon name)</Label>
-                <Input
-                  id="space-logo"
-                  value={logo}
-                  onChange={(event) => setLogo(event.target.value)}
-                />
+                <Label htmlFor="space-logo">Icon</Label>
+                <div>
+                  <SpaceIconPicker id="space-logo" value={logo} onChange={setLogo} />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="space-who-can-post">Who can post</Label>

@@ -1,5 +1,5 @@
 /**
- * Pure logic for the setup wizard: step flow, validation, address rules,
+ * Pure logic for the setup wizard: step flow, validation, subdomain rules,
  * draft (de)serialization and copy helpers. No React, no fetch, so it can be
  * unit tested in isolation.
  */
@@ -12,7 +12,6 @@ export type WizardStep =
   | "offer"
   | "build"
   | "brand"
-  | "email"
   | "plan"
   | "live";
 
@@ -40,7 +39,7 @@ export function buildFlow(env: FlowEnv): WizardStep[] {
   if (env.firstRun) flow.push("about");
   flow.push("school", "offer");
   if (env.hasOffer) flow.push("build");
-  flow.push("brand", "email");
+  flow.push("brand");
   if (env.hosted) flow.push("plan");
   flow.push("live");
   return flow;
@@ -59,7 +58,7 @@ export function previousStep(flow: WizardStep[], step: WizardStep): WizardStep {
 }
 
 export type StepperGroup = {
-  key: "you" | "school" | "offer" | "site" | "email" | "plan" | "live";
+  key: "you" | "school" | "offer" | "site" | "plan" | "live";
   label: string;
   steps: WizardStep[];
 };
@@ -72,7 +71,6 @@ export function stepperGroups(
     { key: "school", label: "School", steps: ["school"], show: true },
     { key: "offer", label: "First offer", steps: ["offer", "build"], show: true },
     { key: "site", label: "Your site", steps: ["brand"], show: true },
-    { key: "email", label: "Email", steps: ["email"], show: true },
     { key: "plan", label: "Plan", steps: ["plan"], show: env.hosted },
     { key: "live", label: "Live", steps: ["live"], show: true },
   ];
@@ -168,15 +166,6 @@ export const LANGUAGES = [
   { value: "pt", label: "Português" },
 ] as const;
 
-export const COUNTRIES = [
-  { value: "GB", label: "United Kingdom", currency: "GBP" },
-  { value: "US", label: "United States", currency: "USD" },
-  { value: "IN", label: "India", currency: "INR" },
-  { value: "CA", label: "Canada", currency: "CAD" },
-  { value: "AU", label: "Australia", currency: "AUD" },
-  { value: "DE", label: "Germany", currency: "EUR" },
-] as const;
-
 const EURO_REGIONS = new Set([
   "DE",
   "FR",
@@ -212,7 +201,6 @@ export function parseLocaleTag(tag: string | undefined | null): {
 export function detectLocaleDefaults(tag: string | undefined | null): {
   currency: string;
   language: string;
-  country: string;
 } {
   const { language, region } = parseLocaleTag(tag);
   const supportedLanguage = LANGUAGES.some((item) => item.value === language)
@@ -223,13 +211,9 @@ export function detectLocaleDefaults(tag: string | undefined | null): {
       ? "EUR"
       : (REGION_CURRENCY[region] ?? "USD")
     : "USD";
-  const country = COUNTRIES.some((item) => item.value === region)
-    ? (region as string)
-    : "GB";
   return {
     currency: CURRENCIES.some((item) => item.value === currency) ? currency : "USD",
     language: supportedLanguage,
-    country,
   };
 }
 
@@ -305,16 +289,6 @@ export type BrandDraft = {
   logo: UploadedFile | null;
 };
 
-export type EmailDraft = {
-  line1: string;
-  city: string;
-  region: string;
-  postal: string;
-  country: string;
-  sender: string;
-  skipped: boolean;
-};
-
 /** Server-side ids of what the wizard already created, so re-saving updates in place. */
 export type OfferRefs = {
   productId?: string;
@@ -328,7 +302,6 @@ export type OfferRefs = {
   /** Client file id -> created file lesson id (download products). */
   fileLessons?: Record<string, string>;
   planId?: string;
-  emailSaved?: boolean;
 };
 
 export type WizardData = {
@@ -343,7 +316,6 @@ export type WizardData = {
   community: CommunityDraft;
   download: DownloadDraft;
   brand: BrandDraft;
-  email: EmailDraft;
   plan: { plan: PlanId; interval: BillingInterval };
   refs: OfferRefs;
 };
@@ -354,7 +326,6 @@ export const DEFAULT_THEME_ID = "classic";
 export function emptyWizardData(defaults?: {
   currency?: string;
   language?: string;
-  country?: string;
 }): WizardData {
   return {
     school: "",
@@ -382,15 +353,6 @@ export function emptyWizardData(defaults?: {
     },
     download: { title: "", description: "", files: [] },
     brand: { themeId: DEFAULT_THEME_ID, tagline: "", logo: null },
-    email: {
-      line1: "",
-      city: "",
-      region: "",
-      postal: "",
-      country: defaults?.country ?? "GB",
-      sender: "",
-      skipped: false,
-    },
     plan: { plan: "pro", interval: "month" },
     refs: {},
   };
@@ -405,9 +367,7 @@ export type FieldErrors = Partial<
     | "subdomain"
     | "title"
     | "question"
-    | "files"
-    | "address"
-    | "postal",
+    | "files",
     string
   >
 >;
@@ -423,8 +383,6 @@ export const ERROR_COPY = {
   question: "Add the question applicants answer.",
   downloadTitle: "Give your download a title.",
   files: "Add at least one file.",
-  address: "Add the street address.",
-  postal: "Add a postal code.",
   subdomain: "Use 3 to 63 lowercase letters, numbers and single hyphens.",
   subdomainTaken: "That address is taken. Pick another.",
 } as const;
@@ -472,13 +430,6 @@ export function validateBuild(data: WizardData): FieldErrors {
   return errors;
 }
 
-export function validateEmail(email: EmailDraft): FieldErrors {
-  const errors: FieldErrors = {};
-  if (blank(email.line1)) errors.address = ERROR_COPY.address;
-  if (blank(email.postal)) errors.postal = ERROR_COPY.postal;
-  return errors;
-}
-
 export function validateStep(
   step: WizardStep,
   data: WizardData,
@@ -491,8 +442,6 @@ export function validateStep(
       return validateSchool(data, extras.availability);
     case "build":
       return validateBuild(data);
-    case "email":
-      return validateEmail(data.email);
     default:
       return {};
   }
@@ -612,7 +561,6 @@ export function laterItems(data: WizardData): string[] {
   if (isPaidOffer(data)) {
     items.push(`Connect payments and add a price to publish ${offerTitleOr(data)}`);
   }
-  if (data.email.skipped) items.push("Add your mailing address to turn on email");
   return items;
 }
 
@@ -739,26 +687,6 @@ export function hasNewConnection(
   });
 }
 
-// ----------------------------------------------------------------------- email
-
-export function formatMailingAddress(email: EmailDraft): string {
-  const country =
-    COUNTRIES.find((item) => item.value === email.country)?.label ?? email.country;
-  const cityLine = [email.city.trim(), email.region.trim(), email.postal.trim()]
-    .filter(Boolean)
-    .join(", ");
-  return [email.line1.trim(), cityLine, country].filter(Boolean).join("\n");
-}
-
-export function addressPreview(email: EmailDraft): string {
-  return (
-    [email.line1, email.city, email.postal]
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .join(", ") || "Your mailing address"
-  );
-}
-
 // ----------------------------------------------------------------------- draft
 
 /** Transient upload state is never stored: only finished uploads survive a reload. */
@@ -787,7 +715,6 @@ export function serializeDraft(data: WizardData): Record<string, unknown> {
       files: data.download.files.map(persistFile).filter(Boolean),
     },
     brand: { ...data.brand, logo: persistFile(data.brand.logo) },
-    email: data.email,
     plan: data.plan,
     refs: data.refs,
   };
@@ -836,7 +763,6 @@ export function parseDraft(
   const community = obj(raw.community);
   const download = obj(raw.download);
   const brand = obj(raw.brand);
-  const email = obj(raw.email);
   const plan = obj(raw.plan);
   const refs = obj(raw.refs);
   const subdomain = str(raw.subdomain);
@@ -879,15 +805,6 @@ export function parseDraft(
       tagline: str(brand.tagline).slice(0, 90),
       logo: parseFile(brand.logo),
     },
-    email: {
-      line1: str(email.line1),
-      city: str(email.city),
-      region: str(email.region),
-      postal: str(email.postal),
-      country: str(email.country, base.email.country),
-      sender: str(email.sender),
-      skipped: email.skipped === true,
-    },
     plan: {
       plan: oneOf<PlanId>(plan.plan, ["pro", "business"], "pro"),
       interval: oneOf<BillingInterval>(plan.interval, ["month", "year"], "month"),
@@ -908,7 +825,6 @@ export function parseDraft(
         ),
       ),
       planId: typeof refs.planId === "string" ? refs.planId : undefined,
-      emailSaved: refs.emailSaved === true,
     },
   };
 }
@@ -930,7 +846,6 @@ export function resumeRows(
     school: fullUrl,
     offer: offerTitle(data) || "Not chosen yet",
     site: "Logo, colour and tagline",
-    email: "Mailing address",
     plan: trialEndsAt
       ? `Free trial until ${new Date(trialEndsAt).toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
       : "Choose a CourseLit plan to go live",

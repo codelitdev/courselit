@@ -30,6 +30,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { CourseLitLoading } from "@/components/loading";
 import { EmailDeliveryNotice } from "@/components/mails/email-delivery-notice";
+import { MailingAddressGate } from "@/components/mails/mailing-address-setup";
 import {
   Card,
   CardContent,
@@ -846,6 +847,7 @@ export default function MailsPage() {
   return (
     <AuthGate>
       <div className="page-shell">
+        <MailingAddressGate schoolId={school?.id ?? null}>
         <PageHeader
           title={pageDetails.title}
           description={pageDetails.description}
@@ -1524,6 +1526,7 @@ export default function MailsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </MailingAddressGate>
       </div>
     </AuthGate>
   );

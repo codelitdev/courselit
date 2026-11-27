@@ -119,6 +119,27 @@ describe("launchChecklist", () => {
     expect(steps.find((s) => s.key === "plans")?.detail).toBe("1 plan.");
   });
 
+  it("needs no plan of its own when a community plan includes it", () => {
+    const steps = launchChecklist({
+      ...base,
+      includedInCommunityPlan: true,
+      lessons: [lesson("a", "published")],
+    });
+    expect(canGoLive(steps)).toBe(true);
+    expect(steps.find((s) => s.key === "plans")).toMatchObject({
+      done: true,
+      detail: "Included with your community.",
+    });
+    // Its own plans still count first.
+    const both = launchChecklist({
+      ...base,
+      includedInCommunityPlan: true,
+      plans: [{ status: "active", kind: "free" }],
+      lessons: [lesson("a", "published")],
+    });
+    expect(both.find((s) => s.key === "plans")?.detail).toBe("1 plan.");
+  });
+
   it("tracks the optional extras", () => {
     const steps = launchChecklist({
       ...base,

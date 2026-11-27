@@ -38,6 +38,7 @@ A community plan can include products. The learner then gets a separate, include
 
 - They become active when the community membership becomes active. For plans that need approval, this is when you approve the request.
 - They expire when the community membership ends, for example when you remove the member, or the member leaves.
+- When you change what the plan includes, products added to the plan become active for its members, and products taken out of it expire.
 
 See [Grant access to additional products](/docs/communities/included-products).
 

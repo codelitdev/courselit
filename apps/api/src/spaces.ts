@@ -7,7 +7,11 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import type { MediaRef } from "@courselit/api-contract";
+import {
+  DEFAULT_SPACE_ICON,
+  isSpaceIconName,
+  type MediaRef,
+} from "@courselit/api-contract";
 import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   communityGifUrls,
@@ -191,7 +195,7 @@ export async function provisionSchoolCommunity(
     name: "General",
     slug: "general",
     description: "",
-    logo: "MessagesSquare",
+    logo: DEFAULT_SPACE_ICON,
     featuredImage: null,
     follow: true,
     whoCanPost: "members",
@@ -468,8 +472,8 @@ export async function createSpace(
   if (whoCanPost !== "members" && whoCanPost !== "admin") {
     return validation("invalid_who_can_post");
   }
-  const logo = input.logo?.trim() || "MessagesSquare";
-  if (!/^[A-Z][A-Za-z0-9]*$/.test(logo)) return validation("invalid_logo");
+  const logo = input.logo?.trim() || DEFAULT_SPACE_ICON;
+  if (!isSpaceIconName(logo)) return validation("invalid_logo");
   const now = clock.now();
   const publicId = createPublicId("spc", clock);
   const slug = await uniqueSlug(db, schoolId, name, publicId);
@@ -564,11 +568,7 @@ export async function updateSpace(
   ) {
     return validation("invalid_who_can_post");
   }
-  if (
-    input.logo !== undefined &&
-    input.logo &&
-    !/^[A-Z][A-Za-z0-9]*$/.test(input.logo)
-  ) {
+  if (input.logo !== undefined && input.logo && !isSpaceIconName(input.logo)) {
     return validation("invalid_logo");
   }
   if (input.name !== undefined && !input.name.trim()) return validation("invalid_name");
@@ -1111,7 +1111,7 @@ export async function enableProductDiscussionSpace(
     name: product.title,
     slug,
     description: "",
-    logo: "MessagesSquare",
+    logo: DEFAULT_SPACE_ICON,
     featuredImage: null,
     follow: true,
     whoCanPost: "members",
@@ -1128,50 +1128,4 @@ export async function enableProductDiscussionSpace(
     createdAt: now,
   });
   return spaceId;
-}
-
-export async function syncIncludedProductMemberships(
-  db: AppDb,
-  schoolId: string,
-  clock: Clock,
-): Promise<void> {
-  const included = await db
-    .select()
-    .from(schema.products)
-    .where(
-      and(
-        eq(schema.products.schoolId, schoolId),
-        eq(schema.products.includedWithCommunity, true),
-        eq(schema.products.status, "published"),
-      ),
-    );
-  const parents = await db
-    .select()
-    .from(schema.learnerMemberships)
-    .where(
-      and(
-        eq(schema.learnerMemberships.schoolId, schoolId),
-        eq(schema.learnerMemberships.entityType, "community"),
-        eq(schema.learnerMemberships.status, "active"),
-      ),
-    );
-  for (const parent of parents) {
-    if (!parent.paymentPlanId) continue;
-    for (const product of included) {
-      await upsertLearnerMembership(
-        db,
-        {
-          schoolId,
-          schoolAccountId: parent.schoolAccountId,
-          entityType: "product",
-          entityId: product.publicId,
-          paymentPlanId: parent.paymentPlanId,
-          status: "active",
-          isIncludedInPlan: true,
-          parentMembershipId: parent.id,
-        },
-        clock,
-      );
-    }
-  }
 }

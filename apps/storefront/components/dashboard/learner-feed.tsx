@@ -2,15 +2,15 @@
 
 import type { SelectedMedia } from "@frontlit/media-uploader";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
-import { FileText, Megaphone, MessagesSquare, Pin, Reply, SmilePlus } from "lucide-react";
+import { Megaphone, MessagesSquare, Pin, Reply, SmilePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useLearnerSession } from "@/components/communities/learner-community";
 import { LearnerCommunityMembershipBar } from "@/components/communities/learner-community-membership";
-import { LearnerPostGifs, withGif } from "@/components/communities/learner-gif-picker";
+import { withGif } from "@/components/communities/learner-gif-picker";
+import { LearnerPostAttachments } from "@/components/communities/learner-post-attachments";
 import {
-  LearnerPostVideos,
   withVideo,
 } from "@/components/communities/learner-youtube-picker";
 import { LearnerPostComposerDialog } from "@/components/communities/learner-post-composer-dialog";
@@ -22,7 +22,6 @@ import {
   LearnerAvatarImage,
   LearnerCard,
   LearnerCardContent,
-  LearnerCardImage,
   LearnerHeader2,
   LearnerLink,
   LearnerReactionPicker,
@@ -229,43 +228,17 @@ function PostContent({ value, className }: { value: string; className?: string }
 
 function PostMedia({ post }: { post: FeedPost }) {
   return (
-    <>
-      <PostAttachments post={post} />
-      <LearnerPostGifs urls={post.gifUrls ?? []} />
-      <LearnerPostVideos urls={post.videoUrls ?? []} />
-    </>
-  );
-}
-
-function PostAttachments({ post }: { post: FeedPost }) {
-  if (!post.media?.length) return null;
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {post.media.map((media) =>
-        media.type === "image" ? (
-          <LearnerCardImage
-            key={media.id}
-            src={media.thumbnailUrl ?? media.url}
-            alt={media.title}
-            className="aspect-video w-full object-cover"
-          />
-        ) : (
-          <LearnerLink
-            key={media.id}
-            href={media.url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-md border p-3"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <FileText className="size-5 shrink-0" aria-hidden="true" />
-            <LearnerText2 component="span" className="truncate">
-              {media.title}
-            </LearnerText2>
-          </LearnerLink>
-        ),
-      )}
-    </div>
+    <LearnerPostAttachments
+      files={(post.media ?? []).map((media) => ({
+        id: media.id,
+        type: media.type,
+        url: media.url,
+        thumbnailUrl: media.thumbnailUrl,
+        name: media.title || media.fileName,
+      }))}
+      gifUrls={post.gifUrls ?? []}
+      videoUrls={post.videoUrls ?? []}
+    />
   );
 }
 

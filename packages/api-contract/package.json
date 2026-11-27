@@ -12,6 +12,14 @@
       "types": "./src/learner-avatar.ts",
       "import": "./src/learner-avatar.ts"
     },
+    "./school-branding": {
+      "types": "./src/school-branding.ts",
+      "import": "./src/school-branding.ts"
+    },
+    "./space-icons": {
+      "types": "./src/space-icons.ts",
+      "import": "./src/space-icons.ts"
+    },
     "./team-permissions": {
       "types": "./src/team-permissions.ts",
       "import": "./src/team-permissions.ts"

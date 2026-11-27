@@ -95,7 +95,6 @@ The response is `201` with the new product.
   "leadMagnet": false,
   "certificate": false,
   "discussions": false,
-  "includedWithCommunity": false,
   "discussionSpaceId": null,
   "publishedAt": null,
   "createdAt": "2026-11-13T09:31:00.000Z",

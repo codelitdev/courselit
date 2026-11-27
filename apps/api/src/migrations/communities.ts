@@ -844,6 +844,8 @@ export async function importLegacyCommunities(
         name,
         description: stringValue(record.description) ?? "",
         includedProducts,
+        // Main has no "all products" plans; its list is imported as is.
+        includesAllProducts: false,
         providerProductId: stringValue(record.providerProductId),
         kind,
         oneTimeAmount,

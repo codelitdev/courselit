@@ -5,6 +5,8 @@ import { UNAVAILABLE_PAGE_BLOCKS } from "./page-blocks.js";
 import { COURSELIT_PERMISSIONS } from "./team-permissions.js";
 
 export * from "./learner-avatar.js";
+export * from "./school-branding.js";
+export * from "./space-icons.js";
 export * from "./page-blocks.js";
 export * from "./payment-webhooks.js";
 export * from "./safe-redirect.js";
@@ -88,8 +90,6 @@ export const productSchema = z.object({
   leadMagnet: z.boolean(),
   certificate: z.boolean(),
   discussions: z.boolean(),
-  /** Status a new lesson gets when it is created without one. */
-  includedWithCommunity: z.boolean(),
   discussionSpaceId: z.string().nullable(),
   /**
    * When the product first went live. Kept when it goes back to draft, so
@@ -194,7 +194,6 @@ export const updateProductBodySchema = z.object({
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
-  includedWithCommunity: z.boolean().optional(),
 });
 
 export const productCertificateTemplateSchema = z.object({
@@ -224,6 +223,13 @@ export const storefrontPlanSchema = z.object({
   productId: z.string(),
   name: z.string(),
   description: z.string(),
+  /**
+   * Community plans only. When true the plan includes every published product
+   * of the school, including ones published later, and `includedProducts` is
+   * empty. Always false for product plans.
+   */
+  includesAllProducts: z.boolean(),
+  /** Community plans only: the products the plan includes when it doesn't include all. */
   includedProducts: z.array(z.string()),
   providerProductId: z.string().nullable(),
   // `type` and the amount fields mirror CourseLit's production PaymentPlan
@@ -367,6 +373,9 @@ const storefrontPlanInputFields = {
   // Retained for the shared plan shape; product-owned plans reject non-empty
   // values because included products belong to community plans in main.
   includedProducts: z.array(z.string()).default([]),
+  // Community plans only: include every published product, now and later.
+  // When true, `includedProducts` is ignored and stored empty.
+  includesAllProducts: z.boolean().default(false),
   // `type` and the amount fields preserve the production payment-plan model;
   // `kind`/minor-unit fields are the API's derived checkout representation.
   kind: z.enum(["free", "one_time", "subscription", "installment"]).optional(),
@@ -396,6 +405,7 @@ export const updateStorefrontPlanBodySchema = z
     name: z.string().trim().min(1).max(200).optional(),
     description: z.string().max(2_000).optional(),
     includedProducts: z.array(z.string()).optional(),
+    includesAllProducts: z.boolean().optional(),
     kind: z.enum(["free", "one_time", "subscription", "installment"]).optional(),
     type: z.enum(["free", "onetime", "emi", "subscription"]).optional(),
     oneTimeAmount: z.number().nonnegative().nullable().optional(),
@@ -1337,6 +1347,11 @@ export const sectionSchema = z.object({
 
 export const productDetailSchema = productSchema.extend({
   enrolled: z.boolean(),
+  /**
+   * Whether an active community plan includes the product (all products, or
+   * this one by name). Such a product can go live without a plan of its own.
+   */
+  includedInCommunityPlan: z.boolean(),
   sections: z.array(sectionSchema),
   lessons: z.array(lessonSummarySchema),
 });
@@ -2328,7 +2343,6 @@ export const onboardingStepSchema = z.enum([
   "offer",
   "build",
   "brand",
-  "email",
   "plan",
   "live",
 ]);
@@ -2439,15 +2453,26 @@ export const schoolEmailDeliverySchema = z.object({
   sender: z.enum(["school", "platform"]),
   integrationStatus: z.string().nullable(),
 });
+/** A postal address in parts; `country` is an ISO 3166-1 alpha-2 code. */
+export const postalAddressSchema = z.object({
+  line1: z.string().trim().min(1).max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(100).optional(),
+  region: z.string().trim().max(100).optional(),
+  postalCode: z.string().trim().max(20).optional(),
+  country: z.string().regex(/^[A-Z]{2}$/),
+});
 export const mailingSettingsSchema = z
   .object({
-    mailingAddress: z.string().nullable(),
+    /** The postal address every marketing email's footer prints; null until
+     * it is set. SendLit formats it into the footer text. */
+    postalAddress: postalAddressSchema.nullable(),
     updatedAt: z.string().nullable().optional(),
   })
   .passthrough();
 export const updateMailingSettingsBodySchema = z
-  .object({ mailingAddress: z.string().trim().min(1).max(1000) })
-  .passthrough();
+  .object({ postalAddress: postalAddressSchema })
+  .strict();
 export const mailSequenceListQuerySchema = z.object({
   /** Broadcasts and sequences are listed separately. */
   type: z.enum(["broadcast", "sequence"]),
